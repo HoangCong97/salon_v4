@@ -7,11 +7,11 @@ Tài liệu này chia nhỏ toàn bộ các chức năng màn hình và nghiệp
 ## 🛠️ PHẦN 1: CƠ SỞ HẠ TẦNG & DỮ LIỆU CHUNG (INFRASTRUCTURE)
 
 ### [ ] MODULE 1: ĐỒNG BỘ SCHEMA DATABASE & THƯ VIỆN DÙNG CHUNG
-- [ ] **Task 1.1**: Thiết kế chi tiết và đồng bộ file `schema.prisma` tại package `@salon/database` dựa trên `schema.sql` (bổ sung đầy đủ các bảng `sal_`, UUID v7, deleted_at, composite indexes).
-- [ ] **Task 1.2**: Chạy lệnh sinh Prisma Client (`db:generate`) và tích hợp xuất bản client dùng chung qua `@salon/database`.
-- [ ] **Task 1.3**: Xây dựng bộ kiểu dữ liệu chung (Dockets, DTOs, API Response structure) tại `@salon/shared-types`.
-- [ ] **Task 1.4**: Định nghĩa các hàm tiện ích định dạng tiền VND, phần trăm, thời gian và Zod Validation Schemas chung tại `@salon/shared-utils`.
-- [ ] **Task 1.5**: Tạo script Seed dữ liệu mẫu cơ bản (Hệ thống quyền `sal_permissions`, nhóm Admin mặc định, cấu hình hệ thống ban đầu).
+- [x] **Task 1.1**: Thiết kế chi tiết và đồng bộ file `schema.prisma` tại package `@salon/database` dựa trên `schema.sql` (bổ sung đầy đủ các bảng `sal_`, UUID v7, deleted_at, composite indexes).
+- [x] **Task 1.2**: Chạy lệnh sinh Prisma Client (`db:generate`) và tích hợp xuất bản client dùng chung qua `@salon/database`.
+- [x] **Task 1.3**: Xây dựng bộ kiểu dữ liệu chung (Dockets, DTOs, API Response structure) tại `@salon/shared-types`.
+- [x] **Task 1.4**: Định nghĩa các hàm tiện ích định dạng tiền VND, phần trăm, thời gian và Zod Validation Schemas chung tại `@salon/shared-utils`.
+- [x] **Task 1.5**: Tạo script Seed dữ liệu mẫu cơ bản (Hệ thống quyền `sal_permissions`, nhóm Admin mặc định, cấu hình hệ thống ban đầu).
 
 ### [ ] MODULE 2: THIẾT LẬP BACKEND CORE & PHÂN TÁCH TENANT (TENANT ISOLATION)
 - [ ] **Task 2.1**: Cấu hình `TenantResolverMiddleware` tại `backend-api` để giải mã `tenant_id` từ Request Header (`X-Tenant-ID`) hoặc Subdomain.
@@ -24,20 +24,20 @@ Tài liệu này chia nhỏ toàn bộ các chức năng màn hình và nghiệp
 ## 🖥️ PHẦN 2: PHÁT TRIỂN SITE NỘI BỘ (SUPER ADMIN PORTAL)
 
 ### [ ] MODULE 3: QUẢN TRỊ HỆ THỐNG SAAS (apps/internal-admin)
-- [ ] **Task 3.1**: Cấu hình khung giao diện chính Super Admin Layout (Sidebar cố định 260px, Topbar 70px, Content Area co giãn).
-- [ ] **Task 3.2**: Trang Dashboard Super Admin: Lưới 4 thẻ KPIs tổng thể, biểu đồ Line Chart doanh thu MRR, biểu đồ tròn phân bố gói dịch vụ.
-- [ ] **Task 3.3**: Quản lý Tenant: Giao diện bảng danh sách salon, tính năng Khóa/Mở khóa, Drawer xem chi tiết, tính năng giả lập quyền truy cập (Impersonate).
-- [ ] **Task 3.4**: Quản lý Gói dịch vụ & Hóa đơn: Tạo mới các gói subscription, theo dõi lịch sử thanh toán tiền phần mềm của các salon.
-- [ ] **Task 3.5**: Cấu hình hệ thống & Tích hợp: Form thiết lập API Key SMS, cổng thanh toán VNPay/Momo, lưu trữ S3.
+- [x] **Task 3.1**: Cấu hình khung giao diện chính Super Admin Layout (Sidebar cố định 260px, Topbar 70px, Content Area co giãn).
+- [x] **Task 3.2**: Trang Dashboard Super Admin: Lưới 4 thẻ KPIs tổng thể, biểu đồ Line Chart doanh thu MRR, biểu đồ tròn phân bố gói dịch vụ.
+- [x] **Task 3.3**: Quản lý Tenant: Giao diện bảng danh sách salon, tính năng Khóa/Mở khóa, Drawer xem chi tiết, tính năng giả lập quyền truy cập (Impersonate).
+- [x] **Task 3.4**: Quản lý Gói dịch vụ & Hóa đơn: Tạo mới các gói subscription, theo dõi lịch sử thanh toán tiền phần mềm của các salon.
+- [x] **Task 3.5**: Cấu hình hệ thống & Tích hợp: Form thiết lập API Key SMS, cổng thanh toán VNPay/Momo, lưu trữ S3.
 
 ---
 
 ## 🏬 PHẦN 3: PHÁT TRIỂN SITE TENANT (SALON PORTAL - ADAPTIVE)
 
-### [ ] MODULE 4: KHUNG GIAO DIỆN THÍCH ỨNG (ADAPTIVE LAYOUT SHELL)
-- [ ] **Task 4.1**: Thiết lập định tuyến thích ứng (`Adaptive Router`) tại `tenant-portal` để nhận diện kích thước màn hình & vai trò người dùng nhằm tải Layout phù hợp.
-- [ ] **Task 4.2**: Xây dựng Desktop Layout (Sidebar điều hướng nâng cao, Topbar tích hợp Branch Selector).
-- [ ] **Task 4.3**: Xây dựng Mobile Layout (Mobile Header, Bottom Navigation Bar cố định 64px dưới cùng dành cho nhân viên).
+### [x] MODULE 4: KHUNG GIAO DIỆN THÍCH ỨNG (ADAPTIVE LAYOUT SHELL)
+- [x] **Task 4.1**: Thiết lập định tuyến thích ứng (`Adaptive Router`) tại `tenant-portal` để nhận diện kích thước màn hình & vai trò người dùng nhằm tải Layout phù hợp.
+- [x] **Task 4.2**: Xây dựng Desktop Layout (Sidebar điều hướng nâng cao, Topbar tích hợp Branch Selector).
+- [x] **Task 4.3**: Xây dựng Mobile Layout (Mobile Header, Bottom Navigation Bar cố định 64px dưới cùng dành cho nhân viên).
 
 ### [ ] MODULE 5: QUẢN LÝ THÔNG TIN & THIẾT LẬP CỬA HÀNG (PC)
 - [ ] **Task 5.1**: API & UI Quản lý chi nhánh: Thêm/Sửa thông tin các chi nhánh trực thuộc chuỗi salon.
