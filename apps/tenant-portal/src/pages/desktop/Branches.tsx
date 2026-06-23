@@ -127,15 +127,7 @@ export default function Branches() {
     <>
       <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <h1 style={{ fontSize: "24px", fontWeight: "700", marginBottom: "4px" }}>
-              Cơ sở & Chi nhánh
-            </h1>
-            <p style={{ color: "var(--text-secondary)" }}>
-              Quản lý mạng lưới chi nhánh, cửa hàng trực thuộc chuỗi salon.
-            </p>
-          </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
           <button className="btn btn-primary" onClick={handleOpenCreateModal}>
             <Plus size={18} /> Add New Branch
           </button>

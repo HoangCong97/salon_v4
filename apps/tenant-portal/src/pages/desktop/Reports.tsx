@@ -3,10 +3,6 @@ import React from "react";
 export default function Reports() {
   return (
     <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      <div>
-        <h1 style={{ fontSize: "24px", fontWeight: "700", marginBottom: "4px" }}>Báo cáo doanh thu & Hiệu suất</h1>
-        <p style={{ color: "var(--text-secondary)" }}>Phân tích xu hướng tài chính và giám sát hoạt động kinh doanh của chi nhánh.</p>
-      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
         <div className="card">

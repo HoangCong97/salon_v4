@@ -3,10 +3,6 @@ import React from "react";
 export default function StaffManagement() {
   return (
     <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      <div>
-        <h1 style={{ fontSize: "24px", fontWeight: "700", marginBottom: "4px" }}>Quản lý nhân viên chi nhánh</h1>
-        <p style={{ color: "var(--text-secondary)" }}>Quản lý thông tin, phân quyền chức vụ và điều hành hoạt động của nhân viên.</p>
-      </div>
 
       <div className="card">
         <h3 className="card-title">Danh sách nhân viên</h3>

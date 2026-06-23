@@ -3,11 +3,6 @@ import React from "react";
 export default function Dashboard() {
   return (
     <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      <div>
-        <h1 style={{ fontSize: "24px", fontWeight: "700", marginBottom: "4px" }}>Tổng quan chi nhánh</h1>
-        <p style={{ color: "var(--text-secondary)" }}>Xem hiệu suất bán hàng, lượt đặt lịch hẹn và hoạt động trong ngày.</p>
-      </div>
-
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px" }}>
         <div className="card">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
