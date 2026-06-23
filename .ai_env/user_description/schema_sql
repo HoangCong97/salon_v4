@@ -1,0 +1,423 @@
+Lưu ý thiết kế cơ sở dữ liệu chung:
+- Toàn bộ các trường khóa chính (id) và khóa ngoại liên kết (tenant_id, branch_id, user_id, customer_id, v.v.) khuyên dùng kiểu dữ liệu UUID để tối ưu bảo mật và khả năng mở rộng cho hệ thống SaaS đa khách thuê.
+- Khuyên dùng UUID v7 thay vì UUID v4 để cấu trúc UUID tăng dần theo thời gian (time-ordered), giúp tránh phân mảnh B-Tree index, tối ưu hóa tốc độ ghi (INSERT) trên tập dữ liệu lớn.
+- Các trường/bảng có ràng buộc duy nhất (UNIQUE) như email, phone trong bảng users/customers hoặc các cặp liên kết như (user_id, branch_id) trong user_branches cần thiết lập Partial Index (chỉ mục duy nhất một phần) trong PostgreSQL với điều kiện "WHERE deleted_at IS NULL" thay cho CONSTRAINT UNIQUE tiêu chuẩn. Điều này tránh việc chặn thêm mới (insert) khi các bản ghi cũ đã bị xóa tạm (soft deleted).
+- Tất cả các bảng đều mang tiền tố 'sal_'.
+- Thiết lập Composite Index (Chỉ mục tổ hợp) bắt đầu bằng cặp (tenant_id, branch_id) cho các bảng giao dịch lớn (bookings, invoices, invoice_items) để tránh Full Table Scan khi lượng dữ liệu lớn.
+- Sử dụng bảng tổng hợp ngày (daily_employee_revenue, daily_branch_revenue, daily_revenue_reports) để làm dashboard báo cáo, tránh chạy hàm tính toán trực tiếp (SUM, COUNT) trên bảng giao dịch lớn thời gian thực.
+- Thiết kế ca làm việc/lịch đặt dùng kiểu khoảng thời gian (Range types như tstzrange trong Postgres) kết hợp GiST Index để tối ưu kiểm tra trùng lịch hẹn của nhân viên.
+- Khi quy mô đạt mốc 1,000+ salon, áp dụng Phân vùng bảng (Table Partitioning) theo tenant_id hoặc theo thời gian (Tháng/Quý) để đảm bảo hiệu năng truy vấn ổn định.
+
+============================================================
+
+bảng tenants (tenants)
+    id
+    name
+    created_at
+    updated_at
+    deleted_at
+
+bảng chi nhánh (branches)
+    id
+    tenant_id
+    name
+    phone
+    email
+    address
+    created_at
+    updated_at
+    deleted_at
+
+bảng vai trò (roles)
+    id
+    tenant_id
+    name
+    description
+    created_at
+    updated_at
+    deleted_at
+
+bảng quyền (permissions)
+    id
+    slug (Ví dụ: invoice.create, invoice.delete, report.view, staff.schedule)
+    group
+    name
+    description
+    created_at
+    updated_at
+    deleted_at
+
+bảng phân quyền vai trò (role_permissions)
+    id
+    role_id
+    permission_id
+    created_at
+
+bảng người dùng (users)
+    id
+    tenant_id
+    role_id
+    name
+    email
+    password
+    phone
+    sex
+    avatar
+    base_salary
+    status
+    note
+    created_at
+    updated_at
+    deleted_at
+
+bảng chi nhánh người dùng (user_branches)
+    id
+    user_id
+    branch_id
+    created_at
+    updated_at
+    deleted_at
+
+bảng cài đặt người dùng (user_settings)
+    id
+    user_id
+    theme
+    language
+    timezone
+    receive_notification
+    receive_sms
+    receive_email
+    created_at
+    updated_at
+    deleted_at
+
+bảng khách hàng (customers)
+    id
+    tenant_id
+    branch_id
+    name
+    phone
+    email
+    password
+    credibility_score
+    created_at
+    updated_at
+    deleted_at
+
+bảng tích điểm khách hàng (customer_points)
+    id
+    tenant_id
+    branch_id
+    customer_id
+    point
+    created_at
+    updated_at
+    deleted_at
+
+bảng dịch vụ (services)
+    id
+    tenant_id
+    branch_id
+    name
+    service_category (dịch vụ, hóa chất, combo)
+    price
+    discount_price
+    duration
+    image_url
+    created_at
+    updated_at
+    deleted_at
+
+bảng kho hàng (inventories)
+    id
+    tenant_id
+    branch_id
+    name
+    cost_price
+    sell_price
+    quantity
+    discount_price
+    image_url
+    created_at
+    updated_at
+    deleted_at
+
+bảng thẻ dịch vụ (service_packages)
+    id
+    tenant_id
+    branch_id
+    name
+    description
+    price
+    discount_price
+    duration
+    image_url
+    created_at
+    updated_at
+    deleted_at
+
+bảng chi tiết thẻ dịch vụ (service_package_details)
+    id
+    service_package_id
+    service_id
+    quantity
+    created_at
+    updated_at
+    deleted_at
+
+bảng lịch sử mua thẻ và số lần sử dụng (customer_purchased_packages)
+    id
+    tenant_id
+    branch_id
+    customer_id
+    service_package_id
+    quantity
+    used_quantity
+    expiry_date
+    created_at
+    updated_at
+    deleted_at
+
+bảng lịch sử sử dụng thẻ (package_usage_history)
+    id
+    tenant_id
+    branch_id
+    customer_id
+    package_id
+    service_id
+    quantity
+    created_at
+    updated_at
+    deleted_at
+
+bảng đặt lịch (bookings)
+    id
+    tenant_id
+    branch_id
+    customer_id
+    start_time
+    end_time
+    status (Trạng thái: PENDING - Chờ xác nhận, CONFIRMED - Đã xác nhận, COMPLETED - Đã hoàn thành, CANCELLED - Đã hủy, NO_SHOW - Khách không đến)
+    note
+    created_at
+    updated_at
+    deleted_at
+
+bảng chi tiết đặt lịch (booking_details)
+    id
+    booking_id
+    service_id
+    staff_id
+    created_at
+    updated_at
+    deleted_at
+
+bảng đánh giá phản hồi (customer_reviews)
+    id
+    tenant_id
+    branch_id
+    customer_id
+    booking_id
+    rating_stars
+    comment
+    created_at
+    updated_at
+    deleted_at
+
+bảng hóa đơn (invoices)
+    id
+    tenant_id
+    branch_id
+    booking_id
+    customer_id
+    staff_id
+    start_time
+    end_time
+    total_price
+    discount_amount
+    final_amount
+    payment_method
+    payment_status
+    status
+    image_transaction
+    note
+    created_at
+    updated_at
+    deleted_at
+    
+bảng hóa đơn chi tiết (invoice_items)
+    id
+    invoice_id
+    staff_id
+    service_id (Khóa ngoại liên kết sa_services, cho phép NULL)
+    inventory_id (Khóa ngoại liên kết sa_inventories, cho phép NULL)
+    service_package_id (Khóa ngoại liên kết sa_service_packages, cho phép NULL)
+    price
+    quantity
+    total_price
+    discount_amount
+    final_amount
+    employee_commission
+    created_at
+    updated_at
+    deleted_at
+
+bảng nhóm cấu hình hoa hồng (commission_templates)
+    id
+    tenant_id
+    name
+    description
+    created_at
+    updated_at
+    deleted_at
+
+bảng chi tiết cấu hình hoa hồng (commission_template_details)
+    id
+    template_id
+    apply_type
+    target_id
+    commission_type
+    commission_value
+    created_at
+    updated_at
+    deleted_at
+
+bảng ca làm việc / phân ca (employee_shifts)
+    id
+    tenant_id
+    branch_id
+    staff_id
+    work_date
+    shift_name
+    start_time
+    end_time
+    is_off
+    created_at
+    updated_at
+    deleted_at
+
+bảng tua làm việc (employee_daily_turns)
+    id
+    tenant_id
+    branch_id
+    staff_id
+    work_date
+    total_walkin_count
+    total_booked_count
+    total_customers_today
+    last_assigned_at
+    created_at
+    updated_at
+    deleted_at
+
+bảng điểm danh (employee_attendances)
+    id
+    tenant_id
+    branch_id
+    staff_id
+    work_date
+    check_in_at
+    check_out_at
+    work_status
+    late_minutes
+    over_time_minutes
+    note
+    created_at
+    updated_at
+    deleted_at
+
+bảng cấu hình lương (employee_salary_configs) chưa hoàn thiện
+    id
+    tenant_id
+    branch_id
+    staff_id
+    commission_template_id
+    base_salary
+    created_at
+    updated_at
+    deleted_at
+
+bảng ứng tiền (salary_advances)
+    id
+    tenant_id
+    branch_id
+    staff_id
+    advance_date
+    amount
+    status
+    note
+    created_at
+    updated_at
+    deleted_at
+
+bảng employee_monthly_payrolls (chưa hoàn thiện)
+    id
+    tenant_id
+    branch_id
+    staff_id
+    salary_period
+    base_salary
+    allowance
+    commission_amount
+    tip_amount
+    deduction_amount
+    final_salary
+    status
+    paid_at
+    created_at
+    updated_at
+    deleted_at
+
+bảng báo cáo doanh thu thực tế (daily_revenue_reports)
+    id
+    tenant_id
+    branch_id
+    work_date
+    total_revenue
+    total_cash
+    total_credit
+    total_transfer
+    status
+    created_at
+    updated_at
+    deleted_at
+
+bảng doanh thu nhân viên theo ngày (daily_employee_revenue)
+    id
+    tenant_id
+    branch_id
+    staff_id
+    work_date
+    total_revenue
+    total_bookings
+    total_customers
+    created_at
+    updated_at
+    deleted_at
+
+bảng doanh thu chi nhánh theo ngày (daily_branch_revenue)
+    id
+    tenant_id
+    branch_id
+    work_date
+    total_revenue
+    total_walkin_count
+    total_booked_count
+    total_customers_today
+    created_at
+    updated_at
+    deleted_at
+
+bảng chi phí trong tháng của từng chi nhánh (revenue_expenditures)
+    id
+    tenant_id
+    branch_id
+    transaction_date
+    revenue_expenditure_type
+    payment_type
+    category
+    amount
+    description
+    created_at
+    updated_at
+    deleted_at

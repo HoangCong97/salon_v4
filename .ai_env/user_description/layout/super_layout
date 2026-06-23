@@ -1,0 +1,123 @@
+# ĐỀ XUẤT THIẾT KẾ LAYOUT - SITE SUPER ADMIN (INTERNAL ADMIN)
+
+Tài liệu này chi tiết hóa cấu trúc Layout, lưới giao diện (Grid System), luồng điều hướng (Navigation Flow), và thiết kế giao diện (UI/UX Specification) dành cho trang quản trị hệ thống Super Admin (Site Nội Bộ).
+
+---
+
+## 📐 I. PHÂN BỐ BỐ CỤC CHUNG (GLOBAL LAYOUT GRID)
+
+Giao diện sử dụng cấu trúc lưới cố định kết hợp Scroll độc lập để tối ưu hóa không gian hiển thị trên màn hình PC/Laptop (Kích thước khuyên dùng từ 1280px trở lên).
+
+```
++-----------------------------------------------------------------------+
+|  LOGO  | Topbar (Search, Thông báo, Hồ sơ Admin, Trạng thái 2FA)     |
+| (64px) | Chiều cao: 70px, Cố định trên cùng, z-index: 40              |
++--------+--------------------------------------------------------------+
+|        |                                                              |
+|        | Vùng Nội Dung Chính (Main Content Area)                      |
+|        |                                                              |
+| Sidebar| - Tiêu đề trang & Breadcrumbs                                |
+|        | - Thanh lọc dữ liệu (Filters)                                |
+| Cố định| - Bảng dữ liệu / Biểu đồ báo cáo / Cấu hình                  |
+| 260px  |                                                              |
+| (Rộng) | - Cuộn dọc độc lập (Overflow-y: auto)                        |
+|        | - Padding chuẩn: 24px (tất cả các phía)                      |
+|        |                                                              |
+|        |                                                              |
++--------+--------------------------------------------------------------+
+```
+
+### Chi tiết kỹ thuật CSS Grid/Flexbox:
+- **Khung cha chính**: `display: flex; height: 100vh; overflow: hidden;`
+- **Sidebar**: `width: 260px; flex-shrink: 0; transition: width 0.2s;` (Khi thu gọn (collapsed) sẽ có `width: 68px;`).
+- **Khung nội dung (Main Box)**: `display: flex; flex-direction: column; flex-grow: 1; overflow: hidden;`
+- **Content Area**: `flex-grow: 1; overflow-y: auto; padding: 24px; background-color: var(--bg-system-gray);`
+
+---
+
+## 🗂️ II. CHI TIẾT CÁC THÀNH PHẦN LAYOUT (COMPONENTS SPECIFICATION)
+
+### 1. Sidebar (Thanh menu bên trái - Cố định)
+- **Thiết kế**: Nền tối (Dark Glassmorphism hoặc Slate/Charcoal HSL), nổi bật lên so với nội dung chính. Menu hỗ trợ accordion cho các mục con.
+- **Danh sách điều hướng**:
+  - **`Tổng quan` (Dashboard)**: Biểu đồ trực quan, chỉ số sức khỏe của toàn bộ hệ thống SaaS.
+  - **`Quản lý Tenant` (Salon Management)**: Danh sách salon, chi tiết chi nhánh, trạng thái hoạt động, khóa/mở khóa.
+  - **`Gói Dịch vụ & Hóa đơn` (Subscription & Billing)**: Thiết lập cấu hình giá, xem lịch sử thanh toán tiền gói dịch vụ của các salon.
+  - **`Cấu hình Hệ thống` (System Settings)**: Quản lý nhóm quyền (`sal_permissions`), cấu hình API bên thứ 3 (SMS Twilio, Brandname, VNPAY, MOMO).
+  - **`Nhật ký & Bảo mật` (Audit Logs & Security)**: Xem log hoạt động của người dùng hệ thống và log lỗi API.
+
+### 2. Topbar (Thanh công cụ phía trên)
+- **Thiết kế**: Nền trắng (Light Mode) hoặc xám đen nhẹ (Dark Mode), viền dưới mỏng (`border-b`).
+- **Các thành phần**:
+  - **Nút Toggle Sidebar**: Thu gọn/mở rộng thanh menu trái.
+  - **Hộp tìm kiếm toàn cục (Global Search)**:
+    - Cho phép tìm kiếm bằng từ khóa hoặc phím tắt (ví dụ: `Ctrl + K`).
+    - Tìm kiếm nhanh theo: Tên Salon, ID Tenant, Số điện thoại chủ salon, mã hóa đơn. Kết quả hiển thị dạng Popover phân nhóm.
+  - **Trạng thái kết nối Hệ thống**: Hiện chấm xanh chỉ thị kết nối Database/Redis đang hoạt động tốt.
+  - **Chuông Thông báo (Notifications)**: 
+    - Có chấm đỏ nếu có sự kiện chưa đọc.
+    - Hiển thị popover các sự kiện: *Có salon mới đăng ký chờ duyệt*, *Hóa đơn thanh toán của Salon A đang chờ xác nhận*, *Lỗi kết nối API bên thứ ba*.
+  - **Hồ sơ Admin (User Menu)**: Avatar, Tên admin, Email. Khi click hiển thị dropdown: Thiết lập tài khoản, Cài đặt bảo mật (2FA), Đăng xuất.
+
+### 3. Vùng Nội Dung Chính (Main Content Area)
+- **Cấu trúc phân cấp**:
+  1. **Page Header**: Tên trang (ví dụ: `Quản lý Tenant`) + Breadcrumbs dẫn đường (ví dụ: `Hệ thống > Tenant > Danh sách`).
+  2. **Action Bar**: Chứa các nút thao tác nhanh như `+ Thêm Salon Mới`, `Xuất Excel`, `Làm mới`.
+  3. **Filter Panel (Bảng bộ lọc)**: Thanh lọc co giãn, mặc định hiển thị bộ lọc cơ bản, hỗ trợ nút bấm mở rộng nâng cao.
+  4. **Data Content**: Lưới hiển thị dữ liệu (biểu đồ hoặc bảng).
+
+---
+
+## 🎨 III. BLUEPRINT CHO CÁC TRANG CHÍNH (PAGE LAYOUT BLUEPRINTS)
+
+### 1. Trang Dashboard Tổng Quan (Dashboard Layout)
+Tối ưu hiển thị dạng lưới bất đối xứng để nhấn mạnh các chỉ số doanh thu và trạng thái vận hành.
+- **Dòng 1: Thẻ chỉ số (KPI Metrics - 4 cột CSS Grid)**
+  - *Doanh thu tháng này (MRR)*: Số tiền thu được từ phí duy trì gói của các salon (kèm tỷ lệ tăng trưởng so với tháng trước).
+  - *Tổng số Tenant (Salon)*: Số lượng đang hoạt động / Tổng số trên hệ thống.
+  - *Tỷ lệ thành công API*: Chỉ số đo lường hiệu năng hệ thống (ví dụ: 99.98%).
+  - *Tổng lượt đặt lịch hẹn trong ngày*: Tổng số lịch hẹn được đặt trên toàn sàn.
+- **Dòng 2: Biểu đồ & Xu hướng (2 cột: 8/12 và 4/12)**
+  - *Cột lớn (8/12)*: Biểu đồ đường (Line Chart) biểu diễn Doanh thu MRR theo tháng và Biểu đồ cột (Bar Chart) lượng đăng ký salon mới.
+  - *Cột nhỏ (4/12)*: Biểu đồ tròn (Doughnut Chart) phân bố các gói subscription (Free, Basic, Premium) đang được sử dụng.
+- **Dòng 3: Sự kiện thời gian thực (2 cột: 6/12 và 6/12)**
+  - *Trái*: Bảng danh sách Salon vừa đăng ký mới (chờ duyệt).
+  - *Phải*: Nhật ký lỗi hệ thống nghiêm trọng cần xử lý (System Health Alert log).
+
+### 2. Trang Quản Lý Tenant (Tenant Management Layout)
+Tập trung vào bảng biểu và các bộ lọc tìm kiếm nâng cao.
+- **Thanh bộ lọc nâng cao (Advanced Filters Bar)**:
+  - Input tìm kiếm tên/mã/số điện thoại.
+  - Dropdown lọc theo Trạng thái (Đang hoạt động, Tạm khóa, Chờ duyệt).
+  - Dropdown lọc theo Gói dịch vụ (Free, Basic, Pro).
+  - Date Picker lọc theo ngày đăng ký.
+- **Bảng dữ liệu (Data Table)**:
+  - *Cấu trúc cột*: [ ] (Checkbox chọn nhiều) | ID (UUID v7 rút gọn) | Tên Salon | Chủ Sở Hữu | Gói Hiện Tại | Số Chi Nhánh | Ngày Đăng Ký | Trạng Thái (Badge màu) | Thao Tác.
+  - *Phân trang (Pagination)*: Nằm cố định góc dưới bên phải bảng, hỗ trợ chọn số lượng dòng trên trang (10, 20, 50, 100).
+- **Thanh hành động nhanh (Row Actions)**:
+  - `Xem chi tiết`: Mở ngăn kéo (Drawer) bên phải hiển thị chi tiết thông tin salon mà không cần chuyển trang.
+  - `Khóa tài khoản`: Mở modal xác nhận lý do khóa tài khoản salon.
+  - `Giả lập quyền (Impersonate)`: Đăng nhập trực tiếp vào hệ thống dưới quyền Admin của salon đó để hỗ trợ kỹ thuật.
+
+### 3. Trang Cấu Hình Tích Hợp (Third-party System Config Layout)
+Bố cục dạng thẻ phân tab (Tabbed Card Layout) để tránh quá tải thông tin.
+- **Các Tab chính**:
+  - Tab 1: Cổng thanh toán (VNPAY / MOMO / PayOS).
+  - Tab 2: Dịch vụ gửi tin nhắn SMS OTP & Zalo ZNS.
+  - Tab 3: Dịch vụ Email thông báo (SendGrid / Mailgun).
+  - Tab 4: Cấu hình lưu trữ đám mây (AWS S3 / Cloudinary).
+- **Bố cục trong mỗi Tab**:
+  - Cột trái (4/12): Mô tả dịch vụ, link tài liệu hướng dẫn và trạng thái kết nối.
+  - Cột phải (8/12): Form nhập API Keys, Client ID, Secret Keys có nút toggle ẩn/hiện mật khẩu bảo mật và nút `Kiểm tra kết nối` (Test Connection).
+
+---
+
+## 📱 IV. HƯỚNG DẪN THÍCH ỨNG (RESPONSIVE & ACCESSIBILITY RULES)
+
+Mặc dù đây là giao diện tối ưu cho máy tính (Desktop-first), giao diện vẫn cần tuân thủ các quy tắc co giãn:
+1. **Breakpoint co giãn**:
+   - Dưới `1200px`: Sidebar tự động thu gọn thành dạng chỉ hiển thị icon nhỏ (Collapsed Sidebar).
+   - Dưới `1024px`: Ẩn bớt các cột không quan trọng trong bảng dữ liệu (như ID UUID, Ngày đăng ký) và thay thế bằng nút mở rộng dòng (`+`).
+2. **Khả năng tiếp cận (Accessibility)**:
+   - Các nút hành động nguy hiểm (như Xóa Tenant, Khóa Salon) phải có màu đỏ (`var(--color-danger)`), kích hoạt Modal xác nhận 2 bước và yêu cầu nhập mã xác thực nếu cần thiết.
+   - Bảng dữ liệu phải có trạng thái rỗng (`Empty State`) hiển thị hình vẽ minh họa chuyên nghiệp khi không có kết quả tìm kiếm.

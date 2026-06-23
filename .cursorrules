@@ -1,0 +1,21 @@
+# AI Workspace Instructions - SaaS Salon App Monorepo
+
+Tài liệu này hướng dẫn AI Assistant hiểu nhanh dự án, tối ưu hóa token và tuân thủ các quy chuẩn thiết kế.
+
+## 📌 Hướng dẫn khởi đầu cho AI
+1. **Đọc tài liệu ngữ cảnh**: Trước khi thực hiện bất kỳ thay đổi nào, hãy xem tài liệu đầy đủ tại [.ai_env/README.md](file:///c:/Workspace/Web09_salon-app/.ai_env/README.md).
+2. **Không tự suy diễn**: Nếu nghiệp vụ chưa rõ ràng, hãy tham khảo các tệp tin trong [.ai_env/user_description/](file:///c:/Workspace/Web09_salon-app/.ai_env/user_description/) bao gồm `yêu cầu dự án`, `chức năng`, `tổ chức dữ liệu v2`, và `use case`.
+
+## 🛠️ Quy tắc lập trình cốt lõi
+1. **Cơ sở dữ liệu (Database)**:
+   - Sử dụng **Prisma ORM** từ package dùng chung `@salon/database`. Không khởi tạo lại PrismaClient mới.
+   - Tham khảo cấu hình Prisma tại [schema.prisma](file:///c:/Workspace/Web09_salon-app/packages/database/prisma/schema.prisma).
+2. **Chia sẻ Kiểu và Tiện ích (Shared Types & Utils)**:
+   - API types & DTOs: Sử dụng hoặc định nghĩa tại `@salon/shared-types` ([packages/shared-types](file:///c:/Workspace/Web09_salon-app/packages/shared-types)).
+   - Validators (Zod) và formatters: Sử dụng tại `@salon/shared-utils` ([packages/shared-utils](file:///c:/Workspace/Web09_salon-app/packages/shared-utils)).
+3. **Phát triển Backend (NestJS)**:
+   - Toàn bộ backend nằm tại [apps/backend-api](file:///c:/Workspace/Web09_salon-app/apps/backend-api). Tuân thủ cấu hình Module -> Controller -> Service.
+4. **Phát triển Frontend**:
+   - **Site Nội bộ (Super Admin)**: [apps/internal-admin](file:///c:/Workspace/Web09_salon-app/apps/internal-admin) (Vite + React SPA).
+   - **Site Tenant (POS/Staff/Employee)**: [apps/tenant-portal](file:///c:/Workspace/Web09_salon-app/apps/tenant-portal) (Vite + React SPA với Adaptive Layout).
+   - **Site Khách hàng (Booking)**: [apps/customer-booking](file:///c:/Workspace/Web09_salon-app/apps/customer-booking) (Next.js App Router để tối ưu hóa SEO).

@@ -1,0 +1,123 @@
+Tác nhân nhân viên employee (Thợ/Kỹ thuật viên)
+    - Quản lý công việc & Lịch hẹn cá nhân
+        - Nhận thông báo khi được gán thực hiện một dịch vụ mới cho khách
+        - Xem danh sách lịch hẹn cần làm trong ngày, tuần (dưới dạng Calendar cá nhân)
+        - Xem ghi chú, yêu cầu đặc biệt của khách hàng trước khi làm
+        - Cập nhật trạng thái công việc: Đang làm (In-progress), Đã hoàn thành (Done)
+    - Xem Hồ sơ & Lịch làm việc cá nhân
+        - Xem thông tin ca làm việc được phân công (Lịch trực ca tuần/tháng)
+        - Thực hiện check-in / check-out chấm công hàng ngày
+        - Theo dõi vị trí xoay tua hiện tại của mình trong ngày (Daily Turns)
+        - Xem hồ sơ cá nhân, lịch sử công việc đã thực hiện
+    - Doanh thu, Hoa hồng & Tiền lương
+        - Xem doanh số thực hiện và hoa hồng tạm tính thời gian thực trên từng dịch vụ đã làm
+        - Đăng ký yêu cầu tạm ứng lương (Salary Advance) gửi Quản lý/Admin duyệt
+        - Xem chi tiết bảng tính lương nhận hàng tháng sau khi đã chốt số liệu
+
+Tác nhân Thu ngân (cashier)
+    - [Kế thừa toàn bộ quyền của Nhân viên (Employee)]
+    - Quản lý Khách hàng & Tiếp đón
+        - Tra cứu thông tin khách hàng, hạng thẻ, tích điểm
+        - Đón tiếp và hỗ trợ khách hàng tạo lịch hẹn trực tiếp tại quầy (Walk-in)
+        - Xác nhận khách đã đến cửa hàng thực tế (Check-in) từ lịch đặt trực tuyến
+        - Xem danh sách lịch hẹn trong ngày tại chi nhánh
+    - Tạo Hóa đơn & Thu tiền
+        - Khởi tạo hóa đơn mới từ lịch hẹn đã hoàn thành hoặc khách mua lẻ trực tiếp
+        - Thêm các dịch vụ thực hiện, sản phẩm hoặc gói dịch vụ vào hóa đơn
+        - Gán nhân viên thực hiện (staff_id) tương ứng cho từng mặt hàng để tính hoa hồng
+        - Áp dụng các Voucher giảm giá, chương trình chiết khấu hoặc điểm tích lũy của khách
+        - Hướng dẫn khách chọn phương thức thanh toán (Tiền mặt, quẹt thẻ, chuyển khoản)
+        - Kiểm tra ảnh giao dịch chuyển khoản đối soát của khách hàng
+        - Xác nhận thanh toán thành công, in hóa đơn và bàn giao cho khách
+        - Thực hiện trừ số buổi còn lại của gói liệu trình tương ứng khi khách sử dụng thẻ dịch vụ
+    - Đối soát cuối ca
+        - Xem danh sách hóa đơn đã thu tiền hoặc hóa đơn hủy trong ca làm việc
+        - Xem báo cáo doanh thu thực thu của ca (tiền mặt, thẻ, chuyển khoản)
+        - Bàn giao số dư két tiền mặt cho ca tiếp theo
+
+Tác nhân quản lý manager
+    - [Kế thừa toàn bộ quyền của Thu ngân (Cashier) & Nhân viên (Employee)] (Chỉ áp dụng trong phạm vi chi nhánh được gán)
+    - Quản lý Nhân sự & Phân ca chi nhánh
+        - Xem danh sách nhân viên thuộc chi nhánh quản lý
+        - Theo dõi chi tiết chấm công, duyệt ngày nghỉ / đổi ca của nhân viên chi nhánh
+        - Xếp lịch làm việc & Phân ca kíp tuần/tháng cho nhân viên chi nhánh
+        - Giám sát, điều chỉnh lượt thợ xoay tua (Daily Turns) trong ngày
+    - Quản lý Dịch vụ & Sản phẩm chi nhánh
+        - Cập nhật thông tin dịch vụ, bảng giá của chi nhánh (nếu được Admin phân quyền)
+        - Kiểm kho sản phẩm chi tiết (xuất, nhập, tồn kho, kiểm hàng hư hỏng)
+        - Thiết lập mức cảnh báo hết hàng cho sản phẩm trong kho chi nhánh
+    - Điều phối Khách hàng & Lịch hẹn chi nhánh
+        - Xem lịch đặt hẹn toàn chi nhánh dưới dạng Calendar/Timeline
+        - Điều phối lịch hẹn: Đổi thợ, đổi giờ hẹn, xác nhận lịch hẹn của khách (chuyển PENDING sang CONFIRMED)
+        - Tiếp nhận phản hồi & Đọc đánh giá (reviews) của khách về chi nhánh
+    - Quản lý Thu chi & Tiền lương chi nhánh
+        - Duyệt tạm ứng lương cho nhân viên thuộc chi nhánh quản lý
+        - Ghi nhận các khoản chi phí vận hành hàng ngày của chi nhánh (tiền điện nước, chi phí phát sinh)
+        - Xem danh sách hóa đơn, đối soát doanh thu ngày của chi nhánh
+    - Báo cáo & Thống kê chi nhánh
+        - Xem Dashboard doanh thu chi nhánh (tiền mặt, thẻ, chuyển khoản)
+        - Xem báo cáo hiệu suất của từng nhân viên (doanh số thực hiện dịch vụ, doanh số bán sản phẩm)
+        - Thống kê dịch vụ/sản phẩm bán chạy nhất tại chi nhánh
+
+Tác nhân admin
+    - [Kế thừa toàn bộ quyền của Quản lý (Manager), Thu ngân (Cashier), và Nhân viên (Employee)] (Áp dụng trên TOÀN BỘ CÁC CHI NHÁNH thuộc chuỗi)
+    - Quản lý Chuỗi & Chi nhánh
+        - Thêm, sửa, cấu hình thông tin chuỗi salon và các chi nhánh mới
+        - Quản lý nhân viên toàn chuỗi, điều phối/luân chuyển nhân sự giữa các chi nhánh
+        - Thiết lập cài đặt phân quyền (Roles & Permissions) cho toàn hệ thống
+        - Theo dõi chấm công toàn chuỗi
+    - Cấu hình Danh mục Toàn cục
+        - Quản lý Menu dịch vụ chung cho toàn chuỗi
+        - Quản lý Kho sản phẩm tổng
+        - Thiết kế Gói Combo / Liệu trình bán trên toàn hệ thống
+    - Cơ chế Lương & Hoa hồng
+        - Cấu hình các nhóm cấu hình hoa hồng (commission_templates & details)
+        - Áp dụng cấu hình lương cứng, hoa hồng template cho từng nhân sự (sal_employee_salary_configs)
+    - Tính Lương & Chi phí vận hành
+        - Phê duyệt bảng tính lương tháng cho toàn bộ nhân viên (sal_employee_monthly_payrolls)
+        - Quản lý, đối soát tất cả chi phí vận hành các chi nhánh
+    - Marketing & Khuyến mãi
+        - Tạo & Quản lý Voucher dùng trên toàn chuỗi hoặc chi nhánh cụ thể
+        - Gửi Thông báo (Broadcast Notifications) đến app khách hàng
+        - Thiết lập các chiến dịch SMS Marketing
+    - Báo cáo & Chiến lược (Toàn bộ chi nhánh)
+        - Xem báo cáo so sánh doanh thu giữa các chi nhánh
+        - Phân tích xu hướng dịch vụ, hiệu suất toàn diện
+
+Tác nhân super admin (Tài khoản sàn SaaS - quản lý các Tenants)
+    - Quản lý Tenant
+        - Đăng ký, khởi tạo, quản lý Tenant mới (tài khoản admin)
+        - Kích hoạt / Tạm khóa Tenant
+        - Xóa Tenant (Soft/Hard Delete)
+    - Quản lý Gói dịch vụ
+        - Thiết lập gói dịch vụ phần mềm (Pricing Plans)
+        - Quản lý hóa đơn đăng ký/duy trì của Tenant
+    - Cấu hình Hệ thống & Dữ liệu Toàn cục
+        - Quản lý Danh mục Quyền (System Permissions)
+        - Bật/Tắt tính năng hệ thống (Feature Flags)
+    - Giám sát & Báo cáo Toàn sàn
+        - Dashboard Tổng quan: Xem tổng số Tenant hoạt động, tổng số user, tốc độ tăng trưởng
+        - Báo cáo Doanh thu Sàn: Doanh thu phí duy trì phần mềm từ các Tenant
+        - Giám sát tài nguyên hệ thống (Storage, băng thông, API call)
+    - Hỗ trợ Kỹ thuật & Bảo mật
+        - Hỗ trợ kỹ thuật từ xa (Remote Support)
+        - Giả lập quyền (Impersonation / Login As)
+        - Xem log hệ thống (Audit Logs)
+        - Gửi thông báo đến tất cả các Tenant
+
+Phân hệ dành cho khách hàng
+    - Quản lý Tài khoản & Thành viên
+        - Đăng ký tài khoản (qua số điện thoại/email), Đăng nhập hệ thống
+        - Quản lý hồ sơ cá nhân: Tên, số điện thoại, mật khẩu, ảnh đại diện
+        - Theo dõi điểm tích lũy, hạng thành viên hiện tại
+        - Xem danh sách gói liệu trình/thẻ dịch vụ đang sở hữu (số buổi còn lại, hạn dùng)
+    - Đặt lịch trực tuyến (Online Booking)
+        - Tìm kiếm và chọn chi nhánh gần nhất
+        - Lựa chọn một hoặc nhiều dịch vụ mong muốn thực hiện
+        - Lựa chọn nhân viên thực hiện yêu thích (hoặc chọn ngẫu nhiên)
+        - Chọn ngày và khung giờ còn trống khả dụng
+        - Nhập ghi chú yêu cầu riêng và bấm đặt lịch hẹn (Trạng thái ban đầu: PENDING - Chờ xác nhận)
+        - Nhận thông báo khi lịch hẹn được xác nhận (CONFIRMED) hoặc bị từ chối/hủy (CANCELLED)
+    - Lịch sử & Đánh giá
+        - Xem lịch sử tất cả các lịch đặt hẹn trước đây và hóa đơn tương ứng
+        - Đánh giá dịch vụ (Reviews): Gửi số sao đánh giá (1-5) và bình luận phản hồi chất lượng phục vụ của cửa hàng cũng như thái độ của nhân viên đối với lịch hẹn đã hoàn thành.

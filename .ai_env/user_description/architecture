@@ -1,0 +1,176 @@
+ĐỀ XUẤT CÔNG NGHỆ VÀ CẤU TRÚC THƯ MỤC V2 (REVISED)
+
+Tài liệu này đề xuất ngăn xếp công nghệ (Tech Stack) và cấu trúc thư mục tối ưu cho dự án SaaS Salon App Đa chi nhánh, đa tenant, đáp ứng các yêu cầu nghiệp vụ cụ thể từ tài liệu "yêu cầu dự án" và "chức năng", đồng thời nâng cấp giải pháp kiến trúc để phát triển lâu dài.
+
+============================================================
+I. PHÂN TÍCH VÀ ĐỀ XUẤT CÔNG NGHỆ (TECH STACK)
+============================================================
+
+1. Kiến trúc Monorepo & Quản lý package: pnpm Workspaces + Turborepo
+   - Tại sao chọn pnpm thay vì npm/yarn? 
+     + Tốc độ cài đặt package cực nhanh nhờ cơ chế hard link và content-addressable store.
+     + Tiết kiệm dung lượng ổ đĩa tối đa khi dùng monorepo.
+     + Tránh hiện tượng "phantom dependencies" (nhập nhầm thư viện chưa khai báo trong package.json).
+   - Tại sao chọn Turborepo?
+     + Tự động caching kết quả build, lint, test giúp tăng tốc độ build CI/CD.
+     + Dễ dàng quản lý các câu lệnh chạy song song giữa backend và frontend.
+
+2. Backend API Server: NestJS + TypeScript + Prisma ORM + PostgreSQL
+   - Thay vì Express.js ở đề xuất v1, NestJS là lựa chọn vượt trội ngay từ Phase 1 vì:
+     + Dự án có quy mô nghiệp vụ lớn (hơn 30 bảng cơ sở dữ liệu vật lý gồm phân quyền phức tạp RBAC, hóa đơn, chấm công, bảng lương, tính hoa hồng, báo cáo doanh thu). Express.js sẽ rất dễ bị rối và thiếu tính đồng nhất về cấu trúc thư mục khi mở rộng.
+     + NestJS cung cấp kiến trúc chuẩn hóa (Module, Controller, Service, Guard, Pipe, Interceptor) giúp mã nguồn dễ đọc, dễ kiểm thử và làm việc nhóm hiệu quả.
+     + Hỗ trợ sẵn Dependency Injection, xử lý Exception toàn cục và tích hợp sâu với TypeScript.
+   - Database & ORM:
+     + PostgreSQL: Phù hợp tuyệt đối với cấu trúc quan hệ phức tạp, hỗ trợ tốt UUID v7, range types (tstzrange) cho đặt lịch và chỉ mục tối ưu.
+     + Prisma ORM: Sinh tự động TypeScript types cực kỳ chuẩn xác từ schema.prisma, giúp đồng bộ hóa kiểu dữ liệu từ Database lên đến các ứng dụng Client, hỗ trợ Transaction cực mạnh (rất cần khi tạo hóa đơn hoặc chi tiết lịch hẹn).
+
+3. Frontend: Chia tách làm 3 Client Portals chuyên biệt dựa trên nghiệp vụ
+   Đúng theo phân vùng 3 Site trong tài liệu "yêu cầu dự án", chúng ta chia làm 3 ứng dụng:
+
+   a) apps/internal-admin (Site Nội bộ):
+      - Đối tượng: Super Admin (Chủ hệ thống SaaS).
+      - Công nghệ: Vite + React + TypeScript + Vanilla CSS (hoặc Tailwind CSS).
+      - Thiết kế: Tối ưu hoàn toàn cho máy tính (Desktop/Laptop), giao diện Dashboard quản lý các tenant đăng ký, gia hạn gói, cấu hình hệ thống, và xem báo cáo tổng thể SaaS.
+
+   b) apps/tenant-portal (Site Tenant):
+      - Đối tượng: Admin, Manager, Cashier (PC/Tablet) & Employee (Mobile).
+      - Công nghệ: Vite + React + TypeScript + React Router SPA + State Management (Zustand).
+      - Giải pháp Thiết kế Thích ứng (Adaptive Layout) trong 1 App duy nhất:
+        + Thay vì tách rời làm desktop-app và mobile-app riêng biệt làm phức tạp hóa deploy, ta gom chung thành một Tenant Portal duy nhất.
+        + Định tuyến thích ứng (Adaptive Routing): Dựa trên vai trò đăng nhập (Role trong JWT) và kích thước màn hình để render layout tương ứng:
+          * Nhóm Quản lý (Admin, Manager, Cashier): Hiển thị Layout Dashboard PC, tích hợp lịch đặt lưới (Scheduler Grid), POS thanh toán hóa đơn, cấu hình lương, báo cáo chi nhánh.
+          * Nhóm Nhân viên (Employee/Stylist): Hiển thị Layout Mobile Web (giống Native App với bottom navigation), giao diện tối giản để thợ xem lịch hẹn của mình, chấm công và xem hoa hồng hôm nay.
+        + Lợi ích: Dùng chung một cổng Auth, một bộ Services gọi API, một domain gốc của tenant (ví dụ: tenant-slug.salonapp.com), tiết kiệm thời gian tích hợp và deploy.
+
+   c) apps/customer-booking (Site Khách hàng):
+      - Đối tượng: Khách hàng đặt lịch (Tối ưu điện thoại).
+      - Công nghệ: Next.js (App Router) + TypeScript.
+      - Tại sao nên chọn Next.js thay vì Vite?
+        + Trang đặt lịch phía khách hàng cần tối ưu SEO rất cao để salon tiếp cận khách hàng tìm kiếm trên Google (SEO Google Maps, SEO dịch vụ làm tóc, v.v.). Next.js hỗ trợ SSR (Server-Side Rendering) giúp hiển thị nhanh và tối ưu SEO vượt trội.
+        + Khả năng chia sẻ link đặt lịch có Metadata Preview hiển thị đẹp trên Facebook, Zalo khi gửi cho khách.
+      - Thiết kế: Mobile-first hoàn chỉnh, mượt mà, thao tác đặt lịch nhanh chóng.
+
+============================================================
+II. CẤU TRÚC THƯ MỤC CHI TIẾT (MONOREPO)
+============================================================
+
+Web09_salon-app/
+├── apps/                               # Các ứng dụng chạy độc lập (Deploy riêng biệt)
+│   │
+│   ├── backend-api/                    # API Server chính (NestJS + TypeScript)
+│   │   ├── src/
+│   │   │   ├── app.module.ts           # Module gốc của ứng dụng
+│   │   │   ├── main.ts                 # Điểm khởi chạy ứng dụng (Port, Global Pipes, Filters)
+│   │   │   ├── common/                 # Middlewares, Guards, Pipes, Interceptors dùng chung
+│   │   │   │   ├── decorators/         # Custom decorators (ví dụ: @CurrentUser, @RequirePermissions)
+│   │   │   │   ├── filters/            # Xử lý exception toàn cục (HttpExceptionFilter)
+│   │   │   │   ├── guards/             # Lớp bảo vệ xác thực (AuthGuard) và phân quyền (PermissionsGuard)
+│   │   │   │   ├── interceptors/       # Biến đổi dữ liệu trả về, logging (TransformInterceptor)
+│   │   │   │   └── middlewares/        # Định danh Tenant từ Request Header/Subdomain (TenantResolverMiddleware)
+│   │   │   └── modules/                # Modules nghiệp vụ (Domain-driven modules)
+│   │   │       ├── auth/               # Xác thực người dùng & khách hàng
+│   │   │       ├── tenants/            # Quản lý thông tin đăng ký Tenant (SaaS)
+│   │   │       ├── branches/           # Quản lý các chi nhánh trực thuộc tenant
+│   │   │       ├── users/              # Quản lý nhân viên, phân vai trò & quyền
+│   │   │       ├── customers/          # Quản lý thông tin khách hàng & điểm tích lũy
+│   │   │       ├── services/           # Quản lý danh mục dịch vụ, combo, gói sản phẩm
+│   │   │       ├── inventories/        # Quản lý kho sản phẩm, nhập xuất hàng hóa
+│   │   │       ├── bookings/           # Xử lý đặt lịch, kiểm tra trùng lịch nhân viên
+│   │   │       ├── invoices/           # Tạo hóa đơn thanh toán, POS checkout, tính hoa hồng trực tiếp
+│   │   │       ├── schedules/          # Xử lý ca làm việc, chấm công, tua làm việc hàng ngày
+│   │   │       ├── payrolls/           # Cấu hình lương cứng, hoa hồng và tính bảng lương hàng tháng
+│   │   │       └── reports/            # Tính toán báo cáo doanh thu ngày, chi phí
+│   │   ├── prisma/                     # Định nghĩa cơ sở dữ liệu Prisma
+│   │   │   ├── schema.prisma           # File schema database tập trung
+│   │   │   └── migrations/             # Lịch sử các lần thay đổi database
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   ├── internal-admin/                 # Site Nội Bộ: Super Admin Portal (Vite + React)
+│   │   ├── src/
+│   │   │   ├── assets/                 # Fonts, Logo hệ thống, Icons
+│   │   │   ├── components/             # UI Components dùng chung (Sidebar, Navbar, StatsCard...)
+│   │   │   ├── pages/                  # Các màn hình (Tenants, Subscriptions, GlobalReports, SystemSettings)
+│   │   │   ├── services/               # Các hàm gọi API tới backend-api
+│   │   │   └── main.tsx
+│   │   ├── package.json
+│   │   └── vite.config.ts
+│   │
+│   ├── tenant-portal/                  # Site Tenant: Giao diện thích ứng (Vite + React)
+│   │   ├── src/
+│   │   │   ├── assets/
+│   │   │   ├── components/
+│   │   │   │   ├── desktop/            # UI chỉ dùng trên PC (Lưới lịch hẹn, Giao diện bán hàng POS...)
+│   │   │   │   ├── mobile/             # UI chỉ dùng trên điện thoại (Thẻ lịch hẹn thợ, Nút chấm công...)
+│   │   │   │   └── shared/             # UI dùng chung cho cả hai (Button, Avatar, Badge, Input...)
+│   │   │   ├── layouts/
+│   │   │   │   ├── DesktopLayout.tsx   # Layout Dashboard PC (Sidebar bên trái)
+│   │   │   │   └── MobileLayout.tsx    # Layout Mobile App (Bottom Navigation Bar)
+│   │   │   ├── pages/
+│   │   │   │   ├── desktop/            # Các màn hình cho Admin/Manager/Cashier
+│   │   │   │   │   ├── Dashboard.tsx
+│   │   │   │   │   ├── POS.tsx
+│   │   │   │   │   ├── StaffManagement.tsx
+│   │   │   │   │   └── Reports.tsx
+│   │   │   │   └── mobile/             # Các màn hình cho Nhân viên (Employee)
+│   │   │   │       ├── Schedule.tsx
+│   │   │   │       ├── Profile.tsx
+│   │   │   │       └── ShiftTasks.tsx
+│   │   │   ├── services/               # Bộ API client dùng chung cho toàn bộ nhân sự tenant
+│   │   │   ├── store/                  # Quản lý state đăng nhập, chi nhánh hiện tại (Zustand)
+│   │   │   ├── routes/                 # Định tuyến thích ứng dựa trên Role và Screen Size
+│   │   │   └── main.tsx
+│   │   ├── package.json
+│   │   └── vite.config.ts
+│   │
+│   └── customer-booking/               # Site Khách Hàng: Đặt lịch trực tuyến (Next.js App Router)
+│       ├── src/
+│       │   ├── app/
+│       │   │   ├── layout.tsx
+│       │   │   ├── page.tsx                # Trang chủ giới thiệu chung
+│       │   │   └── [tenant_slug]/          # Router động nhận diện từng salon qua URL
+│       │   │       ├── page.tsx            # Trang chủ của Salon đó (Hiển thị thông tin, dịch vụ)
+│       │   │       ├── booking/            # Quy trình đặt lịch các bước
+│       │   │       └── profile/            # Trang cá nhân, lịch sử đặt, điểm tích lũy
+│       │   ├── components/                 # Các UI Component tối ưu trên di động
+│       │   ├── services/                   # Các hàm gọi API tới backend-api
+│       │   └── store/                      # Quản lý giỏ hàng dịch vụ đặt lịch
+│       ├── package.json
+│       └── next.config.js
+│
+├── packages/                           # Thư viện dùng chung giữa các dự án trong Monorepo
+│   │
+│   ├── database/                       # Gói quản lý Database Client dùng chung
+│   │   ├── src/
+│   │   │   └── index.ts                # Export PrismaClient dùng chung cho API và Script
+│   │   ├── seed.ts                     # Script seed dữ liệu khởi tạo hệ thống (Vai trò, quyền mặc định)
+│   │   └── package.json
+│   │
+│   ├── shared-types/                   # Định nghĩa các TypeScript Types / Interfaces chung
+│   │   ├── src/
+│   │   │   ├── index.ts
+│   │   │   ├── api.types.ts            # Kiểu dữ liệu request/response của API
+│   │   │   └── model.types.ts          # Các kiểu thực thể mở rộng từ cơ sở dữ liệu
+│   │   └── package.json
+│   │
+│   └── shared-utils/                   # Các hàm tiện ích dùng chung
+│       ├── src/
+│       │   ├── index.ts
+│       │   ├── format.ts               # Hàm format tiền VND, thời gian tiếng Việt, phần trăm hoa hồng
+│       │   └── validation.ts           # Schema validation dùng chung (Zod) cho đăng nhập, đặt lịch
+│       └── package.json
+│
+├── user_description/                   # Thư mục chứa tài liệu mô tả nghiệp vụ và cấu trúc
+│   ├── chức năng
+│   ├── tổ chức dữ liệu
+│   ├── tổ chức dữ liệu v2
+│   ├── use case
+│   ├── yêu cầu dự án
+│   ├── đề xuất công nghệ và cấu trúc thư mục
+│   └── đề xuất công nghệ và cấu trúc thư mục v2
+│
+├── schema.sql                          # Bản thiết kế SQL gốc
+├── package.json                        # Cấu hình workspace monorepo gốc
+├── pnpm-workspace.yaml                 # Định nghĩa workspace của pnpm
+├── turbo.json                          # Cấu hình Turborepo
+└── README.md

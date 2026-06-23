@@ -1,0 +1,157 @@
+# 🤖 CẨM NANG LẬP TRÌNH AI (AI PROJECT CONTEXT & INSTRUCTIONS)
+
+Tài liệu này đóng vai trò là "bộ nhớ dự án" giúp AI Assistant hiểu nhanh nghiệp vụ, tiết kiệm token, và tuân thủ các quy tắc phát triển phần mềm của hệ thống SaaS Salon App Đa chi nhánh, đa tenant này.
+
+---
+
+## 📌 I. TỔNG QUAN DỰ ÁN (PROJECT OVERVIEW)
+
+Dự án là hệ thống **SaaS Salon App Đa chi nhánh & Đa tenant (SaaS Multi-tenant, Multi-branch Salon App)** cung cấp giải pháp vận hành, đặt lịch hẹn trực tuyến, quản lý nhân viên, chấm công, hóa đơn/thanh toán POS, tính hoa hồng và bảng lương cho các salon.
+
+### Phân vùng 3 Giao diện Gốc (3 Frontends):
+1. **Site Nội Bộ (Super Admin Portal)**: Giao diện tối ưu máy tính dành cho Admin tổng để quản lý các Salon (Tenants), cấp giấy phép sử dụng và theo dõi báo cáo doanh thu toàn hệ thống.
+2. **Site Tenant (Salon Portal)**: 
+   - **Giao diện quản trị (PC/Tablet)**: Dành cho Admin, Manager, Cashier thực hiện POS thanh toán, xem lưới lịch biểu đặt lịch hẹn, quản lý kho hàng và cấu hình hoa hồng/lương.
+   - **Giao diện nhân viên (Mobile Web)**: Dành cho Employee (Thợ chính/phụ) xem lịch hẹn được phân công, thực hiện công việc, chấm công và xem hoa hồng cá nhân hàng ngày.
+3. **Site Khách Hàng (Customer Booking Portal)**: Giao diện Mobile-first chạy trên Next.js giúp khách hàng tìm kiếm salon, xem dịch vụ/bảng giá, đặt lịch và đánh giá phản hồi.
+
+---
+
+## 📂 II. KIẾN TRÚC THƯ MỤC (MONOREPO DIRECTORY MAP)
+
+Dự án được quản lý dưới dạng Monorepo sử dụng **pnpm Workspaces** và **Turborepo** để tối ưu hóa việc chia sẻ code giữa backend và frontend.
+
+```
+Web09_salon-app/
+├── apps/                               # Các dự án chạy độc lập
+│   ├── backend-api/                    # REST API Server chính (NestJS + TypeScript)
+│   │   ├── src/common/                 # Middleware phân giải Tenant, Guards (Auth, RBAC)
+│   │   └── src/modules/                # Các mô-đun nghiệp vụ độc lập
+│   ├── internal-admin/                 # Site Nội Bộ (Vite + React SPA cho Super Admin)
+│   ├── tenant-portal/                  # Site Tenant (Vite + React SPA thích ứng PC & Mobile)
+│   └── customer-booking/               # Site Khách Hàng (Next.js App Router tối ưu SEO)
+│
+├── packages/                           # Thư viện chia sẻ dùng chung
+│   ├── database/                       # Prisma Schema và PrismaClient tập trung
+│   ├── shared-types/                   # TypeScript interfaces, DTOs chung của API
+│   └── shared-utils/                   # Hàm helper format và Zod validation schemas
+│
+├── .ai_env/                             # Môi trường lưu trữ nghiệp vụ & cấu trúc AI
+│   └── user_description/               # Nghiệp vụ dự án gốc
+└── schema.sql                          # Bản thiết kế database vật lý gốc của Postgres
+```
+
+---
+
+## ⚙️ III. NGĂN XẾP CÔNG NGHỆ (TECH STACK)
+
+- **Backend Framework**: NestJS (TypeScript).
+- **Frontend Frameworks**:
+  - Vite + React + TypeScript (cho `internal-admin` và `tenant-portal`).
+  - Next.js App Router (cho `customer-booking`).
+- **Database & ORM**: PostgreSQL + Prisma ORM.
+- **Xác thực & Phân quyền**: JWT (Access Token + Refresh Token), RBAC (Role-Based Access Control) thông qua Guards.
+- **Phân tách Tenant (Tenant Isolation)**: Phân tách logic (Logical Separation) bằng cách đính kèm cột `tenant_id` và `branch_id` ở tất cả bảng giao dịch.
+
+---
+
+## 🔒 IV. QUY TẮC PHÂN TÁCH TENANT (TENANT ISOLATION RULES)
+
+> [!IMPORTANT]
+> Đây là dự án SaaS đa tenant, tính bảo mật dữ liệu giữa các salon là ưu tiên tối thượng. AI cần tuân thủ nghiêm ngặt các quy tắc sau:
+
+1. **Xác định Tenant**:
+   - Mọi request gửi tới `backend-api` phải được middleware phân giải `tenant_id` từ **Request Header** (`X-Tenant-ID`) hoặc trích xuất từ **subdomain** của URL.
+   - Khi đã đăng nhập, `tenant_id` phải được giải mã từ JWT token của người dùng.
+2. **Truy vấn Database**:
+   - Tất cả các câu lệnh truy vấn dữ liệu (SELECT, UPDATE, DELETE) đối với các bảng có liên kết tenant **bắt buộc phải bao gồm điều kiện lọc `tenant_id`**.
+   - **Ví dụ**:
+     ```typescript
+     // SAI ❌: Truy vấn không kiểm soát tenant
+     prisma.service.findMany({ where: { branchId } });
+
+     // ĐÚNG ✅: Luôn luôn có tenantId
+     prisma.service.findMany({ where: { tenantId, branchId } });
+     ```
+3. **Soft Delete (Xóa tạm)**:
+   - Tất cả các bảng dữ liệu đều sử dụng cơ chế soft delete (cột `deleted_at`).
+   - Mọi câu lệnh SELECT thông thường phải đi kèm điều kiện `deletedAt: null`.
+
+---
+
+## 💻 V. QUY TẮC LẬP TRÌNH DÀNH CHO AI (AI CODING RULES)
+
+### 1. Database & Prisma
+- Prisma Schema tập trung nằm tại [packages/database/prisma/schema.prisma](file:///c:/Workspace/Web09_salon-app/packages/database/prisma/schema.prisma).
+- **Tuyệt đối không** import `@prisma/client` trực tiếp trong code ứng dụng khác rồi tạo instance mới. Hãy import và sử dụng instance `prisma` xuất khẩu từ thư viện `@salon/database`.
+- **Ví dụ**:
+  ```typescript
+  import { prisma } from '@salon/database';
+  ```
+
+### 2. Định nghĩa Dữ liệu & Types
+- Khi viết các tham số API Request, API Response, DTOs hoặc Interfaces, hãy đặt chúng trong `@salon/shared-types`.
+- Điều này đảm bảo khi Backend thay đổi trường dữ liệu, Frontend sẽ lập tức báo lỗi TypeScript compile, tránh việc API không khớp.
+
+### 3. Tiện ích & Định dạng (Utils)
+- Không viết lại các hàm định dạng ngày tháng hoặc tiền tệ ở từng ứng dụng.
+- Sử dụng hàm `formatCurrencyVND` và `formatDateVN` có sẵn tại `@salon/shared-utils`.
+
+### 4. Cấu trúc Module của NestJS (Backend)
+- Mỗi tính năng nghiệp vụ lớn cần có Module riêng chứa:
+  - `*.module.ts` (Khai báo module)
+  - `*.controller.ts` (Routing, xử lý HTTP request)
+  - `*.service.ts` (Logic nghiệp vụ và tương tác database)
+  - `dto/*.dto.ts` (Định nghĩa dữ liệu đầu vào)
+- Không viết logic nghiệp vụ trực tiếp trong Controller. Controller chỉ làm nhiệm vụ nhận, validates đầu vào và trả về output.
+- **Chuẩn hóa dữ liệu đầu ra (API Response)**: Tất cả các endpoint của Controller bắt buộc phải trả về kiểu cấu trúc `ApiResponse<T>` từ `@salon/shared-types` để Frontend đồng bộ xử lý.
+- **Xác thực và Phân quyền (Auth & RBAC)**:
+  - Sử dụng decorator `@CurrentUser()` (đã khai báo trong `common/decorators`) để lấy thông tin session của người dùng đang đăng nhập (`UserSession`).
+  - Sử dụng decorator `@RequirePermissions('permission.slug')` kết hợp với `PermissionsGuard` để kiểm tra phân quyền người dùng trước khi vào Controller.
+- **Truyền Ngữ cảnh Tenant (Tenant Context Propagation)**:
+  - Controller có trách nhiệm lấy `tenantId` và `branchId` từ `UserSession` (lấy qua `@CurrentUser()`) và truyền trực tiếp vào các đối số của Service.
+  - **Ví dụ**:
+    ```typescript
+    @Get()
+    @RequirePermissions('booking.view')
+    async getBookings(@CurrentUser() session: UserSession) {
+      const bookings = await this.bookingService.findAllByTenant(session.tenantId);
+      return { success: true, data: bookings };
+    }
+    ```
+
+---
+
+## 🔌 VI. BẢN ĐỒ CỔNG MẠNG (PORTS MAP)
+
+Dưới đây là cấu hình cổng phát triển cục bộ mặc định:
+
+| Ứng dụng | Cổng (Port) | Công nghệ | Đối tượng sử dụng |
+| :--- | :---: | :--- | :--- |
+| **`backend-api`** | `3000` | NestJS (API) | API Server dùng chung |
+| **`internal-admin`** | `3001` | Vite + React SPA | Super Admin |
+| **`tenant-portal`** | `3002` | Vite + React SPA | Admin, Manager, Cashier, Employee |
+| **`customer-booking`** | `3003` | Next.js App Router | Khách hàng vãng lai / đặt lịch |
+
+---
+
+## ⚡ VII. CÁC CÂU LỆNH VẬN HÀNH (COMMANDS CHEAT SHEET)
+
+Sử dụng các câu lệnh sau từ thư mục gốc của monorepo:
+
+- **Cài đặt thư viện**:
+  ```bash
+  npx pnpm install
+  ```
+- **Chạy chế độ phát triển (Tất cả ứng dụng chạy song song)**:
+  ```bash
+  npx pnpm dev
+  ```
+- **Biên dịch toàn bộ dự án**:
+  ```bash
+  npx pnpm build
+  ```
+- **Đồng bộ hóa/Tạo Prisma Client sau khi sửa schema**:
+  ```bash
+  npx pnpm --filter @salon/database db:generate
+  ```

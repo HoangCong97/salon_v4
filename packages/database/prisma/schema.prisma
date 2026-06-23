@@ -1,0 +1,752 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model SaasPlan {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String    @db.VarChar(255)
+  code        String    @unique @db.VarChar(50)
+  price       Decimal   @default(0) @db.Decimal(15, 0)
+  maxBranches Int       @default(1) @map("max_branches")
+  maxStaff    Int       @default(5) @map("max_staff")
+  features    String[]  @db.VarChar(255)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenants     Tenant[]
+  invoices    SaasInvoice[]
+
+  @@map("sal_saas_plans")
+}
+
+model SaasInvoice {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  planId        String?   @map("plan_id") @db.Uuid
+  invoiceNumber String    @unique @map("invoice_number") @db.VarChar(100)
+  amount        Decimal   @default(0) @db.Decimal(15, 0)
+  paymentMethod String?   @map("payment_method") @db.VarChar(100)
+  paymentStatus String    @default("PENDING") @map("payment_status") @db.VarChar(50)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  plan          SaasPlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
+
+  @@map("sal_saas_invoices")
+}
+
+model Tenant {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String    @db.VarChar(255)
+  ownerName String?   @map("owner_name") @db.VarChar(255)
+  phone     String?   @db.VarChar(50)
+  email     String?   @db.VarChar(255)
+  address   String?   @db.Text
+  status    String    @default("ACTIVE") @db.VarChar(50)
+  planId    String?   @map("plan_id") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+
+  plan                SaasPlan?                  @relation(fields: [planId], references: [id], onDelete: SetNull)
+  branches            Branch[]
+  roles               Role[]
+  users               User[]
+  customers           Customer[]
+  customerPoints      CustomerPoint[]
+  services            Service[]
+  inventories         Inventory[]
+  servicePackages     ServicePackage[]
+  purchasedPackages   CustomerPurchasedPackage[]
+  packageUsageHistory PackageUsageHistory[]
+  bookings            Booking[]
+  reviews             CustomerReview[]
+  invoices            Invoice[]
+  commissionTemplates CommissionTemplate[]
+  employeeShifts      EmployeeShift[]
+  employeeDailyTurns  EmployeeDailyTurn[]
+  employeeAttendances EmployeeAttendance[]
+  salaryConfigs       EmployeeSalaryConfig[]
+  salaryAdvances      SalaryAdvance[]
+  monthlyPayrolls     EmployeeMonthlyPayroll[]
+  dailyRevenueReports DailyRevenueReport[]
+  dailyEmployeeRev    DailyEmployeeRevenue[]
+  dailyBranchRev      DailyBranchRevenue[]
+  expenditures        RevenueExpenditure[]
+  saasInvoices        SaasInvoice[]
+
+  @@map("sal_tenants")
+}
+
+model Branch {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  name      String    @db.VarChar(255)
+  phone     String?   @db.VarChar(50)
+  email     String?   @db.VarChar(255)
+  address   String?
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant              Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userBranches        UserBranch[]
+  customers           Customer[]
+  customerPoints      CustomerPoint[]
+  services            Service[]
+  inventories         Inventory[]
+  servicePackages     ServicePackage[]
+  purchasedPackages   CustomerPurchasedPackage[]
+  packageUsageHistory PackageUsageHistory[]
+  bookings            Booking[]
+  reviews             CustomerReview[]
+  invoices            Invoice[]
+  employeeShifts      EmployeeShift[]
+  employeeDailyTurns  EmployeeDailyTurn[]
+  employeeAttendances EmployeeAttendance[]
+  salaryConfigs       EmployeeSalaryConfig[]
+  salaryAdvances      SalaryAdvance[]
+  monthlyPayrolls     EmployeeMonthlyPayroll[]
+  dailyRevenueReports DailyRevenueReport[]
+  dailyEmployeeRev    DailyEmployeeRevenue[]
+  dailyBranchRev      DailyBranchRevenue[]
+  expenditures        RevenueExpenditure[]
+
+  @@map("sal_branches")
+}
+
+model Role {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  name        String    @db.VarChar(100)
+  description String?
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users       User[]
+  permissions RolePermission[]
+
+  @@map("sal_roles")
+}
+
+model Permission {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug        String    @db.VarChar(100)
+  groupName   String    @map("group_name") @db.VarChar(100)
+  name        String    @db.VarChar(100)
+  description String?
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  rolePermissions RolePermission[]
+
+  @@map("sal_permissions")
+}
+
+model RolePermission {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  roleId       String   @map("role_id") @db.Uuid
+  permissionId String   @map("permission_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId], map: "uq_sal_role_permissions_link")
+  @@map("sal_role_permissions")
+}
+
+model User {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  roleId     String?   @map("role_id") @db.Uuid
+  name       String    @db.VarChar(255)
+  email      String    @db.VarChar(255)
+  password   String    @db.VarChar(255)
+  phone      String?   @db.VarChar(50)
+  sex        String?   @db.VarChar(10)
+  avatar     String?
+  baseSalary Decimal   @default(0) @map("base_salary") @db.Decimal(15, 0)
+  status     String    @default("ACTIVE") @db.VarChar(50)
+  note       String?
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant          Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  role            Role?                  @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  userBranches    UserBranch[]
+  settings        UserSetting[]
+  bookingDetails  BookingDetail[]
+  invoices        Invoice[]
+  invoiceItems    InvoiceItem[]
+  shifts          EmployeeShift[]
+  dailyTurns      EmployeeDailyTurn[]
+  attendances     EmployeeAttendance[]
+  salaryConfigs   EmployeeSalaryConfig[]
+  salaryAdvances  SalaryAdvance[]
+  monthlyPayrolls EmployeeMonthlyPayroll[]
+  dailyEmployeeRev DailyEmployeeRevenue[]
+
+  @@map("sal_users")
+}
+
+model UserBranch {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  branchId  String    @map("branch_id") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@map("sal_user_branches")
+}
+
+model UserSetting {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String    @map("user_id") @db.Uuid
+  theme              String    @default("dark") @db.VarChar(50)
+  language           String    @default("vi") @db.VarChar(10)
+  timezone           String    @default("Asia/Ho_Chi_Minh") @db.VarChar(100)
+  receiveNotification Boolean   @default(true) @map("receive_notification")
+  receiveSms         Boolean   @default(false) @map("receive_sms")
+  receiveEmail       Boolean   @default(false) @map("receive_email")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt          DateTime? @map("deleted_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sal_user_settings")
+}
+
+model Customer {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String    @map("tenant_id") @db.Uuid
+  branchId         String?   @map("branch_id") @db.Uuid
+  name             String    @db.VarChar(255)
+  phone            String?   @db.VarChar(50)
+  email            String?   @db.VarChar(255)
+  password         String?   @db.VarChar(255)
+  credibilityScore Int       @default(100) @map("credibility_score")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant            Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch            Branch?                    @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  points            CustomerPoint[]
+  purchasedPackages CustomerPurchasedPackage[]
+  packageUsage      PackageUsageHistory[]
+  bookings          Booking[]
+  reviews           CustomerReview[]
+  invoices          Invoice[]
+
+  @@map("sal_customers")
+}
+
+model CustomerPoint {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  branchId   String?   @map("branch_id") @db.Uuid
+  customerId String    @map("customer_id") @db.Uuid
+  point      Int       @default(0)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch   Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("sal_customer_points")
+}
+
+model Service {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String    @map("tenant_id") @db.Uuid
+  branchId        String?   @map("branch_id") @db.Uuid
+  name            String    @db.VarChar(255)
+  serviceCategory String?   @map("service_category") @db.VarChar(100)
+  price           Decimal   @default(0) @db.Decimal(15, 0)
+  discountPrice   Decimal?  @default(0) @map("discount_price") @db.Decimal(15, 0)
+  duration        Int?      // In minutes
+  imageUrl        String?   @map("image_url")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant                Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch                Branch?                 @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  packageDetails        ServicePackageDetail[]
+  purchasedPackageUsage PackageUsageHistory[]
+  bookingDetails        BookingDetail[]
+
+  @@map("sal_services")
+}
+
+model Inventory {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  branchId      String?   @map("branch_id") @db.Uuid
+  name          String    @db.VarChar(255)
+  costPrice     Decimal   @default(0) @map("cost_price") @db.Decimal(15, 0)
+  sellPrice     Decimal   @default(0) @map("sell_price") @db.Decimal(15, 0)
+  quantity      Int       @default(0)
+  discountPrice Decimal?  @default(0) @map("discount_price") @db.Decimal(15, 0)
+  imageUrl      String?   @map("image_url")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  @@map("sal_inventories")
+}
+
+model ServicePackage {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  branchId      String?   @map("branch_id") @db.Uuid
+  name          String    @db.VarChar(255)
+  description   String?
+  price         Decimal   @default(0) @db.Decimal(15, 0)
+  discountPrice Decimal?  @default(0) @map("discount_price") @db.Decimal(15, 0)
+  duration      Int?      // Expiration period in days
+  imageUrl      String?   @map("image_url")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant            Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch            Branch?                    @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  details           ServicePackageDetail[]
+  purchasedPackages CustomerPurchasedPackage[]
+
+  @@map("sal_service_packages")
+}
+
+model ServicePackageDetail {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  servicePackageId String    @map("service_package_id") @db.Uuid
+  serviceId        String    @map("service_id") @db.Uuid
+  quantity         Int       @default(1)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz
+
+  package ServicePackage @relation(fields: [servicePackageId], references: [id], onDelete: Cascade)
+  service Service        @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@map("sal_service_package_details")
+}
+
+model CustomerPurchasedPackage {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String    @map("tenant_id") @db.Uuid
+  branchId         String?   @map("branch_id") @db.Uuid
+  customerId       String    @map("customer_id") @db.Uuid
+  servicePackageId String    @map("service_package_id") @db.Uuid
+  quantity         Int       @default(0)
+  usedQuantity     Int       @default(0) @map("used_quantity")
+  expiryDate       DateTime? @map("expiry_date") @db.Timestamptz
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant       Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch       Branch?        @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  customer     Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  package      ServicePackage @relation(fields: [servicePackageId], references: [id], onDelete: Cascade)
+  usages       PackageUsageHistory[]
+
+  @@map("sal_customer_purchased_packages")
+}
+
+model PackageUsageHistory {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  branchId   String?   @map("branch_id") @db.Uuid
+  customerId String    @map("customer_id") @db.Uuid
+  packageId  String    @map("package_id") @db.Uuid
+  serviceId  String    @map("service_id") @db.Uuid
+  quantity   Int       @default(1)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant   Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch   Branch?                  @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  customer Customer                 @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  purchase CustomerPurchasedPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  service  Service                  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@map("sal_package_usage_history")
+}
+
+model Booking {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  branchId   String    @map("branch_id") @db.Uuid
+  customerId String?   @map("customer_id") @db.Uuid
+  startTime  DateTime  @map("start_time") @db.Timestamptz
+  endTime    DateTime  @map("end_time") @db.Timestamptz
+  status     String    @default("PENDING") @db.VarChar(50)
+  note       String?
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  customer       Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  bookingDetails BookingDetail[]
+  reviews        CustomerReview[]
+  invoices       Invoice[]
+
+  @@map("sal_bookings")
+}
+
+model BookingDetail {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId String    @map("booking_id") @db.Uuid
+  serviceId String    @map("service_id") @db.Uuid
+  staffId   String?   @map("staff_id") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+
+  booking Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  service Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  staff   User?    @relation(fields: [staffId], references: [id], onDelete: SetNull)
+
+  @@map("sal_booking_details")
+}
+
+model CustomerReview {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  branchId    String?   @map("branch_id") @db.Uuid
+  customerId  String    @map("customer_id") @db.Uuid
+  bookingId   String?   @map("booking_id") @db.Uuid
+  ratingStars Int       @map("rating_stars")
+  comment     String?
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch   Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  booking  Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@map("sal_customer_reviews")
+}
+
+model Invoice {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId       String    @map("tenant_id") @db.Uuid
+  branchId       String    @map("branch_id") @db.Uuid
+  bookingId      String?   @map("booking_id") @db.Uuid
+  customerId     String?   @map("customer_id") @db.Uuid
+  staffId        String?   @map("staff_id") @db.Uuid
+  startTime      DateTime? @map("start_time") @db.Timestamptz
+  endTime        DateTime? @map("end_time") @db.Timestamptz
+  totalPrice     Decimal   @default(0) @map("total_price") @db.Decimal(15, 0)
+  discountAmount Decimal   @default(0) @map("discount_amount") @db.Decimal(15, 0)
+  finalAmount    Decimal   @default(0) @map("final_amount") @db.Decimal(15, 0)
+  paymentMethod  String    @default("CASH") @map("payment_method") @db.VarChar(50)
+  paymentStatus  String    @default("UNPAID") @map("payment_status") @db.VarChar(50)
+  status         String    @default("COMPLETED") @db.VarChar(50)
+  imageTransaction String? @map("image_transaction")
+  note           String?
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch       Branch        @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  booking      Booking?      @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  customer     Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  cashier      User?         @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  items        InvoiceItem[]
+
+  @@map("sal_invoices")
+}
+
+model InvoiceItem {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invoiceId          String    @map("invoice_id") @db.Uuid
+  staffId            String?   @map("staff_id") @db.Uuid
+  itemType           String    @map("item_type") @db.VarChar(50)
+  itemId             String    @map("item_id") @db.Uuid
+  price              Decimal   @default(0) @db.Decimal(15, 0)
+  quantity           Int       @default(1)
+  totalPrice         Decimal   @default(0) @map("total_price") @db.Decimal(15, 0)
+  discountAmount     Decimal   @default(0) @map("discount_amount") @db.Decimal(15, 0)
+  finalAmount        Decimal   @default(0) @map("final_amount") @db.Decimal(15, 0)
+  employeeCommission Decimal   @default(0) @map("employee_commission") @db.Decimal(15, 0)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt          DateTime? @map("deleted_at") @db.Timestamptz
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  stylist User?   @relation(fields: [staffId], references: [id], onDelete: SetNull)
+
+  @@map("sal_invoice_items")
+}
+
+model CommissionTemplate {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  name        String    @db.VarChar(100)
+  description String?
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant  Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  details CommissionTemplateDetail[]
+  salaryConfigs EmployeeSalaryConfig[]
+
+  @@map("sal_commission_templates")
+}
+
+model CommissionTemplateDetail {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  templateId      String    @map("template_id") @db.Uuid
+  applyType       String    @map("apply_type") @db.VarChar(50)
+  targetId        String?   @map("target_id") @db.Uuid
+  commissionType  String    @map("commission_type") @db.VarChar(50)
+  commissionValue Decimal   @default(0) @map("commission_value") @db.Decimal(15, 0)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+
+  template CommissionTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("sal_commission_template_details")
+}
+
+model EmployeeShift {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  branchId  String    @map("branch_id") @db.Uuid
+  staffId   String    @map("staff_id") @db.Uuid
+  workDate  DateTime  @map("work_date") @db.Date
+  shiftName String?   @map("shift_name") @db.VarChar(100)
+  startTime String?   @map("start_time") @db.VarChar(50) // Map to String/Time in app logic
+  endTime   String?   @map("end_time") @db.VarChar(50)
+  isOff     Boolean   @default(false) @map("is_off")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  staff  User   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@map("sal_employee_shifts")
+}
+
+model EmployeeDailyTurn {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId            String    @map("tenant_id") @db.Uuid
+  branchId            String    @map("branch_id") @db.Uuid
+  staffId             String    @map("staff_id") @db.Uuid
+  workDate            DateTime  @map("work_date") @db.Date
+  totalWalkinCount    Int       @default(0) @map("total_walkin_count")
+  totalBookedCount    Int       @default(0) @map("total_booked_count")
+  totalCustomersToday Int       @default(0) @map("total_customers_today")
+  lastAssignedAt      DateTime? @map("last_assigned_at") @db.Timestamptz
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt           DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  staff  User   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@map("sal_employee_daily_turns")
+}
+
+model EmployeeAttendance {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String    @map("tenant_id") @db.Uuid
+  branchId        String    @map("branch_id") @db.Uuid
+  staffId         String    @map("staff_id") @db.Uuid
+  workDate        DateTime  @map("work_date") @db.Date
+  checkInAt       DateTime? @map("check_in_at") @db.Timestamptz
+  checkOutAt      DateTime? @map("check_out_at") @db.Timestamptz
+  workStatus      String    @default("PRESENT") @map("work_status") @db.VarChar(50)
+  lateMinutes     Int       @default(0) @map("late_minutes")
+  overTimeMinutes Int       @default(0) @map("over_time_minutes")
+  note            String?
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  staff  User   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@map("sal_employee_attendances")
+}
+
+model EmployeeSalaryConfig {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId             String    @map("tenant_id") @db.Uuid
+  branchId             String    @map("branch_id") @db.Uuid
+  staffId              String    @map("staff_id") @db.Uuid
+  commissionTemplateId String?   @map("commission_template_id") @db.Uuid
+  baseSalary           Decimal   @default(0) @map("base_salary") @db.Decimal(15, 0)
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt            DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch             Branch              @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  staff              User                @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  commissionTemplate CommissionTemplate? @relation(fields: [commissionTemplateId], references: [id], onDelete: SetNull)
+
+  @@map("sal_employee_salary_configs")
+}
+
+model SalaryAdvance {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  branchId    String    @map("branch_id") @db.Uuid
+  staffId     String    @map("staff_id") @db.Uuid
+  advanceDate DateTime  @map("advance_date") @db.Date
+  amount      Decimal   @default(0) @db.Decimal(15, 0)
+  status      String    @default("PENDING") @db.VarChar(50)
+  note        String?
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  staff  User   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@map("sal_salary_advances")
+}
+
+model EmployeeMonthlyPayroll {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String    @map("tenant_id") @db.Uuid
+  branchId         String    @map("branch_id") @db.Uuid
+  staffId          String    @map("staff_id") @db.Uuid
+  salaryPeriod     String    @map("salary_period") @db.VarChar(7) // YYYY-MM
+  baseSalary       Decimal   @default(0) @map("base_salary") @db.Decimal(15, 0)
+  allowance        Decimal?  @default(0) @db.Decimal(15, 0)
+  commissionAmount Decimal?  @default(0) @map("commission_amount") @db.Decimal(15, 0)
+  tipAmount        Decimal?  @default(0) @map("tip_amount") @db.Decimal(15, 0)
+  deductionAmount  Decimal?  @default(0) @map("deduction_amount") @db.Decimal(15, 0)
+  finalSalary      Decimal   @default(0) @map("final_salary") @db.Decimal(15, 0)
+  status           String    @default("DRAFT") @db.VarChar(50)
+  paidAt           DateTime? @map("paid_at") @db.Timestamptz
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  staff  User   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@map("sal_employee_monthly_payrolls")
+}
+
+model DailyRevenueReport {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  branchId      String    @map("branch_id") @db.Uuid
+  workDate      DateTime  @map("work_date") @db.Date
+  totalRevenue  Decimal?  @default(0) @map("total_revenue") @db.Decimal(15, 0)
+  totalCash     Decimal?  @default(0) @map("total_cash") @db.Decimal(15, 0)
+  totalCredit   Decimal?  @default(0) @map("total_credit") @db.Decimal(15, 0)
+  totalTransfer Decimal?  @default(0) @map("total_transfer") @db.Decimal(15, 0)
+  status        String    @default("COMPLETED") @db.VarChar(50)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@map("sal_daily_revenue_reports")
+}
+
+model DailyEmployeeRevenue {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId       String    @map("tenant_id") @db.Uuid
+  branchId       String    @map("branch_id") @db.Uuid
+  staffId        String    @map("staff_id") @db.Uuid
+  workDate       DateTime  @map("work_date") @db.Date
+  totalRevenue   Decimal?  @default(0) @map("total_revenue") @db.Decimal(15, 0)
+  totalBookings  Int       @default(0) @map("total_bookings")
+  totalCustomers Int       @default(0) @map("total_customers")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt      DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  staff  User   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@map("sal_daily_employee_revenue")
+}
+
+model DailyBranchRevenue {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId            String    @map("tenant_id") @db.Uuid
+  branchId            String    @map("branch_id") @db.Uuid
+  workDate            DateTime  @map("work_date") @db.Date
+  totalRevenue        Decimal?  @default(0) @map("total_revenue") @db.Decimal(15, 0)
+  totalWalkinCount    Int       @default(0) @map("total_walkin_count")
+  totalBookedCount    Int       @default(0) @map("total_booked_count")
+  totalCustomersToday Int       @default(0) @map("total_customers_today")
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt           DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@map("sal_daily_branch_revenue")
+}
+
+model RevenueExpenditure {
+  id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId               String    @map("tenant_id") @db.Uuid
+  branchId               String?   @map("branch_id") @db.Uuid
+  transactionDate        DateTime  @map("transaction_date") @db.Date
+  revenueExpenditureType String    @map("revenue_expenditure_type") @db.VarChar(50) // 'income', 'expenditure'
+  paymentType            String?   @map("payment_type") @db.VarChar(50) // 'cash', 'credit', 'transfer'
+  category               String?   @db.VarChar(100) // 'rent', 'electricity', 'salary', 'inventory', 'marketing', 'other'
+  amount                 Decimal   @default(0) @db.Decimal(15, 0)
+  description            String?
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt              DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt              DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+
+  @@map("sal_revenue_expenditures")
+}

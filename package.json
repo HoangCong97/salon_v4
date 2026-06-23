@@ -1,0 +1,21 @@
+{
+  "name": "salon-app-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Multi-Tenant Multi-Branch SaaS Salon Application Monorepo",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.3.2",
+    "typescript": "^5.4.5",
+    "turbo": "^2.0.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "packageManager": "pnpm@9.4.0"
+}
