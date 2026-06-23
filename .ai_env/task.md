@@ -14,10 +14,10 @@ Tài liệu này chia nhỏ toàn bộ các chức năng màn hình và nghiệp
 - [x] **Task 1.5**: Tạo script Seed dữ liệu mẫu cơ bản (Hệ thống quyền `sal_permissions`, nhóm Admin mặc định, cấu hình hệ thống ban đầu).
 
 ### [ ] MODULE 2: THIẾT LẬP BACKEND CORE & PHÂN TÁCH TENANT (TENANT ISOLATION)
-- [ ] **Task 2.1**: Cấu hình `TenantResolverMiddleware` tại `backend-api` để giải mã `tenant_id` từ Request Header (`X-Tenant-ID`) hoặc Subdomain.
-- [ ] **Task 2.2**: Cấu hình Guards bảo mật JWT (`AuthGuard`) và phân quyền RBAC (`PermissionsGuard`) dựa trên JWT payload.
-- [ ] **Task 2.3**: Xây dựng Global Interceptor chuẩn hóa định dạng API Response trả về (`ApiResponse<T>`) và Global Exception Filter.
-- [ ] **Task 2.4**: Viết API kiểm tra sức khỏe hệ thống (Health Check) và tích hợp ghi nhật ký hoạt động (Audit Logs).
+- [x] **Task 2.1**: Cấu hình `TenantResolverMiddleware` tại `backend-api` để giải mã `tenant_id` từ Request Header (`X-Tenant-ID`) hoặc Subdomain.
+- [x] **Task 2.2**: Cấu hình Guards bảo mật JWT (`AuthGuard`) và phân quyền RBAC (`PermissionsGuard`) dựa trên JWT payload.
+- [x] **Task 2.3**: Xây dựng Global Interceptor chuẩn hóa định dạng API Response trả về (`ApiResponse<T>`) và Global Exception Filter.
+- [x] **Task 2.4**: Viết API kiểm tra sức khỏe hệ thống (Health Check) và tích hợp ghi nhật ký hoạt động (Audit Logs).
 
 ---
 
@@ -39,10 +39,10 @@ Tài liệu này chia nhỏ toàn bộ các chức năng màn hình và nghiệp
 - [x] **Task 4.2**: Xây dựng Desktop Layout (Sidebar điều hướng nâng cao, Topbar tích hợp Branch Selector).
 - [x] **Task 4.3**: Xây dựng Mobile Layout (Mobile Header, Bottom Navigation Bar cố định 64px dưới cùng dành cho nhân viên).
 
-### [ ] MODULE 5: QUẢN LÝ THÔNG TIN & THIẾT LẬP CỬA HÀNG (PC)
-- [ ] **Task 5.1**: API & UI Quản lý chi nhánh: Thêm/Sửa thông tin các chi nhánh trực thuộc chuỗi salon.
-- [ ] **Task 5.2**: API & UI Thiết lập danh mục dịch vụ: Quản lý dịch vụ lẻ, Combo đa dịch vụ, thiết lập giá bán và thời gian thực hiện dịch vụ.
-- [ ] **Task 5.3**: API & UI Quản lý kho hàng (Inventories): Nhập kho, xuất kho, thiết lập mức cảnh báo hết hàng cho sản phẩm tại chi nhánh.
+### [x] MODULE 5: QUẢN LÝ THÔNG TIN & THIẾT LẬP CỬA HÀNG (PC)
+- [x] **Task 5.1**: API & UI Quản lý chi nhánh: Thêm/Sửa thông tin các chi nhánh trực thuộc chuỗi salon.
+- [x] **Task 5.2**: API & UI Thiết lập danh mục dịch vụ: Quản lý dịch vụ lẻ, Combo đa dịch vụ, thiết lập giá bán và thời gian thực hiện dịch vụ.
+- [x] **Task 5.3**: API & UI Quản lý kho hàng (Inventories): Nhập kho, xuất kho, thiết lập mức cảnh báo hết hàng cho sản phẩm tại chi nhánh.
 
 ### [ ] MODULE 6: QUẢN LÝ NHÂN SỰ, CA LÀM VIỆC & XOAY TUA (PC & MOBILE)
 - [ ] **Task 6.1**: API & UI Quản lý tài khoản nhân sự: Thêm nhân viên mới, phân quyền chức vụ (Manager, Cashier, Employee), gán chi nhánh hoạt động.

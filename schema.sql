@@ -187,12 +187,25 @@ CREATE TABLE sal_customer_points (
 -- 4. SERVICES & INVENTORY ITEMS
 -- =========================================================================
 
+CREATE TABLE sal_service_categories (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+    tenant_id UUID NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    color VARCHAR(50) NOT NULL, -- 'blue', 'green', 'orange', 'red', 'sky', 'purple', 'pink', 'indigo', 'lime', 'teal'
+    default_commission NUMERIC(5, 2) NOT NULL DEFAULT 0.00,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    CONSTRAINT fk_sal_service_categories_tenant FOREIGN KEY (tenant_id) REFERENCES sal_tenants (id) ON DELETE CASCADE
+);
+
 CREATE TABLE sal_services (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
     tenant_id UUID NOT NULL,
     branch_id UUID,
     name VARCHAR(255) NOT NULL,
     service_category VARCHAR(100), -- 'dịch vụ', 'hóa chất', 'combo'
+    category_id UUID,
     price NUMERIC(15, 0) NOT NULL DEFAULT 0.00,
     discount_price NUMERIC(15, 0) DEFAULT 0.00,
     duration INT, -- Duration in minutes
@@ -201,7 +214,8 @@ CREATE TABLE sal_services (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP WITH TIME ZONE,
     CONSTRAINT fk_sal_services_tenant FOREIGN KEY (tenant_id) REFERENCES sal_tenants (id) ON DELETE CASCADE,
-    CONSTRAINT fk_sal_services_branch FOREIGN KEY (branch_id) REFERENCES sal_branches (id) ON DELETE SET NULL
+    CONSTRAINT fk_sal_services_branch FOREIGN KEY (branch_id) REFERENCES sal_branches (id) ON DELETE SET NULL,
+    CONSTRAINT fk_sal_services_category FOREIGN KEY (category_id) REFERENCES sal_service_categories (id) ON DELETE SET NULL
 );
 
 CREATE TABLE sal_inventories (

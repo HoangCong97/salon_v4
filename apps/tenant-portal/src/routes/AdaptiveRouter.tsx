@@ -6,11 +6,17 @@ import { useAuthStore } from "../store/useAuthStore";
 import DesktopLayout from "../layouts/DesktopLayout";
 import MobileLayout from "../layouts/MobileLayout";
 
+// Auth Login
+import Login from "../pages/Login";
+
 // Desktop Pages
 import Dashboard from "../pages/desktop/Dashboard";
 import POS from "../pages/desktop/POS";
 import StaffManagement from "../pages/desktop/StaffManagement";
 import Reports from "../pages/desktop/Reports";
+import Branches from "../pages/desktop/Branches";
+import Services from "../pages/desktop/Services";
+import Inventories from "../pages/desktop/Inventories";
 
 // Mobile Pages
 import Schedule from "../pages/mobile/Schedule";
@@ -31,16 +37,16 @@ function useWindowWidth() {
 }
 
 export default function AdaptiveRouter() {
-  const { user, setRole } = useAuthStore();
+  const { user, setRole, initializeSession } = useAuthStore();
   const width = useWindowWidth();
   const isMobileScreen = width <= 768;
 
+  useEffect(() => {
+    initializeSession();
+  }, []);
+
   if (!user) {
-    return (
-      <div style={{ padding: "40px", textAlign: "center", fontFamily: "sans-serif" }}>
-        <h2>Không tìm thấy phiên đăng nhập.</h2>
-      </div>
-    );
+    return <Login />;
   }
 
   const isEmployee = user.role === "EMPLOYEE";
@@ -113,6 +119,18 @@ export default function AdaptiveRouter() {
           <Route path="/pos" element={<POS />} />
           
           {/* Permission-restricted routes */}
+          <Route 
+            path="/branches" 
+            element={isManagerOrAdmin ? <Branches /> : <Navigate to="/" replace />} 
+          />
+          <Route 
+            path="/services" 
+            element={isManagerOrAdmin ? <Services /> : <Navigate to="/" replace />} 
+          />
+          <Route 
+            path="/inventories" 
+            element={isManagerOrAdmin ? <Inventories /> : <Navigate to="/" replace />} 
+          />
           <Route 
             path="/staff" 
             element={isManagerOrAdmin ? <StaffManagement /> : <Navigate to="/" replace />} 

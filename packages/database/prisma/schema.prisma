@@ -63,6 +63,7 @@ model Tenant {
   customers           Customer[]
   customerPoints      CustomerPoint[]
   services            Service[]
+  serviceCategories   ServiceCategory[]
   inventories         Inventory[]
   servicePackages     ServicePackage[]
   purchasedPackages   CustomerPurchasedPackage[]
@@ -282,6 +283,7 @@ model Service {
   branchId        String?   @map("branch_id") @db.Uuid
   name            String    @db.VarChar(255)
   serviceCategory String?   @map("service_category") @db.VarChar(100)
+  categoryId      String?   @map("category_id") @db.Uuid
   price           Decimal   @default(0) @db.Decimal(15, 0)
   discountPrice   Decimal?  @default(0) @map("discount_price") @db.Decimal(15, 0)
   duration        Int?      // In minutes
@@ -292,6 +294,7 @@ model Service {
 
   tenant                Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   branch                Branch?                 @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  category              ServiceCategory?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   packageDetails        ServicePackageDetail[]
   purchasedPackageUsage PackageUsageHistory[]
   bookingDetails        BookingDetail[]
@@ -750,3 +753,20 @@ model RevenueExpenditure {
 
   @@map("sal_revenue_expenditures")
 }
+
+model ServiceCategory {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId          String    @map("tenant_id") @db.Uuid
+  name              String    @db.VarChar(100)
+  color             String    @db.VarChar(50) // 'blue', 'green', 'orange', 'red', 'sky', 'purple', 'pink', 'indigo', 'lime', 'teal'
+  defaultCommission Decimal   @default(0) @map("default_commission") @db.Decimal(5, 2)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt         DateTime? @map("deleted_at") @db.Timestamptz
+
+  tenant            Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  services          Service[]
+
+  @@map("sal_service_categories")
+}
+

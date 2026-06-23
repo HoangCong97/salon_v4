@@ -35,6 +35,7 @@ async function main() {
   await prisma.commissionTemplate.deleteMany({});
   await prisma.rolePermission.deleteMany({});
   await prisma.permission.deleteMany({});
+  await prisma.serviceCategory.deleteMany({});
   await prisma.user.deleteMany({});
   await prisma.role.deleteMany({});
   await prisma.service.deleteMany({});
@@ -368,7 +369,35 @@ async function main() {
 
   console.log("✅ Customers created!");
 
-  // 9. CREATE SERVICES
+  // 9. CREATE SERVICE CATEGORIES & SERVICES
+  console.log("🌱 Seeding Service Categories...");
+  const catHair = await prisma.serviceCategory.create({
+    data: {
+      tenantId: tenant1.id,
+      name: "Cắt Tóc Nam & Styling",
+      color: "blue",
+      defaultCommission: 10.00
+    }
+  });
+
+  const catChemical = await prisma.serviceCategory.create({
+    data: {
+      tenantId: tenant1.id,
+      name: "Hóa Chất (Uốn/Nhuộm)",
+      color: "orange",
+      defaultCommission: 15.00
+    }
+  });
+
+  const catSpa = await prisma.serviceCategory.create({
+    data: {
+      tenantId: tenant1.id,
+      name: "Gội Đầu & Spa",
+      color: "green",
+      defaultCommission: 12.00
+    }
+  });
+
   console.log("🌱 Seeding Services...");
   const service1 = await prisma.service.create({
     data: {
@@ -376,6 +405,7 @@ async function main() {
       branchId: branch1a.id,
       name: "Cắt Tóc Nam Premium",
       serviceCategory: "dịch vụ",
+      categoryId: catHair.id,
       price: 150000,
       discountPrice: 120000,
       duration: 30
@@ -388,6 +418,7 @@ async function main() {
       branchId: branch1a.id,
       name: "Uốn Tóc Chuyên Sâu",
       serviceCategory: "hóa chất",
+      categoryId: catChemical.id,
       price: 500000,
       discountPrice: 450000,
       duration: 90
@@ -400,6 +431,7 @@ async function main() {
       branchId: branch1a.id,
       name: "Gội Đầu Dưỡng Sinh Thảo Dược",
       serviceCategory: "dịch vụ",
+      categoryId: catSpa.id,
       price: 100000,
       discountPrice: 100000,
       duration: 45

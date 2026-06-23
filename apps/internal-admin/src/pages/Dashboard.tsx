@@ -11,15 +11,11 @@ const Dashboard: React.FC = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const [statsRes, tenantsRes] = await Promise.all([
-          fetch("http://localhost:3000/api/super-admin/dashboard/stats"),
-          fetch("http://localhost:3000/api/super-admin/tenants")
-        ]);
+        const statsRes = await fetch("http://localhost:3000/api/super-admin/dashboard/stats");
 
-        if (statsRes.ok && tenantsRes.ok) {
+        if (statsRes.ok) {
           const statsData = await statsRes.json();
-          const tenantsData = await tenantsRes.json();
-          setData({ stats: statsData, tenants: tenantsData });
+          setData({ stats: statsData });
         }
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
@@ -31,22 +27,14 @@ const Dashboard: React.FC = () => {
   }, []);
 
   // Compute plan distribution
-  let premiumCount = 0;
-  let basicCount = 0;
-  let freeCount = 0;
+  let premiumCount = 42;
+  let basicCount = 29;
+  let freeCount = 13;
 
-  if (data?.tenants) {
-    data.tenants.forEach((t: any) => {
-      const plan = t.plan ? t.plan.toUpperCase() : "FREE";
-      if (plan === "PREMIUM") premiumCount++;
-      else if (plan === "BASIC") basicCount++;
-      else freeCount++;
-    });
-  } else {
-    // Default mock fallback values when loading/error
-    premiumCount = 42;
-    basicCount = 29;
-    freeCount = 13;
+  if (data?.stats?.plansDistribution) {
+    premiumCount = data.stats.plansDistribution.premium;
+    basicCount = data.stats.plansDistribution.basic;
+    freeCount = data.stats.plansDistribution.free;
   }
 
   const totalFiltered = premiumCount + basicCount + freeCount || 1;

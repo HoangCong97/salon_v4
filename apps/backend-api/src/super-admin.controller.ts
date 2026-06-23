@@ -8,24 +8,53 @@ export class SuperAdminController {
   @Get("dashboard/stats")
   async getDashboardStats() {
     try {
-      // MRR: Sum plan prices for ACTIVE tenants
-      const activeTenants = await prisma.tenant.findMany({
-        where: { status: "ACTIVE", deletedAt: null },
-        include: { plan: true }
-      });
-      const mrr = activeTenants.reduce((sum, t) => sum + (t.plan ? Number(t.plan.price) : 0), 0);
+      // Parallel DB queries for tenants data, branch count, and booking count
+      const [tenants, totalBranches, totalBookings] = await Promise.all([
+        prisma.tenant.findMany({
+          where: { deletedAt: null },
+          select: {
+            status: true,
+            plan: {
+              select: {
+                code: true,
+                price: true
+              }
+            }
+          }
+        }),
+        prisma.branch.count({ where: { deletedAt: null } }),
+        prisma.booking.count({ where: { deletedAt: null } })
+      ]);
 
-      // Total Tenants & Active/Suspended counts
-      const totalTenantsCount = await prisma.tenant.count({ where: { deletedAt: null } });
-      const activeTenantsCount = activeTenants.length;
-      const suspendedTenantsCount = await prisma.tenant.count({ where: { status: "SUSPENDED", deletedAt: null } });
-      const pendingTenantsCount = await prisma.tenant.count({ where: { status: "PENDING", deletedAt: null } });
+      // Calculate stats in a single pass in-memory
+      const totalTenantsCount = tenants.length;
+      let activeTenantsCount = 0;
+      let suspendedTenantsCount = 0;
+      let pendingTenantsCount = 0;
+      let mrr = 0;
+      const plansDistribution = { premium: 0, basic: 0, free: 0 };
 
-      // Total Branches
-      const totalBranches = await prisma.branch.count({ where: { deletedAt: null } });
+      for (const t of tenants) {
+        if (t.status === "ACTIVE") {
+          activeTenantsCount++;
+          if (t.plan) {
+            mrr += Number(t.plan.price);
+          }
+        } else if (t.status === "SUSPENDED") {
+          suspendedTenantsCount++;
+        } else if (t.status === "PENDING") {
+          pendingTenantsCount++;
+        }
 
-      // Total Bookings on the platform
-      const totalBookings = await prisma.booking.count({ where: { deletedAt: null } });
+        const planCode = t.plan ? t.plan.code.toUpperCase() : "FREE";
+        if (planCode === "PREMIUM") {
+          plansDistribution.premium++;
+        } else if (planCode === "BASIC") {
+          plansDistribution.basic++;
+        } else {
+          plansDistribution.free++;
+        }
+      }
 
       return {
         mrr,
@@ -35,6 +64,7 @@ export class SuperAdminController {
         pendingTenants: pendingTenantsCount,
         totalBranches,
         totalBookings,
+        plansDistribution,
         uptime: "99.98%"
       };
     } catch (error) {
@@ -96,7 +126,7 @@ export class SuperAdminController {
       });
 
       // Map count property to match frontend expectations
-      return tenantsList.map(t => ({
+      return tenantsList.map((t: any) => ({
         id: t.id,
         name: t.name,
         owner: t.ownerName || "Chưa thiết lập",
@@ -265,7 +295,7 @@ export class SuperAdminController {
         orderBy: { createdAt: "desc" }
       });
 
-      return invoicesList.map(inv => ({
+      return invoicesList.map((inv: any) => ({
         id: inv.invoiceNumber,
         dbId: inv.id, // Keep the primary key UUID for backend calls
         salonName: inv.tenant.name,
