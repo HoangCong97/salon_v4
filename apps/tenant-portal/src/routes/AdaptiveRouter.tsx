@@ -17,11 +17,13 @@ import Reports from "../pages/desktop/Reports";
 import Branches from "../pages/desktop/Branches";
 import Services from "../pages/desktop/Services";
 import Inventories from "../pages/desktop/Inventories";
+import Shifts from "../pages/desktop/Shifts";
 
 // Mobile Pages
 import Schedule from "../pages/mobile/Schedule";
 import ShiftTasks from "../pages/mobile/ShiftTasks";
 import Profile from "../pages/mobile/Profile";
+
 
 // Custom Screen Size Hook
 function useWindowWidth() {
@@ -134,6 +136,10 @@ export default function AdaptiveRouter() {
           <Route 
             path="/staff" 
             element={isManagerOrAdmin ? <StaffManagement /> : <Navigate to="/" replace />} 
+          />
+          <Route 
+            path="/shifts" 
+            element={isManagerOrAdmin ? <Shifts /> : <Navigate to="/" replace />} 
           />
           <Route 
             path="/reports" 

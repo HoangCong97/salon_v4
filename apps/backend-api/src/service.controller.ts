@@ -40,6 +40,46 @@ export class ServiceController {
     }
   }
 
+  // 1.5. GET ALL PACKAGES FOR TENANT (OPTIONAL BRANCH FILTER)
+  @Get("packages")
+  async getPackages(
+    @Param("tenantId") tenantId: string,
+    @Query("branchId") branchId?: string
+  ) {
+    try {
+      const whereClause: any = {
+        tenantId,
+        deletedAt: null
+      };
+
+      if (branchId) {
+        whereClause.OR = [
+          { branchId: branchId },
+          { branchId: null }
+        ];
+      }
+
+      return await prisma.servicePackage.findMany({
+        where: whereClause,
+        include: {
+          details: {
+            include: {
+              service: true
+            }
+          }
+        },
+        orderBy: {
+          createdAt: "desc"
+        }
+      });
+    } catch (error) {
+      throw new HttpException(
+        `Failed to fetch service packages: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
   // 2. CREATE NEW SERVICE
   @Post()
   async createService(

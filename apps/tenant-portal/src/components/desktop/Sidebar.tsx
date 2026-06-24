@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { useAuthStore } from "../../store/useAuthStore";
-import { LayoutDashboard, Store, Users, BarChart3, MapPin, Layers, Package } from "lucide-react";
+import { LayoutDashboard, Store, Users, BarChart3, MapPin, Layers, Package, CalendarDays } from "lucide-react";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -18,6 +18,7 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
     { path: "/services", label: "Danh mục dịch vụ", icon: Layers, roles: ["ADMIN", "MANAGER"] },
     { path: "/inventories", label: "Quản lý kho hàng", icon: Package, roles: ["ADMIN", "MANAGER"] },
     { path: "/staff", label: "Nhân sự", icon: Users, roles: ["ADMIN", "MANAGER"] },
+    { path: "/shifts", label: "Lịch trực ca", icon: CalendarDays, roles: ["ADMIN", "MANAGER"] },
     { path: "/reports", label: "Báo cáo", icon: BarChart3, roles: ["ADMIN", "MANAGER"] },
   ];
 

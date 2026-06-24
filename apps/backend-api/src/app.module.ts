@@ -7,6 +7,10 @@ import { ServiceController } from "./service.controller";
 import { InventoryController } from "./inventory.controller";
 import { AuthController } from "./auth.controller";
 import { ServiceCategoryController } from "./service-category.controller";
+import { StaffController } from "./staff.controller";
+import { ShiftsController } from "./shifts.controller";
+import { TurnsController } from "./turns.controller";
+import { InvoiceController } from "./invoice.controller";
 
 @Module({
   imports: [],
@@ -17,8 +21,13 @@ import { ServiceCategoryController } from "./service-category.controller";
     ServiceController,
     InventoryController,
     AuthController,
-    ServiceCategoryController
+    ServiceCategoryController,
+    StaffController,
+    ShiftsController,
+    TurnsController,
+    InvoiceController
   ],
   providers: [AppService],
 })
 export class AppModule {}
+

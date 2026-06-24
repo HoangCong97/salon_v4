@@ -94,26 +94,32 @@ Giao diện hiển thị lịch hẹn dạng lưới trực quan theo nhân viê
 ### 2. Màn hình Bán hàng tại Quầy & POS Checkout (Split-Pane Layout)
 Sử dụng bố cục Split-Pane bất đối xứng chia màn hình thành 2 phần chính:
 
+- **Phía bên trái (7/12) - Khu vực Lựa chọn & Tìm kiếm nhanh**:
+  - **Phía trên cùng**: Danh sách nhân viên của chi nhánh đang hoạt động, hiển thị dưới dạng thẻ hoặc nút bấm giúp cashier click nhanh để gán công việc.
+  - **Phía dưới danh sách nhân viên**: Ô tìm kiếm kết hợp các nút bấm phân loại lớn: **[ Tất cả ]**, **[ Dịch vụ ]**, **[ Sản phẩm ]**, **[ Gói ]** để tối ưu tốc độ nhấn trực tiếp. (hien thi tren cung 1 hang)
+  - **Phía dưới cùng**: Chứa tất cả item bao gồm dịch vụ, sản phẩm và gói, hiển thị đồng bộ nhưng được ngăn cách rõ ràng bằng tiêu đề Section và phân biệt bằng màu sắc nền riêng biệt cho từng loại.
+
 ```
 +----------------------------------------------------------------------------------+
-| (BÊN TRÁI - 7/12): DANH MỤC DỊCH VỤ & SẢN PHẨM   | (BÊN PHẢI - 5/12): HÓA ĐƠN      |
+| (BÊN TRÁI - 7/12): CHỌN DỊCH VỤ & THỢ             | (BÊN PHẢI - 5/12): HÓA ĐƠN      |
 | +----------------------------------------------+ | +-----------------------------+ |
-| | [Kính lúp] Tìm dịch vụ/sản phẩm...           | | | KHÁCH HÀNG: [ Nguyễn Văn A] | |
-| +----------------------------------------------+ | | Hạng thẻ: Vàng (Tích lũy)   | |
-| | [Tab: Dịch vụ]  [Tab: Sản phẩm]  [Tab: Gói]   | | +-----------------------------+ |
-| | +------------------+  +--------------------+ | | CÁC MỤC CHỌN (CART ITEMS)     | |
-| | | Cắt tóc nam      |  | Uốn tóc Hàn Quốc   | | | 1. Cắt tóc nam - Thợ A      | |
-| | | 150.000đ      [+]|  | 500.000đ        [+]| | |    Lương cứng + 15% Hoa hồng  | |
-| | +------------------+  +--------------------+ | | 2. Dầu gội phục hồi - Thợ B   | |
-| | | Nhuộm màu thời trang                     | | |    Hoa hồng: 10k              | |
-| | | 800.000đ      [+]                        | | +-----------------------------+ |
-| | +------------------------------------------+ | | Mã giảm giá: [ VOUCHER10% ]   | |
-| |                                              | | Phương thức: [ Chuyển khoản ] | |
-| |                                              | | TỔNG CỘNG:          650.000đ  | |
-| |                                              | | GIẢM GIÁ:           -65.000đ  | |
-| |                                              | | THÀNH TIỀN:         585.000đ  | |
-| |                                              | | [ BUTTON: IN & THANH TOÁN ]   | |
-| +----------------------------------------------+ | +-----------------------------+ |
+| | NHÂN VIÊN ĐANG HOẠT ĐỘNG:                    | | | KHÁCH HÀNG: [ Nguyễn Văn A] | |
+| | [Thợ A] [Thợ B] [Thợ C] [Thợ D]              | | | Hạng thẻ: Vàng (Tích lũy)   | |
+| |----------------------------------------------| | +-----------------------------+ |
+| | [Kính lúp] Tìm dịch vụ, sản phẩm, gói...     | | | CÁC MỤC CHỌN (CART ITEMS)     | |
+| | [ Tất cả ] [ Dịch vụ ] [ Sản phẩm ] [ Gói ]  | | | 1. Cắt tóc nam - Thợ A      | |
+| |----------------------------------------------| | |    Lương cứng + 15% Hoa hồng  | |
+| | -- DỊCH VỤ (Màu theo phân loại dịch vu) ---------------- | | | 2. Dầu gội phục hồi - Thợ B   | |
+| | [ Cắt tóc nam - 150k ] [ Uốn tóc - 500k ]    | | |    Hoa hồng: 10k              | |
+| |                                              | | +-----------------------------+ |
+| | -- SẢN PHẨM (Màu nâu gỗ) ------------------ | | | Mã giảm giá: [ VOUCHER10% ]   | |
+| | [ Dầu gội - 180k ]    [ Sáp vuốt - 220k ]    | | | Phương thức: [ Chuyển khoản ] | |
+| |                                              | | |                               | |
+| | -- GÓI / COMBO (Màu tím) ------------------- | | | TỔNG CỘNG:          650.000đ  | |
+| | [ Combo Gội & Massage - 120k ]               | | | GIẢM GIÁ:           -65.000đ  | |
+| +----------------------------------------------+ | | THÀNH TIỀN:         585.000đ  | |
+|                                                  | | [ BUTTON: IN & THANH TOÁN ]   | |
+|                                                  | | +-----------------------------+ |
 +----------------------------------------------------------------------------------+
 ```
 

@@ -44,10 +44,10 @@ Tài liệu này chia nhỏ toàn bộ các chức năng màn hình và nghiệp
 - [x] **Task 5.2**: API & UI Thiết lập danh mục dịch vụ: Quản lý dịch vụ lẻ, Combo đa dịch vụ, thiết lập giá bán và thời gian thực hiện dịch vụ.
 - [x] **Task 5.3**: API & UI Quản lý kho hàng (Inventories): Nhập kho, xuất kho, thiết lập mức cảnh báo hết hàng cho sản phẩm tại chi nhánh.
 
-### [ ] MODULE 6: QUẢN LÝ NHÂN SỰ, CA LÀM VIỆC & XOAY TUA (PC & MOBILE)
-- [ ] **Task 6.1**: API & UI Quản lý tài khoản nhân sự: Thêm nhân viên mới, phân quyền chức vụ (Manager, Cashier, Employee), gán chi nhánh hoạt động.
-- [ ] **Task 6.2**: API & UI Phân ca trực (Employee Shifts): Lên lịch trực ca tuần/tháng cho nhân sự chi nhánh (PC). Nhân viên xem ca trực cá nhân trên Mobile.
-- [ ] **Task 6.3**: API & UI Hệ thống tua làm việc hàng ngày (Daily Turns): Thuật toán tự động xếp hàng xoay tua thợ, tự động nhảy số lượt nhận khách (PC & Mobile).
+### [x] MODULE 6: QUẢN LÝ NHÂN SỰ, CA LÀM VIỆC & XOAY TUA (PC & MOBILE)
+- [x] **Task 6.1**: API & UI Quản lý tài khoản nhân sự: Thêm nhân viên mới, phân quyền chức vụ (Manager, Cashier, Employee), gán chi nhánh hoạt động.
+- [x] **Task 6.2**: API & UI Phân ca trực (Employee Shifts): Lên lịch trực ca tuần/tháng cho nhân sự chi nhánh (PC). Nhân viên xem ca trực cá nhân trên Mobile.
+- [x] **Task 6.3**: API & UI Hệ thống tua làm việc hàng ngày (Daily Turns): Thuật toán tự động xếp hàng xoay tua thợ, tự động nhảy số lượt nhận khách (PC & Mobile).
 
 ### [ ] MODULE 7: QUẢN LÝ ĐẶT LỊCH HẸN & LƯỚI BẢN ĐỒ (SCHEDULER GRID)
 - [ ] **Task 7.1**: API Quản lý đặt lịch (Bookings): Tạo lịch đặt, kiểm tra va chạm khung giờ (overlap) và trạng thái thợ bận.
