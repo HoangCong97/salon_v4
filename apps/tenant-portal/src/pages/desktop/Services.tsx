@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { formatCurrencyVND } from "@salon/shared-utils";
-import { Layers, Plus, Edit2, Trash2, Loader2, X, Search, Clock, Image as ImageIcon, ChevronUp, ChevronDown } from "lucide-react";
+import { Layers, Plus, Edit2, Trash2, Loader2, X, Search, Clock, Image as ImageIcon, ChevronUp, ChevronDown, Check, Save } from "lucide-react";
 
 interface ServiceCategory {
   id: string;
@@ -225,7 +225,7 @@ const CustomNumberInput: React.FC<CustomNumberInputProps> = ({
 
 export default function Services() {
   const { currentTenantId, currentBranchId } = useAuthStore();
-  
+
   // Data State
   const [services, setServices] = useState<Service[]>([]);
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
@@ -245,7 +245,7 @@ export default function Services() {
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [commissionInput, setCommissionInput] = useState<number>(0);
-  const [priceInput, setPriceInput] = useState(""); 
+  const [priceInput, setPriceInput] = useState("");
   const [duration, setDuration] = useState<number>(30);
   const [imageUrl, setImageUrl] = useState("");
   const [hasDiscount, setHasDiscount] = useState(false);
@@ -266,15 +266,139 @@ export default function Services() {
   const [isCatDropdownOpen, setIsCatDropdownOpen] = useState(false);
   const catDropdownRef = React.useRef<HTMLDivElement>(null);
 
+  // Inline editing helper functions
+  const [inlineEdits, setInlineEdits] = useState<Record<string, Partial<Service>>>({});
+
+  const formatNumber = (val: number | string | undefined | null): string => {
+    if (val === undefined || val === null || val === "") return "";
+    const cleaned = String(val).replace(/\D/g, "");
+    if (!cleaned) return "";
+    return new Intl.NumberFormat("en-US").format(parseInt(cleaned, 10));
+  };
+
+  const handlePriceChange = (serviceId: string, field: "price" | "discountPrice", valStr: string) => {
+    const cleaned = valStr.replace(/\D/g, "");
+    if (cleaned === "") {
+      handleInlineChange(serviceId, field, field === "discountPrice" ? null : 0);
+    } else {
+      handleInlineChange(serviceId, field, parseInt(cleaned, 10));
+    }
+  };
+
+  const handleMouseDownSelectAll = (e: React.MouseEvent<HTMLInputElement>) => {
+    if (document.activeElement !== e.currentTarget) {
+      e.currentTarget.focus();
+      e.preventDefault();
+    }
+  };
+
+  const handleInlineChange = (serviceId: string, field: keyof Service, value: any) => {
+    setInlineEdits(prev => ({
+      ...prev,
+      [serviceId]: {
+        ...prev[serviceId],
+        [field]: value
+      }
+    }));
+  };
+
+  const getInlineValue = (service: Service, field: keyof Service) => {
+    if (inlineEdits[service.id] && inlineEdits[service.id][field] !== undefined) {
+      return inlineEdits[service.id][field];
+    }
+    return service[field];
+  };
+
+  const handleAutoSave = async (serviceId: string, updatedFields: Partial<Service>) => {
+    const originalService = services.find(s => s.id === serviceId);
+    if (!originalService) return;
+
+    // Merge original service with any existing pending edits and the newly updated fields
+    const mergedEdits = {
+      ...inlineEdits[serviceId],
+      ...updatedFields
+    };
+
+    const updatedService = {
+      ...originalService,
+      ...mergedEdits
+    };
+
+    // Skip save if values are identical to original
+    let hasChanges = false;
+    for (const key of Object.keys(updatedFields) as Array<keyof Service>) {
+      if (updatedFields[key] !== originalService[key]) {
+        hasChanges = true;
+        break;
+      }
+    }
+    if (!hasChanges) return;
+
+    // Dynamically calculate the serviceCategory short string from database/fallback
+    const selectedCatObj = categories.find(c => c.id === updatedService.categoryId);
+    const existingService = services.find(s => s.categoryId === updatedService.categoryId && s.id !== serviceId && s.serviceCategory);
+    let serviceCategory = existingService ? existingService.serviceCategory : "";
+
+    if (!serviceCategory && selectedCatObj) {
+      const name = selectedCatObj.name;
+      if (name.includes("Cắt Tóc")) {
+        serviceCategory = "Cắt Tóc";
+      } else if (name.includes("Hóa Chất")) {
+        serviceCategory = "Hóa Chất";
+      } else if (name.includes("Gội Đầu")) {
+        serviceCategory = "Gội Đầu";
+      } else if (name.includes(" & ")) {
+        serviceCategory = name.split(" & ")[0].trim();
+      } else if (name.includes(" (")) {
+        serviceCategory = name.split(" (")[0].trim();
+      } else {
+        serviceCategory = name;
+      }
+    }
+
+    const payload = {
+      name: updatedService.name,
+      categoryId: updatedService.categoryId || null,
+      serviceCategory: serviceCategory || null,
+      price: Number(updatedService.price),
+      discountPrice: updatedService.discountPrice !== undefined && updatedService.discountPrice !== null ? Number(updatedService.discountPrice) : Number(updatedService.price),
+      duration: Number(updatedService.duration),
+      imageUrl: updatedService.imageUrl || null,
+      branchId: updatedService.branchId || null
+    };
+
+    try {
+      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services/${serviceId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error("Lỗi khi tự động lưu");
+
+      // Clear inlineEdits for this service
+      setInlineEdits(prev => {
+        const copy = { ...prev };
+        delete copy[serviceId];
+        return copy;
+      });
+
+      // Refresh list
+      fetchServices();
+    } catch (err: any) {
+      console.error("Auto save failed:", err);
+    }
+  };
+
   const fetchServices = async () => {
     if (!currentTenantId) return;
     setLoading(true);
     setError(null);
     try {
-      const url = currentBranchId 
+      const url = currentBranchId
         ? `http://localhost:3000/api/tenants/${currentTenantId}/services?branchId=${currentBranchId}`
         : `http://localhost:3000/api/tenants/${currentTenantId}/services`;
-      
+
       const res = await fetch(url);
       if (!res.ok) throw new Error("Không thể tải danh mục dịch vụ");
       const data = await res.json();
@@ -341,7 +465,7 @@ export default function Services() {
     setCategoryId(service.categoryId || "");
     setCommissionInput(service.category ? Number(service.category.defaultCommission) : 0);
     setPriceInput(String(Number(service.price)));
-    
+
     const calculatedDeduction = Number(service.price) - Number(service.discountPrice ?? service.price);
     if (calculatedDeduction > 0) {
       setHasDiscount(true);
@@ -384,7 +508,25 @@ export default function Services() {
     }
 
     const selectedCatObj = categories.find(c => c.id === categoryId);
-    const serviceCategory = selectedCatObj ? selectedCatObj.name : "";
+    const existingService = services.find(s => s.categoryId === categoryId && s.serviceCategory);
+    let serviceCategory = existingService ? existingService.serviceCategory : "";
+
+    if (!serviceCategory && selectedCatObj) {
+      const name = selectedCatObj.name;
+      if (name.includes("Cắt Tóc")) {
+        serviceCategory = "Cắt Tóc";
+      } else if (name.includes("Hóa Chất")) {
+        serviceCategory = "Hóa Chất";
+      } else if (name.includes("Gội Đầu")) {
+        serviceCategory = "Gội Đầu";
+      } else if (name.includes(" & ")) {
+        serviceCategory = name.split(" & ")[0].trim();
+      } else if (name.includes(" (")) {
+        serviceCategory = name.split(" (")[0].trim();
+      } else {
+        serviceCategory = name;
+      }
+    }
 
     const priceList = priceInput
       .split(",")
@@ -401,9 +543,9 @@ export default function Services() {
         for (let i = 0; i < priceList.length; i++) {
           const currentPrice = priceList[i];
           const calculatedDiscountPrice = hasDiscount ? Math.max(0, currentPrice - discountDeduction) : currentPrice;
-          
-          const serviceName = priceList.length > 1 
-            ? `${name} (${formatCurrencyVND(currentPrice)})` 
+
+          const serviceName = priceList.length > 1
+            ? `${name} (${formatCurrencyVND(currentPrice)})`
             : name;
 
           const payload = {
@@ -506,7 +648,7 @@ export default function Services() {
         });
       }
 
-      if (!res.ok) throw new Error("Lỗi khi lưu nhóm dịch vụ");
+      if (!res.ok) throw new Error("Lỗi khi lưu phân loại");
 
       setCategoryName("");
       setCategoryColor("blue");
@@ -521,14 +663,14 @@ export default function Services() {
 
   const handleDeleteCategory = async (catId: string) => {
     if (!currentTenantId) return;
-    if (!confirm("Bạn có chắc chắn muốn xóa nhóm dịch vụ này? Các dịch vụ thuộc nhóm này sẽ không còn phân loại.")) return;
+    if (!confirm("Bạn có chắc chắn muốn xóa phân loại này? Các dịch vụ thuộc phân loại này sẽ không còn phân loại.")) return;
 
     try {
       const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/service-categories/${catId}`, {
         method: "DELETE"
       });
 
-      if (!res.ok) throw new Error("Lỗi khi xóa nhóm dịch vụ");
+      if (!res.ok) throw new Error("Lỗi khi xóa phân loại");
 
       fetchCategories();
       fetchServices();
@@ -540,7 +682,7 @@ export default function Services() {
   // Filter Logic
   const filteredServices = services.filter((service) => {
     const matchesSearch = service.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "Tất cả" || 
+    const matchesCategory = selectedCategory === "Tất cả" ||
       service.categoryId === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -633,10 +775,10 @@ export default function Services() {
               />
             </div>
             <button className="btn btn-secondary" onClick={handleOpenCategoriesModal} style={{ display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", flexShrink: 0 }}>
-              <Layers size={18} /> Quản lý nhóm dịch vụ
+              <Layers size={18} /> Phân loại
             </button>
             <button className="btn btn-primary" onClick={handleOpenCreateModal} style={{ display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", flexShrink: 0 }}>
-              <Plus size={18} /> Thêm dịch vụ mới
+              <Plus size={18} /> Thêm dịch vụ
             </button>
           </div>
         </div>
@@ -658,91 +800,274 @@ export default function Services() {
           </div>
         ) : (
           <div className="data-table-container">
+            <style>{`
+              .excel-input, .excel-select {
+                transition: all 0.15s ease;
+                border-radius: 0 !important;
+                border: none !important;
+                background: transparent;
+                width: 100%;
+                height: 38px;
+                box-sizing: border-box;
+              }
+              .excel-input:hover, .excel-select:hover {
+                background-color: hsl(210, 40%, 96%) !important;
+              }
+              .excel-input:focus, .excel-select:focus {
+                background-color: white !important;
+                outline: 2px solid var(--color-primary) !important;
+                outline-offset: -2px;
+                box-shadow: none !important;
+                z-index: 10;
+                position: relative;
+              }
+              .excel-select:focus {
+                color: var(--text-primary) !important;
+              }
+              /* Remove default arrows for number input */
+              .excel-input[type=number]::-webkit-inner-spin-button, 
+              .excel-input[type=number]::-webkit-outer-spin-button { 
+                -webkit-appearance: none; 
+                margin: 0; 
+              }
+              .excel-input[type=number] {
+                -moz-appearance: textfield;
+              }
+            `}</style>
             <table className="data-table">
               <thead>
                 <tr>
-                  <th style={{ width: "80px" }}>Ảnh</th>
-                  <th>Tên dịch vụ</th>
-                  <th>Phân loại</th>
-                  <th>Thời lượng</th>
-                  <th>Giá bán</th>
-                  <th>Giá khuyến mãi</th>
-                  <th>Hoa hồng (%)</th>
-                  <th style={{ width: "200px", textAlign: "right" }}>Thao tác</th>
+                  <th style={{ padding: "6px 10px", fontSize: "13px" }}>Tên dịch vụ</th>
+                  <th style={{ padding: "6px 10px", fontSize: "13px", width: "180px" }}>Phân loại</th>
+                  <th style={{ padding: "6px 10px", fontSize: "13px", width: "100px", textAlign: "center" }}>Thời lượng</th>
+                  <th style={{ padding: "6px 10px", fontSize: "13px", width: "140px", textAlign: "center" }}>Giá bán</th>
+                  <th style={{ padding: "6px 10px", fontSize: "13px", width: "140px", textAlign: "center" }}>Giá KM</th>
+                  <th style={{ padding: "6px 10px", fontSize: "13px", width: "100px", textAlign: "center" }}>Hoa hồng (%)</th>
+                  <th style={{ padding: "6px 10px", fontSize: "13px", width: "100px", textAlign: "center" }}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredServices.map((service) => (
-                  <tr key={service.id}>
-                    <td>
-                      {service.imageUrl ? (
-                        <img
-                          src={service.imageUrl}
-                          alt={service.name}
-                          style={{ width: "48px", height: "48px", borderRadius: "var(--radius-sm)", objectFit: "cover" }}
+                {filteredServices.map((service) => {
+                  const currentCategoryId = getInlineValue(service, "categoryId") as string || "";
+                  const currentCategoryObj = categories.find(c => c.id === currentCategoryId);
+
+                  // Calculate discount values to only show if active and less than original price
+                  const hasInlineDiscount = inlineEdits[service.id] && inlineEdits[service.id].hasOwnProperty("discountPrice");
+                  const isDiscountActive = hasInlineDiscount 
+                    ? (inlineEdits[service.id].discountPrice !== null) 
+                    : (service.discountPrice !== undefined && service.discountPrice !== null && service.discountPrice < service.price);
+                  const displayDiscountVal = isDiscountActive 
+                    ? (hasInlineDiscount ? inlineEdits[service.id].discountPrice : service.discountPrice) 
+                    : null;
+
+                  return (
+                    <tr key={service.id}>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                        <input
+                          type="text"
+                          value={getInlineValue(service, "name") as string}
+                          onChange={(e) => handleInlineChange(service.id, "name", e.target.value)}
+                          onBlur={() => handleAutoSave(service.id, { name: getInlineValue(service, "name") as string })}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") e.currentTarget.blur();
+                          }}
+                          onFocus={(e) => e.target.select()}
+                          onMouseDown={handleMouseDownSelectAll}
+                          style={{
+                            border: "none",
+                            background: "transparent",
+                            width: "100%",
+                            height: "100%",
+                            padding: "0 10px",
+                            fontSize: "13px",
+                            fontWeight: "600",
+                            color: "var(--text-primary)",
+                            boxSizing: "border-box"
+                          }}
+                          className="excel-input"
                         />
-                      ) : (
-                        <div style={{ width: "48px", height: "48px", borderRadius: "var(--radius-sm)", backgroundColor: "hsl(210, 40%, 94%)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}>
-                          <ImageIcon size={18} />
-                        </div>
-                      )}
-                    </td>
-                    <td>
-                      <strong style={{ fontSize: "15px" }}>{service.name}</strong>
-                    </td>
-                    <td>
-                      <span 
-                        className="badge"
-                        style={getColorStyle(service.category?.color || "")}
-                      >
-                        {service.category?.name || service.serviceCategory || "Chưa phân loại"}
-                      </span>
-                    </td>
-                    <td>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--text-secondary)" }}>
-                        <Clock size={14} />
-                        <span>{service.duration || "--"} phút</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span style={{ fontWeight: "500" }}>{formatCurrencyVND(service.price)}</span>
-                    </td>
-                    <td>
-                      {service.discountPrice && Number(service.discountPrice) < Number(service.price) ? (
-                        <span style={{ color: "var(--color-success)", fontWeight: "600" }}>
-                          {formatCurrencyVND(service.discountPrice)}
+                      </td>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                        <select
+                          value={currentCategoryId}
+                          onChange={(e) => {
+                            const newCatId = e.target.value;
+                            handleInlineChange(service.id, "categoryId", newCatId);
+                            handleAutoSave(service.id, { categoryId: newCatId });
+                          }}
+                          style={{
+                            ...getColorStyle(currentCategoryObj?.color || ""),
+                            width: "100%",
+                            height: "100%",
+                            padding: "0 10px",
+                            fontSize: "12px",
+                            fontWeight: "700",
+                            cursor: "pointer",
+                            boxSizing: "border-box",
+                            border: "none",
+                            borderRadius: 0
+                          }}
+                          className="excel-select"
+                        >
+                          <option value="" style={{ color: "var(--text-primary)" }}>-- Chưa phân loại --</option>
+                          {categories.map((cat) => (
+                            <option key={cat.id} value={cat.id} style={{ color: "var(--text-primary)" }}>
+                              {cat.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                        <input
+                          type="number"
+                          value={getInlineValue(service, "duration") as number || 0}
+                          onChange={(e) => handleInlineChange(service.id, "duration", parseInt(e.target.value) || 0)}
+                          onBlur={() => handleAutoSave(service.id, { duration: getInlineValue(service, "duration") as number })}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") e.currentTarget.blur();
+                          }}
+                          onFocus={(e) => e.target.select()}
+                          onMouseDown={handleMouseDownSelectAll}
+                          style={{
+                            border: "none",
+                            background: "transparent",
+                            width: "100%",
+                            height: "100%",
+                            paddingLeft: "32px",
+                            paddingRight: "32px",
+                            fontSize: "13px",
+                            textAlign: "center",
+                            boxSizing: "border-box",
+                            borderRadius: 0
+                          }}
+                          className="excel-input"
+                        />
+                        <span style={{
+                          position: "absolute",
+                          right: "10px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          fontSize: "11px",
+                          color: "var(--text-muted)",
+                          pointerEvents: "none"
+                        }}>
+                          phút
                         </span>
-                      ) : (
-                        <span style={{ color: "var(--text-muted)" }}>--</span>
-                      )}
-                    </td>
-                    <td>
-                      {service.category ? (
-                        <span style={{ fontWeight: "600" }}>{service.category.defaultCommission}%</span>
-                      ) : (
-                        <span style={{ color: "var(--text-muted)" }}>--</span>
-                      )}
-                    </td>
-                    <td>
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
-                        <button
-                          className="btn btn-secondary"
-                          style={{ padding: "6px 12px", fontSize: "12px" }}
-                          onClick={() => handleOpenEditModal(service)}
-                        >
-                          <Edit2 size={14} /> Sửa
-                        </button>
-                        <button
-                          className="btn btn-danger"
-                          style={{ padding: "6px 12px", fontSize: "12px" }}
-                          onClick={() => handleDelete(service.id)}
-                        >
-                          <Trash2 size={14} /> Xóa
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                        <input
+                          type="text"
+                          value={formatNumber(getInlineValue(service, "price") as number | string)}
+                          onChange={(e) => handlePriceChange(service.id, "price", e.target.value)}
+                          onBlur={() => handleAutoSave(service.id, { price: getInlineValue(service, "price") as number })}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") e.currentTarget.blur();
+                          }}
+                          onFocus={(e) => e.target.select()}
+                          onMouseDown={handleMouseDownSelectAll}
+                          style={{
+                            border: "none",
+                            background: "transparent",
+                            width: "100%",
+                            height: "100%",
+                            paddingLeft: "24px",
+                            paddingRight: "24px",
+                            fontSize: "13px",
+                            textAlign: "center",
+                            fontWeight: "500",
+                            boxSizing: "border-box",
+                            borderRadius: 0
+                          }}
+                          className="excel-input"
+                        />
+                        <span style={{
+                          position: "absolute",
+                          right: "10px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          fontSize: "12px",
+                          color: "var(--text-muted)",
+                          pointerEvents: "none",
+                          fontWeight: "500"
+                        }}>
+                          đ
+                        </span>
+                      </td>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                        <input
+                          type="text"
+                          value={displayDiscountVal !== null ? formatNumber(displayDiscountVal) : ""}
+                          onChange={(e) => handlePriceChange(service.id, "discountPrice", e.target.value)}
+                          onBlur={() => handleAutoSave(service.id, { discountPrice: getInlineValue(service, "discountPrice") as number })}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") e.currentTarget.blur();
+                          }}
+                          onFocus={(e) => e.target.select()}
+                          onMouseDown={handleMouseDownSelectAll}
+                          placeholder="--"
+                          style={{
+                            border: "none",
+                            background: "transparent",
+                            width: "100%",
+                            height: "100%",
+                            paddingLeft: "24px",
+                            paddingRight: "24px",
+                            fontSize: "13px",
+                            textAlign: "center",
+                            color: "var(--color-success)",
+                            fontWeight: "600",
+                            boxSizing: "border-box",
+                            borderRadius: 0
+                          }}
+                          className="excel-input"
+                        />
+                        {displayDiscountVal !== null && (
+                          <span style={{
+                            position: "absolute",
+                            right: "10px",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            fontSize: "12px",
+                            color: "var(--color-success)",
+                            pointerEvents: "none",
+                            fontWeight: "600"
+                          }}>
+                            đ
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: "0 8px", verticalAlign: "middle", textAlign: "center", height: "38px" }}>
+                        {currentCategoryObj ? (
+                          <span style={{ fontWeight: "600", fontSize: "13px", color: "var(--text-secondary)" }}>
+                            {currentCategoryObj.defaultCommission}%
+                          </span>
+                        ) : (
+                          <span style={{ color: "var(--text-muted)", fontSize: "13px" }}>--</span>
+                        )}
+                      </td>
+                      <td style={{ padding: "0 8px", verticalAlign: "middle", textAlign: "center", height: "38px" }}>
+                        <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>
+                          <button
+                            className="btn btn-secondary"
+                            style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                            onClick={() => handleOpenEditModal(service)}
+                            title="Chỉnh sửa chi tiết"
+                          >
+                            <Edit2 size={13} />
+                          </button>
+                          <button
+                            className="btn btn-danger"
+                            style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                            onClick={() => handleDelete(service.id)}
+                            title="Xóa dịch vụ"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -772,20 +1097,20 @@ export default function Services() {
               <X size={20} />
             </button>
             <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "20px" }}>
-              Quản lý nhóm dịch vụ
+              Quản lý phân loại
             </h2>
 
             <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "24px", overflowY: "auto", flex: 1 }}>
               {/* Left Side: Category List */}
               <div style={{ display: "flex", flexDirection: "column", gap: "12px", borderRight: "1px solid hsl(210, 40%, 90%)", paddingRight: "20px" }}>
-                <h3 style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-secondary)" }}>Danh sách nhóm dịch vụ</h3>
-                
+                <h3 style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-secondary)" }}>Danh sách phân loại</h3>
+
                 {categoriesLoading ? (
                   <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
                     <Loader2 className="animate-spin" size={24} style={{ color: "var(--color-primary)" }} />
                   </div>
                 ) : categories.length === 0 ? (
-                  <p style={{ color: "var(--text-muted)", fontSize: "13px", fontStyle: "italic" }}>Chưa có nhóm nào. Hãy tạo một nhóm ở biểu mẫu bên cạnh.</p>
+                  <p style={{ color: "var(--text-muted)", fontSize: "13px", fontStyle: "italic" }}>Chưa có phân loại nào. Hãy tạo một phân loại ở biểu mẫu bên cạnh.</p>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px", overflowY: "auto", paddingRight: "4px" }}>
                     {categories.map((cat) => (
@@ -836,11 +1161,11 @@ export default function Services() {
               {/* Right Side: Form (Add or Edit) */}
               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                 <h3 style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-secondary)" }}>
-                  {editingCategoryId ? "Chỉnh sửa nhóm" : "Thêm nhóm mới"}
+                  {editingCategoryId ? "Chỉnh sửa phân loại" : "Thêm phân loại mới"}
                 </h3>
 
                 <div className="form-group">
-                  <label className="form-label">Tên nhóm *</label>
+                  <label className="form-label">Tên phân loại *</label>
                   <input
                     className="form-input"
                     type="text"
@@ -915,7 +1240,7 @@ export default function Services() {
                     onClick={handleSaveCategory}
                     disabled={!categoryName.trim()}
                   >
-                    {editingCategoryId ? "Lưu thay đổi" : "Tạo nhóm"}
+                    {editingCategoryId ? "Lưu thay đổi" : "Tạo phân loại"}
                   </button>
                 </div>
               </div>
@@ -951,7 +1276,7 @@ export default function Services() {
               {modalMode === "create" ? "Thêm dịch vụ mới" : "Chỉnh sửa dịch vụ"}
             </h2>
             <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              
+
               <div style={{ display: "grid", gridTemplateColumns: "2.5fr 2fr 1.2fr", gap: "16px", alignItems: "flex-end" }}>
                 <style>{`
                   /* Hide browser default number input spin buttons */
@@ -978,7 +1303,7 @@ export default function Services() {
 
                 {/* Custom Category Dropdown */}
                 <div ref={catDropdownRef} className="form-group" style={{ margin: 0, position: "relative" }}>
-                  <label className="form-label">Nhóm dịch vụ *</label>
+                  <label className="form-label">Phân loại *</label>
                   <button
                     type="button"
                     className="form-input"
@@ -999,7 +1324,7 @@ export default function Services() {
                         {categories.find(c => c.id === categoryId)?.name}
                       </span>
                     ) : (
-                      <span style={{ color: "var(--text-muted)" }}>-- Chọn nhóm --</span>
+                      <span style={{ color: "var(--text-muted)" }}>-- Chọn phân loại --</span>
                     )}
                     <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>▼</span>
                   </button>
@@ -1063,7 +1388,7 @@ export default function Services() {
                               setShowCategorySubForm(true);
                               setIsCatDropdownOpen(false);
                             }}
-                            title="Sửa nhóm"
+                            title="Sửa phân loại"
                           >
                             ✏️
                           </button>
@@ -1125,10 +1450,10 @@ export default function Services() {
                   marginTop: "-8px"
                 }}>
                   <h4 style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-primary)" }}>
-                    {subFormMode === "create" ? "➕ Thêm nhóm dịch vụ mới" : "✏️ Chỉnh sửa nhóm dịch vụ"}
+                    {subFormMode === "create" ? "➕ Thêm phân loại mới" : "✏️ Chỉnh sửa phân loại"}
                   </h4>
                   <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ fontSize: "11px" }}>Tên nhóm *</label>
+                    <label className="form-label" style={{ fontSize: "11px" }}>Tên phân loại *</label>
                     <input
                       className="form-input"
                       type="text"
@@ -1214,7 +1539,7 @@ export default function Services() {
                               body: JSON.stringify(payload)
                             });
                           }
-                          if (!res.ok) throw new Error("Lỗi khi lưu nhóm dịch vụ");
+                          if (!res.ok) throw new Error("Lỗi khi lưu phân loại");
                           const savedCat = await res.json();
                           await fetchCategories();
                           if (subFormMode === "create") {
@@ -1229,7 +1554,7 @@ export default function Services() {
                         }
                       }}
                     >
-                      Lưu nhóm
+                      Lưu phân loại
                     </button>
                   </div>
                 </div>
@@ -1397,7 +1722,7 @@ export default function Services() {
               {/* Drag & Drop Image Uploader Zone */}
               <div className="form-group">
                 <label className="form-label">Hình ảnh minh họa</label>
-                
+
                 <div
                   onDragOver={(e) => {
                     e.preventDefault();
