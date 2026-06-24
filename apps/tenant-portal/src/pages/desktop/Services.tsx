@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { formatCurrencyVND } from "@salon/shared-utils";
 import { Layers, Plus, Edit2, Trash2, Loader2, X, Search, Clock, Image as ImageIcon, ChevronUp, ChevronDown, Check, Save } from "lucide-react";
+import { ExcelInput, ExcelSelect } from "../../components/desktop/TableComponents";
 
 interface ServiceCategory {
   id: string;
@@ -21,6 +22,7 @@ interface Service {
   duration?: number;
   imageUrl?: string;
   branchId?: string;
+  commission?: number;
 }
 
 const COLOR_PRESETS = [
@@ -292,6 +294,40 @@ export default function Services() {
     }
   };
 
+  const handleCommissionAutoSave = async (serviceId: string, commissionVal: number) => {
+    const service = services.find(s => s.id === serviceId);
+    if (!service || !service.categoryId) return;
+    const category = categories.find(c => c.id === service.categoryId);
+    if (!category) return;
+    
+    if (Number(category.defaultCommission) === commissionVal) return;
+
+    try {
+      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/service-categories/${service.categoryId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: category.name,
+          color: category.color,
+          defaultCommission: commissionVal
+        })
+      });
+
+      if (!res.ok) throw new Error("Lỗi khi tự động lưu hoa hồng");
+
+      setInlineEdits(prev => {
+        const copy = { ...prev };
+        delete copy[serviceId];
+        return copy;
+      });
+
+      fetchCategories(true);
+      fetchServices(true);
+    } catch (err: any) {
+      console.error("Commission auto save failed:", err);
+    }
+  };
+
   const handleInlineChange = (serviceId: string, field: keyof Service, value: any) => {
     setInlineEdits(prev => ({
       ...prev,
@@ -384,15 +420,15 @@ export default function Services() {
       });
 
       // Refresh list
-      fetchServices();
+      fetchServices(true);
     } catch (err: any) {
       console.error("Auto save failed:", err);
     }
   };
 
-  const fetchServices = async () => {
+  const fetchServices = async (silent = false) => {
     if (!currentTenantId) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const url = currentBranchId
@@ -406,13 +442,13 @@ export default function Services() {
     } catch (err: any) {
       setError(err.message || "Đã xảy ra lỗi");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (silent = false) => {
     if (!currentTenantId) return;
-    setCategoriesLoading(true);
+    if (!silent) setCategoriesLoading(true);
     try {
       const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/service-categories`);
       if (!res.ok) throw new Error("Không thể tải danh sách nhóm dịch vụ");
@@ -421,7 +457,7 @@ export default function Services() {
     } catch (err: any) {
       console.error("Lỗi tải danh mục:", err);
     } finally {
-      setCategoriesLoading(false);
+      if (!silent) setCategoriesLoading(false);
     }
   };
 
@@ -801,7 +837,7 @@ export default function Services() {
         ) : (
           <div className="data-table-container">
             <style>{`
-              .excel-input, .excel-select {
+              .excel-input {
                 transition: all 0.15s ease;
                 border-radius: 0 !important;
                 border: none !important;
@@ -810,10 +846,10 @@ export default function Services() {
                 height: 38px;
                 box-sizing: border-box;
               }
-              .excel-input:hover, .excel-select:hover {
+              .excel-input:hover {
                 background-color: hsl(210, 40%, 96%) !important;
               }
-              .excel-input:focus, .excel-select:focus {
+              .excel-input:focus {
                 background-color: white !important;
                 outline: 2px solid var(--color-primary) !important;
                 outline-offset: -2px;
@@ -821,8 +857,22 @@ export default function Services() {
                 z-index: 10;
                 position: relative;
               }
+              .excel-select {
+                transition: all 0.15s ease;
+                border-radius: 6px !important;
+                border: none !important;
+                box-sizing: border-box;
+              }
+              .excel-select:hover {
+                opacity: 0.9;
+              }
               .excel-select:focus {
+                background-color: white !important;
                 color: var(--text-primary) !important;
+                outline: 2px solid var(--color-primary) !important;
+                outline-offset: -1px;
+                z-index: 10;
+                position: relative;
               }
               /* Remove default arrows for number input */
               .excel-input[type=number]::-webkit-inner-spin-button, 
@@ -863,186 +913,78 @@ export default function Services() {
                   return (
                     <tr key={service.id}>
                       <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
-                        <input
-                          type="text"
+                        <ExcelInput
                           value={getInlineValue(service, "name") as string}
-                          onChange={(e) => handleInlineChange(service.id, "name", e.target.value)}
+                          onChange={(val) => handleInlineChange(service.id, "name", val)}
                           onBlur={() => handleAutoSave(service.id, { name: getInlineValue(service, "name") as string })}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") e.currentTarget.blur();
-                          }}
-                          onFocus={(e) => e.target.select()}
-                          onMouseDown={handleMouseDownSelectAll}
-                          style={{
-                            border: "none",
-                            background: "transparent",
-                            width: "100%",
-                            height: "100%",
-                            padding: "0 10px",
-                            fontSize: "13px",
-                            fontWeight: "600",
-                            color: "var(--text-primary)",
-                            boxSizing: "border-box"
-                          }}
-                          className="excel-input"
+                          fontWeight="600"
                         />
                       </td>
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
-                        <select
+                      <td style={{ padding: "3px 6px", verticalAlign: "middle", height: "38px", boxSizing: "border-box" }}>
+                        <ExcelSelect
                           value={currentCategoryId}
-                          onChange={(e) => {
-                            const newCatId = e.target.value;
+                          onChange={(newCatId) => {
                             handleInlineChange(service.id, "categoryId", newCatId);
                             handleAutoSave(service.id, { categoryId: newCatId });
                           }}
-                          style={{
-                            ...getColorStyle(currentCategoryObj?.color || ""),
-                            width: "100%",
-                            height: "100%",
-                            padding: "0 10px",
-                            fontSize: "12px",
-                            fontWeight: "700",
-                            cursor: "pointer",
-                            boxSizing: "border-box",
-                            border: "none",
-                            borderRadius: 0
-                          }}
-                          className="excel-select"
-                        >
-                          <option value="" style={{ color: "var(--text-primary)" }}>-- Chưa phân loại --</option>
-                          {categories.map((cat) => (
-                            <option key={cat.id} value={cat.id} style={{ color: "var(--text-primary)" }}>
-                              {cat.name}
-                            </option>
-                          ))}
-                        </select>
+                          options={categories.map((cat) => ({ value: cat.id, label: cat.name }))}
+                          colorStyle={getColorStyle(currentCategoryObj?.color || "")}
+                          placeholder="-- Chưa phân loại --"
+                        />
                       </td>
                       <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
-                        <input
+                        <ExcelInput
                           type="number"
                           value={getInlineValue(service, "duration") as number || 0}
-                          onChange={(e) => handleInlineChange(service.id, "duration", parseInt(e.target.value) || 0)}
+                          onChange={(val) => handleInlineChange(service.id, "duration", parseInt(val) || 0)}
                           onBlur={() => handleAutoSave(service.id, { duration: getInlineValue(service, "duration") as number })}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") e.currentTarget.blur();
-                          }}
-                          onFocus={(e) => e.target.select()}
-                          onMouseDown={handleMouseDownSelectAll}
-                          style={{
-                            border: "none",
-                            background: "transparent",
-                            width: "100%",
-                            height: "100%",
-                            paddingLeft: "32px",
-                            paddingRight: "32px",
-                            fontSize: "13px",
-                            textAlign: "center",
-                            boxSizing: "border-box",
-                            borderRadius: 0
-                          }}
-                          className="excel-input"
+                          textAlign="center"
+                          unit="phút"
                         />
-                        <span style={{
-                          position: "absolute",
-                          right: "10px",
-                          top: "50%",
-                          transform: "translateY(-50%)",
-                          fontSize: "11px",
-                          color: "var(--text-muted)",
-                          pointerEvents: "none"
-                        }}>
-                          phút
-                        </span>
                       </td>
                       <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
-                        <input
-                          type="text"
+                        <ExcelInput
                           value={formatNumber(getInlineValue(service, "price") as number | string)}
-                          onChange={(e) => handlePriceChange(service.id, "price", e.target.value)}
+                          onChange={(val) => handlePriceChange(service.id, "price", val)}
                           onBlur={() => handleAutoSave(service.id, { price: getInlineValue(service, "price") as number })}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") e.currentTarget.blur();
-                          }}
-                          onFocus={(e) => e.target.select()}
-                          onMouseDown={handleMouseDownSelectAll}
-                          style={{
-                            border: "none",
-                            background: "transparent",
-                            width: "100%",
-                            height: "100%",
-                            paddingLeft: "24px",
-                            paddingRight: "24px",
-                            fontSize: "13px",
-                            textAlign: "center",
-                            fontWeight: "500",
-                            boxSizing: "border-box",
-                            borderRadius: 0
-                          }}
-                          className="excel-input"
+                          textAlign="center"
+                          fontWeight="500"
+                          unit="đ"
                         />
-                        <span style={{
-                          position: "absolute",
-                          right: "10px",
-                          top: "50%",
-                          transform: "translateY(-50%)",
-                          fontSize: "12px",
-                          color: "var(--text-muted)",
-                          pointerEvents: "none",
-                          fontWeight: "500"
-                        }}>
-                          đ
-                        </span>
                       </td>
                       <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
-                        <input
-                          type="text"
+                        <ExcelInput
                           value={displayDiscountVal !== null ? formatNumber(displayDiscountVal) : ""}
-                          onChange={(e) => handlePriceChange(service.id, "discountPrice", e.target.value)}
+                          onChange={(val) => handlePriceChange(service.id, "discountPrice", val)}
                           onBlur={() => handleAutoSave(service.id, { discountPrice: getInlineValue(service, "discountPrice") as number })}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") e.currentTarget.blur();
-                          }}
-                          onFocus={(e) => e.target.select()}
-                          onMouseDown={handleMouseDownSelectAll}
                           placeholder="--"
-                          style={{
-                            border: "none",
-                            background: "transparent",
-                            width: "100%",
-                            height: "100%",
-                            paddingLeft: "24px",
-                            paddingRight: "24px",
-                            fontSize: "13px",
-                            textAlign: "center",
-                            color: "var(--color-success)",
-                            fontWeight: "600",
-                            boxSizing: "border-box",
-                            borderRadius: 0
-                          }}
-                          className="excel-input"
+                          textAlign="center"
+                          fontWeight="600"
+                          textColor="var(--color-success)"
+                          unit="đ"
+                          showUnit={displayDiscountVal !== null}
                         />
-                        {displayDiscountVal !== null && (
-                          <span style={{
-                            position: "absolute",
-                            right: "10px",
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            fontSize: "12px",
-                            color: "var(--color-success)",
-                            pointerEvents: "none",
-                            fontWeight: "600"
-                          }}>
-                            đ
-                          </span>
-                        )}
                       </td>
-                      <td style={{ padding: "0 8px", verticalAlign: "middle", textAlign: "center", height: "38px" }}>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
                         {currentCategoryObj ? (
-                          <span style={{ fontWeight: "600", fontSize: "13px", color: "var(--text-secondary)" }}>
-                            {currentCategoryObj.defaultCommission}%
-                          </span>
+                          <ExcelInput
+                            type="number"
+                            value={getInlineValue(service, "commission") !== undefined 
+                              ? (getInlineValue(service, "commission") as number) 
+                              : (currentCategoryObj.defaultCommission || 0)}
+                            onChange={(val) => handleInlineChange(service.id, "commission", parseInt(val) || 0)}
+                            onBlur={() => handleCommissionAutoSave(service.id, (getInlineValue(service, "commission") !== undefined 
+                              ? (getInlineValue(service, "commission") as number) 
+                              : currentCategoryObj.defaultCommission))}
+                            textAlign="center"
+                            fontWeight="600"
+                            textColor="var(--text-secondary)"
+                            unit="%"
+                          />
                         ) : (
-                          <span style={{ color: "var(--text-muted)", fontSize: "13px" }}>--</span>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-muted)", fontSize: "13px" }}>
+                            --
+                          </div>
                         )}
                       </td>
                       <td style={{ padding: "0 8px", verticalAlign: "middle", textAlign: "center", height: "38px" }}>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { formatCurrencyVND } from "@salon/shared-utils";
 import { Package, Plus, Edit2, Trash2, Loader2, X, Search, AlertTriangle, ArrowUpRight, ArrowDownLeft, Image as ImageIcon } from "lucide-react";
+import { ExcelInput } from "../../components/desktop/TableComponents";
 
 interface InventoryItem {
   id: string;
@@ -21,6 +22,9 @@ export default function Inventories() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Inline editing helper states & functions
+  const [inlineEdits, setInlineEdits] = useState<Record<string, Partial<InventoryItem>>>({});
 
   // Filter State
   const [searchTerm, setSearchTerm] = useState("");
@@ -43,9 +47,99 @@ export default function Inventories() {
   const [adjustType, setAdjustType] = useState<"import" | "export">("import");
   const [adjustQuantity, setAdjustQuantity] = useState<number>(1);
 
-  const fetchInventory = async () => {
+  const formatNumber = (val: number | string | undefined | null): string => {
+    if (val === undefined || val === null || val === "") return "";
+    const cleaned = String(val).replace(/\D/g, "");
+    if (!cleaned) return "";
+    return new Intl.NumberFormat("en-US").format(parseInt(cleaned, 10));
+  };
+
+  const handlePriceChange = (itemId: string, field: "costPrice" | "sellPrice" | "quantity", valStr: string) => {
+    const cleaned = valStr.replace(/\D/g, "");
+    if (cleaned === "") {
+      handleInlineChange(itemId, field, 0);
+    } else {
+      handleInlineChange(itemId, field, parseInt(cleaned, 10));
+    }
+  };
+
+  const handleInlineChange = (itemId: string, field: keyof InventoryItem, value: any) => {
+    setInlineEdits(prev => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        [field]: value
+      }
+    }));
+  };
+
+  const getInlineValue = (item: InventoryItem, field: keyof InventoryItem) => {
+    if (inlineEdits[item.id] && inlineEdits[item.id][field] !== undefined) {
+      return inlineEdits[item.id][field];
+    }
+    return item[field];
+  };
+
+  const handleAutoSave = async (itemId: string, updatedFields: Partial<InventoryItem>) => {
+    const originalItem = items.find(i => i.id === itemId);
+    if (!originalItem) return;
+
+    const mergedEdits = {
+      ...inlineEdits[itemId],
+      ...updatedFields
+    };
+
+    const updatedItem = {
+      ...originalItem,
+      ...mergedEdits
+    };
+
+    // Skip save if values are identical to original
+    let hasChanges = false;
+    for (const key of Object.keys(updatedFields) as Array<keyof InventoryItem>) {
+      if (updatedFields[key] !== originalItem[key]) {
+        hasChanges = true;
+        break;
+      }
+    }
+    if (!hasChanges) return;
+
+    const payload = {
+      name: updatedItem.name,
+      costPrice: Number(updatedItem.costPrice),
+      sellPrice: Number(updatedItem.sellPrice),
+      discountPrice: updatedItem.discountPrice !== undefined && updatedItem.discountPrice !== null ? Number(updatedItem.discountPrice) : Number(updatedItem.sellPrice),
+      quantity: Number(updatedItem.quantity),
+      imageUrl: updatedItem.imageUrl || null,
+      branchId: updatedItem.branchId || null
+    };
+
+    try {
+      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/inventories/${itemId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error("Lỗi khi tự động lưu");
+
+      // Clear inlineEdits for this item
+      setInlineEdits(prev => {
+        const copy = { ...prev };
+        delete copy[itemId];
+        return copy;
+      });
+
+      // Refresh list silently
+      fetchInventory(true);
+    } catch (err: any) {
+      console.error("Auto save failed:", err);
+    }
+  };
+
+  const fetchInventory = async (silent = false) => {
     if (!currentTenantId) return;
-    setLoading(true);
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const url = currentBranchId 
@@ -59,7 +153,7 @@ export default function Inventories() {
     } catch (err: any) {
       setError(err.message || "Đã xảy ra lỗi");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -176,13 +270,6 @@ export default function Inventories() {
   return (
     <>
       <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-        {/* Header */}
-        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
-          <button className="btn btn-primary" onClick={handleOpenCreateModal}>
-            <Plus size={18} /> Nhập sản phẩm mới
-          </button>
-        </div>
-
         {/* Filter and Search Bar */}
         <div className="card" style={{ display: "flex", flexWrap: "wrap", gap: "16px", alignItems: "center", justifyContent: "space-between", padding: "16px" }}>
           {/* Toggle Option */}
@@ -205,17 +292,29 @@ export default function Inventories() {
             </label>
           </div>
 
-          {/* Search Input */}
-          <div style={{ position: "relative", width: "100%", maxWidth: "320px" }}>
-            <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Tìm kiếm sản phẩm..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ paddingLeft: "36px" }}
-            />
+          {/* Search & Actions */}
+          <div style={{
+            display: "flex",
+            gap: "12px",
+            alignItems: "center",
+            width: "100%",
+            maxWidth: "520px",
+            marginLeft: "auto"
+          }}>
+            <div style={{ position: "relative", width: "100%", maxWidth: "320px", flexShrink: 1, minWidth: "160px" }}>
+              <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Tìm kiếm sản phẩm..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ paddingLeft: "36px" }}
+              />
+            </div>
+            <button className="btn btn-primary" onClick={handleOpenCreateModal} style={{ display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", flexShrink: 0 }}>
+              <Plus size={18} /> Nhập sản phẩm mới
+            </button>
           </div>
         </div>
 
@@ -236,16 +335,46 @@ export default function Inventories() {
           </div>
         ) : (
           <div className="data-table-container">
+            <style>{`
+              .excel-input {
+                transition: all 0.15s ease;
+                border-radius: 0 !important;
+                border: none !important;
+                background: transparent;
+                width: 100%;
+                height: 38px;
+                box-sizing: border-box;
+              }
+              .excel-input:hover {
+                background-color: hsl(210, 40%, 96%) !important;
+              }
+              .excel-input:focus {
+                background-color: white !important;
+                outline: 2px solid var(--color-primary) !important;
+                outline-offset: -2px;
+                box-shadow: none !important;
+                z-index: 10;
+                position: relative;
+              }
+              /* Remove default arrows for number input */
+              .excel-input[type=number]::-webkit-inner-spin-button, 
+              .excel-input[type=number]::-webkit-outer-spin-button { 
+                -webkit-appearance: none; 
+                margin: 0; 
+              }
+              .excel-input[type=number] {
+                -moz-appearance: textfield;
+              }
+            `}</style>
             <table className="data-table">
               <thead>
                 <tr>
-                  <th style={{ width: "80px" }}>Ảnh</th>
-                  <th>Tên sản phẩm</th>
-                  <th>Giá vốn (giá nhập)</th>
-                  <th>Giá bán lẻ</th>
-                  <th>Tồn kho</th>
-                  <th>Trạng thái</th>
-                  <th style={{ width: "240px", textAlign: "right" }}>Thao tác</th>
+                  <th style={{ padding: "6px 10px", fontSize: "13px" }}>Tên sản phẩm</th>
+                  <th style={{ padding: "6px 10px", fontSize: "13px", width: "160px", textAlign: "center" }}>Giá vốn (giá nhập)</th>
+                  <th style={{ padding: "6px 10px", fontSize: "13px", width: "160px", textAlign: "center" }}>Giá bán lẻ</th>
+                  <th style={{ padding: "6px 10px", fontSize: "13px", width: "120px", textAlign: "center" }}>Tồn kho</th>
+                  <th style={{ padding: "6px 10px", fontSize: "13px", width: "140px" }}>Trạng thái</th>
+                  <th style={{ padding: "6px 10px", fontSize: "13px", width: "160px", textAlign: "center" }}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -255,34 +384,46 @@ export default function Inventories() {
 
                   return (
                     <tr key={item.id}>
-                      <td>
-                        {item.imageUrl ? (
-                          <img
-                            src={item.imageUrl}
-                            alt={item.name}
-                            style={{ width: "48px", height: "48px", borderRadius: "var(--radius-sm)", objectFit: "cover" }}
-                          />
-                        ) : (
-                          <div style={{ width: "48px", height: "48px", borderRadius: "var(--radius-sm)", backgroundColor: "hsl(210, 40%, 94%)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}>
-                            <ImageIcon size={18} />
-                          </div>
-                        )}
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                        <ExcelInput
+                          value={getInlineValue(item, "name") as string}
+                          onChange={(val) => handleInlineChange(item.id, "name", val)}
+                          onBlur={() => handleAutoSave(item.id, { name: getInlineValue(item, "name") as string })}
+                          fontWeight="600"
+                        />
                       </td>
-                      <td>
-                        <strong style={{ fontSize: "15px" }}>{item.name}</strong>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                        <ExcelInput
+                          value={formatNumber(getInlineValue(item, "costPrice") as number | string)}
+                          onChange={(val) => handlePriceChange(item.id, "costPrice", val)}
+                          onBlur={() => handleAutoSave(item.id, { costPrice: getInlineValue(item, "costPrice") as number })}
+                          textAlign="center"
+                          fontWeight="500"
+                          unit="đ"
+                        />
                       </td>
-                      <td>
-                        <span>{formatCurrencyVND(item.costPrice)}</span>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                        <ExcelInput
+                          value={formatNumber(getInlineValue(item, "sellPrice") as number | string)}
+                          onChange={(val) => handlePriceChange(item.id, "sellPrice", val)}
+                          onBlur={() => handleAutoSave(item.id, { sellPrice: getInlineValue(item, "sellPrice") as number })}
+                          textAlign="center"
+                          fontWeight="500"
+                          unit="đ"
+                        />
                       </td>
-                      <td>
-                        <span style={{ fontWeight: "500" }}>{formatCurrencyVND(item.sellPrice)}</span>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                        <ExcelInput
+                          type="number"
+                          value={getInlineValue(item, "quantity") as number || 0}
+                          onChange={(val) => handleInlineChange(item.id, "quantity", parseInt(val) || 0)}
+                          onBlur={() => handleAutoSave(item.id, { quantity: getInlineValue(item, "quantity") as number })}
+                          textAlign="center"
+                          fontWeight="600"
+                          textColor={isOutOfStock ? "var(--color-danger)" : isLowStock ? "var(--color-warning)" : "inherit"}
+                        />
                       </td>
-                      <td>
-                        <strong style={{ color: isOutOfStock ? "var(--color-danger)" : isLowStock ? "var(--color-warning)" : "inherit" }}>
-                          {item.quantity}
-                        </strong>
-                      </td>
-                      <td>
+                      <td style={{ padding: "0 10px", verticalAlign: "middle", height: "38px" }}>
                         {isOutOfStock ? (
                           <span className="badge badge-danger">Hết hàng</span>
                         ) : isLowStock ? (
@@ -293,28 +434,31 @@ export default function Inventories() {
                           <span className="badge badge-success">Còn hàng</span>
                         )}
                       </td>
-                      <td>
-                        <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+                      <td style={{ padding: "0 8px", verticalAlign: "middle", textAlign: "center", height: "38px" }}>
+                        <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>
                           <button
                             className="btn btn-secondary"
-                            style={{ padding: "6px 12px", fontSize: "12px", gap: "4px" }}
+                            style={{ padding: "4px 8px", fontSize: "12px", borderRadius: "var(--radius-sm)" }}
                             onClick={() => handleOpenAdjustModal(item)}
+                            title="Nhập / Xuất kho"
                           >
                             Nhập/Xuất
                           </button>
                           <button
                             className="btn btn-secondary"
-                            style={{ padding: "6px 12px", fontSize: "12px" }}
+                            style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
                             onClick={() => handleOpenEditModal(item)}
+                            title="Chỉnh sửa chi tiết"
                           >
-                            <Edit2 size={14} /> Sửa
+                            <Edit2 size={13} />
                           </button>
                           <button
                             className="btn btn-danger"
-                            style={{ padding: "6px 12px", fontSize: "12px" }}
+                            style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
                             onClick={() => handleDelete(item.id)}
+                            title="Xóa sản phẩm"
                           >
-                            <Trash2 size={14} /> Xóa
+                            <Trash2 size={13} />
                           </button>
                         </div>
                       </td>
