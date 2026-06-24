@@ -70,6 +70,50 @@ const MOCK_CUSTOMERS = [
   { id: "c3", name: "Trần Thị B", phone: "0918765432", rank: "Bạc (Tích lũy 3%)" }
 ];
 
+const getInitialInvoices = () => {
+  try {
+    const saved = localStorage.getItem("pos_invoices");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {
+    console.error("Failed to parse saved invoices", e);
+  }
+  return [
+    {
+      id: "inv-1",
+      name: "Hóa đơn 1",
+      cart: [],
+      selectedCustomerId: "c1",
+      voucherCode: "",
+      discountPercent: 0,
+      paymentMethod: "CASH"
+    }
+  ];
+};
+
+const getInitialActiveInvoiceId = () => {
+  return localStorage.getItem("pos_active_invoice_id") || "inv-1";
+};
+
+const getInitialCustomers = () => {
+  try {
+    const saved = localStorage.getItem("pos_customers");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {
+    console.error("Failed to parse saved customers", e);
+  }
+  return MOCK_CUSTOMERS;
+};
+
+const getInitialSelectedStylistId = () => {
+  return localStorage.getItem("pos_selected_stylist_id") || "";
+};
+
 export default function POS() {
   const { currentTenantId, currentBranchId, branches, user } = useAuthStore();
 
@@ -79,10 +123,26 @@ export default function POS() {
   const [inventories, setInventories] = useState<ProductItem[]>([]);
   const [packages, setPackages] = useState<PackageItem[]>([]);
 
+  // Customers dynamic state
+  const [customers, setCustomers] = useState(getInitialCustomers);
+
+  const handleCreateCustomer = (name: string, phone: string) => {
+    const newCust = {
+      id: `c-${Date.now()}`,
+      name,
+      phone,
+      rank: "Khách mới"
+    };
+    setCustomers(prev => [...prev, newCust]);
+    setSelectedCustomerId(newCust.id);
+    return newCust;
+  };
+
   // Selection & UI States
-  const [selectedStylistId, setSelectedStylistId] = useState<string>("");
+  const [selectedStylistId, setSelectedStylistId] = useState<string>(getInitialSelectedStylistId);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [flashStaff, setFlashStaff] = useState(false);
 
   // Multi-invoice Tab State
   const [invoices, setInvoices] = useState<Array<{
@@ -102,18 +162,8 @@ export default function POS() {
     voucherCode: string;
     discountPercent: number;
     paymentMethod: string;
-  }>>([
-    {
-      id: "inv-1",
-      name: "Hóa đơn 1",
-      cart: [],
-      selectedCustomerId: "c1",
-      voucherCode: "",
-      discountPercent: 0,
-      paymentMethod: "CASH"
-    }
-  ]);
-  const [activeInvoiceId, setActiveInvoiceId] = useState<string>("inv-1");
+  }>>(getInitialInvoices);
+  const [activeInvoiceId, setActiveInvoiceId] = useState<string>(getInitialActiveInvoiceId);
 
   const activeInvoice = invoices.find(inv => inv.id === activeInvoiceId) || invoices[0];
   const cart = activeInvoice.cart;
@@ -227,18 +277,28 @@ export default function POS() {
     fetchPOSData();
   }, [currentTenantId, currentBranchId]);
 
+  // Sync state changes to localStorage
+  useEffect(() => {
+    localStorage.setItem("pos_invoices", JSON.stringify(invoices));
+  }, [invoices]);
+
+  useEffect(() => {
+    localStorage.setItem("pos_active_invoice_id", activeInvoiceId);
+  }, [activeInvoiceId]);
+
+  useEffect(() => {
+    localStorage.setItem("pos_customers", JSON.stringify(customers));
+  }, [customers]);
+
+  useEffect(() => {
+    localStorage.setItem("pos_selected_stylist_id", selectedStylistId);
+  }, [selectedStylistId]);
+
   // Fallbacks
   const activeStaff = staff.length > 0 ? staff : MOCK_STAFF;
   const activeServices = services.length > 0 ? services : MOCK_SERVICES;
   const activeProducts = inventories.length > 0 ? inventories : MOCK_PRODUCTS;
   const activePackages = packages.length > 0 ? packages : MOCK_PACKAGES;
-
-  // Initialize selected default stylist
-  useEffect(() => {
-    if (activeStaff.length > 0 && !selectedStylistId) {
-      setSelectedStylistId(activeStaff[0].id);
-    }
-  }, [activeStaff, selectedStylistId]);
 
   // Extract distinct category names from active services list
   const serviceCategories = Array.from(
@@ -247,6 +307,11 @@ export default function POS() {
 
   // Add Item to cart (Prevent row merging: unique cart ID generated on each click)
   const addToCart = (item: any, type: "SERVICE" | "PRODUCT" | "PACKAGE") => {
+    if (!selectedStylistId) {
+      setFlashStaff(true);
+      setTimeout(() => setFlashStaff(false), 1500);
+      return;
+    }
     const price = type === "SERVICE" ? item.price : (type === "PRODUCT" ? item.sellPrice : item.price);
     const itemId = item.id;
     const uniqueKey = `${itemId}-${selectedStylistId}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
@@ -397,7 +462,7 @@ export default function POS() {
         discountAmount,
         finalAmount,
         paymentMethod,
-        customer: MOCK_CUSTOMERS.find(c => c.id === selectedCustomerId),
+        customer: customers.find(c => c.id === selectedCustomerId),
         cashier: { name: user?.name || "Thu ngân" },
         items: cart.map(c => ({
           id: c.id,
@@ -460,6 +525,7 @@ export default function POS() {
           filteredPackages={filteredPackages}
           addToCart={addToCart}
           cart={cart}
+          flashStaff={flashStaff}
         />
 
         {/* RIGHT COLUMN: Cart & Billing Info */}
@@ -489,7 +555,8 @@ export default function POS() {
           updateCartItemPrice={updateCartItemPrice}
           updateCartItemDiscount={updateCartItemDiscount}
           adjustQuantity={adjustQuantity}
-          customers={MOCK_CUSTOMERS}
+          customers={customers}
+          onCreateCustomer={handleCreateCustomer}
         />
 
       </div>

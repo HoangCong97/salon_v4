@@ -66,10 +66,10 @@ Tài liệu này chia nhỏ toàn bộ các chức năng màn hình và nghiệp
 - [ ] **Task 9.4**: UI Thống kê Hoa hồng trên Mobile (Employee): Hiển thị doanh thu thực hiện hôm nay, hoa hồng tạm tính thời gian thực và lịch sử bảng lương.
 
 ### [ ] MODULE 10: HÓA ĐƠN & THANH TOÁN POS TẠI QUẦY (PC)
-- [ ] **Task 10.1**: API Tạo hóa đơn & POS checkout: Tạo hóa đơn nháp, liên kết lịch hẹn, gán mã nhân viên (`staff_id`) cho từng dòng dịch vụ/sản phẩm để tính hoa hồng.
-- [ ] **Task 10.2**: UI Bán hàng POS Checkout: Thiết lập Split-Pane, hỗ trợ tìm kiếm nhanh sản phẩm/dịch vụ, chọn thông tin khách hàng, nhập mã Voucher giảm giá, trừ số buổi thẻ liệu trình.
-- [ ] **Task 10.3**: API & UI Xử lý thanh toán: Tích hợp hiển thị mã QR động VNPAY/PayOS chuyển khoản đối soát, lưu ảnh giao dịch, in hóa đơn nhiệt.
-- [ ] **Task 10.4**: API & UI Đối soát cuối ca (Cashier reconciliation): Thống kê doanh thu thực tế thu được trong ca, bàn giao két tiền mặt.
+- [x] **Task 10.1**: API Tạo hóa đơn & POS checkout: Tạo hóa đơn nháp, liên kết lịch hẹn, gán mã nhân viên (`staff_id`) cho từng dòng dịch vụ/sản phẩm để tính hoa hồng.
+- [x] **Task 10.2**: UI Bán hàng POS Checkout: Thiết lập Split-Pane, hỗ trợ tìm kiếm nhanh sản phẩm/dịch vụ, chọn thông tin khách hàng, nhập mã Voucher giảm giá, trừ số buổi thẻ liệu trình.
+- [x] **Task 10.3**: API & UI Xử lý thanh toán: Tích hợp hiển thị mã QR động VNPAY/PayOS chuyển khoản đối soát, lưu ảnh giao dịch, in hóa đơn nhiệt.
+- [x] **Task 10.4**: API & UI Đối soát cuối ca (Cashier reconciliation): Thống kê doanh thu thực tế thu được trong ca, bàn giao két tiền mặt.
 
 ---
 

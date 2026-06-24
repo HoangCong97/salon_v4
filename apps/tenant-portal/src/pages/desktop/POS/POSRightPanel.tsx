@@ -5,6 +5,7 @@ import {
 import { formatCurrencyVND } from "@salon/shared-utils";
 import { ExcelInput, ExcelSelect } from "../../../components/desktop/TableComponents";
 import { getEmployeeColor } from "./POSLeftPanel";
+import { POSCreateCustomerModal } from "./POSReceiptModal";
 
 interface CartItem {
   id: string;
@@ -70,6 +71,7 @@ interface POSRightPanelProps {
   updateCartItemDiscount: (cartId: string, newDiscountVal: string | number) => void;
   adjustQuantity: (cartId: string, amount: number) => void;
   customers: Array<{ id: string; name: string; phone: string; rank: string }>;
+  onCreateCustomer: (name: string, phone: string) => void;
 }
 
 const formatNumber = (val: number | string | undefined | null): string => {
@@ -106,14 +108,70 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
   updateCartItemDiscount,
   adjustQuantity,
   customers,
+  onCreateCustomer,
 }) => {
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
 
+  const [customerQuery, setCustomerQuery] = React.useState("");
+  const [showSuggestions, setShowSuggestions] = React.useState(false);
+  const [showCreateModal, setShowCreateModal] = React.useState(false);
+  const [prefillName, setPrefillName] = React.useState("");
+  const [prefillPhone, setPrefillPhone] = React.useState("");
+
+  React.useEffect(() => {
+    if (selectedCustomer && selectedCustomerId !== "c1") {
+      setCustomerQuery(selectedCustomer.name);
+    } else {
+      setCustomerQuery("");
+    }
+  }, [selectedCustomerId, selectedCustomer]);
+
+  const handleInputChange = (val: string) => {
+    setCustomerQuery(val);
+    setShowSuggestions(true);
+    if (!val.trim()) {
+      setSelectedCustomerId("c1");
+    }
+  };
+
+  const filteredCustomers = React.useMemo(() => {
+    const q = customerQuery.trim().toLowerCase();
+    if (!q) return [];
+    return customers.filter(c => 
+      (c.name.toLowerCase().includes(q) || c.phone.includes(q)) && c.id !== "c1"
+    );
+  }, [customerQuery, customers]);
+
+  const exactMatch = customers.find(c => c.name.toLowerCase() === customerQuery.trim().toLowerCase() || c.phone === customerQuery.trim());
+  const showCreateSuggestion = customerQuery.trim().length > 0 && !exactMatch;
+
   return (
     <div className="card" style={{ display: "flex", flexDirection: "column", height: "100%", padding: "20px", position: "relative", minHeight: 0, overflow: "hidden" }}>
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+      `}</style>
       
       {/* Invoice Tabs */}
-      <div style={{ display: "flex", alignItems: "center", gap: "6px", borderBottom: "1px solid var(--border-color)", paddingBottom: "10px", marginBottom: "12px", overflowX: "auto", flexShrink: 0 }}>
+      <div 
+        className="no-scrollbar"
+        style={{ 
+          display: "flex", 
+          alignItems: "center", 
+          gap: "6px", 
+          borderBottom: "1px solid var(--border-color)", 
+          height: "40px", 
+          marginBottom: "12px", 
+          overflowX: "auto", 
+          flexShrink: 0,
+          boxSizing: "border-box"
+        }}
+      >
         {invoices.map((inv) => {
           const isActive = inv.id === activeInvoiceId;
           return (
@@ -124,9 +182,11 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
-                padding: "6px 12px",
+                padding: "0 12px",
+                height: "28px",
+                boxSizing: "border-box",
                 borderRadius: "var(--radius-sm)",
-                border: isActive ? "2px solid var(--color-primary)" : "1px solid var(--border-color)",
+                border: isActive ? "2px solid var(--color-primary)" : "2px solid var(--border-color)",
                 background: isActive ? "var(--color-primary-light)" : "white",
                 color: isActive ? "var(--color-primary)" : "var(--text-secondary)",
                 fontWeight: "600",
@@ -185,18 +245,95 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
           <Users size={18} style={{ color: "var(--color-primary)" }} /> KHÁCH HÀNG
         </h3>
         
-        <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "10px" }}>
-          <select
-            className="form-input"
-            value={selectedCustomerId}
-            onChange={(e) => setSelectedCustomerId(e.target.value)}
-          >
-            {customers.map(c => (
-              <option key={c.id} value={c.id}>
-                {c.name} {c.phone ? `(${c.phone})` : ""}
-              </option>
-            ))}
-          </select>
+        {showSuggestions && (
+          <div 
+            onClick={() => setShowSuggestions(false)}
+            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 90 }}
+          />
+        )}
+        <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "10px", position: "relative", zIndex: 95 }}>
+          <div style={{ position: "relative" }}>
+            <input
+              type="text"
+              className="form-input"
+              value={customerQuery}
+              onChange={(e) => handleInputChange(e.target.value)}
+              onFocus={() => setShowSuggestions(true)}
+              placeholder="Nhập khách hàng..."
+              style={{ width: "100%", height: "36px" }}
+            />
+            {showSuggestions && (customerQuery.trim().length > 0) && (
+              <div 
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  width: "100%",
+                  background: "white",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: "var(--radius-sm)",
+                  boxShadow: "var(--shadow-md)",
+                  zIndex: 100,
+                  maxHeight: "200px",
+                  overflowY: "auto",
+                  marginTop: "4px"
+                }}
+              >
+                {filteredCustomers.map(c => (
+                  <div
+                    key={c.id}
+                    onClick={() => {
+                      setSelectedCustomerId(c.id);
+                      setCustomerQuery(c.name);
+                      setShowSuggestions(false);
+                    }}
+                    style={{
+                      padding: "8px 12px",
+                      cursor: "pointer",
+                      fontSize: "12.5px",
+                      borderBottom: "1px solid #f1f5f9",
+                      transition: "background 0.15s"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = "#f1f5f9"}
+                    onMouseLeave={(e) => e.currentTarget.style.background = "none"}
+                  >
+                    <strong>{c.name}</strong> {c.phone ? `(${c.phone})` : ""} - <span style={{ color: "var(--color-primary)" }}>{c.rank}</span>
+                  </div>
+                ))}
+                
+                {showCreateSuggestion && (
+                  <div
+                    onClick={() => {
+                      const q = customerQuery.trim();
+                      const isPhone = /^[0-9+\s]+$/.test(q);
+                      if (isPhone) {
+                        setPrefillPhone(q);
+                        setPrefillName("");
+                      } else {
+                        setPrefillName(q);
+                        setPrefillPhone("");
+                      }
+                      setShowCreateModal(true);
+                      setShowSuggestions(false);
+                    }}
+                    style={{
+                      padding: "8px 12px",
+                      cursor: "pointer",
+                      fontSize: "12.5px",
+                      background: "var(--color-primary-light)",
+                      color: "var(--color-primary)",
+                      fontWeight: "600",
+                      transition: "background 0.15s"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = "#e0f2fe"}
+                    onMouseLeave={(e) => e.currentTarget.style.background = "var(--color-primary-light)"}
+                  >
+                    ➕ Tạo khách hàng mới: "{customerQuery}"
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <div style={{
             display: "flex",
             alignItems: "center",
@@ -209,7 +346,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
             border: "1px solid var(--border-focus)",
             textAlign: "center"
           }}>
-            Hạng: {selectedCustomer?.rank}
+            Hạng: {selectedCustomer?.rank || "Khách mới"}
           </div>
         </div>
       </div>
@@ -363,11 +500,10 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                           }}
                         >
                           <ExcelInput
-                            value={cItem.discount ? formatNumber(cItem.discount) : ""}
+                            value={formatNumber(cItem.discount)}
                             onChange={(val) => updateCartItemDiscount(cItem.id, val)}
                             textAlign="center"
                             fontWeight="700"
-                            placeholder="0"
                             unit="đ"
                             showUnit={false}
                             type="text"
@@ -540,6 +676,14 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
         </button>
 
       </div>
+
+      <POSCreateCustomerModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSave={onCreateCustomer}
+        prefillName={prefillName}
+        prefillPhone={prefillPhone}
+      />
 
     </div>
   );

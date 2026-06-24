@@ -45,6 +45,11 @@ export default function Topbar() {
           title: "Báo cáo doanh thu & Hiệu suất",
           description: "Phân tích xu hướng tài chính và giám sát hoạt động kinh doanh của chi nhánh."
         };
+      case "/invoices":
+        return {
+          title: "Lịch sử hoá đơn",
+          description: "Thống kê doanh số theo ca, lọc danh sách hóa đơn theo ngày, thợ gán lượt, khách hàng và nguồn đơn."
+        };
       default:
         return {
           title: "Hệ thống Quản lý Salon",

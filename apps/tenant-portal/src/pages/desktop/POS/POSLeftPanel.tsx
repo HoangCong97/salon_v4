@@ -48,6 +48,7 @@ interface POSLeftPanelProps {
   filteredPackages: any[];
   addToCart: (item: any, type: "SERVICE" | "PRODUCT" | "PACKAGE") => void;
   cart: any[];
+  flashStaff?: boolean;
 }
 
 export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
@@ -64,6 +65,7 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
   filteredPackages,
   addToCart,
   cart,
+  flashStaff = false,
 }) => {
   // Helper UI: Render active cart assignment badges on item card
   const renderItemCartBadges = (itemId: string) => {
@@ -107,11 +109,43 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
     <div style={{ display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto", paddingRight: "8px" }}>
 
       {/* Top Panel: Active Staff Members */}
-      <div className="card" style={{ padding: "16px" }}>
+      <div
+        className="card"
+        style={{
+          padding: "16px",
+          border: "1px solid var(--border-color)",
+          borderColor: flashStaff ? "var(--color-danger)" : "var(--border-color)",
+          animation: flashStaff ? "flash-red-border 0.4s infinite alternate" : "none",
+          transition: "all 0.2s"
+        }}
+      >
+        <style>{`
+          @keyframes flash-red-border {
+            0% { border-color: var(--color-danger); box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+            100% { border-color: var(--border-color); box-shadow: none; }
+          }
+          .no-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+          }
+        `}</style>
         <h4 style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
           <Users size={16} /> NHÂN VIÊN CHI NHÁNH (Chọn để gán lượt)
         </h4>
-        <div style={{ display: "flex", gap: "10px", overflowX: "auto", paddingBottom: "4px" }}>
+        <div
+          className="no-scrollbar"
+          style={{
+            display: "flex",
+            gap: "10px",
+            overflowX: "auto",
+            height: "44px",
+            alignItems: "center",
+            boxSizing: "border-box"
+          }}
+        >
           {activeStaff.map((s) => {
             const isSelected = selectedStylistId === s.id;
             const empColor = getEmployeeColor(s.id);
@@ -124,9 +158,11 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
                   display: "flex",
                   alignItems: "center",
                   gap: "8px",
-                  padding: "8px 16px",
+                  padding: "0 16px",
+                  height: "38px",
+                  boxSizing: "border-box",
                   borderRadius: "var(--radius-sm)",
-                  border: isSelected ? `2px solid ${empColor.text}` : `1.5px solid ${empColor.border}`,
+                  border: isSelected ? `2px solid ${empColor.text}` : `2px solid ${empColor.border}`,
                   background: isSelected ? empColor.bg : "white",
                   color: empColor.text,
                   fontWeight: isSelected ? "700" : "500",
@@ -358,7 +394,7 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
               <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#8a5a22", padding: "4px 10px", borderRadius: "6px", background: "#fcf8f2" }}>
-                Sản phẩm (Màu Nâu Gỗ)
+                Sản phẩm
               </span>
               <div style={{ flexGrow: 1, height: "1px", background: "linear-gradient(to right, #ebdcc5, transparent)" }}></div>
             </div>
@@ -433,7 +469,7 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
               <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#7e22ce", padding: "4px 10px", borderRadius: "6px", background: "#faf0fc" }}>
-                Gói combo (Màu Tím)
+                Gói combo
               </span>
               <div style={{ flexGrow: 1, height: "1px", background: "linear-gradient(to right, #eed0fc, transparent)" }}></div>
             </div>

@@ -18,6 +18,7 @@ import Branches from "../pages/desktop/Branches";
 import Services from "../pages/desktop/Services";
 import Inventories from "../pages/desktop/Inventories";
 import Shifts from "../pages/desktop/Shifts";
+import Invoices from "../pages/desktop/Invoices";
 
 // Mobile Pages
 import Schedule from "../pages/mobile/Schedule";
@@ -144,6 +145,14 @@ export default function AdaptiveRouter() {
           <Route 
             path="/reports" 
             element={isManagerOrAdmin ? <Reports /> : <Navigate to="/" replace />} 
+          />
+          <Route 
+            path="/invoices" 
+            element={
+              user.role === "ADMIN" || user.role === "MANAGER" || user.role === "CASHIER"
+                ? <Invoices /> 
+                : <Navigate to="/" replace />
+            } 
           />
           
           <Route path="*" element={<Navigate to="/" replace />} />
