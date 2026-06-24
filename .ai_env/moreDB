@@ -1,0 +1,21 @@
+# Lịch sử cập nhật Database Schema
+
+## Cập nhật ngày 25-06-2026 (Quản lý trạng thái gói cước Tenant)
+
+Chúng ta đã bổ sung thêm các trường thông tin quản lý trạng thái gói cước SaaS trực tiếp vào model **Tenant** trong tệp `packages/database/prisma/schema.prisma` để thuận tiện cho việc kiểm tra thời hạn và quyền lợi mà không cần truy vấn/join từ bảng hóa đơn (`invoices`).
+
+### 1. Thay đổi trong model `Tenant`
+Thêm 3 trường mới:
+- `planStartedAt` (`DateTime?` / `@db.Timestamptz`): Ngày Tenant bắt đầu kích hoạt gói cước hiện tại.
+- `planExpiresAt` (`DateTime?` / `@db.Timestamptz`): Ngày gói cước hết hạn.
+- `planStatus` (`String` / `@default("TRIAL")` / `@db.VarChar(50)`): Trạng thái gói của Tenant (Ví dụ: `TRIAL`, `ACTIVE`, `EXPIRED`, `GRACE_PERIOD`).
+
+### 2. Cập nhật Seeding
+Cập nhật file `packages/database/prisma/seed.ts` để gán dữ liệu mẫu khi seeding:
+- **HairStar Beauty Salon** (Premium): `ACTIVE`, bắt đầu 26/05/2026, hết hạn 26/05/2027.
+- **BarberShop House** (Basic): `ACTIVE`, bắt đầu 10/06/2026, hết hạn 10/07/2026.
+- **Seoul Hair & Spa** (Basic - Đình chỉ): `EXPIRED`, bắt đầu 11/05/2026, hết hạn 10/06/2026 (Đã quá hạn).
+- **Salon Tóc Việt** (Free Trial): `TRIAL`, bắt đầu 20/06/2026, hết hạn 04/07/2026.
+
+---
+*(Vui lòng đồng bộ database bằng lệnh `pnpm --filter @salon/database db:push` sau khi pull mã nguồn mới).*

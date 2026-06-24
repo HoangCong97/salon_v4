@@ -98,7 +98,10 @@ async function main() {
       email: "contact@hairstar.vn",
       address: "123 Đường Ba Tháng Hai, Quận 10, TP.HCM",
       status: "ACTIVE",
-      planId: premiumPlan.id
+      planId: premiumPlan.id,
+      planStartedAt: new Date("2026-05-26T00:00:00Z"),
+      planExpiresAt: new Date("2027-05-26T00:00:00Z"),
+      planStatus: "ACTIVE"
     }
   });
 
@@ -110,7 +113,10 @@ async function main() {
       email: "info@barberhouse.com",
       address: "45 Nguyễn Trãi, Quận 1, TP.HCM",
       status: "ACTIVE",
-      planId: basicPlan.id
+      planId: basicPlan.id,
+      planStartedAt: new Date("2026-06-10T00:00:00Z"),
+      planExpiresAt: new Date("2026-07-10T00:00:00Z"),
+      planStatus: "ACTIVE"
     }
   });
 
@@ -122,7 +128,10 @@ async function main() {
       email: "seoulhair@gmail.com",
       address: "200 Kim Mã, Quận Ba Đình, Hà Nội",
       status: "SUSPENDED",
-      planId: basicPlan.id
+      planId: basicPlan.id,
+      planStartedAt: new Date("2026-05-11T00:00:00Z"),
+      planExpiresAt: new Date("2026-06-10T00:00:00Z"),
+      planStatus: "EXPIRED"
     }
   });
 
@@ -134,7 +143,10 @@ async function main() {
       email: "tocviet@outlook.com",
       address: "56 Nguyễn Huệ, TP. Huế",
       status: "PENDING",
-      planId: freePlan.id
+      planId: freePlan.id,
+      planStartedAt: new Date("2026-06-20T00:00:00Z"),
+      planExpiresAt: new Date("2026-07-04T00:00:00Z"),
+      planStatus: "TRIAL"
     }
   });
 

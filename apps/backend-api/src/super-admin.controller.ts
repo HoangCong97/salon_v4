@@ -335,6 +335,24 @@ export class SuperAdminController {
         }
       });
 
+      // Automatically activate or renew the tenant's SaaS plan upon invoice approval
+      if (updated.planId && updated.tenantId) {
+        const planStartedAt = new Date();
+        const planExpiresAt = new Date();
+        planExpiresAt.setMonth(planExpiresAt.getMonth() + 1); // 30 days plan duration
+
+        await prisma.tenant.update({
+          where: { id: updated.tenantId },
+          data: {
+            planId: updated.planId,
+            planStatus: "ACTIVE",
+            planStartedAt,
+            planExpiresAt,
+            updatedAt: new Date()
+          }
+        });
+      }
+
       return {
         id: updated.invoiceNumber,
         dbId: updated.id,

@@ -50,9 +50,12 @@ model Tenant {
   phone     String?   @db.VarChar(50)
   email     String?   @db.VarChar(255)
   address   String?   @db.Text
-  status    String    @default("ACTIVE") @db.VarChar(50)
-  planId    String?   @map("plan_id") @db.Uuid
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  status        String    @default("ACTIVE") @db.VarChar(50)
+  planId        String?   @map("plan_id") @db.Uuid
+  planStartedAt DateTime? @map("plan_started_at") @db.Timestamptz
+  planExpiresAt DateTime? @map("plan_expires_at") @db.Timestamptz
+  planStatus    String    @default("TRIAL") @map("plan_status") @db.VarChar(50)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz
 

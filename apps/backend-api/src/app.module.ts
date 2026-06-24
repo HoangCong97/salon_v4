@@ -11,6 +11,7 @@ import { StaffController } from "./staff.controller";
 import { ShiftsController } from "./shifts.controller";
 import { TurnsController } from "./turns.controller";
 import { InvoiceController } from "./invoice.controller";
+import { TenantSubscriptionController } from "./tenant-subscription.controller";
 
 @Module({
   imports: [],
@@ -25,7 +26,8 @@ import { InvoiceController } from "./invoice.controller";
     StaffController,
     ShiftsController,
     TurnsController,
-    InvoiceController
+    InvoiceController,
+    TenantSubscriptionController
   ],
   providers: [AppService],
 })
