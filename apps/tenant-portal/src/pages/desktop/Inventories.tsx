@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { formatCurrencyVND } from "@salon/shared-utils";
 import { Package, Plus, Edit2, Trash2, Loader2, X, Search, AlertTriangle, ArrowUpRight, ArrowDownLeft, Image as ImageIcon } from "lucide-react";
-import { ExcelInput } from "../../components/desktop/TableComponents";
+import { ExcelInput, PriceInputWithSuggestion } from "../../components/desktop/TableComponents";
 
 interface InventoryItem {
   id: string;
@@ -37,9 +37,9 @@ export default function Inventories() {
 
   // Form Fields
   const [name, setName] = useState("");
-  const [costPrice, setCostPrice] = useState<number>(0);
-  const [sellPrice, setSellPrice] = useState<number>(0);
-  const [discountPrice, setDiscountPrice] = useState<number>(0);
+  const [costPrice, setCostPrice] = useState<string>("0");
+  const [sellPrice, setSellPrice] = useState<string>("0");
+  const [discountPrice, setDiscountPrice] = useState<string>("0");
   const [quantity, setQuantity] = useState<number>(0);
   const [imageUrl, setImageUrl] = useState("");
 
@@ -164,9 +164,9 @@ export default function Inventories() {
   const handleOpenCreateModal = () => {
     setModalMode("create");
     setName("");
-    setCostPrice(50000);
-    setSellPrice(100000);
-    setDiscountPrice(100000);
+    setCostPrice("50000");
+    setSellPrice("100000");
+    setDiscountPrice("100000");
     setQuantity(10);
     setImageUrl("");
     setIsModalOpen(true);
@@ -176,9 +176,9 @@ export default function Inventories() {
     setModalMode("edit");
     setSelectedItemId(item.id);
     setName(item.name);
-    setCostPrice(Number(item.costPrice));
-    setSellPrice(Number(item.sellPrice));
-    setDiscountPrice(Number(item.discountPrice ?? item.sellPrice));
+    setCostPrice(String(Number(item.costPrice)));
+    setSellPrice(String(Number(item.sellPrice)));
+    setDiscountPrice(String(Number(item.discountPrice ?? item.sellPrice)));
     setQuantity(item.quantity);
     setImageUrl(item.imageUrl || "");
     setIsModalOpen(true);
@@ -189,9 +189,9 @@ export default function Inventories() {
     setSelectedItemId(item.id);
     setName(item.name);
     setQuantity(item.quantity);
-    setCostPrice(Number(item.costPrice));
-    setSellPrice(Number(item.sellPrice));
-    setDiscountPrice(Number(item.discountPrice ?? item.sellPrice));
+    setCostPrice(String(Number(item.costPrice)));
+    setSellPrice(String(Number(item.sellPrice)));
+    setDiscountPrice(String(Number(item.discountPrice ?? item.sellPrice)));
     setImageUrl(item.imageUrl || "");
     setAdjustType("import");
     setAdjustQuantity(1);
@@ -209,11 +209,15 @@ export default function Inventories() {
         : Math.max(0, quantity - adjustQuantity);
     }
 
+    const cleanCost = String(costPrice).replace(/,/g, "");
+    const cleanSell = String(sellPrice).replace(/,/g, "");
+    const cleanDiscount = String(discountPrice).replace(/,/g, "");
+
     const payload = {
       name,
-      costPrice,
-      sellPrice,
-      discountPrice,
+      costPrice: parseFloat(cleanCost) || 0,
+      sellPrice: parseFloat(cleanSell) || 0,
+      discountPrice: parseFloat(cleanDiscount) || 0,
       quantity: finalQuantity,
       imageUrl: imageUrl || null,
       branchId: currentBranchId || null
@@ -334,7 +338,7 @@ export default function Inventories() {
             <p style={{ color: "var(--text-secondary)" }}>Hãy thử điều chỉnh bộ lọc hoặc tạo sản phẩm mới.</p>
           </div>
         ) : (
-          <div className="data-table-container">
+          <div className="data-table-container" style={{ overflow: "visible" }}>
             <style>{`
               .excel-input {
                 transition: all 0.15s ease;
@@ -384,7 +388,7 @@ export default function Inventories() {
 
                   return (
                     <tr key={item.id}>
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
                         <ExcelInput
                           value={getInlineValue(item, "name") as string}
                           onChange={(val) => handleInlineChange(item.id, "name", val)}
@@ -392,7 +396,7 @@ export default function Inventories() {
                           fontWeight="600"
                         />
                       </td>
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
                         <ExcelInput
                           value={formatNumber(getInlineValue(item, "costPrice") as number | string)}
                           onChange={(val) => handlePriceChange(item.id, "costPrice", val)}
@@ -402,7 +406,7 @@ export default function Inventories() {
                           unit="đ"
                         />
                       </td>
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
                         <ExcelInput
                           value={formatNumber(getInlineValue(item, "sellPrice") as number | string)}
                           onChange={(val) => handlePriceChange(item.id, "sellPrice", val)}
@@ -412,7 +416,7 @@ export default function Inventories() {
                           unit="đ"
                         />
                       </td>
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
                         <ExcelInput
                           type="number"
                           value={getInlineValue(item, "quantity") as number || 0}
@@ -517,13 +521,11 @@ export default function Inventories() {
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                     <div className="form-group">
                       <label className="form-label">Giá nhập kho (giá vốn)</label>
-                      <input
-                        className="form-input"
-                        type="number"
-                        min={0}
+                      <PriceInputWithSuggestion
                         required
                         value={costPrice}
-                        onChange={(e) => setCostPrice(parseFloat(e.target.value) || 0)}
+                        onChange={setCostPrice}
+                        placeholder="0"
                       />
                     </div>
                     <div className="form-group">
@@ -542,23 +544,19 @@ export default function Inventories() {
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                     <div className="form-group">
                       <label className="form-label">Giá bán lẻ (VND) *</label>
-                      <input
-                        className="form-input"
-                        type="number"
-                        min={0}
+                      <PriceInputWithSuggestion
                         required
                         value={sellPrice}
-                        onChange={(e) => setSellPrice(parseFloat(e.target.value) || 0)}
+                        onChange={setSellPrice}
+                        placeholder="0"
                       />
                     </div>
                     <div className="form-group">
                       <label className="form-label">Giá KM (nếu có)</label>
-                      <input
-                        className="form-input"
-                        type="number"
-                        min={0}
+                      <PriceInputWithSuggestion
                         value={discountPrice}
-                        onChange={(e) => setDiscountPrice(parseFloat(e.target.value) || 0)}
+                        onChange={setDiscountPrice}
+                        placeholder="0"
                       />
                     </div>
                   </div>

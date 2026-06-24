@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { formatCurrencyVND } from "@salon/shared-utils";
 import { Layers, Plus, Edit2, Trash2, Loader2, X, Search, Clock, Image as ImageIcon, ChevronUp, ChevronDown, Check, Save } from "lucide-react";
-import { ExcelInput, ExcelSelect } from "../../components/desktop/TableComponents";
+import { ExcelInput, ExcelSelect, PriceInputWithSuggestion } from "../../components/desktop/TableComponents";
 
 interface ServiceCategory {
   id: string;
@@ -723,28 +723,7 @@ export default function Services() {
     return matchesSearch && matchesCategory;
   });
 
-  // Autocomplete price helper
-  const segments = priceInput.split(",");
-  const lastSegment = segments[segments.length - 1] || "";
-  const lastSegmentPriceDigits = /^\d+$/.test(lastSegment.trim()) ? lastSegment.trim() : null;
 
-  const applySuggestion = (suggestedNum: string) => {
-    const segs = priceInput.split(",");
-    segs[segs.length - 1] = suggestedNum;
-    const newValue = segs.join(", ") + ", ";
-    setPriceInput(newValue);
-  };
-
-  const handlePriceInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (lastSegmentPriceDigits && lastSegmentPriceDigits.length <= 4) {
-        applySuggestion(lastSegmentPriceDigits + "000");
-      } else if (lastSegment.trim()) {
-        setPriceInput(priceInput.trim() + ", ");
-      }
-    }
-  };
 
   return (
     <>
@@ -835,7 +814,7 @@ export default function Services() {
             <p style={{ color: "var(--text-secondary)" }}>Hãy thử điều chỉnh bộ lọc hoặc thêm dịch vụ mới.</p>
           </div>
         ) : (
-          <div className="data-table-container">
+          <div className="data-table-container" style={{ overflow: "visible" }}>
             <style>{`
               .excel-input {
                 transition: all 0.15s ease;
@@ -912,7 +891,7 @@ export default function Services() {
 
                   return (
                     <tr key={service.id}>
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
                         <ExcelInput
                           value={getInlineValue(service, "name") as string}
                           onChange={(val) => handleInlineChange(service.id, "name", val)}
@@ -932,7 +911,7 @@ export default function Services() {
                           placeholder="-- Chưa phân loại --"
                         />
                       </td>
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
                         <ExcelInput
                           type="number"
                           value={getInlineValue(service, "duration") as number || 0}
@@ -942,7 +921,7 @@ export default function Services() {
                           unit="phút"
                         />
                       </td>
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
                         <ExcelInput
                           value={formatNumber(getInlineValue(service, "price") as number | string)}
                           onChange={(val) => handlePriceChange(service.id, "price", val)}
@@ -952,7 +931,7 @@ export default function Services() {
                           unit="đ"
                         />
                       </td>
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
                         <ExcelInput
                           value={displayDiscountVal !== null ? formatNumber(displayDiscountVal) : ""}
                           onChange={(val) => handlePriceChange(service.id, "discountPrice", val)}
@@ -965,7 +944,7 @@ export default function Services() {
                           showUnit={displayDiscountVal !== null}
                         />
                       </td>
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px", position: "relative" }}>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
                         {currentCategoryObj ? (
                           <ExcelInput
                             type="number"
@@ -1541,46 +1520,15 @@ export default function Services() {
               {/* Row 3: Giá bán + Áp dụng khuyến mãi + Số tiền giảm trừ */}
               <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 2fr", gap: "16px", alignItems: "flex-end" }}>
                 {/* Price input with custom autocompletion and comma-separated loops */}
-                <div className="form-group" style={{ margin: 0, position: "relative" }}>
+                <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Giá bán gốc (VND) *</label>
-                  <input
-                    className="form-input"
-                    type="text"
+                  <PriceInputWithSuggestion
                     required
                     value={priceInput}
-                    onChange={(e) => setPriceInput(e.target.value)}
-                    onKeyDown={handlePriceInputKeyDown}
+                    onChange={setPriceInput}
+                    multiSegment={true}
                     placeholder="Ví dụ: 150000 hoặc 100000, 150000"
                   />
-                  {lastSegmentPriceDigits && lastSegmentPriceDigits.length <= 4 && (
-                    <button
-                      type="button"
-                      style={{
-                        position: "absolute",
-                        top: "100%",
-                        left: 0,
-                        zIndex: 10,
-                        marginTop: "4px",
-                        padding: "4px 10px",
-                        fontSize: "12px",
-                        background: "var(--color-primary)",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "var(--radius-sm)",
-                        cursor: "pointer",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                        fontWeight: "600",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        whiteSpace: "nowrap"
-                      }}
-                      onClick={() => applySuggestion(lastSegmentPriceDigits + "000")}
-                    >
-                      <span>{Number(lastSegmentPriceDigits + "000").toLocaleString("vi-VN")}đ</span>
-                      <kbd style={{ fontSize: "9px", padding: "1px 5px", borderRadius: "3px", background: "rgba(255,255,255,0.15)", fontFamily: "inherit", border: "none", color: "rgba(255,255,255,0.8)" }}>Enter ↵</kbd>
-                    </button>
-                  )}
                 </div>
 
                 {/* Smaller Discount toggle */}
