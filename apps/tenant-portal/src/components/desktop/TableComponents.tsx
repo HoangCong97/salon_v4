@@ -346,16 +346,20 @@ interface ExcelChipsInputProps {
   values: number[];
   onChange: (newValues: number[]) => void;
   onBlur?: () => void;
+  onFocus?: () => void;
   placeholder?: string;
   disabled?: boolean;
+  hasOutline?: boolean;
 }
 
 export const ExcelChipsInput: React.FC<ExcelChipsInputProps> = ({
   values = [],
   onChange,
   onBlur,
+  onFocus,
   placeholder = "+ Giá...",
   disabled = false,
+  hasOutline = true,
 }) => {
   const [inputValue, setInputValue] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -438,7 +442,7 @@ export const ExcelChipsInput: React.FC<ExcelChipsInputProps> = ({
         boxSizing: "border-box",
         zIndex: isFocused ? 50 : 1,
         background: isFocused ? "white" : "transparent",
-        outline: isFocused ? "2px solid var(--color-primary)" : "none",
+        outline: (isFocused && hasOutline) ? "2px solid var(--color-primary)" : "none",
         outlineOffset: "-2px",
         overflow: "visible",
         cursor: "text"
@@ -497,7 +501,10 @@ export const ExcelChipsInput: React.FC<ExcelChipsInputProps> = ({
         value={inputValue}
         onChange={(e) => handleInputChange(e.target.value)}
         onKeyDown={handleKeyDownEvent}
-        onFocus={() => setIsFocused(true)}
+        onFocus={() => {
+          setIsFocused(true);
+          if (onFocus) onFocus();
+        }}
         onBlur={() => {
           setIsFocused(false);
           if (inputValue.trim()) {

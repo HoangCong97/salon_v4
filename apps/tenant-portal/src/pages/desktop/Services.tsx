@@ -250,6 +250,7 @@ export default function Services() {
   const [commissionInput, setCommissionInput] = useState<number>(0);
   const [priceInput, setPriceInput] = useState("");
   const [additionalPrices, setAdditionalPrices] = useState<number[]>([]);
+  const [isAltPriceFocused, setIsAltPriceFocused] = useState(false);
   const [duration, setDuration] = useState<number>(30);
   const [imageUrl, setImageUrl] = useState("");
   const [hasDiscount, setHasDiscount] = useState(false);
@@ -1600,17 +1601,23 @@ export default function Services() {
               <div className="form-group">
                 <label className="form-label">Các giá bán khác (VND)</label>
                 <div style={{
-                  border: "1px solid hsl(210, 40%, 85%)",
+                  border: isAltPriceFocused ? "1px solid var(--color-primary)" : "1px solid hsl(210, 40%, 85%)",
+                  boxShadow: isAltPriceFocused ? "0 0 0 2px var(--color-primary-light)" : "none",
                   borderRadius: "var(--radius-sm)",
                   minHeight: "38px",
                   backgroundColor: "white",
                   display: "flex",
-                  alignItems: "center"
+                  alignItems: "center",
+                  boxSizing: "border-box",
+                  transition: "all 0.15s ease"
                 }}>
                   <ExcelChipsInput
                     values={additionalPrices}
                     onChange={setAdditionalPrices}
                     placeholder="Nhập giá khác, VD: 120000"
+                    hasOutline={false}
+                    onFocus={() => setIsAltPriceFocused(true)}
+                    onBlur={() => setIsAltPriceFocused(false)}
                   />
                 </div>
               </div>
