@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { formatCurrencyVND } from "@salon/shared-utils";
 import { Layers, Plus, Edit2, Trash2, Loader2, X, Search, Clock, Image as ImageIcon, ChevronUp, ChevronDown, Check, Save } from "lucide-react";
-import { ExcelInput, ExcelSelect, PriceInputWithSuggestion } from "../../components/desktop/TableComponents";
+import { ExcelInput, ExcelSelect, PriceInputWithSuggestion, ExcelChipsInput } from "../../components/desktop/TableComponents";
 
 interface ServiceCategory {
   id: string;
@@ -23,6 +23,7 @@ interface Service {
   imageUrl?: string;
   branchId?: string;
   commission?: number;
+  additionalPrices?: number[];
 }
 
 const COLOR_PRESETS = [
@@ -248,6 +249,7 @@ export default function Services() {
   const [categoryId, setCategoryId] = useState("");
   const [commissionInput, setCommissionInput] = useState<number>(0);
   const [priceInput, setPriceInput] = useState("");
+  const [additionalPrices, setAdditionalPrices] = useState<number[]>([]);
   const [duration, setDuration] = useState<number>(30);
   const [imageUrl, setImageUrl] = useState("");
   const [hasDiscount, setHasDiscount] = useState(false);
@@ -400,7 +402,8 @@ export default function Services() {
       discountPrice: updatedService.discountPrice !== undefined && updatedService.discountPrice !== null ? Number(updatedService.discountPrice) : Number(updatedService.price),
       duration: Number(updatedService.duration),
       imageUrl: updatedService.imageUrl || null,
-      branchId: updatedService.branchId || null
+      branchId: updatedService.branchId || null,
+      additionalPrices: updatedService.additionalPrices ? updatedService.additionalPrices.map(Number) : []
     };
 
     try {
@@ -491,6 +494,7 @@ export default function Services() {
     setImageUrl("");
     setShowCategorySubForm(false);
     setIsCatDropdownOpen(false);
+    setAdditionalPrices([]);
     setIsModalOpen(true);
   };
 
@@ -515,6 +519,7 @@ export default function Services() {
     setImageUrl(service.imageUrl || "");
     setShowCategorySubForm(false);
     setIsCatDropdownOpen(false);
+    setAdditionalPrices(service.additionalPrices ? service.additionalPrices.map(Number) : []);
     setIsModalOpen(true);
   };
 
@@ -544,7 +549,7 @@ export default function Services() {
     }
 
     const selectedCatObj = categories.find(c => c.id === categoryId);
-    const existingService = services.find(s => s.categoryId === categoryId && s.serviceCategory);
+    const existingService = services.find(s => s.categoryId === categoryId && s.id !== selectedServiceId && s.serviceCategory);
     let serviceCategory = existingService ? existingService.serviceCategory : "";
 
     if (!serviceCategory && selectedCatObj) {
@@ -564,68 +569,43 @@ export default function Services() {
       }
     }
 
-    const priceList = priceInput
-      .split(",")
-      .map(p => parseFloat(p.trim()))
-      .filter(p => !isNaN(p));
-
-    if (priceList.length === 0) {
+    const basePrice = parseFloat(priceInput.replace(/\D/g, ""));
+    if (isNaN(basePrice)) {
       alert("Vui lòng nhập giá gốc hợp lệ");
       return;
     }
 
+    const calculatedDiscountPrice = hasDiscount ? Math.max(0, basePrice - discountDeduction) : basePrice;
+
+    const payload = {
+      name,
+      categoryId: categoryId || null,
+      serviceCategory: serviceCategory || null,
+      price: basePrice,
+      discountPrice: calculatedDiscountPrice,
+      duration,
+      imageUrl: imageUrl || null,
+      branchId: currentBranchId || null,
+      additionalPrices: additionalPrices.map(Number)
+    };
+
     try {
+      let res;
       if (modalMode === "create") {
-        for (let i = 0; i < priceList.length; i++) {
-          const currentPrice = priceList[i];
-          const calculatedDiscountPrice = hasDiscount ? Math.max(0, currentPrice - discountDeduction) : currentPrice;
-
-          const serviceName = priceList.length > 1
-            ? `${name} (${formatCurrencyVND(currentPrice)})`
-            : name;
-
-          const payload = {
-            name: serviceName,
-            categoryId: categoryId || null,
-            serviceCategory: serviceCategory || null,
-            price: currentPrice,
-            discountPrice: calculatedDiscountPrice,
-            duration,
-            imageUrl: imageUrl || null,
-            branchId: currentBranchId || null
-          };
-
-          const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
-
-          if (!res.ok) throw new Error("Lỗi khi lưu thông tin dịch vụ");
-        }
+        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
       } else {
-        const currentPrice = priceList[0];
-        const calculatedDiscountPrice = hasDiscount ? Math.max(0, currentPrice - discountDeduction) : currentPrice;
-
-        const payload = {
-          name,
-          categoryId: categoryId || null,
-          serviceCategory: serviceCategory || null,
-          price: currentPrice,
-          discountPrice: calculatedDiscountPrice,
-          duration,
-          imageUrl: imageUrl || null,
-          branchId: currentBranchId || null
-        };
-
-        const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services/${selectedServiceId}`, {
+        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services/${selectedServiceId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
-
-        if (!res.ok) throw new Error("Lỗi khi lưu thông tin dịch vụ");
       }
+
+      if (!res.ok) throw new Error("Lỗi khi lưu thông tin dịch vụ");
 
       setIsModalOpen(false);
       fetchServices();
@@ -870,6 +850,7 @@ export default function Services() {
                   <th style={{ padding: "6px 10px", fontSize: "13px", width: "180px" }}>Phân loại</th>
                   <th style={{ padding: "6px 10px", fontSize: "13px", width: "100px", textAlign: "center" }}>Thời lượng</th>
                   <th style={{ padding: "6px 10px", fontSize: "13px", width: "140px", textAlign: "center" }}>Giá bán</th>
+                  <th style={{ padding: "6px 10px", fontSize: "13px", width: "140px", textAlign: "center" }}>Giá bán khác</th>
                   <th style={{ padding: "6px 10px", fontSize: "13px", width: "140px", textAlign: "center" }}>Giá KM</th>
                   <th style={{ padding: "6px 10px", fontSize: "13px", width: "100px", textAlign: "center" }}>Hoa hồng (%)</th>
                   <th style={{ padding: "6px 10px", fontSize: "13px", width: "100px", textAlign: "center" }}>Thao tác</th>
@@ -929,6 +910,13 @@ export default function Services() {
                           textAlign="center"
                           fontWeight="500"
                           unit="đ"
+                        />
+                      </td>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                        <ExcelChipsInput
+                          values={getInlineValue(service, "additionalPrices") as number[] || []}
+                          onChange={(vals) => handleInlineChange(service.id, "additionalPrices", vals)}
+                          onBlur={() => handleAutoSave(service.id, { additionalPrices: getInlineValue(service, "additionalPrices") as number[] || [] })}
                         />
                       </td>
                       <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
@@ -1519,15 +1507,15 @@ export default function Services() {
 
               {/* Row 3: Giá bán + Áp dụng khuyến mãi + Số tiền giảm trừ */}
               <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 2fr", gap: "16px", alignItems: "flex-end" }}>
-                {/* Price input with custom autocompletion and comma-separated loops */}
+                {/* Price input with custom autocompletion */}
                 <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label">Giá bán gốc (VND) *</label>
+                  <label className="form-label">Giá bán mặc định (VND) *</label>
                   <PriceInputWithSuggestion
                     required
                     value={priceInput}
                     onChange={setPriceInput}
-                    multiSegment={true}
-                    placeholder="Ví dụ: 150000 hoặc 100000, 150000"
+                    multiSegment={false}
+                    placeholder="Ví dụ: 150000"
                   />
                 </div>
 
@@ -1608,6 +1596,24 @@ export default function Services() {
                   Giá bán thực tế sau giảm: {formatCurrencyVND(Math.max(0, (parseFloat(priceInput) || 0) - discountDeduction))}
                 </div>
               )}
+
+              <div className="form-group">
+                <label className="form-label">Các giá bán khác (VND)</label>
+                <div style={{
+                  border: "1px solid hsl(210, 40%, 85%)",
+                  borderRadius: "var(--radius-sm)",
+                  minHeight: "38px",
+                  backgroundColor: "white",
+                  display: "flex",
+                  alignItems: "center"
+                }}>
+                  <ExcelChipsInput
+                    values={additionalPrices}
+                    onChange={setAdditionalPrices}
+                    placeholder="Nhập giá khác, VD: 120000"
+                  />
+                </div>
+              </div>
 
               {/* Drag & Drop Image Uploader Zone */}
               <div className="form-group">

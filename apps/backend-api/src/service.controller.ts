@@ -53,6 +53,7 @@ export class ServiceController {
       duration?: number;
       imageUrl?: string;
       branchId?: string;
+      additionalPrices?: number[];
     }
   ) {
     try {
@@ -69,6 +70,7 @@ export class ServiceController {
           categoryId: body.categoryId || null,
           price: body.price || 0,
           discountPrice: body.discountPrice ?? body.price ?? 0,
+          additionalPrices: body.additionalPrices ? body.additionalPrices.map(Number) : [],
           duration: body.duration || null,
           imageUrl: body.imageUrl || null
         },
@@ -99,6 +101,7 @@ export class ServiceController {
       duration?: number;
       imageUrl?: string;
       branchId?: string;
+      additionalPrices?: number[];
     }
   ) {
     try {
@@ -124,6 +127,7 @@ export class ServiceController {
           categoryId: body.categoryId ?? null,
           price: body.price || 0,
           discountPrice: body.discountPrice ?? body.price ?? 0,
+          additionalPrices: body.additionalPrices ? body.additionalPrices.map(Number) : undefined,
           duration: body.duration || null,
           imageUrl: body.imageUrl ?? null,
           updatedAt: new Date()

@@ -286,6 +286,7 @@ model Service {
   categoryId      String?   @map("category_id") @db.Uuid
   price           Decimal   @default(0) @db.Decimal(15, 0)
   discountPrice   Decimal?  @default(0) @map("discount_price") @db.Decimal(15, 0)
+  additionalPrices Decimal[] @default([]) @map("additional_prices") @db.Decimal(15, 0)
   duration        Int?      // In minutes
   imageUrl        String?   @map("image_url")
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz

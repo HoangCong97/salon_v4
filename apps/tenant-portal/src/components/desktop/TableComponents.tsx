@@ -341,3 +341,190 @@ export const PriceInputWithSuggestion: React.FC<PriceInputWithSuggestionProps> =
     </div>
   );
 };
+
+interface ExcelChipsInputProps {
+  values: number[];
+  onChange: (newValues: number[]) => void;
+  onBlur?: () => void;
+  placeholder?: string;
+  disabled?: boolean;
+}
+
+export const ExcelChipsInput: React.FC<ExcelChipsInputProps> = ({
+  values = [],
+  onChange,
+  onBlur,
+  placeholder = "+ Giá...",
+  disabled = false,
+}) => {
+  const [inputValue, setInputValue] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  const addChip = (valStr: string) => {
+    const cleaned = valStr.replace(/\D/g, "");
+    if (!cleaned) return;
+    const num = parseInt(cleaned, 10);
+    if (!isNaN(num) && !values.includes(num)) {
+      const nextValues = [...values, num];
+      onChange(nextValues);
+    }
+    setInputValue("");
+  };
+
+  const removeChip = (indexToRemove: number) => {
+    const nextValues = values.filter((_, idx) => idx !== indexToRemove);
+    onChange(nextValues);
+  };
+
+  const {
+    showSuggestion,
+    suggestedValue,
+    applySuggestion,
+    handleKeyDown: handleSuggestionKeyDown
+  } = usePriceSuggestion(inputValue, addChip, false);
+
+  const handleInputChange = (val: string) => {
+    if (val.includes(",")) {
+      const parts = val.split(",");
+      const toAdd = parts[0].trim();
+      addChip(toAdd);
+      setInputValue(parts[1] || "");
+    } else {
+      setInputValue(val);
+    }
+  };
+
+  const handleKeyDownEvent = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const handled = handleSuggestionKeyDown(e);
+    if (handled) return;
+
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addChip(inputValue);
+    } else if (e.key === "Backspace" && inputValue === "") {
+      if (values.length > 0) {
+        removeChip(values.length - 1);
+        if (onBlur) {
+          setTimeout(() => onBlur(), 0);
+        }
+      }
+    }
+  };
+
+  const handleContainerClick = (e: React.MouseEvent) => {
+    if (containerRef.current && e.target === containerRef.current) {
+      const input = containerRef.current.querySelector("input");
+      if (input) input.focus();
+    }
+  };
+
+  const formatChipValue = (val: number): string => {
+    return new Intl.NumberFormat("vi-VN").format(val) + "đ";
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      onClick={handleContainerClick}
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        gap: "4px",
+        padding: "0 6px",
+        boxSizing: "border-box",
+        zIndex: isFocused ? 50 : 1,
+        background: isFocused ? "white" : "transparent",
+        outline: isFocused ? "2px solid var(--color-primary)" : "none",
+        outlineOffset: "-2px",
+        overflow: "visible",
+        cursor: "text"
+      }}
+    >
+      {values.map((val, idx) => (
+        <span
+          key={`${val}-${idx}`}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "4px",
+            padding: "2px 6px",
+            fontSize: "11px",
+            fontWeight: "600",
+            backgroundColor: "var(--color-primary-light)",
+            color: "var(--color-primary)",
+            borderRadius: "4px",
+            height: "24px",
+            flexShrink: 0,
+            boxSizing: "border-box"
+          }}
+        >
+          {formatChipValue(val)}
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={(e) => {
+              e.stopPropagation();
+              removeChip(idx);
+              if (onBlur) {
+                setTimeout(() => onBlur(), 0);
+              }
+            }}
+            style={{
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+              padding: 0,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--color-primary)",
+              fontSize: "12px",
+              fontWeight: "bold",
+              lineHeight: 1
+            }}
+          >
+            ×
+          </button>
+        </span>
+      ))}
+      <input
+        type="text"
+        disabled={disabled}
+        value={inputValue}
+        onChange={(e) => handleInputChange(e.target.value)}
+        onKeyDown={handleKeyDownEvent}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => {
+          setIsFocused(false);
+          if (inputValue.trim()) {
+            addChip(inputValue);
+          }
+          if (onBlur) onBlur();
+        }}
+        placeholder={values.length === 0 ? placeholder : ""}
+        style={{
+          border: "none",
+          background: "transparent",
+          height: "100%",
+          flexGrow: values.length > 0 ? (isFocused ? 1 : 0) : 1,
+          width: values.length > 0 ? (isFocused ? "60px" : "30px") : "100%",
+          minWidth: values.length > 0 ? (isFocused ? "50px" : "30px") : "60px",
+          fontSize: "13px",
+          padding: 0,
+          outline: "none",
+          boxShadow: "none"
+        }}
+      />
+      <PriceSuggestionBadge
+        show={showSuggestion && isFocused}
+        suggestedValue={suggestedValue}
+        onClick={applySuggestion}
+      />
+    </div>
+  );
+};
+
