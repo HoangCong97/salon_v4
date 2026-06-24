@@ -94,6 +94,9 @@ export default function Invoices() {
   const [activeStaff, setActiveStaff] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
+  const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Filter conditions
@@ -114,10 +117,13 @@ export default function Invoices() {
       if (!currentTenantId || !currentBranchId) return;
       setLoading(true);
       try {
-        const [staffRes, customerSaved, invoicesRes] = await Promise.all([
+        const [staffRes, customerSaved, invoicesRes, servicesRes, productsRes, packagesRes] = await Promise.all([
           fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/shifts/staff`),
           Promise.resolve(localStorage.getItem("pos_customers")),
-          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/invoices`)
+          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/invoices`),
+          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services?branchId=${currentBranchId}`),
+          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/inventories?branchId=${currentBranchId}`),
+          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services/packages?branchId=${currentBranchId}`)
         ]);
 
         let loadedStaff = MOCK_STAFF;
@@ -135,6 +141,16 @@ export default function Invoices() {
           } catch {}
         }
         setCustomers(loadedCustomers);
+
+        if (servicesRes.ok) {
+          try { setServices(await servicesRes.json()); } catch {}
+        }
+        if (productsRes.ok) {
+          try { setProducts(await productsRes.json()); } catch {}
+        }
+        if (packagesRes.ok) {
+          try { setPackages(await packagesRes.json()); } catch {}
+        }
 
         // Populate invoices
         let loadedInvoices = [];
@@ -166,9 +182,32 @@ export default function Invoices() {
     fetchResources();
   }, [currentTenantId, currentBranchId]);
 
+  // Resolve item names from DB item ID & Type
+  const resolvedInvoices = useMemo(() => {
+    return invoices.map((inv) => {
+      const resolvedItems = inv.items?.map((item: any) => {
+        if (item.name) return item;
+        
+        let name = "Mặt hàng";
+        if (item.itemType === "SERVICE") {
+          const s = services.find((x) => x.id === item.itemId);
+          name = s ? s.name : "Dịch vụ";
+        } else if (item.itemType === "PRODUCT") {
+          const p = products.find((x) => x.id === item.itemId);
+          name = p ? p.name : "Sản phẩm";
+        } else if (item.itemType === "PACKAGE") {
+          const pkg = packages.find((x) => x.id === item.itemId);
+          name = pkg ? pkg.name : "Gói combo";
+        }
+        return { ...item, name };
+      });
+      return { ...inv, items: resolvedItems };
+    });
+  }, [invoices, services, products, packages]);
+
   // Apply filters on the invoices list
   const filteredInvoices = useMemo(() => {
-    return invoices.filter((inv) => {
+    return resolvedInvoices.filter((inv) => {
       // 1. Filter by Start Date
       if (startDate) {
         const startSecs = new Date(startDate + "T00:00:00").getTime();

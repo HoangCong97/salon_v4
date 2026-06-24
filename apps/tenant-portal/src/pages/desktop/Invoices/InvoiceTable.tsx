@@ -32,6 +32,14 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
     return `${hours}:${minutes}`;
   };
 
+  const formatDateDMY = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   const renderStaffAvatars = (items: any[]) => {
     const staffIds = Array.from(
       new Set(items?.map((item: any) => item.staffId || item.stylist?.id).filter(Boolean))
@@ -58,8 +66,8 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
               key={String(sId)}
               title={sObj ? sObj.name : "Nhân viên"}
               style={{
-                width: "24px",
-                height: "24px",
+                width: "34px",
+                height: "34px",
                 borderRadius: "50%",
                 background: empColor.bg,
                 border: "1.5px solid white",
@@ -67,9 +75,9 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "10px",
+                fontSize: "12px",
                 fontWeight: "800",
-                marginLeft: idx > 0 ? "-8px" : "0",
+                marginLeft: idx > 0 ? "-12px" : "0",
                 boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
                 flexShrink: 0,
                 zIndex: 10 - idx,
@@ -83,8 +91,8 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
           <div
             title={`Và ${extraCount} nhân viên thực hiện khác`}
             style={{
-              width: "24px",
-              height: "24px",
+              width: "34px",
+              height: "34px",
               borderRadius: "50%",
               background: "#e2e8f0",
               border: "1.5px solid white",
@@ -92,9 +100,9 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "10px",
+              fontSize: "12px",
               fontWeight: "800",
-              marginLeft: "-8px",
+              marginLeft: "-12px",
               boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
               flexShrink: 0,
               zIndex: 5,
@@ -107,7 +115,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
     );
   };
 
-
+  let lastDate = "";
 
   return (
     <div className="card" style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "16px", flexGrow: 1, overflow: "hidden" }}>
@@ -119,23 +127,23 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
         <table className="data-table">
           <thead>
             <tr>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, textAlign: "center" }}>Ảnh nhân viên</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10 }}>Nhân viên thực hiện</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, textAlign: "center" }}>Thời gian</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10 }}>Chi tiết dịch vụ</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10 }}>Khách hàng</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, textAlign: "right" }}>Tổng tiền dịch vụ</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, textAlign: "right" }}>Tổng giảm giá</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, textAlign: "right" }}>Tổng thanh toán</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, textAlign: "center" }}>Hình thức</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, textAlign: "center" }}>Nguồn</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, textAlign: "center" }}>Thao tác</th>
+              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "90px", minWidth: "90px", maxWidth: "90px", textAlign: "center", padding: "12px 8px" }}>Ảnh nhân viên</th>
+              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "280px", minWidth: "280px", maxWidth: "280px", padding: "12px 12px" }}>Nhân viên thực hiện</th>
+              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "70px", minWidth: "70px", maxWidth: "70px", textAlign: "center", padding: "12px 8px" }}>Thời gian</th>
+              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "auto", minWidth: "220px", padding: "12px 12px" }}>Chi tiết dịch vụ</th>
+              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "100px", minWidth: "100px", maxWidth: "100px", textAlign: "right", padding: "12px 8px" }}>Tổng dịch vụ</th>
+              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "80px", minWidth: "80px", maxWidth: "80px", textAlign: "right", padding: "12px 8px" }}>Tổng giảm</th>
+              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "100px", minWidth: "100px", maxWidth: "100px", textAlign: "right", padding: "12px 8px" }}>Thanh toán</th>
+              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "115px", minWidth: "115px", maxWidth: "115px", textAlign: "center", padding: "12px 6px" }}>Hình thức</th>
+              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "120px", minWidth: "120px", maxWidth: "120px", padding: "12px 12px" }}>Khách hàng</th>
+              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "85px", minWidth: "85px", maxWidth: "85px", textAlign: "center", padding: "12px 8px" }}>Nguồn</th>
+              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "60px", minWidth: "60px", maxWidth: "60px", textAlign: "center", padding: "12px 6px" }}>Thao tác</th>
             </tr>
           </thead>
           <tbody>
             {paginatedInvoices.length === 0 ? (
               <tr>
-                <td colSpan={12} style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)", fontWeight: "500" }}>
+                <td colSpan={11} style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)", fontWeight: "500" }}>
                   Không tìm thấy hóa đơn phù hợp với bộ lọc.
                 </td>
               </tr>
@@ -163,107 +171,133 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                 const totalServicePrice = inv.items?.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0) || inv.totalPrice || inv.finalAmount;
                 const discountAmount = inv.discountAmount || 0;
 
+                const currentDateStr = formatDateDMY(inv.createdAt);
+                const showDateSeparator = currentDateStr !== lastDate;
+                lastDate = currentDateStr;
+
                 return (
-                  <tr key={inv.id} style={{ transition: "background 0.15s" }}>
-                    <td style={{ textAlign: "center", verticalAlign: "middle" }}>
-                      <div style={{ display: "flex", justifyContent: "center" }}>
-                        {renderStaffAvatars(inv.items)}
-                      </div>
-                    </td>
-                    <td style={{ fontWeight: "500" }}>
-                      <div
-                        title={uniqueStaffNames}
-                        style={{
-                          maxWidth: "140px",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {uniqueStaffNames}
-                      </div>
-                    </td>
-                    <td style={{ textAlign: "center" }}>{formatTimeHHMM(inv.createdAt)}</td>
-                    <td>
-                      <div
-                        title={serviceDetailsStr}
-                        style={{
-                          maxWidth: "200px",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {serviceDetailsStr}
-                      </div>
-                    </td>
-                    <td>{customerName}</td>
-                    <td style={{ textAlign: "right" }}>{formatCurrencyVND(totalServicePrice)}</td>
-                    <td style={{ textAlign: "right", color: discountAmount > 0 ? "var(--color-danger)" : "var(--text-secondary)", fontWeight: discountAmount > 0 ? "700" : "400" }}>
-                      {discountAmount > 0 ? `-${formatCurrencyVND(discountAmount)}` : "0đ"}
-                    </td>
-                    <td style={{ fontWeight: "800", textAlign: "right", color: "var(--color-primary)" }}>{formatCurrencyVND(inv.finalAmount)}</td>
-                    <td style={{ textAlign: "center" }}>
-                      <span
-                        style={{
-                          display: "inline-block",
-                          padding: "4px 8px",
-                          borderRadius: "4px",
-                          fontSize: "11px",
-                          fontWeight: "700",
-                          background: inv.paymentMethod === "CASH" ? "#ecfdf5" : "#eff6ff",
-                          color: inv.paymentMethod === "CASH" ? "#10b981" : "#3b82f6",
-                        }}
-                      >
-                        {inv.paymentMethod === "CASH" ? "Tiền mặt" : "Chuyển khoản"}
-                      </span>
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      <span
-                        style={{
-                          display: "inline-block",
-                          padding: "4px 8px",
-                          borderRadius: "4px",
-                          fontSize: "11px",
-                          fontWeight: "700",
-                          background: inv.orderSource === "BOOKING" ? "#faf5ff" : "#f1f5f9",
-                          color: inv.orderSource === "BOOKING" ? "#8b5cf6" : "#475569",
-                        }}
-                      >
-                        {inv.orderSource === "BOOKING" ? "Lịch hẹn" : "Tại quầy"}
-                      </span>
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      <button
-                        type="button"
-                        onClick={() => onViewDetail(inv)}
-                        title="Xem chi tiết hóa đơn"
-                        style={{
-                          padding: "6px",
-                          fontSize: "12px",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          background: "var(--color-primary-light)",
-                          border: "none",
-                          color: "var(--color-primary)",
-                          borderRadius: "var(--radius-sm)",
-                          cursor: "pointer",
-                          transition: "all 0.15s"
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = "var(--color-primary)";
-                          e.currentTarget.style.color = "white";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = "var(--color-primary-light)";
-                          e.currentTarget.style.color = "var(--color-primary)";
-                        }}
-                      >
-                        <Eye size={14} />
-                      </button>
-                    </td>
-                  </tr>
+                  <React.Fragment key={inv.id}>
+                    {showDateSeparator && (
+                      <tr style={{ background: "var(--color-primary-light)", borderBottom: "1.5px solid var(--border-color)" }}>
+                        <td colSpan={11} style={{ padding: "10px 16px", fontWeight: "700", color: "var(--color-primary)", fontSize: "12.5px", textAlign: "left" }}>
+                          📅 Ngày {currentDateStr}
+                        </td>
+                      </tr>
+                    )}
+                    <tr style={{ transition: "background 0.15s" }}>
+                      <td style={{ textAlign: "center", verticalAlign: "middle", padding: "4px 8px", width: "90px", minWidth: "90px", maxWidth: "90px" }}>
+                        <div style={{ display: "flex", justifyContent: "center" }}>
+                          {renderStaffAvatars(inv.items)}
+                        </div>
+                      </td>
+                      <td style={{ fontWeight: "500", padding: "10px 12px", width: "280px", minWidth: "280px", maxWidth: "280px" }}>
+                        <div
+                          title={uniqueStaffNames}
+                          style={{
+                            maxWidth: "240px",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {uniqueStaffNames}
+                        </div>
+                      </td>
+                      <td style={{ textAlign: "center", padding: "10px 8px", width: "70px", minWidth: "70px", maxWidth: "70px" }}>{formatTimeHHMM(inv.createdAt)}</td>
+                      <td style={{ padding: "10px 12px", width: "auto", minWidth: "220px" }}>
+                        <div
+                          title={serviceDetailsStr}
+                          style={{
+                            maxWidth: "350px",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {serviceDetailsStr}
+                        </div>
+                      </td>
+                      <td style={{ textAlign: "right", padding: "10px 8px", width: "100px", minWidth: "100px", maxWidth: "100px" }}>{formatCurrencyVND(totalServicePrice)}</td>
+                      <td style={{ textAlign: "right", padding: "10px 8px", width: "80px", minWidth: "80px", maxWidth: "80px", color: discountAmount > 0 ? "var(--color-danger)" : "var(--text-secondary)", fontWeight: discountAmount > 0 ? "700" : "400" }}>
+                        {discountAmount > 0 ? `-${formatCurrencyVND(discountAmount)}` : "0đ"}
+                      </td>
+                      <td style={{ fontWeight: "800", textAlign: "right", padding: "10px 8px", color: "var(--color-primary)", width: "100px", minWidth: "100px", maxWidth: "100px" }}>{formatCurrencyVND(inv.finalAmount)}</td>
+                      <td style={{ textAlign: "center", padding: "10px 6px", width: "115px", minWidth: "115px", maxWidth: "115px" }}>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            padding: "4px 8px",
+                            borderRadius: "4px",
+                            fontSize: "11.5px",
+                            fontWeight: "700",
+                            background: inv.paymentMethod === "CASH" ? "#ecfdf5" : "#eff6ff",
+                            color: inv.paymentMethod === "CASH" ? "#10b981" : "#3b82f6",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {inv.paymentMethod === "CASH" ? "Tiền mặt" : "Chuyển khoản"}
+                        </span>
+                      </td>
+                      <td style={{ fontWeight: "600", padding: "10px 12px", width: "120px", minWidth: "120px", maxWidth: "120px" }}>
+                        <div
+                          title={customerName}
+                          style={{
+                            maxWidth: "96px",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {customerName}
+                        </div>
+                      </td>
+                      <td style={{ textAlign: "center", padding: "10px 8px", width: "85px", minWidth: "85px", maxWidth: "85px" }}>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            padding: "4px 8px",
+                            borderRadius: "4px",
+                            fontSize: "11px",
+                            fontWeight: "700",
+                            background: inv.orderSource === "BOOKING" ? "#faf5ff" : "#f1f5f9",
+                            color: inv.orderSource === "BOOKING" ? "#8b5cf6" : "#475569",
+                          }}
+                        >
+                          {inv.orderSource === "BOOKING" ? "Lịch hẹn" : "Tại quầy"}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: "center", padding: "10px 6px", width: "60px", minWidth: "60px", maxWidth: "60px" }}>
+                        <button
+                          type="button"
+                          onClick={() => onViewDetail(inv)}
+                          title="Xem chi tiết hóa đơn"
+                          style={{
+                            padding: "6px",
+                            fontSize: "12px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            background: "var(--color-primary-light)",
+                            border: "none",
+                            color: "var(--color-primary)",
+                            borderRadius: "var(--radius-sm)",
+                            cursor: "pointer",
+                            transition: "all 0.15s"
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "var(--color-primary)";
+                            e.currentTarget.style.color = "white";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "var(--color-primary-light)";
+                            e.currentTarget.style.color = "var(--color-primary)";
+                          }}
+                        >
+                          <Eye size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  </React.Fragment>
                 );
               })
             )}
@@ -304,4 +338,3 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
     </div>
   );
 };
-
