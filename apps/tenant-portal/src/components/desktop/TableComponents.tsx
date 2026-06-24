@@ -62,8 +62,8 @@ export const ExcelInput: React.FC<ExcelInputProps> = ({
   };
 
   // Adjust paddings dynamically to prevent text from overlapping units
-  const paddingLeft = textAlign === "center" ? (unit ? (unit === "phút" ? "32px" : "24px") : "10px") : "10px";
-  const paddingRight = unit ? (unit === "phút" ? "32px" : "24px") : "10px";
+  const paddingLeft = textAlign === "center" ? ((unit && showUnit) ? (unit === "phút" ? "32px" : "24px") : "10px") : "10px";
+  const paddingRight = (unit && showUnit) ? (unit === "phút" ? "32px" : "24px") : "10px";
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", alignItems: "center", zIndex: isFocused ? 50 : 1 }}>
@@ -154,7 +154,6 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
       style={{
-        ...colorStyle,
         width: "100%",
         height: "100%",
         padding: "0 10px",
@@ -164,6 +163,7 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
         boxSizing: "border-box",
         border: "none",
         borderRadius: "6px",
+        ...colorStyle,
       }}
       className="excel-select"
     >
