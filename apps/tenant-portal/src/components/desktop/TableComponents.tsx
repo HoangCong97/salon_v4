@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 
 interface ExcelInputProps {
   value: string | number | undefined | null;
@@ -129,6 +130,7 @@ export const ExcelInput: React.FC<ExcelInputProps> = ({
 interface ExcelSelectOption {
   value: string;
   label: string;
+  colorStyle?: React.CSSProperties;
 }
 
 interface ExcelSelectProps {
@@ -167,9 +169,17 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
       }}
       className="excel-select"
     >
-      <option value="" style={{ color: "var(--text-primary)" }}>{placeholder}</option>
+      <option value="" style={{ color: "var(--text-primary)", backgroundColor: "white" }}>{placeholder}</option>
       {options.map((opt) => (
-        <option key={opt.value} value={opt.value} style={{ color: "var(--text-primary)" }}>
+        <option 
+          key={opt.value} 
+          value={opt.value} 
+          style={{ 
+            color: "var(--text-primary)", 
+            backgroundColor: "white", 
+            ...opt.colorStyle 
+          }}
+        >
           {opt.label}
         </option>
       ))}
@@ -534,4 +544,339 @@ export const ExcelChipsInput: React.FC<ExcelChipsInputProps> = ({
     </div>
   );
 };
+
+interface ExcelMultipleSelectOption {
+  value: string;
+  label: string;
+}
+
+interface ExcelMultipleSelectProps {
+  values: string[];
+  onChange: (newValues: string[]) => void;
+  onBlur?: () => void;
+  options: ExcelMultipleSelectOption[];
+  placeholder?: string;
+  disabled?: boolean;
+}
+
+export const ExcelMultipleSelect: React.FC<ExcelMultipleSelectProps> = ({
+  values = [],
+  onChange,
+  onBlur,
+  options,
+  placeholder = "-- Chọn --",
+  disabled = false,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dropdownCoords, setDropdownCoords] = useState({ top: 0, left: 0, width: 0 });
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  const updateCoords = () => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setDropdownCoords({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    if (isOpen) {
+      updateCoords();
+      window.addEventListener("scroll", updateCoords, true);
+      window.addEventListener("resize", updateCoords);
+    }
+    return () => {
+      window.removeEventListener("scroll", updateCoords, true);
+      window.removeEventListener("resize", updateCoords);
+    };
+  }, [isOpen]);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        containerRef.current && 
+        !containerRef.current.contains(event.target as Node) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        if (isOpen) {
+          setIsOpen(false);
+          setSearchTerm("");
+          if (onBlur) onBlur();
+        }
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, onBlur]);
+
+  const handleToggle = (val: string) => {
+    let nextValues;
+    if (values.includes(val)) {
+      nextValues = values.filter((v) => v !== val);
+    } else {
+      nextValues = [...values, val];
+    }
+    onChange(nextValues);
+  };
+
+  const filteredOptions = options.filter((opt) =>
+    opt.label.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const selectedLabels = options
+    .filter((opt) => values.includes(opt.value))
+    .map((opt) => opt.label.replace(/HairStar|BarberShop| - Chi nhánh/g, "").trim());
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        boxSizing: "border-box",
+      }}
+    >
+      {/* Trigger Area */}
+      <div
+        onClick={() => {
+          if (!disabled) setIsOpen(!isOpen);
+        }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: "100%",
+          height: "100%",
+          padding: "0 10px",
+          fontSize: "12px",
+          cursor: disabled ? "not-allowed" : "pointer",
+          boxSizing: "border-box",
+          background: isOpen ? "white" : "transparent",
+          outline: isOpen ? "2px solid var(--color-primary)" : "none",
+          outlineOffset: "-2px",
+        }}
+        className="excel-multiple-select-trigger"
+      >
+        <div
+          style={{
+            display: "flex",
+            gap: "4px",
+            flexWrap: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            alignItems: "center",
+            maxWidth: "calc(100% - 20px)",
+          }}
+        >
+          {selectedLabels.length === 0 ? (
+            <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>{placeholder}</span>
+          ) : (
+            selectedLabels.map((lbl, idx) => (
+              <span
+                key={idx}
+                style={{
+                  fontSize: "11px",
+                  padding: "1px 6px",
+                  borderRadius: "10px",
+                  background: "#f1f5f9",
+                  color: "#475569",
+                  border: "1px solid #e2e8f0",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+              >
+                {lbl}
+              </span>
+            ))
+          )}
+        </div>
+        <span style={{ color: "var(--text-muted)", fontSize: "10px", flexShrink: 0, marginLeft: "4px" }}>
+          ▼
+        </span>
+      </div>
+
+      {/* Dropdown Menu via Portal */}
+      {isOpen && createPortal(
+        <div
+          ref={dropdownRef}
+          style={{
+            position: "absolute",
+            top: `${dropdownCoords.top}px`,
+            left: `${dropdownCoords.left}px`,
+            width: `${Math.max(260, dropdownCoords.width)}px`,
+            maxHeight: "260px",
+            backgroundColor: "white",
+            border: "1px solid var(--border-color)",
+            borderRadius: "var(--radius-sm)",
+            boxShadow: "var(--shadow-md)",
+            zIndex: 9999,
+            marginTop: "2px",
+            padding: "8px",
+            boxSizing: "border-box",
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
+          }}
+        >
+          {/* Search Box */}
+          <div style={{ position: "relative", width: "100%" }}>
+            <input
+              type="text"
+              placeholder="Tìm kiếm..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: "100%",
+                height: "30px",
+                padding: "4px 8px 4px 28px",
+                fontSize: "12px",
+                border: "1px solid var(--border-color)",
+                borderRadius: "var(--radius-sm)",
+                boxSizing: "border-box",
+              }}
+            />
+            <span
+              style={{
+                position: "absolute",
+                left: "8px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                fontSize: "12px",
+                color: "var(--text-muted)",
+              }}
+            >
+              🔍
+            </span>
+          </div>
+
+          {/* Options List */}
+          <div
+            style={{
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: "2px",
+              flexGrow: 1,
+            }}
+          >
+            {filteredOptions.length === 0 ? (
+              <div style={{ padding: "8px", fontSize: "12px", color: "var(--text-muted)", textAlign: "center" }}>
+                Không tìm thấy kết quả
+              </div>
+            ) : (
+              filteredOptions.map((opt) => {
+                const isChecked = values.includes(opt.value);
+                return (
+                  <div
+                    key={opt.value}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggle(opt.value);
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "6px 8px",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                      background: isChecked ? "var(--color-primary-light)" : "transparent",
+                      color: isChecked ? "var(--color-primary)" : "var(--text-primary)",
+                      transition: "all 0.1s ease",
+                    }}
+                    className="excel-multiple-select-option"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => {}}
+                      style={{ cursor: "pointer" }}
+                    />
+                    <span style={{ fontWeight: isChecked ? "600" : "400", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {opt.label}
+                    </span>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+};
+
+interface ExcelRowProps extends React.HTMLAttributes<HTMLTableRowElement> {
+  onImageDrop?: (file: File) => void;
+}
+
+export const ExcelRow: React.FC<ExcelRowProps> = ({
+  children,
+  onImageDrop,
+  style,
+  ...props
+}) => {
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent<HTMLTableRowElement>) => {
+    if (!onImageDrop) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLTableRowElement>) => {
+    if (!onImageDrop) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLTableRowElement>) => {
+    if (!onImageDrop) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith("image/")) {
+        onImageDrop(file);
+      }
+    }
+  };
+
+  return (
+    <tr
+      {...props}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      style={{
+        transition: "all 0.15s ease",
+        backgroundColor: isDragging ? "var(--color-primary-light)" : undefined,
+        outline: isDragging ? "2px dashed var(--color-primary)" : undefined,
+        outlineOffset: "-2px",
+        ...style
+      }}
+    >
+      {children}
+    </tr>
+  );
+};
+
 

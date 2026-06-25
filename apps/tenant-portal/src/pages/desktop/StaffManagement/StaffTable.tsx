@@ -1,11 +1,13 @@
 import React from "react";
 import { Search, Plus, Users, Edit2, Trash2 } from "lucide-react";
-import { ExcelInput, ExcelSelect } from "../../../components/desktop/TableComponents";
-import { StaffMember, Role, getRoleColorStyle, getStatusColorStyle } from "./types";
+import { ExcelInput, ExcelSelect, ExcelMultipleSelect, ExcelRow } from "../../../components/desktop/TableComponents";
+import { StaffMember, Role, Branch, getRoleColorStyle, getStatusColorStyle } from "./types";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 interface StaffTableProps {
   filteredStaff: StaffMember[];
   roles: Role[];
+  branches: Branch[];
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   handleOpenCreateModal: () => void;
@@ -17,11 +19,13 @@ interface StaffTableProps {
   handleAutoSave: (staffId: string, updatedFields: Partial<StaffMember>) => Promise<void>;
   getInlineValue: (item: StaffMember, field: keyof StaffMember) => any;
   formatNumber: (val: number | string | undefined | null) => string;
+  adminUserId?: string;
 }
 
 export const StaffTable: React.FC<StaffTableProps> = ({
   filteredStaff,
   roles,
+  branches,
   searchTerm,
   setSearchTerm,
   handleOpenCreateModal,
@@ -33,7 +37,49 @@ export const StaffTable: React.FC<StaffTableProps> = ({
   handleAutoSave,
   getInlineValue,
   formatNumber,
+  adminUserId,
 }) => {
+  const currentUser = useAuthStore((state) => state.user);
+  const currentTenantId = useAuthStore((state) => state.currentTenantId);
+
+  const handleImageDrop = async (itemId: string, file: File) => {
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = async () => {
+        const base64Data = reader.result as string;
+        const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/upload`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            file: base64Data,
+            category: "staff",
+            filename: file.name
+          })
+        });
+
+        if (!res.ok) {
+          throw new Error("Lỗi khi tải ảnh lên máy chủ");
+        }
+
+        const data = await res.json();
+        const imageUrl = data.url;
+
+        handleInlineChange(itemId, "avatar", imageUrl);
+        await handleAutoSave(itemId, { avatar: imageUrl });
+      };
+    } catch (err: any) {
+      alert("Lỗi tải ảnh kéo thả: " + err.message);
+    }
+  };
+
+  const getInitialsOfLastWord = (name: string): string => {
+    if (!name || !name.trim()) return "?";
+    const words = name.trim().split(/\s+/);
+    const lastWord = words[words.length - 1];
+    return lastWord ? lastWord.charAt(0).toUpperCase() : "?";
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       {/* Search Bar & Action Button */}
@@ -87,12 +133,37 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                 {filteredStaff.map((item) => {
                   const inlineRoleVal = getInlineValue(item, "role") as { id: string; name: string } | null;
                   const inlineStatusVal = getInlineValue(item, "status") as string;
+                  const inlineBranchesVal = getInlineValue(item, "branches") as Branch[] || [];
+                  const selectedBranchIds = inlineBranchesVal.map((b) => b.id);
+
+                  const isAdminRow = item.isAdmin || item.id === adminUserId;
+                  const isSelf = item.id === currentUser?.id;
+                  const isSelfAdmin = isAdminRow && isSelf;
+
+                  const filteredRoles = roles.filter(
+                    (r) => isAdminRow || r.name.toUpperCase() !== "ADMIN"
+                  );
+
+                  const handleBranchChange = (newBranchIds: string[]) => {
+                    const newBranchesObj = newBranchIds
+                      .map((id) => {
+                        const b = branches.find((br) => br.id === id);
+                        return b ? { id: b.id, name: b.name } : null;
+                      })
+                      .filter(Boolean) as Branch[];
+                    
+                    handleInlineChange(item.id, "branches", newBranchesObj);
+                    handleAutoSave(item.id, { branches: newBranchesObj });
+                  };
 
                   return (
-                    <tr key={item.id}>
+                    <ExcelRow 
+                      key={item.id}
+                      onImageDrop={(file) => handleImageDrop(item.id, file)}
+                    >
                       <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingLeft: "10px", width: "100%", height: "100%" }}>
-                          {item.avatar ? (
+                           {item.avatar ? (
                             <img
                               src={item.avatar}
                               alt={item.name}
@@ -112,7 +183,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                               }}
                             >
                               <span style={{ fontSize: "10px", fontWeight: "700", color: "var(--text-secondary)" }}>
-                                {item.name ? item.name.substring(0, 1).toUpperCase() : "?"}
+                                {getInitialsOfLastWord(item.name)}
                               </span>
                             </div>
                           )}
@@ -132,6 +203,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           value={getInlineValue(item, "phone") as string}
                           onChange={(val) => handleInlineChange(item.id, "phone", val)}
                           onBlur={() => handleAutoSave(item.id, { phone: getInlineValue(item, "phone") as string })}
+                          disabled={isSelfAdmin}
                         />
                       </td>
 
@@ -140,6 +212,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           value={getInlineValue(item, "email") as string}
                           onChange={(val) => handleInlineChange(item.id, "email", val)}
                           onBlur={() => handleAutoSave(item.id, { email: getInlineValue(item, "email") as string })}
+                          disabled={isSelfAdmin}
                         />
                       </td>
 
@@ -152,9 +225,10 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                             handleInlineChange(item.id, "role", nextRoleObj);
                             handleAutoSave(item.id, { role: nextRoleObj });
                           }}
-                          options={roles.map((r) => ({ value: r.id, label: r.name }))}
+                          options={filteredRoles.map((r) => ({ value: r.id, label: r.name, colorStyle: getRoleColorStyle(r.name) }))}
                           colorStyle={getRoleColorStyle(inlineRoleVal ? inlineRoleVal.name : "Employee")}
                           placeholder="-- Chọn vai trò --"
+                          disabled={isAdminRow}
                         />
                       </td>
 
@@ -169,34 +243,13 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                         />
                       </td>
 
-                      <td
-                        style={{ padding: "0 16px", verticalAlign: "middle", height: "38px", cursor: "pointer" }}
-                        onClick={() => handleOpenEditModal(item)}
-                        title="Click để thay đổi chi nhánh hoạt động"
-                      >
-                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
-                          {item.branches.length === 0 ? (
-                            <span style={{ fontSize: "12px", color: "var(--text-muted)", fontStyle: "italic" }}>
-                              Chưa gán chi nhánh
-                            </span>
-                          ) : (
-                            item.branches.map((b) => (
-                              <span
-                                key={b.id}
-                                style={{
-                                  fontSize: "11px",
-                                  padding: "2px 8px",
-                                  borderRadius: "4px",
-                                  background: "#f1f5f9",
-                                  color: "#475569",
-                                  border: "1px solid #e2e8f0",
-                                }}
-                              >
-                                {b.name.replace(/HairStar|BarberShop| - Chi nhánh/g, "").trim()}
-                              </span>
-                            ))
-                          )}
-                        </div>
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                        <ExcelMultipleSelect
+                          values={selectedBranchIds}
+                          options={branches.map((b) => ({ value: b.id, label: b.name }))}
+                          onChange={handleBranchChange}
+                          placeholder="Chưa gán chi nhánh"
+                        />
                       </td>
 
                       <td style={{ padding: "3px 6px", verticalAlign: "middle", height: "38px" }}>
@@ -207,10 +260,11 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                             handleAutoSave(item.id, { status: newStatus });
                           }}
                           options={[
-                            { value: "ACTIVE", label: "Hoạt động" },
-                            { value: "INACTIVE", label: "Tạm khóa" },
+                            { value: "ACTIVE", label: "Hoạt động", colorStyle: getStatusColorStyle("ACTIVE") },
+                            { value: "INACTIVE", label: "Tạm khóa", colorStyle: getStatusColorStyle("INACTIVE") },
                           ]}
                           colorStyle={getStatusColorStyle(inlineStatusVal)}
+                          disabled={isSelfAdmin}
                         />
                       </td>
 
@@ -225,14 +279,21 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           </button>
                           <button
                             className="btn btn-danger"
-                            style={{ padding: "4px 8px", fontSize: "12px", borderRadius: "var(--radius-sm)" }}
-                            onClick={() => handleDeleteStaff(item.id)}
+                            style={{
+                              padding: "4px 8px",
+                              fontSize: "12px",
+                              borderRadius: "var(--radius-sm)",
+                              opacity: isAdminRow ? 0.5 : 1,
+                              cursor: isAdminRow ? "not-allowed" : "pointer"
+                            }}
+                            disabled={isAdminRow}
+                            onClick={() => !isAdminRow && handleDeleteStaff(item.id)}
                           >
                             <Trash2 size={12} />
                           </button>
                         </div>
                       </td>
-                    </tr>
+                    </ExcelRow>
                   );
                 })}
               </tbody>

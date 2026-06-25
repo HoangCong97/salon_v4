@@ -213,6 +213,7 @@ export default function StaffManagement() {
           status: finalFields.status,
           note: finalFields.note,
           branchIds: branchIdsToSave,
+          avatar: finalFields.avatar,
         }),
       });
 
@@ -481,14 +482,35 @@ export default function StaffManagement() {
     setIsAddStaffToQueueOpen(true);
   };
 
+  // Find the admin user (either by isAdmin flag or fallback to oldest createdAt)
+  const adminUser = staff.reduce<StaffMember | null>((oldest, current) => {
+    if (current.isAdmin) return current;
+    if (oldest?.isAdmin) return oldest;
+    if (!oldest) return current;
+    if (!current.createdAt) return oldest;
+    if (!oldest.createdAt) return current;
+    return new Date(current.createdAt) < new Date(oldest.createdAt) ? current : oldest;
+  }, null);
+
+  const adminUserId = adminUser?.id;
+
   // Filter staff based on search query
-  const filteredStaff = staff.filter(
+  const filteredStaffBase = staff.filter(
     (item) =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.phone && item.phone.includes(searchTerm)) ||
       (item.role && item.role.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  // Sort: Admin user always goes first
+  const filteredStaff = [...filteredStaffBase].sort((a, b) => {
+    if (adminUserId) {
+      if (a.id === adminUserId) return -1;
+      if (b.id === adminUserId) return 1;
+    }
+    return 0;
+  });
 
   // Calculate staff list gán chi nhánh này chưa có trong turns queue
   const inQueueIds = dailyTurns.map((t) => t.staffId);
@@ -588,6 +610,7 @@ export default function StaffManagement() {
               <StaffTable
                 filteredStaff={filteredStaff}
                 roles={roles}
+                branches={branchList}
                 searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
                 handleOpenCreateModal={handleOpenCreateModal}
@@ -599,6 +622,7 @@ export default function StaffManagement() {
                 handleAutoSave={handleAutoSave}
                 getInlineValue={getInlineValue}
                 formatNumber={formatNumber}
+                adminUserId={adminUserId}
               />
             )}
 

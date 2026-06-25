@@ -63,6 +63,40 @@ async function ensureStandardPermissions() {
   return permissions;
 }
 
+async function getAdminUserId(tenantId: string): Promise<string | null> {
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId }
+  });
+
+  let adminUser = await prisma.user.findFirst({
+    where: {
+      tenantId,
+      deletedAt: null,
+      OR: [
+        { email: tenant?.email ? tenant.email.toLowerCase() : undefined },
+        { phone: tenant?.phone ? tenant.phone : undefined }
+      ]
+    },
+    orderBy: {
+      createdAt: "asc"
+    }
+  });
+
+  if (!adminUser) {
+    adminUser = await prisma.user.findFirst({
+      where: {
+        tenantId,
+        deletedAt: null
+      },
+      orderBy: {
+        createdAt: "asc"
+      }
+    });
+  }
+
+  return adminUser?.id || null;
+}
+
 @Controller("api/tenants/:tenantId")
 export class StaffController {
 
@@ -107,6 +141,8 @@ export class StaffController {
         }
       });
 
+      const adminUserId = await getAdminUserId(tenantId);
+
       // Map to a clean response format
       return staffList.map((user) => ({
         id: user.id,
@@ -122,7 +158,9 @@ export class StaffController {
         branches: user.userBranches.map((ub) => ({
           id: ub.branch.id,
           name: ub.branch.name
-        }))
+        })),
+        isAdmin: user.id === adminUserId,
+        createdAt: user.createdAt.toISOString()
       }));
     } catch (error) {
       throw new HttpException(
@@ -223,6 +261,8 @@ export class StaffController {
         throw new Error("Failed to retrieve created user");
       }
 
+      const adminUserId = await getAdminUserId(tenantId);
+
       return {
         id: createdUser.id,
         name: createdUser.name,
@@ -237,7 +277,9 @@ export class StaffController {
         branches: createdUser.userBranches.map((ub) => ({
           id: ub.branch.id,
           name: ub.branch.name
-        }))
+        })),
+        isAdmin: createdUser.id === adminUserId,
+        createdAt: createdUser.createdAt.toISOString()
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
@@ -356,6 +398,8 @@ export class StaffController {
         throw new Error("Failed to retrieve updated user");
       }
 
+      const adminUserId = await getAdminUserId(tenantId);
+
       return {
         id: updatedUser.id,
         name: updatedUser.name,
@@ -370,7 +414,9 @@ export class StaffController {
         branches: updatedUser.userBranches.map((ub) => ({
           id: ub.branch.id,
           name: ub.branch.name
-        }))
+        })),
+        isAdmin: updatedUser.id === adminUserId,
+        createdAt: updatedUser.createdAt.toISOString()
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;

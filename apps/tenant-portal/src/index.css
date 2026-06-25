@@ -15,3 +15,65 @@
 .flash-active {
     animation: flash-red-border 0.1s infinite alternate;
 }
+
+/* Excel-like Table Components Styles */
+.excel-input {
+  transition: all 0.15s ease;
+  border-radius: 0 !important;
+  border: none !important;
+  background: transparent;
+  width: 100%;
+  height: 38px;
+  box-sizing: border-box;
+}
+
+.excel-input:hover {
+  background-color: hsl(210, 40%, 96%) !important;
+}
+
+.excel-input:focus {
+  background-color: white !important;
+  outline: 2px solid var(--color-primary) !important;
+  outline-offset: -2px;
+  box-shadow: none !important;
+  z-index: 10;
+  position: relative;
+}
+
+/* Remove default arrows for number input */
+.excel-input[type=number]::-webkit-inner-spin-button,
+.excel-input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.excel-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.excel-select {
+  transition: all 0.15s ease;
+  border-radius: 16px !important;
+  border: none !important;
+  box-sizing: border-box;
+}
+
+.excel-select:hover {
+  opacity: 0.9;
+}
+
+.excel-select:focus {
+  outline: 2px solid var(--color-primary) !important;
+  outline-offset: -1px;
+  z-index: 10;
+  position: relative;
+}
+
+.excel-multiple-select-trigger {
+  transition: all 0.15s ease;
+}
+
+.excel-multiple-select-trigger:hover {
+  background-color: hsl(210, 40%, 96%) !important;
+}
+

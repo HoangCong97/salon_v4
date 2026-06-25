@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X, Users, Edit2, Camera, User } from "lucide-react";
 import { PriceInputWithSuggestion } from "../../../components/desktop/TableComponents";
 import { StaffMember, Role, Branch } from "./types";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 const compressAndGetBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -78,6 +79,25 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
   const [note, setNote] = useState("");
   const [avatar, setAvatar] = useState("");
   const [hoverAvatar, setHoverAvatar] = useState(false);
+
+  const currentUser = useAuthStore((state) => state.user);
+
+  const adminUser = staff.reduce<StaffMember | null>((oldest, current) => {
+    if (current.isAdmin) return current;
+    if (oldest?.isAdmin) return oldest;
+    if (!oldest) return current;
+    if (!current.createdAt) return oldest;
+    if (!oldest.createdAt) return current;
+    return new Date(current.createdAt) < new Date(oldest.createdAt) ? current : oldest;
+  }, null);
+
+  const isAdminRow = mode === "edit" && selectedStaffId === adminUser?.id;
+  const isSelf = mode === "edit" && selectedStaffId === currentUser?.id;
+  const isSelfAdmin = isAdminRow && isSelf;
+
+  const filteredRoles = roles.filter(
+    (r) => isAdminRow || r.name.toUpperCase() !== "ADMIN"
+  );
 
   const formatNumber = (val: number | string | undefined | null): string => {
     if (val === undefined || val === null || val === "") return "";
@@ -347,6 +367,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Ví dụ: email@gmail.com"
+                disabled={isSelfAdmin}
               />
             </div>
           </div>
@@ -371,6 +392,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="Ví dụ: 0901234567"
+                disabled={isSelfAdmin}
               />
             </div>
           </div>
@@ -386,9 +408,14 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Chức vụ (Phân quyền)</label>
-              <select className="form-input" value={roleId} onChange={(e) => setRoleId(e.target.value)}>
+              <select 
+                className="form-input" 
+                value={roleId} 
+                onChange={(e) => setRoleId(e.target.value)}
+                disabled={isAdminRow}
+              >
                 <option value="">-- Chọn vai trò --</option>
-                {roles.map((r) => (
+                {filteredRoles.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.name}
                   </option>
@@ -408,7 +435,12 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Trạng thái tài khoản</label>
-              <select className="form-input" value={status} onChange={(e) => setStatus(e.target.value)}>
+              <select 
+                className="form-input" 
+                value={status} 
+                onChange={(e) => setStatus(e.target.value)}
+                disabled={isSelfAdmin}
+              >
                 <option value="ACTIVE">Hoạt động (Active)</option>
                 <option value="INACTIVE">Tạm khóa (Inactive)</option>
               </select>

@@ -396,37 +396,6 @@ export default function Inventories() {
           </div>
         ) : (
           <div className="data-table-container" style={{ overflow: "visible" }}>
-            <style>{`
-              .excel-input {
-                transition: all 0.15s ease;
-                border-radius: 0 !important;
-                border: none !important;
-                background: transparent;
-                width: 100%;
-                height: 38px;
-                box-sizing: border-box;
-              }
-              .excel-input:hover {
-                background-color: hsl(210, 40%, 96%) !important;
-              }
-              .excel-input:focus {
-                background-color: white !important;
-                outline: 2px solid var(--color-primary) !important;
-                outline-offset: -2px;
-                box-shadow: none !important;
-                z-index: 10;
-                position: relative;
-              }
-              /* Remove default arrows for number input */
-              .excel-input[type=number]::-webkit-inner-spin-button, 
-              .excel-input[type=number]::-webkit-outer-spin-button { 
-                -webkit-appearance: none; 
-                margin: 0; 
-              }
-              .excel-input[type=number] {
-                -moz-appearance: textfield;
-              }
-            `}</style>
             <table className="data-table">
               <thead>
                 <tr>

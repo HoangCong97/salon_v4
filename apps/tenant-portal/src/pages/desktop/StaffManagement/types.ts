@@ -21,6 +21,8 @@ export interface StaffMember {
   avatar?: string;
   role: { id: string; name: string } | null;
   branches: Branch[];
+  isAdmin?: boolean;
+  createdAt?: string;
 }
 
 export interface SystemPermission {
