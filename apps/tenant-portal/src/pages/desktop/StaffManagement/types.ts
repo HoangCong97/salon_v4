@@ -18,6 +18,7 @@ export interface StaffMember {
   baseSalary: number;
   status: string;
   note: string;
+  avatar?: string;
   role: { id: string; name: string } | null;
   branches: Branch[];
 }

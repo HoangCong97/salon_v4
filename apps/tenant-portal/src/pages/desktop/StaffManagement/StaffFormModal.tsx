@@ -1,7 +1,46 @@
 import React, { useState, useEffect } from "react";
-import { X, Users, Edit2 } from "lucide-react";
+import { X, Users, Edit2, Camera, User } from "lucide-react";
 import { PriceInputWithSuggestion } from "../../../components/desktop/TableComponents";
 import { StaffMember, Role, Branch } from "./types";
+
+const compressAndGetBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 200;
+        const MAX_HEIGHT = 200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+        resolve(dataUrl);
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+};
 
 interface StaffFormModalProps {
   isOpen: boolean;
@@ -37,6 +76,8 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
   const [status, setStatus] = useState("ACTIVE");
   const [selectedBranchIds, setSelectedBranchIds] = useState<string[]>([]);
   const [note, setNote] = useState("");
+  const [avatar, setAvatar] = useState("");
+  const [hoverAvatar, setHoverAvatar] = useState(false);
 
   const formatNumber = (val: number | string | undefined | null): string => {
     if (val === undefined || val === null || val === "") return "";
@@ -60,6 +101,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
           setStatus(item.status);
           setSelectedBranchIds(item.branches.map((b) => b.id));
           setNote(item.note || "");
+          setAvatar(item.avatar || "");
         }
       } else {
         // Create mode defaults
@@ -73,6 +115,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
         setStatus("ACTIVE");
         setSelectedBranchIds(branchList.length > 0 ? [branchList[0].id] : []);
         setNote("");
+        setAvatar("");
       }
     }
   }, [isOpen, mode, selectedStaffId, staff, roles, branchList]);
@@ -83,6 +126,37 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
     setSelectedBranchIds((prev) =>
       prev.includes(bId) ? prev.filter((id) => id !== bId) : [...prev, bId]
     );
+  };
+
+  const uploadFile = async (base64Data: string, category: string, originalFilename?: string): Promise<string> => {
+    const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/upload`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        file: base64Data,
+        category,
+        filename: originalFilename
+      })
+    });
+    if (!res.ok) {
+      throw new Error("Lỗi khi tải ảnh lên máy chủ");
+    }
+    const data = await res.json();
+    return data.url;
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      try {
+        const base64 = await compressAndGetBase64(file);
+        const fileUrl = await uploadFile(base64, "staff", file.name);
+        setAvatar(fileUrl);
+      } catch (err: any) {
+        alert("Lỗi tải ảnh đại diện: " + err.message);
+      }
+    }
   };
 
   const handleModalSave = async (e: React.FormEvent) => {
@@ -105,6 +179,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
       status,
       branchIds: selectedBranchIds,
       note,
+      avatar: avatar || null,
     };
 
     try {
@@ -179,6 +254,76 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
             </>
           )}
         </h2>
+
+        {/* Circular Avatar Uploader */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
+          <div
+            style={{
+              position: "relative",
+              width: "90px",
+              height: "90px",
+              borderRadius: "50%",
+              overflow: "hidden",
+              border: "2px solid var(--border-color)",
+              cursor: "pointer",
+              backgroundColor: "#f1f5f9",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+            onClick={() => document.getElementById("staff-avatar-input")?.click()}
+            onMouseEnter={() => setHoverAvatar(true)}
+            onMouseLeave={() => setHoverAvatar(false)}
+          >
+            {avatar ? (
+              <img
+                src={avatar}
+                alt="Avatar"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : (
+              <User size={36} style={{ color: "var(--text-muted)" }} />
+            )}
+
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                background: "rgba(15, 23, 42, 0.6)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: hoverAvatar ? 1 : 0,
+                transition: "opacity 0.15s ease",
+                color: "white"
+              }}
+            >
+              <Camera size={20} />
+            </div>
+          </div>
+
+          <input
+            type="file"
+            id="staff-avatar-input"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={handleAvatarChange}
+          />
+
+          {avatar && (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              style={{ padding: "2px 8px", fontSize: "11px", height: "24px" }}
+              onClick={() => setAvatar("")}
+            >
+              Xóa ảnh
+            </button>
+          )}
+        </div>
 
         <form onSubmit={handleModalSave} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>

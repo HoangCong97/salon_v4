@@ -29,7 +29,21 @@ export class BranchController {
   @Post()
   async createBranch(
     @Param("tenantId") tenantId: string,
-    @Body() body: { name: string; phone?: string; email?: string; address?: string }
+    @Body() body: {
+      name: string;
+      phone?: string;
+      email?: string;
+      address?: string;
+      brandName?: string;
+      slogan?: string;
+      logoUrl?: string;
+      bannerUrl?: string;
+      hotline?: string;
+      fanpageUrl?: string;
+      instagramUrl?: string;
+      tiktokUrl?: string;
+      websiteUrl?: string;
+    }
   ) {
     try {
       if (!body.name) {
@@ -42,7 +56,16 @@ export class BranchController {
           name: body.name,
           phone: body.phone || null,
           email: body.email || null,
-          address: body.address || null
+          address: body.address || null,
+          brandName: body.brandName || null,
+          slogan: body.slogan || null,
+          logoUrl: body.logoUrl || null,
+          bannerUrl: body.bannerUrl || null,
+          hotline: body.hotline || null,
+          fanpageUrl: body.fanpageUrl || null,
+          instagramUrl: body.instagramUrl || null,
+          tiktokUrl: body.tiktokUrl || null,
+          websiteUrl: body.websiteUrl || null
         }
       });
     } catch (error) {
@@ -59,7 +82,21 @@ export class BranchController {
   async updateBranch(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
-    @Body() body: { name: string; phone?: string; email?: string; address?: string }
+    @Body() body: {
+      name: string;
+      phone?: string;
+      email?: string;
+      address?: string;
+      brandName?: string;
+      slogan?: string;
+      logoUrl?: string;
+      bannerUrl?: string;
+      hotline?: string;
+      fanpageUrl?: string;
+      instagramUrl?: string;
+      tiktokUrl?: string;
+      websiteUrl?: string;
+    }
   ) {
     try {
       if (!body.name) {
@@ -82,6 +119,15 @@ export class BranchController {
           phone: body.phone ?? null,
           email: body.email ?? null,
           address: body.address ?? null,
+          brandName: body.brandName ?? null,
+          slogan: body.slogan ?? null,
+          logoUrl: body.logoUrl ?? null,
+          bannerUrl: body.bannerUrl ?? null,
+          hotline: body.hotline ?? null,
+          fanpageUrl: body.fanpageUrl ?? null,
+          instagramUrl: body.instagramUrl ?? null,
+          tiktokUrl: body.tiktokUrl ?? null,
+          websiteUrl: body.websiteUrl ?? null,
           updatedAt: new Date()
         }
       });

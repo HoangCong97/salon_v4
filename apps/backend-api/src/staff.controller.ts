@@ -117,6 +117,7 @@ export class StaffController {
         baseSalary: Number(user.baseSalary),
         status: user.status,
         note: user.note || "",
+        avatar: user.avatar || "",
         role: user.role ? { id: user.role.id, name: user.role.name } : null,
         branches: user.userBranches.map((ub) => ({
           id: ub.branch.id,
@@ -146,6 +147,7 @@ export class StaffController {
       status?: string;
       note?: string;
       branchIds?: string[];
+      avatar?: string;
     }
   ) {
     try {
@@ -181,7 +183,8 @@ export class StaffController {
           baseSalary: body.baseSalary || 0,
           roleId: body.roleId || null,
           status: body.status || "ACTIVE",
-          note: body.note || null
+          note: body.note || null,
+          avatar: body.avatar || null
         }
       });
 
@@ -229,6 +232,7 @@ export class StaffController {
         baseSalary: Number(createdUser.baseSalary),
         status: createdUser.status,
         note: createdUser.note || "",
+        avatar: createdUser.avatar || "",
         role: createdUser.role ? { id: createdUser.role.id, name: createdUser.role.name } : null,
         branches: createdUser.userBranches.map((ub) => ({
           id: ub.branch.id,
@@ -260,6 +264,7 @@ export class StaffController {
       status?: string;
       note?: string;
       branchIds?: string[];
+      avatar?: string;
     }
   ) {
     try {
@@ -304,6 +309,10 @@ export class StaffController {
         note: body.note ?? null,
         updatedAt: new Date()
       };
+
+      if (body.avatar !== undefined) {
+        updateData.avatar = body.avatar || null;
+      }
 
       if (body.password && body.password.trim().length > 0) {
         updateData.password = body.password;
@@ -356,6 +365,7 @@ export class StaffController {
         baseSalary: Number(updatedUser.baseSalary),
         status: updatedUser.status,
         note: updatedUser.note || "",
+        avatar: updatedUser.avatar || "",
         role: updatedUser.role ? { id: updatedUser.role.id, name: updatedUser.role.name } : null,
         branches: updatedUser.userBranches.map((ub) => ({
           id: ub.branch.id,

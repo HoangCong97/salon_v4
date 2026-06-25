@@ -29,6 +29,8 @@ interface AuthState {
   currentTenantId: string | null;
   branches: BranchInfo[];
   currentBranchId: string | null;
+  brandName: string | null;
+  logoUrl: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
@@ -36,6 +38,8 @@ interface AuthState {
   setBranch: (branchId: string) => void;
   setTenant: (tenantId: string) => Promise<void>;
   initializeSession: () => Promise<void>;
+  setBrandInfo: (brandName: string | null, logoUrl: string | null) => void;
+  fetchBrandInfo: () => Promise<void>;
 }
 
 // Initial mock data to make testing easier immediately
@@ -56,6 +60,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   currentTenantId: null,
   branches: [],
   currentBranchId: null,
+  brandName: null,
+  logoUrl: null,
   isLoading: false,
   
   login: async (email, password) => {
@@ -90,6 +96,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             currentBranchId: mappedBranches[0].id,
             isLoading: false
           });
+          await get().fetchBrandInfo();
           return true;
         }
       }
@@ -129,6 +136,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             currentBranchId: mappedBranches[0].id,
             isLoading: false
           });
+          await get().fetchBrandInfo();
           return;
         }
       }
@@ -179,6 +187,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 currentBranchId: mappedBranches[0].id,
                 isLoading: false
               });
+              await get().fetchBrandInfo();
               return;
             }
           }
@@ -196,5 +205,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       currentBranchId: "b1",
       isLoading: false
     });
+    await get().fetchBrandInfo();
+  },
+
+  setBrandInfo: (brandName, logoUrl) => set({ brandName, logoUrl }),
+
+  fetchBrandInfo: async () => {
+    const { currentTenantId } = get();
+    if (!currentTenantId) return;
+    try {
+      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}`);
+      if (res.ok) {
+        const data = await res.json();
+        set({
+          brandName: data.brandName || data.name,
+          logoUrl: data.logoUrl || null
+        });
+      }
+    } catch (e) {
+      console.warn("Failed to fetch brand info, using mock", e);
+      if (currentTenantId === "t1") {
+        set({ brandName: "HairStar Beauty Salon", logoUrl: null });
+      } else if (currentTenantId === "t2") {
+        set({ brandName: "BarberShop House", logoUrl: null });
+      } else {
+        set({ brandName: "SALON Portal", logoUrl: null });
+      }
+    }
   }
 }));

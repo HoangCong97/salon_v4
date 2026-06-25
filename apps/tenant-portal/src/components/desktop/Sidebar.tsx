@@ -9,7 +9,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
-  const { user } = useAuthStore();
+  const { user, brandName, logoUrl } = useAuthStore();
 
   const menuItems = [
     { path: "/", label: "Tổng quan", icon: LayoutDashboard, roles: ["ADMIN", "MANAGER", "CASHIER"] },
@@ -57,40 +57,69 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
           whiteSpace: "nowrap"
         }}
       >
-        <div
-          style={{
-            backgroundColor: "var(--color-primary)",
-            borderRadius: "var(--radius-sm)",
-            width: "36px",
-            height: "36px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0
-          }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{ transform: "rotate(90deg)" }}
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt="Logo"
+            style={{
+              width: "36px",
+              height: "36px",
+              borderRadius: "var(--radius-sm)",
+              objectFit: "cover",
+              flexShrink: 0
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              backgroundColor: "var(--color-primary)",
+              borderRadius: "var(--radius-sm)",
+              width: "36px",
+              height: "36px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0
+            }}
           >
-            <circle cx="6" cy="6" r="3" />
-            <circle cx="6" cy="18" r="3" />
-            <line x1="20" y1="4" x2="8.12" y2="15.88" />
-            <line x1="14.47" y1="14.48" x2="20" y2="20" />
-            <line x1="8.12" y1="8.12" x2="12" y2="12" />
-          </svg>
-        </div>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ transform: "rotate(90deg)" }}
+            >
+              <circle cx="6" cy="6" r="3" />
+              <circle cx="6" cy="18" r="3" />
+              <line x1="20" y1="4" x2="8.12" y2="15.88" />
+              <line x1="14.47" y1="14.48" x2="20" y2="20" />
+              <line x1="8.12" y1="8.12" x2="12" y2="12" />
+            </svg>
+          </div>
+        )}
         {!collapsed && (
-          <span style={{ fontWeight: 700, fontSize: "16px", letterSpacing: "0.5px", color: "var(--text-on-dark)", whiteSpace: "nowrap" }}>
-            SALON<span style={{ color: "var(--color-primary)" }}>Portal</span>
+          <span
+            title={brandName || "SALON Portal"}
+            style={{
+              fontWeight: 700,
+              fontSize: "14px",
+              letterSpacing: "0.5px",
+              color: "var(--text-on-dark)",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis"
+            }}
+          >
+            {brandName ? brandName.toUpperCase() : (
+              <>
+                SALON<span style={{ color: "var(--color-primary)" }}>Portal</span>
+              </>
+            )}
           </span>
         )}
       </div>

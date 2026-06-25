@@ -42,6 +42,63 @@ export default function Inventories() {
   const [discountPrice, setDiscountPrice] = useState<string>("0");
   const [quantity, setQuantity] = useState<number>(0);
   const [imageUrl, setImageUrl] = useState("");
+  const [dragging, setDragging] = useState(false);
+
+  const compressAndGetBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 300;
+          const MAX_HEIGHT = 300;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+          resolve(dataUrl);
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
+    });
+  };
+
+  const uploadFile = async (base64Data: string, category: string, originalFilename?: string): Promise<string> => {
+    const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/upload`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        file: base64Data,
+        category,
+        filename: originalFilename
+      })
+    });
+    if (!res.ok) {
+      throw new Error("Lỗi khi tải ảnh lên máy chủ");
+    }
+    const data = await res.json();
+    return data.url;
+  };
 
   // Adjustment Fields
   const [adjustType, setAdjustType] = useState<"import" | "export">("import");
@@ -562,14 +619,105 @@ export default function Inventories() {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">URL Hình ảnh</label>
-                    <input
-                      className="form-input"
-                      type="text"
-                      value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
-                      placeholder="Link ảnh minh họa..."
-                    />
+                    <label className="form-label">Hình ảnh sản phẩm</label>
+                    <div
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragging(true);
+                      }}
+                      onDragLeave={() => setDragging(false)}
+                      onDrop={async (e) => {
+                        e.preventDefault();
+                        setDragging(false);
+                        const files = e.dataTransfer.files;
+                        if (files && files.length > 0) {
+                          const file = files[0];
+                          try {
+                            const base64 = await compressAndGetBase64(file);
+                            const uploadedUrl = await uploadFile(base64, "items", file.name);
+                            setImageUrl(uploadedUrl);
+                          } catch (err: any) {
+                            alert("Lỗi nạp ảnh: " + err.message);
+                          }
+                        }
+                      }}
+                      onClick={() => {
+                        document.getElementById("product-file-upload")?.click();
+                      }}
+                      style={{
+                        border: dragging ? "2px dashed var(--color-primary)" : "2px dashed hsl(210, 40%, 85%)",
+                        borderRadius: "var(--radius-sm)",
+                        padding: "16px",
+                        textAlign: "center",
+                        cursor: "pointer",
+                        backgroundColor: dragging ? "hsl(210, 100%, 98%)" : "hsl(210, 40%, 98%)",
+                        transition: "all 0.15s ease",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        minHeight: "100px",
+                      }}
+                    >
+                      <input
+                        id="product-file-upload"
+                        type="file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={async (e) => {
+                          const files = e.target.files;
+                          if (files && files.length > 0) {
+                            const file = files[0];
+                            try {
+                              const base64 = await compressAndGetBase64(file);
+                              const uploadedUrl = await uploadFile(base64, "items", file.name);
+                              setImageUrl(uploadedUrl);
+                            } catch (err: any) {
+                              alert("Lỗi nạp ảnh: " + err.message);
+                            }
+                          }
+                        }}
+                      />
+                      {imageUrl ? (
+                        <div
+                          style={{
+                            position: "relative",
+                            width: "100%",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <img
+                            src={imageUrl}
+                            alt="Preview"
+                            style={{ maxWidth: "100px", maxHeight: "100px", objectFit: "cover", borderRadius: "var(--radius-sm)" }}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-danger"
+                            style={{ padding: "2px 8px", fontSize: "10.5px", cursor: "pointer" }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setImageUrl("");
+                            }}
+                          >
+                            Xóa ảnh
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <ImageIcon size={24} style={{ color: "var(--text-muted)", marginBottom: "6px" }} />
+                          <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-primary)" }}>
+                            Kéo thả ảnh sản phẩm hoặc click để chọn
+                          </span>
+                          <span style={{ fontSize: "10px", color: "var(--text-secondary)", marginTop: "2px" }}>
+                            Tự động lưu trữ và tối ưu hóa
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </>
               ) : (

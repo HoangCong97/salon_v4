@@ -43,6 +43,23 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
   const [discountDeduction, setDiscountDeduction] = useState<number>(0);
   const [dragging, setDragging] = useState(false);
 
+  const uploadFile = async (base64Data: string, category: string, originalFilename?: string): Promise<string> => {
+    const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/upload`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        file: base64Data,
+        category,
+        filename: originalFilename
+      })
+    });
+    if (!res.ok) {
+      throw new Error("Lỗi khi tải ảnh lên máy chủ");
+    }
+    const data = await res.json();
+    return data.url;
+  };
+
   // Custom Category Dropdown State
   const [isCatDropdownOpen, setIsCatDropdownOpen] = useState(false);
   const catDropdownRef = useRef<HTMLDivElement>(null);
@@ -697,7 +714,8 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                   const file = files[0];
                   try {
                     const base64 = await compressAndGetBase64(file);
-                    setImageUrl(base64);
+                    const uploadedUrl = await uploadFile(base64, "items", file.name);
+                    setImageUrl(uploadedUrl);
                   } catch (err) {
                     alert("Lỗi nạp ảnh: " + (err as any).message);
                   }
@@ -732,7 +750,8 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                     const file = files[0];
                     try {
                       const base64 = await compressAndGetBase64(file);
-                      setImageUrl(base64);
+                      const uploadedUrl = await uploadFile(base64, "items", file.name);
+                      setImageUrl(uploadedUrl);
                     } catch (err) {
                       alert("Lỗi nạp ảnh: " + (err as any).message);
                     }

@@ -91,12 +91,40 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                   return (
                     <tr key={item.id}>
                       <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
-                        <ExcelInput
-                          value={getInlineValue(item, "name") as string}
-                          onChange={(val) => handleInlineChange(item.id, "name", val)}
-                          onBlur={() => handleAutoSave(item.id, { name: getInlineValue(item, "name") as string })}
-                          fontWeight="600"
-                        />
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingLeft: "10px", width: "100%", height: "100%" }}>
+                          {item.avatar ? (
+                            <img
+                              src={item.avatar}
+                              alt={item.name}
+                              style={{ width: "24px", height: "24px", borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: "24px",
+                                height: "24px",
+                                borderRadius: "50%",
+                                backgroundColor: "hsl(210, 40%, 90%)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0
+                              }}
+                            >
+                              <span style={{ fontSize: "10px", fontWeight: "700", color: "var(--text-secondary)" }}>
+                                {item.name ? item.name.substring(0, 1).toUpperCase() : "?"}
+                              </span>
+                            </div>
+                          )}
+                          <div style={{ flexGrow: 1, minWidth: 0 }}>
+                            <ExcelInput
+                              value={getInlineValue(item, "name") as string}
+                              onChange={(val) => handleInlineChange(item.id, "name", val)}
+                              onBlur={() => handleAutoSave(item.id, { name: getInlineValue(item, "name") as string })}
+                              fontWeight="600"
+                            />
+                          </div>
+                        </div>
                       </td>
 
                       <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>

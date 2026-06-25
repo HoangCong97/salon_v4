@@ -1,5 +1,7 @@
-import { Controller, Get, Post, Body, Param, HttpStatus, HttpException } from "@nestjs/common";
+import { Controller, Get, Post, Put, Body, Param, HttpStatus, HttpException } from "@nestjs/common";
 import { prisma } from "@salon/database";
+import * as fs from "fs";
+import * as path from "path";
 
 @Controller("api/tenants")
 export class TenantSubscriptionController {
@@ -144,6 +146,156 @@ export class TenantSubscriptionController {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to create purchase invoice: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  // 4. GET TENANT PROFILE / BRAND SETTINGS
+  @Get(":tenantId")
+  async getTenant(@Param("tenantId") tenantId: string) {
+    try {
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: tenantId }
+      });
+
+      if (!tenant) {
+        throw new HttpException("Tenant not found", HttpStatus.NOT_FOUND);
+      }
+
+      return tenant;
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      throw new HttpException(
+        `Failed to fetch tenant: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  // 5. UPDATE TENANT PROFILE / BRAND SETTINGS
+  @Put(":tenantId")
+  async updateTenant(
+    @Param("tenantId") tenantId: string,
+    @Body() body: {
+      name: string;
+      email?: string;
+      phone?: string;
+      address?: string;
+      brandName?: string;
+      slogan?: string;
+      logoUrl?: string;
+      bannerUrl?: string;
+      hotline?: string;
+      fanpageUrl?: string;
+      instagramUrl?: string;
+      tiktokUrl?: string;
+      websiteUrl?: string;
+    }
+  ) {
+    try {
+      if (!body.name) {
+        throw new HttpException("Tenant name is required", HttpStatus.BAD_REQUEST);
+      }
+
+      const existing = await prisma.tenant.findUnique({
+        where: { id: tenantId }
+      });
+
+      if (!existing) {
+        throw new HttpException("Tenant not found", HttpStatus.NOT_FOUND);
+      }
+
+      return await prisma.tenant.update({
+        where: { id: tenantId },
+        data: {
+          name: body.name,
+          email: body.email ?? null,
+          phone: body.phone ?? null,
+          address: body.address ?? null,
+          brandName: body.brandName ?? null,
+          slogan: body.slogan ?? null,
+          logoUrl: body.logoUrl ?? null,
+          bannerUrl: body.bannerUrl ?? null,
+          hotline: body.hotline ?? null,
+          fanpageUrl: body.fanpageUrl ?? null,
+          instagramUrl: body.instagramUrl ?? null,
+          tiktokUrl: body.tiktokUrl ?? null,
+          websiteUrl: body.websiteUrl ?? null,
+          updatedAt: new Date()
+        }
+      });
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      throw new HttpException(
+        `Failed to update tenant: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  // 6. QUICK UPLOAD FILE (BASE64 TO DISK SEPARATED BY CATEGORY)
+  @Post(":tenantId/upload")
+  async uploadFile(
+    @Param("tenantId") tenantId: string,
+    @Body() body: { file: string; category: string; filename?: string }
+  ) {
+    try {
+      if (!body.file) {
+        throw new HttpException("File data is required", HttpStatus.BAD_REQUEST);
+      }
+      if (!body.category) {
+        throw new HttpException("Category is required", HttpStatus.BAD_REQUEST);
+      }
+
+      // 1. Convert base64 data to Buffer
+      let buffer: Buffer;
+      let extension = "png";
+      const matches = body.file.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+      
+      if (matches && matches.length === 3) {
+        extension = matches[1].split("/")[1] || "png";
+        if (extension === "jpeg") extension = "jpg";
+        buffer = Buffer.from(matches[2], "base64");
+      } else {
+        buffer = Buffer.from(body.file, "base64");
+      }
+
+      // 2. Build directories by category
+      let categoryFolder = body.category.toLowerCase();
+      if (categoryFolder === "transactions") {
+        const todayStr = new Date().toISOString().split("T")[0]; // yyyy-mm-dd
+        categoryFolder = path.join("transactions", todayStr);
+      }
+
+      const uploadDir = path.join(process.cwd(), "uploads", tenantId, categoryFolder);
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      // 3. Build unique filename
+      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+      let baseName = "file";
+      if (body.filename) {
+        baseName = path.basename(body.filename, path.extname(body.filename))
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "-");
+      }
+      const finalFilename = `${baseName}-${uniqueSuffix}.${extension}`;
+      const destFilePath = path.join(uploadDir, finalFilename);
+
+      // 4. Save file to disk
+      fs.writeFileSync(destFilePath, buffer);
+
+      // 5. Construct static URL
+      const relativeUrl = `/uploads/${tenantId}/${categoryFolder.replace(/\\/g, "/")}/${finalFilename}`;
+      const fileUrl = `http://localhost:3000${relativeUrl}`;
+
+      return { url: fileUrl };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      throw new HttpException(
+        `Failed to upload file: ${(error as any).message}`,
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }
