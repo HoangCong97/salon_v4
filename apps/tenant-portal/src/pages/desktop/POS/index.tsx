@@ -114,6 +114,14 @@ const getInitialSelectedStylistId = () => {
   return localStorage.getItem("pos_selected_stylist_id") || "";
 };
 
+const removeVietnameseTones = (str: string): string => {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D");
+};
+
 export default function POS() {
   const { currentTenantId, currentBranchId, branches, user } = useAuthStore();
 
@@ -522,9 +530,16 @@ export default function POS() {
   // Dynamic Filtering Logic
   const selectedCatName = selectedCategory.startsWith("Service:") ? selectedCategory.split(":")[1] : null;
 
+  const matchesSearch = (name: string, query: string) => {
+    if (!query) return true;
+    const cleanName = removeVietnameseTones(name.toLowerCase());
+    const cleanQuery = removeVietnameseTones(query.toLowerCase());
+    return cleanName.includes(cleanQuery);
+  };
+
   const filteredServices = activeServices.filter((s) => {
-    const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase());
-    if (!matchesSearch) return false;
+    const matches = matchesSearch(s.name, search);
+    if (!matches) return false;
     if (selectedCategory === "All") return true;
     if (selectedCatName) {
       return (s.category?.name || "Dịch vụ") === selectedCatName;
@@ -533,14 +548,14 @@ export default function POS() {
   });
 
   const filteredProducts = activeProducts.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    if (!matchesSearch) return false;
+    const matches = matchesSearch(p.name, search);
+    if (!matches) return false;
     return selectedCategory === "All" || selectedCategory === "Product";
   });
 
   const filteredPackages = activePackages.filter((pkg) => {
-    const matchesSearch = pkg.name.toLowerCase().includes(search.toLowerCase());
-    if (!matchesSearch) return false;
+    const matches = matchesSearch(pkg.name, search);
+    if (!matches) return false;
     return selectedCategory === "All" || selectedCategory === "Package";
   });
 
