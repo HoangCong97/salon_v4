@@ -16,7 +16,7 @@ interface ServiceItem {
   name: string;
   price: number;
   duration?: number | null;
-  category?: { name: string } | null;
+  category?: { name: string; color?: string } | null;
   discountPrice?: number | null;
   additionalPrices?: number[] | null;
 }
@@ -123,6 +123,12 @@ export default function POS() {
   const [inventories, setInventories] = useState<ProductItem[]>([]);
   const [packages, setPackages] = useState<PackageItem[]>([]);
 
+  // Fallbacks
+  const activeStaff = staff.length > 0 ? staff : MOCK_STAFF;
+  const activeServices = services.length > 0 ? services : MOCK_SERVICES;
+  const activeProducts = inventories.length > 0 ? inventories : MOCK_PRODUCTS;
+  const activePackages = packages.length > 0 ? packages : MOCK_PACKAGES;
+
   // Customers dynamic state
   const [customers, setCustomers] = useState(getInitialCustomers);
 
@@ -221,10 +227,10 @@ export default function POS() {
         return;
       }
     }
-    
+
     const nextInvoices = invoices.filter(inv => inv.id !== invId);
     setInvoices(nextInvoices);
-    
+
     if (activeInvoiceId === invId) {
       setActiveInvoiceId(nextInvoices[0].id);
     }
@@ -294,11 +300,34 @@ export default function POS() {
     localStorage.setItem("pos_selected_stylist_id", selectedStylistId);
   }, [selectedStylistId]);
 
-  // Fallbacks
-  const activeStaff = staff.length > 0 ? staff : MOCK_STAFF;
-  const activeServices = services.length > 0 ? services : MOCK_SERVICES;
-  const activeProducts = inventories.length > 0 ? inventories : MOCK_PRODUCTS;
-  const activePackages = packages.length > 0 ? packages : MOCK_PACKAGES;
+  // Keyboard shortcut: Press 1-9 to select active staff members by order
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      const keyNum = parseInt(e.key, 10);
+      if (!isNaN(keyNum) && keyNum >= 1 && keyNum <= 9) {
+        const staffIndex = keyNum - 1;
+        if (activeStaff[staffIndex]) {
+          setSelectedStylistId(activeStaff[staffIndex].id);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [activeStaff]);
+
+
 
   // Extract distinct category names from active services list
   const serviceCategories = Array.from(
@@ -307,9 +336,10 @@ export default function POS() {
 
   // Add Item to cart (Prevent row merging: unique cart ID generated on each click)
   const addToCart = (item: any, type: "SERVICE" | "PRODUCT" | "PACKAGE") => {
-    if (!selectedStylistId) {
+    const isStylistValid = selectedStylistId && activeStaff.some(s => s.id === selectedStylistId);
+    if (!isStylistValid) {
       setFlashStaff(true);
-      setTimeout(() => setFlashStaff(false), 1500);
+      setTimeout(() => setFlashStaff(false), 300);
       return;
     }
     const price = type === "SERVICE" ? item.price : (type === "PRODUCT" ? item.sellPrice : item.price);
@@ -331,6 +361,14 @@ export default function POS() {
           discount: 0
         }
       ];
+      return { ...inv, cart: newCart };
+    }));
+  };
+
+  const removeFromCart = (itemId: string) => {
+    setInvoices((prev) => prev.map((inv) => {
+      if (inv.id !== activeInvoiceId) return inv;
+      const newCart = inv.cart.filter((c) => c.itemId !== itemId);
       return { ...inv, cart: newCart };
     }));
   };
@@ -364,7 +402,7 @@ export default function POS() {
     } else {
       newPrice = parseFloat(newPriceVal.replace(/\D/g, "")) || 0;
     }
-    
+
     setInvoices((prev) => prev.map((inv) => {
       if (inv.id !== activeInvoiceId) return inv;
       return {
@@ -383,7 +421,7 @@ export default function POS() {
     } else {
       newDiscount = parseFloat(newDiscountVal.replace(/\D/g, "")) || 0;
     }
-    
+
     setInvoices((prev) => prev.map((inv) => {
       if (inv.id !== activeInvoiceId) return inv;
       return {
@@ -509,7 +547,7 @@ export default function POS() {
   return (
     <>
       <div className="animate-fade-in" style={{ display: "grid", gridTemplateColumns: "7fr 5fr", gap: "24px", height: "calc(100vh - 120px)", overflow: "hidden" }}>
-        
+
         {/* LEFT COLUMN: Service/Product/Package Selection */}
         <POSLeftPanel
           activeStaff={activeStaff}
@@ -524,6 +562,7 @@ export default function POS() {
           filteredProducts={filteredProducts}
           filteredPackages={filteredPackages}
           addToCart={addToCart}
+          removeFromCart={removeFromCart}
           cart={cart}
           flashStaff={flashStaff}
         />

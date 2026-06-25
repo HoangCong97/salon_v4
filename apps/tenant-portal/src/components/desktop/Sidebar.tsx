@@ -23,7 +23,7 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
     { path: "/reports", label: "Báo cáo", icon: BarChart3, roles: ["ADMIN", "MANAGER"] },
   ];
 
-  const allowedItems = menuItems.filter(item => 
+  const allowedItems = menuItems.filter(item =>
     user && item.roles.includes(user.role)
   );
 
@@ -89,7 +89,7 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
           </svg>
         </div>
         {!collapsed && (
-          <span style={{ fontWeight: 700, fontSize: "16px", letterSpacing: "0.5px", color: "var(--text-on-dark)" }}>
+          <span style={{ fontWeight: 700, fontSize: "16px", letterSpacing: "0.5px", color: "var(--text-on-dark)", whiteSpace: "nowrap" }}>
             SALON<span style={{ color: "var(--color-primary)" }}>Portal</span>
           </span>
         )}
@@ -107,20 +107,21 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 display: "flex",
                 alignItems: "center",
                 gap: "12px",
-                padding: "12px 14px",
                 borderRadius: "var(--radius-sm)",
                 color: isActive ? "white" : "rgba(255, 255, 255, 0.7)",
                 background: isActive ? "var(--color-primary)" : "transparent",
                 transition: "all 0.15s ease",
                 fontWeight: isActive ? "600" : "500",
                 justifyContent: collapsed ? "center" : "flex-start",
-                position: "relative"
+                height: "44px",
+                padding: "0 14px",
+                position: "relative",
               })}
             >
               {({ isActive }) => (
                 <>
                   <Icon size={20} style={{ flexShrink: 0 }} />
-                  {!collapsed && <span style={{ fontSize: "14px" }}>{item.label}</span>}
+                  {!collapsed && <span style={{ fontSize: "14px", whiteSpace: "nowrap" }}>{item.label}</span>}
                   {collapsed && isActive && (
                     <div
                       style={{
@@ -129,7 +130,7 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                         width: "4px",
                         height: "20px",
                         backgroundColor: "white",
-                        borderRadius: "0 var(--radius-sm) var(--radius-sm) 0"
+                        borderRadius: "0 var(--radius-sm) var(--radius-sm) 0",
                       }}
                     />
                   )}
@@ -161,6 +162,8 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
             fontSize: "12px",
             fontWeight: "500",
             transition: "all 0.15s ease",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
           }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)")}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.05)")}

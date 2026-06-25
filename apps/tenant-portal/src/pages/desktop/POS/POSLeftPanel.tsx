@@ -2,16 +2,22 @@ import React from "react";
 import { Search, Users, Check } from "lucide-react";
 import { formatCurrencyVND } from "@salon/shared-utils";
 
-export const getEmployeeColor = (id: string) => {
+export const getEmployeeColor = (id: string, activeStaff?: any[]) => {
   const colors = [
-    { bg: "#fee2e2", border: "#fca5a5", text: "#991b1b" }, // Light Red
-    { bg: "#fef3c7", border: "#fcd34d", text: "#92400e" }, // Amber/Yellow
-    { bg: "#dcfce7", border: "#86efac", text: "#166534" }, // Light Green
-    { bg: "#e0f2fe", border: "#7dd3fc", text: "#0369a1" }, // Sky Blue
-    { bg: "#fae8ff", border: "#f5d0fe", text: "#86198f" }, // Purple
-    { bg: "#e0e7ff", border: "#a5b4fc", text: "#3730a3" }, // Indigo
-    { bg: "#ffedd5", border: "#fdbb2d", text: "#9a3412" }  // Orange
+    { color: "#0d9488" }, // Teal 600
+    { color: "#0284c7" }, // Sky Blue 600
+    { color: "#4f46e5" }, // Indigo 600
+    { color: "#7c3aed" }, // Violet 600
+    { color: "#e11d48" }, // Rose 600
+    { color: "#ea580c" }, // Orange 600
+    { color: "#d97706" }  // Amber 600
   ];
+  if (activeStaff && activeStaff.length > 0) {
+    const idx = activeStaff.findIndex(s => s.id === id);
+    if (idx !== -1) {
+      return colors[idx % colors.length];
+    }
+  }
   let sum = 0;
   const safeId = id || "default";
   for (let i = 0; i < safeId.length; i++) {
@@ -20,7 +26,24 @@ export const getEmployeeColor = (id: string) => {
   return colors[sum % colors.length];
 };
 
-const getServiceCategoryColor = (categoryName: string) => {
+const getServiceCategoryColor = (categoryName: string, colorName?: string) => {
+  if (colorName) {
+    const presets: Record<string, { bg: string; border: string; text: string; labelBg: string }> = {
+      blue: { bg: "hsl(210, 100%, 96%)", border: "hsl(210, 100%, 90%)", text: "hsl(210, 100%, 45%)", labelBg: "hsl(210, 100%, 96%)" },
+      green: { bg: "hsl(142, 70%, 95%)", border: "hsl(142, 70%, 88%)", text: "hsl(142, 72%, 29%)", labelBg: "hsl(142, 70%, 95%)" },
+      orange: { bg: "hsl(30, 100%, 95%)", border: "hsl(30, 100%, 90%)", text: "hsl(30, 100%, 40%)", labelBg: "hsl(30, 100%, 95%)" },
+      red: { bg: "hsl(0, 100%, 96%)", border: "hsl(0, 100%, 90%)", text: "hsl(0, 100%, 45%)", labelBg: "hsl(0, 100%, 96%)" },
+      sky: { bg: "hsl(193, 90%, 95%)", border: "hsl(193, 90%, 88%)", text: "hsl(193, 90%, 35%)", labelBg: "hsl(193, 90%, 95%)" },
+      purple: { bg: "hsl(270, 80%, 96%)", border: "hsl(270, 80%, 90%)", text: "hsl(270, 80%, 45%)", labelBg: "hsl(270, 80%, 96%)" },
+      pink: { bg: "hsl(330, 80%, 96%)", border: "hsl(330, 80%, 90%)", text: "hsl(330, 80%, 45%)", labelBg: "hsl(330, 80%, 96%)" },
+      indigo: { bg: "hsl(235, 80%, 96%)", border: "hsl(235, 80%, 90%)", text: "hsl(235, 80%, 45%)", labelBg: "hsl(235, 80%, 96%)" },
+      lime: { bg: "hsl(80, 80%, 94%)", border: "hsl(80, 80%, 85%)", text: "hsl(80, 80%, 30%)", labelBg: "hsl(80, 80%, 94%)" },
+      teal: { bg: "hsl(170, 80%, 94%)", border: "hsl(170, 80%, 85%)", text: "hsl(170, 80%, 30%)", labelBg: "hsl(170, 80%, 94%)" },
+    };
+    const c = colorName.toLowerCase();
+    if (presets[c]) return presets[c];
+  }
+
   const name = (categoryName || "").toLowerCase();
   if (name.includes("hair") || name.includes("tóc")) {
     return { bg: "#f0f7ff", border: "#bae6fd", text: "#0369a1", labelBg: "#e0f2fe" }; // Light Blue
@@ -47,6 +70,7 @@ interface POSLeftPanelProps {
   filteredProducts: any[];
   filteredPackages: any[];
   addToCart: (item: any, type: "SERVICE" | "PRODUCT" | "PACKAGE") => void;
+  removeFromCart: (itemId: string) => void;
   cart: any[];
   flashStaff?: boolean;
 }
@@ -64,6 +88,7 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
   filteredProducts,
   filteredPackages,
   addToCart,
+  removeFromCart,
   cart,
   flashStaff = false,
 }) => {
@@ -72,32 +97,44 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
     const assignments = cart.filter(c => c.itemId === itemId);
     if (assignments.length === 0) return null;
 
+    // Group assignments by staffId and sum quantities
+    const groupedAssignments: { staffId: string; quantity: number }[] = [];
+    assignments.forEach((asg) => {
+      const existing = groupedAssignments.find(x => x.staffId === asg.staffId);
+      if (existing) {
+        existing.quantity += asg.quantity;
+      } else {
+        groupedAssignments.push({ staffId: asg.staffId, quantity: asg.quantity });
+      }
+    });
+
     return (
       <div style={{ display: "flex", gap: "4px" }}>
-        {assignments.map((asg) => {
-          const staffMember = activeStaff.find(s => s.id === asg.staffId);
-          const empColor = getEmployeeColor(asg.staffId);
+        {groupedAssignments.map((ga) => {
+          const staffMember = activeStaff.find(s => s.id === ga.staffId);
+          const empColor = getEmployeeColor(ga.staffId, activeStaff);
           const staffName = staffMember ? staffMember.name.split("(")[0].trim() : "Nhân viên";
           return (
             <span
-              key={asg.id}
-              title={`${staffName}: ${asg.quantity}`}
+              key={ga.staffId}
+              title={`${staffName}: ${ga.quantity}`}
+              onContextMenu={(e) => { e.preventDefault(); removeFromCart(itemId); }}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
                 width: "20px",
                 height: "20px",
-                fontSize: "11px",
-                fontWeight: "800",
                 borderRadius: "50%",
-                background: empColor.bg,
-                border: `1.5px solid ${empColor.border}`,
-                color: empColor.text,
-                boxShadow: "0 1px 3px rgba(0,0,0,0.08)"
+                fontSize: "10.5px",
+                fontWeight: "700",
+                backgroundColor: empColor.color,
+                color: "white",
+                border: `2px solid ${empColor.color}`,
+                cursor: "pointer",
               }}
             >
-              {asg.quantity}
+              {ga.quantity}
             </span>
           );
         })}
@@ -106,24 +143,17 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto", paddingRight: "8px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px", height: "100%", overflow: "hidden" }}>
 
       {/* Top Panel: Active Staff Members */}
       <div
-        className="card"
+        className={`card ${flashStaff ? "flash-active" : ""}`}
         style={{
           padding: "16px",
-          border: "1px solid var(--border-color)",
-          borderColor: flashStaff ? "var(--color-danger)" : "var(--border-color)",
-          animation: flashStaff ? "flash-red-border 0.4s infinite alternate" : "none",
           transition: "all 0.2s"
         }}
       >
         <style>{`
-          @keyframes flash-red-border {
-            0% { border-color: var(--color-danger); box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
-            100% { border-color: var(--border-color); box-shadow: none; }
-          }
           .no-scrollbar::-webkit-scrollbar {
             display: none;
           }
@@ -133,7 +163,7 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
           }
         `}</style>
         <h4 style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
-          <Users size={16} /> NHÂN VIÊN CHI NHÁNH (Chọn để gán lượt)
+          <Users size={16} /> NHÂN VIÊN CHI NHÁNH (Có thể sử dụng hàng phím số để chọn)
         </h4>
         <div
           className="no-scrollbar"
@@ -146,9 +176,9 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
             boxSizing: "border-box"
           }}
         >
-          {activeStaff.map((s) => {
+          {activeStaff.map((s, idx) => {
             const isSelected = selectedStylistId === s.id;
-            const empColor = getEmployeeColor(s.id);
+            const empColor = getEmployeeColor(s.id, activeStaff);
             return (
               <button
                 key={s.id}
@@ -162,24 +192,19 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
                   height: "38px",
                   boxSizing: "border-box",
                   borderRadius: "var(--radius-sm)",
-                  border: isSelected ? `2px solid ${empColor.text}` : `2px solid ${empColor.border}`,
-                  background: isSelected ? empColor.bg : "white",
-                  color: empColor.text,
-                  fontWeight: isSelected ? "700" : "500",
+                  border: isSelected ? `2px solid ${empColor.color}` : `2px solid ${empColor.color}`,
+                  background: isSelected ? empColor.color : "white",
+                  backgroundClip: "padding-box",
+                  color: isSelected ? "white" : empColor.color,
+                  fontWeight: "600",
                   fontSize: "13px",
                   cursor: "pointer",
-                  transition: "all 0.2s",
-                  boxShadow: isSelected ? `0 2px 8px ${empColor.border}` : "none"
+                  transition: "background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s",
+                  boxShadow: isSelected ? "0 4px 12px rgba(0, 0, 0, 0.12)" : "none",
+                  outline: "none"
                 }}
               >
-                <div style={{
-                  width: "8px",
-                  height: "8px",
-                  borderRadius: "50%",
-                  background: empColor.text,
-                }}></div>
                 {s.name.split("(")[0]}
-                {isSelected && <Check size={12} />}
               </button>
             );
           })}
@@ -292,14 +317,14 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
                 whiteSpace: "nowrap"
               }}
             >
-              Gói combo
+              Gói dịch vụ
             </button>
           </div>
         </div>
       </div>
 
       {/* Main Items Listing: Services, Products, Packages */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "24px", overflowY: "auto", flex: 1, paddingRight: "8px" }}>
 
         {/* 1. SERVICES SECTION (Primary/blue layout) */}
         {(selectedCategory === "All" || selectedCategory.startsWith("Service:")) && filteredServices.length > 0 && (
@@ -311,10 +336,10 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
               <div style={{ flexGrow: 1, height: "1px", background: "linear-gradient(to right, var(--color-primary-light), transparent)" }}></div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "12px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "12px" }}>
               {filteredServices.map((item) => {
                 const catName = item.category?.name || "Dịch vụ";
-                const catColor = getServiceCategoryColor(catName);
+                const catColor = getServiceCategoryColor(catName, item.category?.color);
 
                 // Determine filter behavior
                 if (selectedCategory !== "All" && selectedCategory !== `Service:${catName}`) {
@@ -326,11 +351,15 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
                     key={item.id}
                     className="card"
                     onClick={() => addToCart(item, "SERVICE")}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      removeFromCart(item.id);
+                    }}
                     style={{
                       position: "relative",
                       padding: "12px 14px",
-                      background: catColor.bg,
-                      border: `1.5px solid ${catColor.border}`,
+                      background: "transparent",
+                      border: `1px solid ${catColor.text}`,
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "space-between",
@@ -364,7 +393,6 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           width: "100%",
-                          paddingRight: "28px",
                           marginBottom: "4px"
                         }}
                       >
@@ -373,7 +401,7 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
                     </div>
 
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto" }}>
-                      <span style={{ fontWeight: "800", fontSize: "14px", color: catColor.text }}>
+                      <span style={{ fontWeight: "600", fontSize: "14px" }}>
                         {formatCurrencyVND(item.price)}
                       </span>
                       {item.duration && (
@@ -399,17 +427,21 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
               <div style={{ flexGrow: 1, height: "1px", background: "linear-gradient(to right, #ebdcc5, transparent)" }}></div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "12px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "12px" }}>
               {filteredProducts.map((item) => (
                 <div
                   key={item.id}
                   className="card"
                   onClick={() => addToCart(item, "PRODUCT")}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    removeFromCart(item.id);
+                  }}
                   style={{
                     position: "relative",
                     padding: "12px 14px",
-                    background: "#faf6f0",
-                    border: "1.5px solid #ebdcc5",
+                    background: "transparent",
+                    border: "1px solid #8a5a22",
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
@@ -469,22 +501,26 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
               <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#7e22ce", padding: "4px 10px", borderRadius: "6px", background: "#faf0fc" }}>
-                Gói combo
+                Gói dịch vụ
               </span>
               <div style={{ flexGrow: 1, height: "1px", background: "linear-gradient(to right, #eed0fc, transparent)" }}></div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "12px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "12px" }}>
               {filteredPackages.map((item) => (
                 <div
                   key={item.id}
                   className="card"
                   onClick={() => addToCart(item, "PACKAGE")}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    removeFromCart(item.id);
+                  }}
                   style={{
                     position: "relative",
                     padding: "12px 14px",
-                    background: "#faf5ff",
-                    border: "1.5px solid #eed0fc",
+                    background: "transparent",
+                    border: "1px solid #6b21a8",
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",

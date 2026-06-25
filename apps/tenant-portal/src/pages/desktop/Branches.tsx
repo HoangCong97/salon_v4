@@ -20,7 +20,7 @@ export default function Branches() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
-  
+
   // Form Fields
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -89,10 +89,10 @@ export default function Branches() {
       }
 
       if (!res.ok) throw new Error("Lỗi khi lưu thông tin chi nhánh");
-      
+
       setIsModalOpen(false);
       await fetchBranches();
-      
+
       // Update global context so branch selector gets updated
       if (currentTenantId) {
         await setTenant(currentTenantId);
@@ -113,7 +113,7 @@ export default function Branches() {
       if (!res.ok) throw new Error("Lỗi khi xóa chi nhánh");
 
       await fetchBranches();
-      
+
       // Update global context so branch selector gets updated
       if (currentTenantId) {
         await setTenant(currentTenantId);
@@ -177,15 +177,15 @@ export default function Branches() {
 
                 {/* Actions */}
                 <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "24px", paddingTop: "12px", borderTop: "1px solid var(--border-color)" }}>
-                  <button 
-                    className="btn btn-secondary" 
+                  <button
+                    className="btn btn-secondary"
                     style={{ padding: "6px 12px", fontSize: "12px" }}
                     onClick={() => handleOpenEditModal(branch)}
                   >
                     <Edit2 size={14} /> Chỉnh sửa
                   </button>
-                  <button 
-                    className="btn btn-danger" 
+                  <button
+                    className="btn btn-danger"
                     style={{ padding: "6px 12px", fontSize: "12px" }}
                     onClick={() => handleDelete(branch.id)}
                   >
@@ -214,7 +214,7 @@ export default function Branches() {
           zIndex: 1000
         }}>
           <div className="card animate-fade-in" style={{ width: "100%", maxWidth: "480px", position: "relative" }}>
-            <button 
+            <button
               style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }}
               onClick={() => setIsModalOpen(false)}
             >
@@ -226,44 +226,41 @@ export default function Branches() {
             <form onSubmit={handleSave}>
               <div className="form-group">
                 <label className="form-label">Tên chi nhánh *</label>
-                <input 
-                  className="form-input" 
-                  type="text" 
-                  required 
-                  value={name} 
+                <input
+                  className="form-input"
+                  type="text"
+                  required
+                  value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Ví dụ: HairStar - Chi nhánh Quận 1"
+                  placeholder="Tên chi nhánh"
                 />
               </div>
               <div className="form-group">
                 <label className="form-label">Số điện thoại</label>
-                <input 
-                  className="form-input" 
-                  type="text" 
-                  value={phone} 
+                <input
+                  className="form-input"
+                  type="text"
+                  value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Ví dụ: 02839998881"
                 />
               </div>
               <div className="form-group">
                 <label className="form-label">Email liên hệ</label>
-                <input 
-                  className="form-input" 
-                  type="email" 
-                  value={email} 
+                <input
+                  className="form-input"
+                  type="email"
+                  value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Ví dụ: branch1@hairstar.vn"
                 />
               </div>
               <div className="form-group">
                 <label className="form-label">Địa chỉ</label>
-                <textarea 
-                  className="form-input" 
-                  rows={3} 
-                  value={address} 
+                <textarea
+                  className="form-input"
+                  rows={3}
+                  value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Ví dụ: 15 Lê Thánh Tôn, Quận 1, TP.HCM"
-                  style={{ resize: "vertical" }}
+                  style={{ resize: "none" }}
                 />
               </div>
 

@@ -56,7 +56,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       <div style={{ display: "flex", alignItems: "center" }}>
         {displayIds.map((sId: any, idx) => {
           const sObj = activeStaff.find((s) => s.id === sId);
-          const empColor = getEmployeeColor(String(sId));
+          const empColor = getEmployeeColor(String(sId), activeStaff);
           const initials = sObj
             ? sObj.name.split(" ").pop()?.substring(0, 2).toUpperCase()
             : "?";

@@ -1,6 +1,6 @@
 import React from "react";
-import { 
-  Users, Trash2, Plus, Tag, CreditCard, QrCode, FileText, X, Printer, Loader2 
+import {
+  Users, Trash2, Plus, Tag, CreditCard, QrCode, FileText, X, Printer, Loader2
 } from "lucide-react";
 import { formatCurrencyVND } from "@salon/shared-utils";
 import { ExcelInput, ExcelSelect } from "../../../components/desktop/TableComponents";
@@ -117,6 +117,8 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [prefillName, setPrefillName] = React.useState("");
   const [prefillPhone, setPrefillPhone] = React.useState("");
+  const [showQRModal, setShowQRModal] = React.useState(false); // keep it for compatibility if needed elsewhere, though we can also just use showQRPopover
+  const [showQRPopover, setShowQRPopover] = React.useState(false);
 
   React.useEffect(() => {
     if (selectedCustomer && selectedCustomerId !== "c1") {
@@ -137,7 +139,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
   const filteredCustomers = React.useMemo(() => {
     const q = customerQuery.trim().toLowerCase();
     if (!q) return [];
-    return customers.filter(c => 
+    return customers.filter(c =>
       (c.name.toLowerCase().includes(q) || c.phone.includes(q)) && c.id !== "c1"
     );
   }, [customerQuery, customers]);
@@ -156,18 +158,18 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
           scrollbar-width: none;  /* Firefox */
         }
       `}</style>
-      
+
       {/* Invoice Tabs */}
-      <div 
+      <div
         className="no-scrollbar"
-        style={{ 
-          display: "flex", 
-          alignItems: "center", 
-          gap: "6px", 
-          borderBottom: "1px solid var(--border-color)", 
-          height: "40px", 
-          marginBottom: "12px", 
-          overflowX: "auto", 
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          borderBottom: "1px solid var(--border-color)",
+          height: "40px",
+          marginBottom: "12px",
+          overflowX: "auto",
           flexShrink: 0,
           boxSizing: "border-box"
         }}
@@ -244,9 +246,9 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
         <h3 style={{ fontSize: "15px", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
           <Users size={18} style={{ color: "var(--color-primary)" }} /> KHÁCH HÀNG
         </h3>
-        
+
         {showSuggestions && (
-          <div 
+          <div
             onClick={() => setShowSuggestions(false)}
             style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 90 }}
           />
@@ -263,7 +265,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
               style={{ width: "100%", height: "36px" }}
             />
             {showSuggestions && (customerQuery.trim().length > 0) && (
-              <div 
+              <div
                 style={{
                   position: "absolute",
                   top: "100%",
@@ -300,7 +302,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                     <strong>{c.name}</strong> {c.phone ? `(${c.phone})` : ""} - <span style={{ color: "var(--color-primary)" }}>{c.rank}</span>
                   </div>
                 ))}
-                
+
                 {showCreateSuggestion && (
                   <div
                     onClick={() => {
@@ -376,8 +378,8 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
               </thead>
               <tbody>
                 {cart.map((cItem) => {
-                  const empColor = getEmployeeColor(cItem.staffId);
-                  
+                  const empColor = getEmployeeColor(cItem.staffId, activeStaff);
+
                   // Get available prices for this service
                   const serviceObj = activeServices.find(s => s.id === cItem.itemId);
                   const availablePrices: number[] = [];
@@ -401,15 +403,22 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                   const hasMultiplePrices = cItem.itemType === "SERVICE" && availablePrices.length > 1;
 
                   return (
-                    <tr key={cItem.id}>
+                    <tr
+                      key={cItem.id}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        adjustQuantity(cItem.id, -cItem.quantity);
+                      }}
+                      style={{ cursor: "context-menu" }}
+                    >
                       {/* Item name - exactly 1 line */}
                       <td style={{ padding: "8px 10px", verticalAlign: "middle", width: "140px" }}>
-                        <div 
-                          title={cItem.name} 
-                          style={{ 
-                            fontWeight: "700", 
-                            whiteSpace: "nowrap", 
-                            overflow: "hidden", 
+                        <div
+                          title={cItem.name}
+                          style={{
+                            fontWeight: "400",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
                             textOverflow: "ellipsis",
                             width: "130px"
                           }}
@@ -425,13 +434,13 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                           onChange={(val) => updateCartItemStylist(cItem.id, val)}
                           options={activeStaff.map(st => ({ value: st.id, label: st.name.split("(")[0] }))}
                           colorStyle={{
-                            background: empColor.bg,
-                            color: empColor.text,
-                            border: `1.5px solid ${empColor.border}`,
+                            background: "white",
+                            color: empColor.color,
+                            border: `1.5px solid ${empColor.color}`,
                             height: "26px",
                             padding: "0 4px",
                             fontSize: "11.5px",
-                            fontWeight: "600",
+                            fontWeight: "400",
                             width: "100%"
                           }}
                         />
@@ -452,7 +461,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                               height: "26px",
                               padding: "0 10px",
                               fontSize: "12.5px",
-                              fontWeight: "700",
+                              fontWeight: "500",
                               width: "100px",
                               border: "1px solid var(--border-color)",
                               borderRadius: "var(--radius-sm)",
@@ -462,12 +471,12 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                             }}
                           />
                         ) : (
-                          <div 
-                            style={{ 
-                              width: "100px", 
-                              height: "26px", 
-                              border: "1px solid var(--border-color)", 
-                              borderRadius: "var(--radius-sm)", 
+                          <div
+                            style={{
+                              width: "100px",
+                              height: "26px",
+                              border: "1px solid var(--border-color)",
+                              borderRadius: "var(--radius-sm)",
                               background: "white",
                               position: "relative",
                               margin: "0 auto"
@@ -477,7 +486,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                               value={formatNumber(cItem.price)}
                               onChange={(val) => updateCartItemPrice(cItem.id, val)}
                               textAlign="center"
-                              fontWeight="700"
+                              fontWeight="500"
                               unit="đ"
                               showUnit={false}
                               type="text"
@@ -488,12 +497,12 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
 
                       {/* Item Discount Input */}
                       <td style={{ padding: "4px 6px", verticalAlign: "middle", textAlign: "center", width: "110px" }}>
-                        <div 
-                          style={{ 
-                            width: "90px", 
-                            height: "26px", 
-                            border: "1px solid var(--border-color)", 
-                            borderRadius: "var(--radius-sm)", 
+                        <div
+                          style={{
+                            width: "90px",
+                            height: "26px",
+                            border: "1px solid var(--border-color)",
+                            borderRadius: "var(--radius-sm)",
                             background: "white",
                             position: "relative",
                             margin: "0 auto"
@@ -503,7 +512,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                             value={formatNumber(cItem.discount)}
                             onChange={(val) => updateCartItemDiscount(cItem.id, val)}
                             textAlign="center"
-                            fontWeight="700"
+                            fontWeight="500"
                             unit="đ"
                             showUnit={false}
                             type="text"
@@ -515,16 +524,16 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                       {/* Price & Trash Delete on same row */}
                       <td style={{ padding: "8px 10px", verticalAlign: "middle", textAlign: "right", width: "110px" }}>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "8px" }}>
-                          <span style={{ fontWeight: "700", whiteSpace: "nowrap" }}>
+                          <span style={{ fontWeight: "700", whiteSpace: "nowrap", color: "var(--color-primary)" }}>
                             {formatCurrencyVND((cItem.price - (cItem.discount || 0)) * cItem.quantity)}
                           </span>
                           <button
                             type="button"
                             onClick={() => adjustQuantity(cItem.id, -cItem.quantity)}
-                            style={{ 
-                              background: "none", 
-                              border: "none", 
-                              color: "var(--color-danger)", 
+                            style={{
+                              background: "none",
+                              border: "none",
+                              color: "var(--color-danger)",
                               cursor: "pointer",
                               padding: 0,
                               display: "inline-flex",
@@ -546,7 +555,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
 
       {/* Payment Method & QR Code Display */}
       <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "16px", flexShrink: 0 }}>
-        
+
         {/* Voucher input */}
         <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
           <div style={{ position: "relative", flexGrow: 1 }}>
@@ -560,9 +569,9 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
               style={{ paddingLeft: "30px", height: "34px", fontSize: "12.5px" }}
             />
           </div>
-          <button 
-            type="button" 
-            className="btn btn-secondary" 
+          <button
+            type="button"
+            className="btn btn-secondary"
             onClick={applyVoucher}
             style={{ padding: "0 12px", height: "34px", fontSize: "12.5px" }}
           >
@@ -576,7 +585,10 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
             <button
               type="button"
-              onClick={() => setPaymentMethod("CASH")}
+              onClick={() => {
+                setPaymentMethod("CASH");
+                setShowQRPopover(false);
+              }}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -596,7 +608,10 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setPaymentMethod("BANK_TRANSFER")}
+              onClick={() => {
+                setPaymentMethod("BANK_TRANSFER");
+                setShowQRPopover(true);
+              }}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -617,28 +632,6 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
           </div>
         </div>
 
-        {/* Simulated Bank QR Code box */}
-        {paymentMethod === "BANK_TRANSFER" && finalAmount > 0 && (
-          <div style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "8px",
-            background: "#faf5ff",
-            padding: "12px",
-            border: "1px solid #ebd5fc",
-            borderRadius: "var(--radius-sm)",
-            marginBottom: "12px",
-            textAlign: "center"
-          }}>
-            <QrCode size={100} style={{ color: "#7e22ce" }} />
-            <div>
-              <span style={{ fontSize: "11px", fontWeight: "700", display: "block", color: "#6b21a8" }}>QUÉT QR ĐỐI SOÁT VNPAY/PayOS</span>
-              <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>Số tiền: <strong style={{ color: "var(--color-primary)" }}>{formatCurrencyVND(finalAmount)}</strong></span>
-            </div>
-          </div>
-        )}
-
         {/* Final calculations section */}
         <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "12px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "13px" }}>
@@ -658,9 +651,9 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
         </div>
 
         {/* Print & checkout button */}
-        <button 
-          className="btn btn-primary" 
-          style={{ width: "100%", padding: "12px", fontSize: "14px", fontWeight: "700" }} 
+        <button
+          className="btn btn-primary"
+          style={{ width: "100%", padding: "12px", fontSize: "14px", fontWeight: "700" }}
           disabled={cart.length === 0 || checkingOut}
           onClick={handleCheckout}
         >
@@ -684,6 +677,79 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
         prefillName={prefillName}
         prefillPhone={prefillPhone}
       />
+
+      {/* Floating QR Card Popover */}
+      {paymentMethod === "BANK_TRANSFER" && showQRPopover && finalAmount > 0 && (
+        <div style={{
+          position: "absolute",
+          bottom: "235px", // sits right above the payment options
+          right: "20px",   // aligns with the right edge of the button
+          width: "calc(50% - 24px)",  // matches the width of the button exactly
+          background: "white",
+          border: "1px solid #ebd5fc",
+          boxShadow: "var(--shadow-lg)",
+          borderRadius: "var(--radius-md)",
+          padding: "12px 10px",
+          zIndex: 200,
+          textAlign: "center",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "8px",
+          animation: "fade-in 0.15s ease-out"
+        }}>
+          {/* Close button */}
+          <button
+            onClick={() => setShowQRPopover(false)}
+            style={{
+              position: "absolute",
+              top: "8px",
+              right: "8px",
+              background: "none",
+              border: "none",
+              color: "var(--text-muted)",
+              cursor: "pointer",
+              padding: "2px"
+            }}
+          >
+            <X size={16} />
+          </button>
+
+          <h4 style={{ fontSize: "12px", fontWeight: "700", color: "#6b21a8", margin: 0 }}>MÃ QR THANH TOÁN</h4>
+
+          <div style={{
+            display: "inline-flex",
+            padding: "8px",
+            background: "#faf5ff",
+            border: "1px dashed #ebd5fc",
+            borderRadius: "var(--radius-sm)",
+          }}>
+            <QrCode size={250} style={{ color: "#7e22ce" }} />
+          </div>
+
+          <div style={{ fontSize: "10.5px", color: "var(--text-secondary)", lineHeight: "1.3" }}>
+            Quét mã QR chuyển khoản đối soát VNPAY/PayOS
+          </div>
+
+          <div style={{ fontSize: "11.5px", color: "var(--text-secondary)" }}>
+            Số tiền: <strong style={{ color: "var(--color-primary)" }}>{formatCurrencyVND(finalAmount)}</strong>
+          </div>
+
+          {/* Popover Arrow pointing to Chuyển khoản button */}
+          <div style={{
+            position: "absolute",
+            bottom: "-6px",
+            left: "50%",
+            transform: "translateX(-50%) rotate(45deg)",
+            width: "12px",
+            height: "12px",
+            background: "white",
+            borderRight: "1px solid #ebd5fc",
+            borderBottom: "1px solid #ebd5fc",
+            zIndex: 201
+          }} />
+        </div>
+      )}
 
     </div>
   );

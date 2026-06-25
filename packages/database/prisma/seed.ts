@@ -7,7 +7,7 @@ async function main() {
 
   // 1. CLEAN UP EXISTING DATA IN RELATION ORDER
   console.log("🧹 Cleaning up old data...");
-  
+
   await prisma.saasInvoice.deleteMany({});
   await prisma.invoiceItem.deleteMany({});
   await prisma.invoice.deleteMany({});
@@ -21,7 +21,7 @@ async function main() {
   await prisma.inventory.deleteMany({});
   await prisma.customerPoint.deleteMany({});
   await prisma.customer.deleteMany({});
-  
+
   await prisma.userBranch.deleteMany({});
   await prisma.userSetting.deleteMany({});
   await prisma.employeeShift.deleteMany({});
@@ -30,7 +30,7 @@ async function main() {
   await prisma.salaryAdvance.deleteMany({});
   await prisma.employeeMonthlyPayroll.deleteMany({});
   await prisma.employeeSalaryConfig.deleteMany({});
-  
+
   await prisma.commissionTemplateDetail.deleteMany({});
   await prisma.commissionTemplate.deleteMany({});
   await prisma.rolePermission.deleteMany({});
@@ -39,12 +39,12 @@ async function main() {
   await prisma.user.deleteMany({});
   await prisma.role.deleteMany({});
   await prisma.service.deleteMany({});
-  
+
   await prisma.dailyEmployeeRevenue.deleteMany({});
   await prisma.dailyBranchRevenue.deleteMany({});
   await prisma.dailyRevenueReport.deleteMany({});
   await prisma.revenueExpenditure.deleteMany({});
-  
+
   await prisma.branch.deleteMany({});
   await prisma.tenant.deleteMany({});
   await prisma.saasPlan.deleteMany({});
@@ -202,7 +202,7 @@ async function main() {
   const branch1a = await prisma.branch.create({
     data: {
       tenantId: tenant1.id,
-      name: "HairStar - Chi nhánh Quận 1",
+      name: "HairStar - Chi nhánh 2",
       phone: "02839998881",
       email: "branch1@hairstar.vn",
       address: "15 Lê Thánh Tôn, Quận 1, TP.HCM"
@@ -212,7 +212,7 @@ async function main() {
   const branch1b = await prisma.branch.create({
     data: {
       tenantId: tenant1.id,
-      name: "HairStar - Chi nhánh Quận 3",
+      name: "HairStar - Chi nhánh 3",
       phone: "02839998882",
       email: "branch2@hairstar.vn",
       address: "120 Nguyễn Đình Chiểu, Quận 3, TP.HCM"
@@ -233,7 +233,7 @@ async function main() {
 
   // 6. CREATE ROLES & PERMISSIONS
   console.log("🌱 Seeding Roles & Permissions...");
-  
+
   // Create default permissions
   const permBookCreate = await prisma.permission.create({ data: { slug: "booking.create", groupName: "Booking", name: "Tạo lịch hẹn", description: "Cho phép đặt lịch hẹn mới" } });
   const permBookView = await prisma.permission.create({ data: { slug: "booking.view", groupName: "Booking", name: "Xem lịch hẹn", description: "Xem danh sách lịch hẹn" } });
@@ -282,7 +282,7 @@ async function main() {
 
   // 7. CREATE USERS
   console.log("🌱 Seeding Users...");
-  
+
   const user1 = await prisma.user.create({
     data: {
       tenantId: tenant1.id,
@@ -386,7 +386,7 @@ async function main() {
   const catHair = await prisma.serviceCategory.create({
     data: {
       tenantId: tenant1.id,
-      name: "Cắt Tóc Nam & Styling",
+      name: "Cơ bản",
       color: "blue",
       defaultCommission: 10.00
     }
@@ -395,7 +395,7 @@ async function main() {
   const catChemical = await prisma.serviceCategory.create({
     data: {
       tenantId: tenant1.id,
-      name: "Hóa Chất (Uốn/Nhuộm)",
+      name: "Hóa chất",
       color: "orange",
       defaultCommission: 15.00
     }
@@ -404,57 +404,105 @@ async function main() {
   const catSpa = await prisma.serviceCategory.create({
     data: {
       tenantId: tenant1.id,
-      name: "Gội Đầu & Spa",
-      color: "green",
+      name: "Combo",
+      color: "purple",
       defaultCommission: 12.00
     }
   });
 
   console.log("🌱 Seeding Services...");
-  const service1 = await prisma.service.create({
-    data: {
-      tenantId: tenant1.id,
-      branchId: branch1a.id,
-      name: "Cắt Tóc Nam Premium",
-      serviceCategory: "Cắt Tóc",
-      categoryId: catHair.id,
-      price: 150000,
-      discountPrice: 120000,
-      duration: 30
-    }
-  });
+  const serviceData = [
+    // Combo
+    { name: "COMBO Cơ Bản", catId: catSpa.id, serviceCategory: "Combo", branches: ["CN2", "CN3"], priceCN2: 140000, priceCN3: 140000, additional: [110000, 130000, 190000, 210000, 220000, 160000, 140000], status: "Hoạt động" },
+    { name: "COMBO Cao cấp", catId: catSpa.id, serviceCategory: "Combo", branches: ["CN2", "CN3"], priceCN2: 210000, priceCN3: 210000, additional: [130000, 170000, 230000, 250000, 290000, 190000], status: "Hoạt động" },
+    { name: "COMBO Thượng Hạng", catId: catSpa.id, serviceCategory: "Combo", branches: ["CN2", "CN3"], priceCN2: 280000, priceCN3: 280000, additional: [290000, 350000, 360000, 260000, 250000, 240000], status: "Hoạt động" },
+    { name: "COMBO 1", catId: catSpa.id, serviceCategory: "Combo", branches: ["CN2"], priceCN2: 200000, priceCN3: 0, additional: [150000, 200000], status: "Ngừng" },
+    { name: "COMBO 2", catId: catSpa.id, serviceCategory: "Combo", branches: ["CN2"], priceCN2: 280000, priceCN3: 0, additional: [230000, 280000], status: "Ngừng" },
+    { name: "COMBO Nâng Cao", catId: catSpa.id, serviceCategory: "Combo", branches: ["CN2"], priceCN2: 189000, priceCN3: 0, additional: [189000], status: "Ngừng" },
+    { name: "COMBO Đặc Biệt", catId: catSpa.id, serviceCategory: "Combo", branches: ["CN2"], priceCN2: 240000, priceCN3: 0, additional: [240000], status: "Ngừng" },
+    { name: "COMBO Chăm Sóc", catId: catSpa.id, serviceCategory: "Combo", branches: ["CN2"], priceCN2: 130000, priceCN3: 0, additional: [130000], status: "Hoạt động" },
+    { name: "Combo thường", catId: catSpa.id, serviceCategory: "Combo", branches: ["CN2"], priceCN2: 60000, priceCN3: 0, additional: [60000], status: "Hoạt động" },
 
-  const service2 = await prisma.service.create({
-    data: {
-      tenantId: tenant1.id,
-      branchId: branch1a.id,
-      name: "Uốn Tóc Chuyên Sâu",
-      serviceCategory: "Hóa Chất",
-      categoryId: catChemical.id,
-      price: 500000,
-      discountPrice: 450000,
-      duration: 90
-    }
-  });
+    // Cơ bản
+    { name: "Hớt tóc", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN2", "CN3"], priceCN2: 70000, priceCN3: 70000, additional: [60000, 70000, 80000], status: "Hoạt động" },
+    { name: "Cạo mặt", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN2", "CN3"], priceCN2: 20000, priceCN3: 20000, additional: [10000, 15000], status: "Hoạt động" },
+    { name: "Ráy tai", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN2", "CN3"], priceCN2: 70000, priceCN3: 70000, additional: [30000, 50000, 60000, 70000], status: "Hoạt động" },
+    { name: "Gội đầu massage", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN2", "CN3"], priceCN2: 70000, priceCN3: 70000, additional: [50000, 60000, 70000], status: "Hoạt động" },
+    { name: "Massage mặt", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN2", "CN3"], priceCN2: 0, priceCN3: 0, additional: [], status: "Hoạt động" },
+    { name: "Đánh mắt", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN2", "CN3"], priceCN2: 50000, priceCN3: 50000, additional: [30000, 40000, 50000], status: "Hoạt động" },
+    { name: "Nhổ tóc bạc", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN2", "CN3"], priceCN2: 50000, priceCN3: 50000, additional: [80000, 100000], status: "Hoạt động" },
+    { name: "Làm móng", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN2", "CN3"], priceCN2: 80000, priceCN3: 80000, additional: [50000, 30000, 60000, 70000, 80000], status: "Hoạt động" },
+    { name: "Đắp mặt nạ", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN2", "CN3"], priceCN2: 50000, priceCN3: 50000, additional: [30000, 40000, 50000], status: "Hoạt động" },
+    { name: "Lột mụn", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN2", "CN3"], priceCN2: 40000, priceCN3: 40000, additional: [30000], status: "Hoạt động" },
+    { name: "Hút mụn + Xông mặt", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN2", "CN3"], priceCN2: 130000, priceCN3: 130000, additional: [100000, 120000], status: "Hoạt động" },
+    { name: "Tẩy tế bào chết", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN2", "CN3"], priceCN2: 40000, priceCN3: 40000, additional: [20000, 30000], status: "Hoạt động" },
+    { name: "Tattoo", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN2", "CN3"], priceCN2: 30000, priceCN3: 30000, additional: [10000, 20000, 30000], status: "Hoạt động" },
+    { name: "Cắt tóc (Free thẻ tích điểm)", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN2", "CN3"], priceCN2: 60000, priceCN3: 60000, additional: [], status: "Hoạt động" },
+    { name: "Xoe lỗ ghèn", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN2", "CN3"], priceCN2: 50000, priceCN3: 50000, additional: [], status: "Hoạt động" },
+    { name: "Phụ dập xả tóc sấy tóc", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN3"], priceCN2: 0, priceCN3: 50000, additional: [], status: "Hoạt động" },
+    { name: "sấy tạo kiểu", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN3"], priceCN2: 0, priceCN3: 40000, additional: [40000], status: "Hoạt động" },
+    { name: "nhuộm thuốc của khách", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN3"], priceCN2: 0, priceCN3: 50000, additional: [50000], status: "Hoạt động" },
+    { name: "Hấp dầu", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN2"], priceCN2: 250000, priceCN3: 0, additional: [250000], status: "Hoạt động" },
+    { name: "kẹp giả", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN3"], priceCN2: 0, priceCN3: 10000, additional: [100000], status: "Hoạt động" },
 
-  const service3 = await prisma.service.create({
-    data: {
-      tenantId: tenant1.id,
-      branchId: branch1a.id,
-      name: "Gội Đầu Dưỡng Sinh Thảo Dược",
-      serviceCategory: "Gội Đầu",
-      categoryId: catSpa.id,
-      price: 100000,
-      discountPrice: 100000,
-      duration: 45
+    // Hoá chất
+    { name: "Nhuộm đen", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 300000, priceCN3: 300000, additional: [100000, 150000, 200000, 250000, 300000, 350000, 400000, 450000, 500000], status: "Ngừng" },
+    { name: "Nhuộm màu", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 500000, priceCN3: 500000, additional: [200000, 250000, 300000, 350000, 400000, 450000, 500000, 550000, 600000, 700000, 800000, 900000], status: "Hoạt động" },
+    { name: "Tẩy tóc", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 300000, priceCN3: 300000, additional: [150000], status: "Hoạt động" },
+    { name: "Uốn", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 300000, priceCN3: 300000, additional: [200000, 250000, 300000, 350000, 380000, 400000, 450000, 500000, 550000, 600000, 700000, 800000, 900000], status: "Hoạt động" },
+    { name: "Duỗi", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 300000, priceCN3: 300000, additional: [200000, 250000, 300000, 350000, 400000, 450000, 500000], status: "Hoạt động" },
+    { name: "Ép side", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 250000, priceCN3: 250000, additional: [270000, 350000], status: "Hoạt động" },
+    { name: "Móc ligh", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 70000, priceCN3: 70000, additional: [70000, 100000], status: "Hoạt động" },
+    { name: "Phục hồi tóc", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 170000, priceCN3: 170000, additional: [], status: "Hoạt động" }
+  ];
+
+  let service1: any;
+  let service3: any;
+
+  for (const s of serviceData) {
+    if (s.branches.includes("CN2")) {
+      const created = await prisma.service.create({
+        data: {
+          tenantId: tenant1.id,
+          branchId: branch1a.id,
+          name: s.name,
+          serviceCategory: s.serviceCategory,
+          categoryId: s.catId,
+          price: s.priceCN2,
+          additionalPrices: s.additional,
+          duration: 30,
+          deletedAt: s.status === "Ngừng" ? new Date() : null
+        }
+      });
+      if (s.name === "Hớt tóc") {
+        service1 = created;
+      }
+      if (s.name === "Gội đầu massage") {
+        service3 = created;
+      }
     }
-  });
+    if (s.branches.includes("CN3")) {
+      await prisma.service.create({
+        data: {
+          tenantId: tenant1.id,
+          branchId: branch1b.id,
+          name: s.name,
+          serviceCategory: s.serviceCategory,
+          categoryId: s.catId,
+          price: s.priceCN3,
+          additionalPrices: s.additional,
+          duration: 30,
+          deletedAt: s.status === "Ngừng" ? new Date() : null
+        }
+      });
+    }
+  }
 
   console.log("✅ Services created!");
 
   // 10. CREATE BOOKINGS & INVOICES
   console.log("🌱 Seeding Bookings & Invoices...");
-  
+
   // Future Booking (PENDING)
   const booking1 = await prisma.booking.create({
     data: {
@@ -571,6 +619,59 @@ async function main() {
     }
   });
 
+  const productData = [
+    { name: "Gôm xịt", branches: ["CN2", "CN3"], costPrice: 170000, sellPrice: 170000, status: "Hoạt động" },
+    { name: "Sáp Vuốt Tóc", branches: ["CN2", "CN3"], costPrice: 170000, sellPrice: 170000, status: "Hoạt động" },
+    { name: "Keo Vuốt Tóc", branches: ["CN2", "CN3"], costPrice: 170000, sellPrice: 170000, status: "Hoạt động" },
+    { name: "Wax H&T đen nhỏ", branches: ["CN2", "CN3"], costPrice: 170000, sellPrice: 170000, status: "Hoạt động" },
+    { name: "Wax H&T đen lớn", branches: ["CN2", "CN3"], costPrice: 270000, sellPrice: 270000, status: "Hoạt động" },
+    { name: "Wax H&T xanh nhỏ", branches: ["CN2", "CN3"], costPrice: 170000, sellPrice: 170000, status: "Hoạt động" },
+    { name: "Wax H&T xanh lớn", branches: ["CN2", "CN3"], costPrice: 270000, sellPrice: 270000, status: "Hoạt động" },
+    { name: "Wax H&T trắng nhỏ", branches: ["CN2", "CN3"], costPrice: 170000, sellPrice: 170000, status: "Hoạt động" },
+    { name: "Wax H&T trắng lớn", branches: ["CN2", "CN3"], costPrice: 270000, sellPrice: 270000, status: "Hoạt động" },
+    { name: "Wax Vol Canic", branches: ["CN2", "CN3"], costPrice: 170000, sellPrice: 170000, status: "Hoạt động" },
+    { name: "Waz Crew trắng", branches: ["CN2", "CN3"], costPrice: 200000, sellPrice: 200000, status: "Hoạt động" },
+    { name: "Gôm Reuzel xanh lá", branches: ["CN2", "CN3"], costPrice: 170000, sellPrice: 170000, status: "Hoạt động" },
+    { name: "Gôm Reuzel xanh dương", branches: ["CN2", "CN3"], costPrice: 170000, sellPrice: 170000, status: "Hoạt động" },
+    { name: "Gôm Perfect đen", branches: ["CN2", "CN3"], costPrice: 170000, sellPrice: 170000, status: "Hoạt động" },
+    { name: "Gôm Butterfly Bạc nhỏ", branches: ["CN2", "CN3"], costPrice: 100000, sellPrice: 100000, status: "Hoạt động" },
+    { name: "Tinh dầu dưỡng tóc", branches: ["CN2", "CN3"], costPrice: 200000, sellPrice: 200000, status: "Hoạt động" },
+    { name: "Nước hoa", branches: ["CN2", "CN3"], costPrice: 170000, sellPrice: 170000, status: "Hoạt động" },
+    { name: "Dụng cụ Ráy tai", branches: ["CN2", "CN3"], costPrice: 200000, sellPrice: 200000, status: "Hoạt động" },
+    { name: "Dầu gội trị nấm", branches: ["CN3"], costPrice: 0, sellPrice: 90000, status: "Hoạt động" },
+    { name: "Xịt tạo phồng tóc", branches: ["CN2"], costPrice: 120000, sellPrice: 120000, status: "Hoạt động" }
+  ];
+
+  for (const p of productData) {
+    if (p.branches.includes("CN2")) {
+      await prisma.inventory.create({
+        data: {
+          tenantId: tenant1.id,
+          branchId: branch1a.id,
+          name: p.name,
+          costPrice: p.costPrice,
+          sellPrice: p.sellPrice,
+          quantity: 50,
+          deletedAt: p.status === "Ngừng" ? new Date() : null
+        }
+      });
+    }
+    if (p.branches.includes("CN3")) {
+      await prisma.inventory.create({
+        data: {
+          tenantId: tenant1.id,
+          branchId: branch1b.id,
+          name: p.name,
+          costPrice: p.costPrice,
+          sellPrice: p.sellPrice,
+          quantity: 50,
+          deletedAt: p.status === "Ngừng" ? new Date() : null
+        }
+      });
+    }
+  }
+
+
   const package1 = await prisma.servicePackage.create({
     data: {
       tenantId: tenant1.id,
@@ -595,7 +696,7 @@ async function main() {
 
   // 12. SEED REPORTS AND EXPENDITURES
   console.log("🌱 Seeding Reports & Expenditures...");
-  
+
   await prisma.dailyRevenueReport.create({
     data: {
       tenantId: tenant1.id,

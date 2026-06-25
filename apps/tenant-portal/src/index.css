@@ -1,1 +1,17 @@
 @import "../../../packages/shared-utils/src/styles/theme.css";
+
+@keyframes flash-red-border {
+    0% {
+        border-color: var(--color-danger);
+        box-shadow: 0 0 3px rgba(239, 68, 68, 1);
+    }
+
+    100% {
+        border-color: var(--border-color);
+        box-shadow: none;
+    }
+}
+
+.flash-active {
+    animation: flash-red-border 0.1s infinite alternate;
+}
