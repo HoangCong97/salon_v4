@@ -1,5 +1,5 @@
-import React from "react";
-import { Search, Users, Check } from "lucide-react";
+import React, { useState } from "react";
+import { Search, Users, Check, GripVertical, Star } from "lucide-react";
 import { formatCurrencyVND } from "@salon/shared-utils";
 
 export const getEmployeeColor = (id: string, activeStaff?: any[]) => {
@@ -73,6 +73,9 @@ interface POSLeftPanelProps {
   removeFromCart: (itemId: string) => void;
   cart: any[];
   flashStaff?: boolean;
+  pinnedItemIds: string[];
+  togglePinItem: (itemId: string) => void;
+  reorderItems: (type: "SERVICE" | "PRODUCT" | "PACKAGE", orderedIds: string[]) => void;
 }
 
 export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
@@ -91,7 +94,33 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
   removeFromCart,
   cart,
   flashStaff = false,
+  pinnedItemIds,
+  togglePinItem,
+  reorderItems,
 }) => {
+  const [isSortingServices, setIsSortingServices] = useState(false);
+  const [isSortingProducts, setIsSortingProducts] = useState(false);
+  const [isSortingPackages, setIsSortingPackages] = useState(false);
+
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [draggedType, setDraggedType] = useState<"SERVICE" | "PRODUCT" | "PACKAGE" | null>(null);
+
+  const handleDrop = (
+    type: "SERVICE" | "PRODUCT" | "PACKAGE",
+    targetIndex: number,
+    itemsList: any[]
+  ) => {
+    if (draggedIndex === null || draggedType !== type || draggedIndex === targetIndex) return;
+
+    const listCopy = [...itemsList];
+    const [draggedItem] = listCopy.splice(draggedIndex, 1);
+    listCopy.splice(targetIndex, 0, draggedItem);
+
+    const newOrderIds = listCopy.map(item => item.id);
+    reorderItems(type, newOrderIds);
+    setDraggedIndex(null);
+    setDraggedType(null);
+  };
   // Helper UI: Render active cart assignment badges on item card
   const renderItemCartBadges = (itemId: string) => {
     const assignments = cart.filter(c => c.itemId === itemId);
@@ -160,6 +189,15 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
           .no-scrollbar {
             -ms-overflow-style: none;  /* IE and Edge */
             scrollbar-width: none;  /* Firefox */
+          }
+          .item-card {
+            position: relative;
+          }
+          .pin-btn {
+            opacity: 0;
+          }
+          .item-card:hover .pin-btn, .pin-btn.pinned {
+            opacity: 1;
           }
         `}</style>
         <h4 style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
@@ -326,18 +364,31 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
       {/* Main Items Listing: Services, Products, Packages */}
       <div style={{ display: "flex", flexDirection: "column", gap: "24px", overflowY: "auto", flex: 1, paddingRight: "8px" }}>
 
-        {/* 1. SERVICES SECTION (Primary/blue layout) */}
+        {/* 1. SERVICES SECTION */}
         {(selectedCategory === "All" || selectedCategory.startsWith("Service:")) && filteredServices.length > 0 && (
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px", justifyContent: "space-between", width: "100%" }}>
               <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "var(--color-primary)", padding: "4px 10px", borderRadius: "6px", background: "var(--color-primary-light)" }}>
                 Dịch vụ Salon
               </span>
               <div style={{ flexGrow: 1, height: "1px", background: "linear-gradient(to right, var(--color-primary-light), transparent)" }}></div>
+              {isSortingServices && (
+                <span style={{ fontSize: "11px", color: "var(--text-muted)", fontStyle: "italic", marginRight: "4px" }}>
+                  Kéo thả để sắp xếp
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsSortingServices(!isSortingServices)}
+                className={`btn ${isSortingServices ? "btn-primary" : "btn-secondary"}`}
+                style={{ padding: "4px 10px", fontSize: "11px", height: "26px", fontWeight: "600", borderRadius: "4px" }}
+              >
+                {isSortingServices ? "Xong" : "Sắp xếp"}
+              </button>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "12px" }}>
-              {filteredServices.map((item) => {
+              {filteredServices.map((item, index) => {
                 const catName = item.category?.name || "Dịch vụ";
                 const catColor = getServiceCategoryColor(catName, item.category?.color);
 
@@ -349,8 +400,27 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
                 return (
                   <div
                     key={item.id}
-                    className="card"
-                    onClick={() => addToCart(item, "SERVICE")}
+                    className="card item-card"
+                    draggable={isSortingServices}
+                    onDragStart={(e) => {
+                      setDraggedIndex(index);
+                      setDraggedType("SERVICE");
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                    }}
+                    onDrop={() => {
+                      handleDrop("SERVICE", index, filteredServices);
+                    }}
+                    onDragEnd={() => {
+                      setDraggedIndex(null);
+                      setDraggedType(null);
+                    }}
+                    onClick={() => {
+                      if (isSortingServices) return;
+                      addToCart(item, "SERVICE");
+                    }}
                     onContextMenu={(e) => {
                       e.preventDefault();
                       removeFromCart(item.id);
@@ -364,9 +434,10 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
                       flexDirection: "column",
                       justifyContent: "space-between",
                       minHeight: "80px",
-                      cursor: "pointer",
+                      cursor: isSortingServices ? "move" : "pointer",
                       transition: "transform 0.15s, box-shadow 0.15s",
-                      overflow: "hidden"
+                      overflow: "hidden",
+                      opacity: (draggedType === "SERVICE" && draggedIndex === index) ? 0.5 : 1
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = "translateY(-2px)";
@@ -379,7 +450,11 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
                   >
                     {/* Absolute Top-Right Badge Corner */}
                     <div style={{ position: "absolute", top: "4px", right: "4px", display: "flex", gap: "4px", zIndex: 10 }}>
-                      {renderItemCartBadges(item.id)}
+                      {isSortingServices ? (
+                        <GripVertical size={16} style={{ color: "var(--text-muted)", cursor: "move" }} />
+                      ) : (
+                        renderItemCartBadges(item.id)
+                      )}
                     </div>
 
                     <div>
@@ -399,9 +474,8 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
                         {item.name}
                       </h4>
                     </div>
-
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto" }}>
-                      <span style={{ fontWeight: "600", fontSize: "14px" }}>
+                      <span style={{ fontWeight: "500", fontSize: "14px" }}>
                         {formatCurrencyVND(item.price)}
                       </span>
                       {item.duration && (
@@ -418,80 +492,117 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
         )}
 
         {/* 2. PRODUCTS SECTION (Wood brown layout) */}
+        {/* 2. PRODUCTS SECTION (Wood brown layout) */}
+        {/* 2. PRODUCTS SECTION (Wood brown layout) */}
         {(selectedCategory === "All" || selectedCategory === "Product") && filteredProducts.length > 0 && (
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px", justifyContent: "space-between", width: "100%" }}>
               <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#8a5a22", padding: "4px 10px", borderRadius: "6px", background: "#fcf8f2" }}>
                 Sản phẩm
               </span>
               <div style={{ flexGrow: 1, height: "1px", background: "linear-gradient(to right, #ebdcc5, transparent)" }}></div>
+              {isSortingProducts && (
+                <span style={{ fontSize: "11px", color: "var(--text-muted)", fontStyle: "italic", marginRight: "4px" }}>
+                  Kéo thả để sắp xếp
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsSortingProducts(!isSortingProducts)}
+                className={`btn ${isSortingProducts ? "btn-primary" : "btn-secondary"}`}
+                style={{ padding: "4px 10px", fontSize: "11px", height: "26px", fontWeight: "600", borderRadius: "4px" }}
+              >
+                {isSortingProducts ? "Xong" : "Sắp xếp"}
+              </button>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "12px" }}>
-              {filteredProducts.map((item) => (
-                <div
-                  key={item.id}
-                  className="card"
-                  onClick={() => addToCart(item, "PRODUCT")}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    removeFromCart(item.id);
-                  }}
-                  style={{
-                    position: "relative",
-                    padding: "12px 14px",
-                    background: "transparent",
-                    border: "1px solid #8a5a22",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    minHeight: "80px",
-                    cursor: "pointer",
-                    transition: "transform 0.15s, box-shadow 0.15s",
-                    overflow: "hidden"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "var(--shadow-md)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "none";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
-                >
-                  {/* Absolute Top-Right Badge Corner */}
-                  <div style={{ position: "absolute", top: "4px", right: "4px", display: "flex", gap: "4px", zIndex: 10 }}>
-                    {renderItemCartBadges(item.id)}
-                  </div>
+              {filteredProducts.map((item, index) => {
+                return (
+                  <div
+                    key={item.id}
+                    className="card item-card"
+                    draggable={isSortingProducts}
+                    onDragStart={(e) => {
+                      setDraggedIndex(index);
+                      setDraggedType("PRODUCT");
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => handleDrop("PRODUCT", index, filteredProducts)}
+                    onDragEnd={() => {
+                      setDraggedIndex(null);
+                      setDraggedType(null);
+                    }}
+                    onClick={() => {
+                      if (isSortingProducts) return;
+                      addToCart(item, "PRODUCT");
+                    }}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      removeFromCart(item.id);
+                    }}
+                    style={{
+                      position: "relative",
+                      padding: "12px 14px",
+                      background: "transparent",
+                      border: "1px solid #8a5a22",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      minHeight: "80px",
+                      cursor: isSortingProducts ? "move" : "pointer",
+                      transition: "transform 0.15s, box-shadow 0.15s",
+                      overflow: "hidden",
+                      opacity: (draggedType === "PRODUCT" && draggedIndex === index) ? 0.5 : 1
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow = "var(--shadow-md)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "none";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  >
+                    {/* Absolute Top-Right Badge Corner */}
+                    <div style={{ position: "absolute", top: "4px", right: "4px", display: "flex", gap: "4px", zIndex: 10 }}>
+                      {isSortingProducts ? (
+                        <GripVertical size={16} style={{ color: "var(--text-muted)", cursor: "move" }} />
+                      ) : (
+                        renderItemCartBadges(item.id)
+                      )}
+                    </div>
 
-                  <div>
-                    <h4
-                      title={item.name}
-                      style={{
-                        fontWeight: "700",
-                        fontSize: "13.5px",
-                        color: "#8a5a22",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        width: "100%",
-                        paddingRight: "28px",
-                        marginBottom: "4px"
-                      }}
-                    >
-                      {item.name}
-                    </h4>
+                    <div>
+                      <h4
+                        title={item.name}
+                        style={{
+                          fontWeight: "700",
+                          fontSize: "13.5px",
+                          color: "#8a5a22",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          width: "100%",
+                          paddingRight: "28px",
+                          marginBottom: "4px"
+                        }}
+                      >
+                        {item.name}
+                      </h4>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto" }}>
+                      <span style={{ fontWeight: "500", fontSize: "14px", color: "black" }}>
+                        {formatCurrencyVND(item.sellPrice)}
+                      </span>
+                      <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>
+                        Kho: {item.quantity}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto" }}>
-                    <span style={{ fontWeight: "800", fontSize: "14px", color: "#8a5a22" }}>
-                      {formatCurrencyVND(item.sellPrice)}
-                    </span>
-                    <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>
-                      Kho: {item.quantity}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -499,84 +610,118 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
         {/* 3. PACKAGES SECTION (Purple layout) */}
         {(selectedCategory === "All" || selectedCategory === "Package") && filteredPackages.length > 0 && (
           <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px", justifyContent: "space-between", width: "100%" }}>
               <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#7e22ce", padding: "4px 10px", borderRadius: "6px", background: "#faf0fc" }}>
                 Gói dịch vụ
               </span>
               <div style={{ flexGrow: 1, height: "1px", background: "linear-gradient(to right, #eed0fc, transparent)" }}></div>
+              {isSortingPackages && (
+                <span style={{ fontSize: "11px", color: "var(--text-muted)", fontStyle: "italic", marginRight: "4px" }}>
+                  Kéo thả để sắp xếp
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsSortingPackages(!isSortingPackages)}
+                className={`btn ${isSortingPackages ? "btn-primary" : "btn-secondary"}`}
+                style={{ padding: "4px 10px", fontSize: "11px", height: "26px", fontWeight: "600", borderRadius: "4px" }}
+              >
+                {isSortingPackages ? "Xong" : "Sắp xếp"}
+              </button>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "12px" }}>
-              {filteredPackages.map((item) => (
-                <div
-                  key={item.id}
-                  className="card"
-                  onClick={() => addToCart(item, "PACKAGE")}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    removeFromCart(item.id);
-                  }}
-                  style={{
-                    position: "relative",
-                    padding: "12px 14px",
-                    background: "transparent",
-                    border: "1px solid #6b21a8",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "space-between",
-                    minHeight: "80px",
-                    cursor: "pointer",
-                    transition: "transform 0.15s, box-shadow 0.15s",
-                    overflow: "hidden"
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "var(--shadow-md)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "none";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
-                >
-                  {/* Absolute Top-Right Badge Corner */}
-                  <div style={{ position: "absolute", top: "4px", right: "4px", display: "flex", gap: "4px", zIndex: 10 }}>
-                    {renderItemCartBadges(item.id)}
-                  </div>
+              {filteredPackages.map((item, index) => {
+                return (
+                  <div
+                    key={item.id}
+                    className="card item-card"
+                    draggable={isSortingPackages}
+                    onDragStart={(e) => {
+                      setDraggedIndex(index);
+                      setDraggedType("PACKAGE");
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => handleDrop("PACKAGE", index, filteredPackages)}
+                    onDragEnd={() => {
+                      setDraggedIndex(null);
+                      setDraggedType(null);
+                    }}
+                    onClick={() => {
+                      if (isSortingPackages) return;
+                      addToCart(item, "PACKAGE");
+                    }}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      removeFromCart(item.id);
+                    }}
+                    style={{
+                      position: "relative",
+                      padding: "12px 14px",
+                      background: "transparent",
+                      border: "1px solid #6b21a8",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "space-between",
+                      minHeight: "80px",
+                      cursor: isSortingPackages ? "move" : "pointer",
+                      transition: "transform 0.15s, box-shadow 0.15s",
+                      overflow: "hidden",
+                      opacity: (draggedType === "PACKAGE" && draggedIndex === index) ? 0.5 : 1
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow = "var(--shadow-md)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "none";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  >
+                    {/* Absolute Top-Right Badge Corner */}
+                    <div style={{ position: "absolute", top: "4px", right: "4px", display: "flex", gap: "4px", zIndex: 10 }}>
+                      {isSortingPackages ? (
+                        <GripVertical size={16} style={{ color: "var(--text-muted)", cursor: "move" }} />
+                      ) : (
+                        renderItemCartBadges(item.id)
+                      )}
+                    </div>
 
-                  <div>
-                    <h4
-                      title={item.name}
-                      style={{
-                        fontWeight: "700",
-                        fontSize: "13.5px",
-                        color: "#6b21a8",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        width: "100%",
-                        paddingRight: "28px",
-                        marginBottom: "4px"
-                      }}
-                    >
-                      {item.name}
-                    </h4>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto" }}>
-                    <span style={{ fontWeight: "800", fontSize: "14px", color: "#6b21a8" }}>
-                      {formatCurrencyVND(item.price)}
-                    </span>
-                    {item.duration && (
-                      <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>
-                        ⏱️ {item.duration}p
+                    <div>
+                      <h4
+                        title={item.name}
+                        style={{
+                          fontWeight: "700",
+                          fontSize: "13.5px",
+                          color: "#6b21a8",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          width: "100%",
+                          paddingRight: "28px",
+                          marginBottom: "4px"
+                        }}
+                      >
+                        {item.name}
+                      </h4>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto" }}>
+                      <span style={{ fontWeight: "500", fontSize: "14px", color: "black" }}>
+                        {formatCurrencyVND(item.price)}
                       </span>
-                    )}
+                      {item.duration && (
+                        <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>
+                          ⏱️ {item.duration}p
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
-
       </div>
 
     </div>

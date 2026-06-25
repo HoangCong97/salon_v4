@@ -122,6 +122,32 @@ const removeVietnameseTones = (str: string): string => {
     .replace(/Đ/g, "D");
 };
 
+const getInitialPinnedItemIds = (): string[] => {
+  try {
+    const saved = localStorage.getItem("pos_pinned_ids");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (e) {
+    console.error("Failed to parse pinned items", e);
+  }
+  return [];
+};
+
+const getInitialOrder = (key: string): string[] => {
+  try {
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (e) {
+    console.error(`Failed to parse order for ${key}`, e);
+  }
+  return [];
+};
+
 export default function POS() {
   const { currentTenantId, currentBranchId, branches, user } = useAuthStore();
 
@@ -130,6 +156,12 @@ export default function POS() {
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [inventories, setInventories] = useState<ProductItem[]>([]);
   const [packages, setPackages] = useState<PackageItem[]>([]);
+
+  // Pinned and custom ordering states
+  const [pinnedItemIds, setPinnedItemIds] = useState<string[]>(getInitialPinnedItemIds);
+  const [servicesOrder, setServicesOrder] = useState<string[]>(() => getInitialOrder("pos_order_services"));
+  const [productsOrder, setProductsOrder] = useState<string[]>(() => getInitialOrder("pos_order_products"));
+  const [packagesOrder, setPackagesOrder] = useState<string[]>(() => getInitialOrder("pos_order_packages"));
 
   // Fallbacks
   const activeStaff = staff.length > 0 ? staff : MOCK_STAFF;
@@ -308,6 +340,22 @@ export default function POS() {
     localStorage.setItem("pos_selected_stylist_id", selectedStylistId);
   }, [selectedStylistId]);
 
+  useEffect(() => {
+    localStorage.setItem("pos_pinned_ids", JSON.stringify(pinnedItemIds));
+  }, [pinnedItemIds]);
+
+  useEffect(() => {
+    localStorage.setItem("pos_order_services", JSON.stringify(servicesOrder));
+  }, [servicesOrder]);
+
+  useEffect(() => {
+    localStorage.setItem("pos_order_products", JSON.stringify(productsOrder));
+  }, [productsOrder]);
+
+  useEffect(() => {
+    localStorage.setItem("pos_order_packages", JSON.stringify(packagesOrder));
+  }, [packagesOrder]);
+
   // Keyboard shortcut: Press 1-9 to select active staff members by order
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -335,7 +383,28 @@ export default function POS() {
     };
   }, [activeStaff]);
 
+  const togglePinItem = (itemId: string) => {
+    setPinnedItemIds((prev) => {
+      if (prev.includes(itemId)) {
+        return prev.filter((id) => id !== itemId);
+      } else {
+        return [...prev, itemId];
+      }
+    });
+  };
 
+  const reorderItems = (
+    type: "SERVICE" | "PRODUCT" | "PACKAGE",
+    orderedIds: string[]
+  ) => {
+    if (type === "SERVICE") {
+      setServicesOrder(orderedIds);
+    } else if (type === "PRODUCT") {
+      setProductsOrder(orderedIds);
+    } else if (type === "PACKAGE") {
+      setPackagesOrder(orderedIds);
+    }
+  };
 
   // Extract distinct category names from active services list
   const serviceCategories = Array.from(
@@ -559,6 +628,25 @@ export default function POS() {
     return selectedCategory === "All" || selectedCategory === "Package";
   });
 
+  const sortItems = (items: any[], orderArray: string[]) => {
+    return [...items].sort((a, b) => {
+      const aIdx = orderArray.indexOf(a.id);
+      const bIdx = orderArray.indexOf(b.id);
+
+      if (aIdx !== -1 && bIdx !== -1) {
+        return aIdx - bIdx;
+      }
+      if (aIdx !== -1 && bIdx === -1) return -1;
+      if (aIdx === -1 && bIdx !== -1) return 1;
+
+      return 0;
+    });
+  };
+
+  const sortedServices = sortItems(filteredServices, servicesOrder);
+  const sortedProducts = sortItems(filteredProducts, productsOrder);
+  const sortedPackages = sortItems(filteredPackages, packagesOrder);
+
   return (
     <>
       <div className="animate-fade-in" style={{ display: "grid", gridTemplateColumns: "7fr 5fr", gap: "24px", height: "calc(100vh - 120px)", overflow: "hidden" }}>
@@ -573,13 +661,16 @@ export default function POS() {
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
           serviceCategories={serviceCategories}
-          filteredServices={filteredServices}
-          filteredProducts={filteredProducts}
-          filteredPackages={filteredPackages}
+          filteredServices={sortedServices}
+          filteredProducts={sortedProducts}
+          filteredPackages={sortedPackages}
           addToCart={addToCart}
           removeFromCart={removeFromCart}
           cart={cart}
           flashStaff={flashStaff}
+          pinnedItemIds={pinnedItemIds}
+          togglePinItem={togglePinItem}
+          reorderItems={reorderItems}
         />
 
         {/* RIGHT COLUMN: Cart & Billing Info */}

@@ -416,7 +416,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                         <div
                           title={cItem.name}
                           style={{
-                            fontWeight: "400",
+                            fontWeight: "500",
                             whiteSpace: "nowrap",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
@@ -436,11 +436,11 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                           colorStyle={{
                             background: "white",
                             color: empColor.color,
-                            border: `1.5px solid ${empColor.color}`,
+                            border: `1px solid ${empColor.color}`,
                             height: "26px",
                             padding: "0 4px",
                             fontSize: "11.5px",
-                            fontWeight: "400",
+                            fontWeight: "500",
                             width: "100%"
                           }}
                         />
