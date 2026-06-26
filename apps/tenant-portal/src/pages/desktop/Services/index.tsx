@@ -10,9 +10,11 @@ import { TargetField } from "../../../hooks/useImportWizard";
 import { useFileDragAndDrop } from "../../../hooks/useFileDragAndDrop";
 import { ExportButton } from "../../../components/desktop/ExportButton";
 import { ExportColumnMapping } from "../../../utils/exportData";
+import { useConfirm } from "../../../components/desktop/ConfirmDialog";
 
 export default function Services() {
   const { currentTenantId, currentBranchId } = useAuthStore();
+  const confirm = useConfirm();
 
   // Data State
   const [services, setServices] = useState<Service[]>([]);
@@ -288,7 +290,15 @@ export default function Services() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa dịch vụ này?")) return;
+    if (
+      !(await confirm({
+        title: "Xóa dịch vụ",
+        message: "Bạn có chắc chắn muốn xóa dịch vụ này?",
+        type: "danger",
+        confirmText: "Xóa",
+      }))
+    )
+      return;
 
     try {
       const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services/${id}`, {

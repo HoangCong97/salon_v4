@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { X, Loader2, Layers } from "lucide-react";
 import { CustomNumberInput } from "./CustomNumberInput";
 import { ServiceCategory, COLOR_PRESETS, getColorStyle } from "./types";
+import { useConfirm } from "../../../components/desktop/ConfirmDialog";
 
 interface CategoryModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
   fetchServices,
   currentTenantId,
 }) => {
+  const confirm = useConfirm();
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [categoryName, setCategoryName] = useState("");
   const [categoryColor, setCategoryColor] = useState("blue");
@@ -74,7 +76,15 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
 
   const handleDeleteCategory = async (catId: string) => {
     if (!currentTenantId) return;
-    if (!confirm("Bạn có chắc chắn muốn xóa phân loại này? Các dịch vụ thuộc phân loại này sẽ không còn phân loại.")) return;
+    if (
+      !(await confirm({
+        title: "Xóa phân loại",
+        message: "Bạn có chắc chắn muốn xóa phân loại này? Các dịch vụ thuộc phân loại này sẽ không còn phân loại.",
+        type: "danger",
+        confirmText: "Xóa",
+      }))
+    )
+      return;
 
     try {
       const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/service-categories/${catId}`, {

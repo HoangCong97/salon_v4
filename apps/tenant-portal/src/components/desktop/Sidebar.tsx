@@ -2,6 +2,7 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import { useAuthStore } from "../../store/useAuthStore";
 import { LayoutDashboard, Store, Users, BarChart3, MapPin, Layers, Package, CalendarDays, Receipt } from "lucide-react";
+import { Tooltip } from "./Tooltip";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -128,7 +129,7 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
       <div style={{ flexGrow: 1, padding: "16px 8px", display: "flex", flexDirection: "column", gap: "4px" }}>
         {allowedItems.map((item) => {
           const Icon = item.icon;
-          return (
+          const navLink = (
             <NavLink
               key={item.path}
               to={item.path}
@@ -167,6 +168,14 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               )}
             </NavLink>
           );
+
+          return collapsed ? (
+            <Tooltip key={item.path} content={item.label} position="right">
+              {navLink}
+            </Tooltip>
+          ) : (
+            navLink
+          );
         })}
       </div>
 
@@ -178,27 +187,53 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
           textAlign: "center",
         }}
       >
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          style={{
-            background: "rgba(255, 255, 255, 0.05)",
-            border: "none",
-            color: "white",
-            padding: "8px 12px",
-            borderRadius: "var(--radius-sm)",
-            cursor: "pointer",
-            width: "100%",
-            fontSize: "12px",
-            fontWeight: "500",
-            transition: "all 0.15s ease",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)")}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.05)")}
-        >
-          {collapsed ? "»" : "« Thu gọn"}
-        </button>
+        {collapsed ? (
+          <Tooltip content="Mở rộng" position="right">
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              style={{
+                background: "rgba(255, 255, 255, 0.05)",
+                border: "none",
+                color: "white",
+                padding: "8px 12px",
+                borderRadius: "var(--radius-sm)",
+                cursor: "pointer",
+                width: "100%",
+                fontSize: "12px",
+                fontWeight: "500",
+                transition: "all 0.15s ease",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.05)")}
+            >
+              »
+            </button>
+          </Tooltip>
+        ) : (
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            style={{
+              background: "rgba(255, 255, 255, 0.05)",
+              border: "none",
+              color: "white",
+              padding: "8px 12px",
+              borderRadius: "var(--radius-sm)",
+              cursor: "pointer",
+              width: "100%",
+              fontSize: "12px",
+              fontWeight: "500",
+              transition: "all 0.15s ease",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.05)")}
+          >
+            « Thu gọn
+          </button>
+        )}
       </div>
     </div>
   );

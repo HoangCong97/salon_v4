@@ -11,9 +11,11 @@ import { AddStaffToQueueModal } from "./AddStaffToQueueModal";
 import { ImportWizardModal } from "../../../components/desktop/ImportWizard/ImportWizardModal";
 import { TargetField } from "../../../hooks/useImportWizard";
 import { useFileDragAndDrop } from "../../../hooks/useFileDragAndDrop";
+import { useConfirm } from "../../../components/desktop/ConfirmDialog";
 
 export default function StaffManagement() {
   const { currentTenantId, currentBranchId, branches } = useAuthStore();
+  const confirm = useConfirm();
 
   // Navigation Tab State
   const [activeTab, setActiveTab] = useState<"staff" | "permissions" | "turns">("staff");
@@ -302,7 +304,15 @@ export default function StaffManagement() {
   };
 
   const handleDeleteStaff = async (id: string) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa tài khoản nhân viên này khỏi hệ thống?")) return;
+    if (
+      !(await confirm({
+        title: "Xóa nhân sự",
+        message: "Bạn có chắc chắn muốn xóa tài khoản nhân viên này khỏi hệ thống?",
+        type: "danger",
+        confirmText: "Xóa",
+      }))
+    )
+      return;
 
     try {
       const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/staff/${id}`, {
@@ -378,7 +388,15 @@ export default function StaffManagement() {
       return;
     }
 
-    if (!confirm(`Bạn có chắc chắn muốn xóa chức vụ "${activeRole.name}"? Chức năng này không thể hoàn tác.`)) return;
+    if (
+      !(await confirm({
+        title: "Xóa chức vụ",
+        message: `Bạn có chắc chắn muốn xóa chức vụ "${activeRole.name}"? Chức năng này không thể hoàn tác.`,
+        type: "danger",
+        confirmText: "Xóa",
+      }))
+    )
+      return;
 
     try {
       const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/roles/${selectedRoleId}`, {
@@ -421,7 +439,15 @@ export default function StaffManagement() {
 
   const handleResetTurns = async () => {
     if (!currentTenantId || !currentBranchId) return;
-    if (!confirm("Bạn có chắc chắn muốn RESET toàn bộ lượt nhận khách hôm nay về 0?")) return;
+    if (
+      !(await confirm({
+        title: "Reset lượt nhận khách",
+        message: "Bạn có chắc chắn muốn RESET toàn bộ lượt nhận khách hôm nay về 0?",
+        type: "warning",
+        confirmText: "Reset",
+      }))
+    )
+      return;
 
     try {
       const res = await fetch(

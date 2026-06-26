@@ -140,6 +140,8 @@ interface ExcelSelectProps {
   colorStyle?: React.CSSProperties;
   placeholder?: string;
   disabled?: boolean;
+  allowCustom?: boolean;
+  unit?: string;
 }
 
 export const ExcelSelect: React.FC<ExcelSelectProps> = ({
@@ -149,41 +151,289 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
   colorStyle,
   placeholder = "-- Chọn --",
   disabled = false,
+  allowCustom = false,
+  unit,
 }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [dropdownCoords, setDropdownCoords] = useState({ top: 0, left: 0, width: 0 });
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  const canOpen = !disabled && options && options.length > 0;
+  const showPriceSuggestion = (unit === "đ" || unit === "VND") && isFocused;
+  const {
+    showSuggestion,
+    suggestedValue,
+    applySuggestion,
+    handleKeyDown: handleSuggestionKeyDown
+  } = usePriceSuggestion(value, onChange, false);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLInputElement>) => {
+    if (document.activeElement !== e.currentTarget) {
+      e.currentTarget.focus();
+      e.preventDefault();
+    }
+  };
+
+  const updateCoords = () => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setDropdownCoords({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    if (isOpen) {
+      updateCoords();
+      window.addEventListener("scroll", updateCoords, true);
+      window.addEventListener("resize", updateCoords);
+    }
+    return () => {
+      window.removeEventListener("scroll", updateCoords, true);
+      window.removeEventListener("resize", updateCoords);
+    };
+  }, [isOpen]);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        if (isOpen) {
+          setIsOpen(false);
+        }
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const cleanStr = (s: string) => (s || "").replace(/\D/g, "");
+
+  const selectedOpt = options.find(opt => {
+    if (opt.value === value) return true;
+    const cleanOpt = cleanStr(opt.value);
+    const cleanVal = cleanStr(value);
+    return cleanOpt && cleanVal && cleanOpt === cleanVal;
+  });
+
+  const displayLabel = selectedOpt ? selectedOpt.label : (value || placeholder);
+
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      disabled={disabled}
+    <div
+      ref={containerRef}
       style={{
+        position: "relative",
         width: "100%",
         height: "100%",
-        padding: "0 10px",
-        fontSize: "12px",
-        fontWeight: "700",
-        cursor: "pointer",
         boxSizing: "border-box",
-        border: "none",
-        borderRadius: "6px",
-        ...colorStyle,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       }}
-      className="excel-select"
     >
-      <option value="" style={{ color: "var(--text-primary)", backgroundColor: "white" }}>{placeholder}</option>
-      {options.map((opt) => (
-        <option 
-          key={opt.value} 
-          value={opt.value} 
-          style={{ 
-            color: "var(--text-primary)", 
-            backgroundColor: "white", 
-            ...opt.colorStyle 
+      {allowCustom ? (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            height: "100%",
+            position: "relative",
+            borderRadius: "6px",
+            boxSizing: "border-box",
+            outline: isFocused ? "2px solid var(--color-primary)" : "none",
+            outlineOffset: "-2px",
+            background: isFocused ? "white" : "transparent",
+            ...colorStyle,
           }}
         >
-          {opt.label}
-        </option>
-      ))}
-    </select>
+          <input
+            type="text"
+            disabled={disabled}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onFocus={(e) => {
+              setIsFocused(true);
+              e.target.select();
+            }}
+            onBlur={() => setIsFocused(false)}
+            onMouseDown={handleMouseDown}
+            onKeyDown={(e) => {
+              if (showPriceSuggestion) {
+                const handled = handleSuggestionKeyDown(e);
+                if (handled) return;
+              }
+              if (e.key === "Enter") {
+                e.currentTarget.blur();
+              }
+            }}
+            style={{
+              width: "100%",
+              height: "100%",
+              border: "none",
+              background: "transparent",
+              textAlign: "center",
+              fontSize: "12px",
+              fontWeight: colorStyle?.fontWeight || "500",
+              color: "inherit",
+              paddingLeft: "16px",
+              paddingRight: canOpen ? "24px" : "16px",
+              boxSizing: "border-box",
+              outline: "none"
+            }}
+          />
+          {canOpen && (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => {
+                setIsOpen(!isOpen);
+              }}
+              style={{
+                position: "absolute",
+                right: "4px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "4px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--text-muted)",
+                fontSize: "9px"
+              }}
+            >
+              ▼
+            </button>
+          )}
+          {showPriceSuggestion && (
+            <PriceSuggestionBadge
+              show={showSuggestion}
+              suggestedValue={suggestedValue}
+              onClick={applySuggestion}
+            />
+          )}
+        </div>
+      ) : (
+        <div
+          onClick={() => {
+            if (canOpen) setIsOpen(!isOpen);
+          }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
+            height: "100%",
+            padding: canOpen ? "0 24px 0 10px" : "0 10px",
+            fontSize: "12px",
+            fontWeight: "500",
+            cursor: disabled ? "not-allowed" : (canOpen ? "pointer" : "default"),
+            boxSizing: "border-box",
+            borderRadius: "6px",
+            position: "relative",
+            userSelect: "none",
+            ...colorStyle,
+          }}
+        >
+          <span style={{ 
+            textAlign: "center", 
+            width: "100%",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis"
+          }}>
+            {displayLabel}
+          </span>
+          {canOpen && (
+            <span style={{ position: "absolute", right: "8px", fontSize: "9px", color: "var(--text-muted)" }}>
+              ▼
+            </span>
+          )}
+        </div>
+      )}
+
+      {isOpen && createPortal(
+        <div
+          ref={dropdownRef}
+          style={{
+            position: "absolute",
+            top: `${dropdownCoords.top}px`,
+            left: `${dropdownCoords.left}px`,
+            width: `${dropdownCoords.width}px`,
+            maxHeight: "200px",
+            overflowY: "auto",
+            backgroundColor: "white",
+            border: "1px solid var(--border-color)",
+            borderRadius: "var(--radius-sm)",
+            boxShadow: "var(--shadow-md)",
+            zIndex: 9999,
+            marginTop: "2px",
+            padding: "4px",
+            boxSizing: "border-box",
+            display: "flex",
+            flexDirection: "column",
+            gap: "2px",
+          }}
+        >
+          {options.map((opt) => {
+            const isSelected = opt.value === value;
+            return (
+              <div
+                key={opt.value}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                style={{
+                  padding: "8px 10px",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  textAlign: "center",
+                  background: isSelected ? "var(--color-primary-light)" : "transparent",
+                  color: isSelected ? "var(--color-primary)" : "var(--text-primary)",
+                  transition: "all 0.1s ease",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  ...opt.colorStyle
+                }}
+                className="excel-select-option"
+                onMouseEnter={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.backgroundColor = "var(--bg-light)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }
+                }}
+              >
+                {opt.label}
+              </div>
+            );
+          })}
+        </div>,
+        document.body
+      )}
+    </div>
   );
 };
 
@@ -610,7 +860,7 @@ export const ExcelMultipleSelect: React.FC<ExcelMultipleSelectProps> = ({
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
-        containerRef.current && 
+        containerRef.current &&
         !containerRef.current.contains(event.target as Node) &&
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node)
@@ -812,7 +1062,7 @@ export const ExcelMultipleSelect: React.FC<ExcelMultipleSelectProps> = ({
                     <input
                       type="checkbox"
                       checked={isChecked}
-                      onChange={() => {}}
+                      onChange={() => { }}
                       style={{ cursor: "pointer" }}
                     />
                     <span style={{ fontWeight: isChecked ? "600" : "400", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

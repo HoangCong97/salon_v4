@@ -3,6 +3,8 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { formatCurrencyVND } from "@salon/shared-utils";
 import { Package, Plus, Edit2, Trash2, Loader2, X, Search, AlertTriangle, ArrowUpRight, ArrowDownLeft, Image as ImageIcon } from "lucide-react";
 import { ExcelInput, PriceInputWithSuggestion } from "../../components/desktop/TableComponents";
+import { Tooltip } from "../../components/desktop/Tooltip";
+import { useConfirm } from "../../components/desktop/ConfirmDialog";
 
 interface InventoryItem {
   id: string;
@@ -17,6 +19,7 @@ interface InventoryItem {
 
 export default function Inventories() {
   const { currentTenantId, currentBranchId } = useAuthStore();
+  const confirm = useConfirm();
 
   // Data State
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -306,7 +309,15 @@ export default function Inventories() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi kho?")) return;
+    if (
+      !(await confirm({
+        title: "Xóa sản phẩm",
+        message: "Bạn có chắc chắn muốn xóa sản phẩm này khỏi kho?",
+        type: "danger",
+        confirmText: "Xóa",
+      }))
+    )
+      return;
 
     try {
       const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/inventories/${id}`, {
@@ -466,30 +477,33 @@ export default function Inventories() {
                       </td>
                       <td style={{ padding: "0 8px", verticalAlign: "middle", textAlign: "center", height: "38px" }}>
                         <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>
-                          <button
-                            className="btn btn-secondary"
-                            style={{ padding: "4px 8px", fontSize: "12px", borderRadius: "var(--radius-sm)" }}
-                            onClick={() => handleOpenAdjustModal(item)}
-                            title="Nhập / Xuất kho"
-                          >
-                            Nhập/Xuất
-                          </button>
-                          <button
-                            className="btn btn-secondary"
-                            style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
-                            onClick={() => handleOpenEditModal(item)}
-                            title="Chỉnh sửa chi tiết"
-                          >
-                            <Edit2 size={13} />
-                          </button>
-                          <button
-                            className="btn btn-danger"
-                            style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
-                            onClick={() => handleDelete(item.id)}
-                            title="Xóa sản phẩm"
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                          <Tooltip content="Nhập / Xuất kho">
+                            <button
+                              className="btn btn-secondary"
+                              style={{ padding: "4px 8px", fontSize: "12px", borderRadius: "var(--radius-sm)" }}
+                              onClick={() => handleOpenAdjustModal(item)}
+                            >
+                              Nhập/Xuất
+                            </button>
+                          </Tooltip>
+                          <Tooltip content="Chỉnh sửa chi tiết">
+                            <button
+                              className="btn btn-secondary"
+                              style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                              onClick={() => handleOpenEditModal(item)}
+                            >
+                              <Edit2 size={13} />
+                            </button>
+                          </Tooltip>
+                          <Tooltip content="Xóa sản phẩm">
+                            <button
+                              className="btn btn-danger"
+                              style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                              onClick={() => handleDelete(item.id)}
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </Tooltip>
                         </div>
                       </td>
                     </tr>

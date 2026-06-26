@@ -387,9 +387,6 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                     if (serviceObj.price !== undefined && serviceObj.price !== null) {
                       availablePrices.push(serviceObj.price);
                     }
-                    if (serviceObj.discountPrice !== undefined && serviceObj.discountPrice !== null && serviceObj.discountPrice !== serviceObj.price) {
-                      availablePrices.push(serviceObj.discountPrice);
-                    }
                     if (serviceObj.additionalPrices && Array.isArray(serviceObj.additionalPrices)) {
                       serviceObj.additionalPrices.forEach(p => {
                         const numP = Number(p);
@@ -438,7 +435,6 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                             color: empColor.color,
                             border: `1px solid ${empColor.color}`,
                             height: "26px",
-                            padding: "0 4px",
                             fontSize: "11.5px",
                             fontWeight: "500",
                             width: "100%"
@@ -450,22 +446,23 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                       <td style={{ padding: "4px 6px", verticalAlign: "middle", textAlign: "center", width: "125px" }}>
                         {hasMultiplePrices ? (
                           <ExcelSelect
-                            value={String(cItem.price)}
-                            onChange={(val) => updateCartItemPrice(cItem.id, Number(val))}
+                            value={formatNumber(cItem.price)}
+                            onChange={(val) => updateCartItemPrice(cItem.id, val)}
                             options={availablePrices.map((p) => ({
                               value: String(p),
                               label: `${formatNumber(p)}đ`
                             }))}
                             placeholder="-- Chọn giá --"
+                            allowCustom={true}
+                            unit="đ"
                             colorStyle={{
                               height: "26px",
-                              padding: "0 10px",
                               fontSize: "12.5px",
                               fontWeight: "500",
                               width: "100px",
                               border: "1px solid var(--border-color)",
                               borderRadius: "var(--radius-sm)",
-                              background: "transparent",
+                              background: "white",
                               color: "var(--text-primary)",
                               margin: "0 auto"
                             }}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../../store/useAuthStore";
+import { Tooltip } from "../../components/desktop/Tooltip";
 import { 
   ShieldCheck, 
   Calendar, 
@@ -652,13 +653,14 @@ export default function Dashboard() {
                         <span style={{ color: "var(--text-secondary)" }}>Số tài khoản:</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "800", fontSize: "16px", color: "var(--color-primary)", marginTop: "2px" }}>
                           1023456789
-                          <button 
-                            onClick={() => copyToClipboard("1023456789", "account")}
-                            style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center" }}
-                            title="Sao chép số tài khoản"
-                          >
-                            {copiedField === "account" ? <CheckCircle2 size={16} style={{ color: "var(--color-success)" }} /> : <Copy size={16} />}
-                          </button>
+                          <Tooltip content="Sao chép số tài khoản">
+                            <button 
+                              onClick={() => copyToClipboard("1023456789", "account")}
+                              style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center" }}
+                            >
+                              {copiedField === "account" ? <CheckCircle2 size={16} style={{ color: "var(--color-success)" }} /> : <Copy size={16} />}
+                            </button>
+                          </Tooltip>
                         </div>
                       </div>
 
@@ -678,13 +680,14 @@ export default function Dashboard() {
                         <span style={{ color: "var(--text-secondary)" }}>Nội dung chuyển khoản (bắt buộc ghi đúng):</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "800", fontSize: "15px", color: "hsl(35, 92%, 45%)", marginTop: "2px", background: "white", padding: "6px 10px", borderRadius: "6px", border: "1px dashed hsl(35, 92%, 50%)" }}>
                           {checkoutInvoice.invoiceNumber}
-                          <button 
-                            onClick={() => copyToClipboard(checkoutInvoice.invoiceNumber, "code")}
-                            style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center", marginLeft: "auto" }}
-                            title="Sao chép nội dung chuyển khoản"
-                          >
-                            {copiedField === "code" ? <CheckCircle2 size={16} style={{ color: "var(--color-success)" }} /> : <Copy size={16} />}
-                          </button>
+                          <Tooltip content="Sao chép nội dung chuyển khoản">
+                            <button 
+                              onClick={() => copyToClipboard(checkoutInvoice.invoiceNumber, "code")}
+                              style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", display: "flex", alignItems: "center", marginLeft: "auto" }}
+                            >
+                              {copiedField === "code" ? <CheckCircle2 size={16} style={{ color: "var(--color-success)" }} /> : <Copy size={16} />}
+                            </button>
+                          </Tooltip>
                         </div>
                       </div>
                     </div>

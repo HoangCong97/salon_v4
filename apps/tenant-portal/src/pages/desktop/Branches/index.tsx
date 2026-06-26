@@ -6,9 +6,11 @@ import BrandCard from "./BrandCard";
 import BrandModal from "./BrandModal";
 import BranchCard from "./BranchCard";
 import BranchModal from "./BranchModal";
+import { useConfirm } from "../../../components/desktop/ConfirmDialog";
 
 export default function Branches() {
   const { currentTenantId, setTenant } = useAuthStore();
+  const confirm = useConfirm();
   const [branches, setBranches] = useState<Branch[]>([]);
   const [tenantInfo, setTenantInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -127,7 +129,15 @@ export default function Branches() {
   };
 
   const handleDeleteBranch = async (id: string) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa chi nhánh này?")) return;
+    if (
+      !(await confirm({
+        title: "Xóa chi nhánh",
+        message: "Bạn có chắc chắn muốn xóa chi nhánh này?",
+        type: "danger",
+        confirmText: "Xóa",
+      }))
+    )
+      return;
 
     try {
       const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${id}`, {

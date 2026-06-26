@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { formatCurrencyVND } from "@salon/shared-utils";
 import { Eye } from "lucide-react";
+import { Tooltip } from "../../../components/desktop/Tooltip";
 import { getEmployeeColor } from "../POS/POSLeftPanel";
 
 interface InvoiceTableProps {
@@ -62,54 +63,55 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             : "?";
 
           return (
+            <Tooltip key={String(sId)} content={sObj ? sObj.name : "Nhân viên"}>
+              <div
+                style={{
+                  width: "34px",
+                  height: "34px",
+                  borderRadius: "50%",
+                  background: empColor.color,
+                  border: "1.5px solid white",
+                  color: "white",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "12px",
+                  fontWeight: "800",
+                  marginLeft: idx > 0 ? "-12px" : "0",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                  flexShrink: 0,
+                  zIndex: 10 - idx,
+                }}
+              >
+                {initials}
+              </div>
+            </Tooltip>
+          );
+        })}
+        {extraCount > 0 && (
+          <Tooltip content={`Và ${extraCount} nhân viên thực hiện khác`}>
             <div
-              key={String(sId)}
-              title={sObj ? sObj.name : "Nhân viên"}
               style={{
                 width: "34px",
                 height: "34px",
                 borderRadius: "50%",
-                background: empColor.color,
+                background: "#e2e8f0",
                 border: "1.5px solid white",
-                color: "white",
+                color: "#475569",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: "12px",
                 fontWeight: "800",
-                marginLeft: idx > 0 ? "-12px" : "0",
+                marginLeft: "-12px",
                 boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
                 flexShrink: 0,
-                zIndex: 10 - idx,
+                zIndex: 5,
               }}
             >
-              {initials}
+              +{extraCount}
             </div>
-          );
-        })}
-        {extraCount > 0 && (
-          <div
-            title={`Và ${extraCount} nhân viên thực hiện khác`}
-            style={{
-              width: "34px",
-              height: "34px",
-              borderRadius: "50%",
-              background: "#e2e8f0",
-              border: "1.5px solid white",
-              color: "#475569",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "12px",
-              fontWeight: "800",
-              marginLeft: "-12px",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-              flexShrink: 0,
-              zIndex: 5,
-            }}
-          >
-            +{extraCount}
-          </div>
+          </Tooltip>
         )}
       </div>
     );
@@ -191,31 +193,35 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                         </div>
                       </td>
                       <td style={{ fontWeight: "500", padding: "10px 12px", width: "280px", minWidth: "280px", maxWidth: "280px" }}>
-                        <div
-                          title={uniqueStaffNames}
-                          style={{
-                            maxWidth: "240px",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {uniqueStaffNames}
-                        </div>
+                        <Tooltip content={uniqueStaffNames}>
+                          <div
+                            style={{
+                              maxWidth: "240px",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              cursor: "default",
+                            }}
+                          >
+                            {uniqueStaffNames}
+                          </div>
+                        </Tooltip>
                       </td>
                       <td style={{ textAlign: "center", padding: "10px 8px", width: "70px", minWidth: "70px", maxWidth: "70px" }}>{formatTimeHHMM(inv.createdAt)}</td>
                       <td style={{ padding: "10px 12px", width: "auto", minWidth: "220px" }}>
-                        <div
-                          title={serviceDetailsStr}
-                          style={{
-                            maxWidth: "350px",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {serviceDetailsStr}
-                        </div>
+                        <Tooltip content={serviceDetailsStr}>
+                          <div
+                            style={{
+                              maxWidth: "350px",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              cursor: "default",
+                            }}
+                          >
+                            {serviceDetailsStr}
+                          </div>
+                        </Tooltip>
                       </td>
                       <td style={{ textAlign: "right", padding: "10px 8px", width: "100px", minWidth: "100px", maxWidth: "100px" }}>{formatCurrencyVND(totalServicePrice)}</td>
                       <td style={{ textAlign: "right", padding: "10px 8px", width: "80px", minWidth: "80px", maxWidth: "80px", color: discountAmount > 0 ? "var(--color-danger)" : "var(--text-secondary)", fontWeight: discountAmount > 0 ? "700" : "400" }}>
@@ -239,17 +245,19 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                         </span>
                       </td>
                       <td style={{ fontWeight: "600", padding: "10px 12px", width: "120px", minWidth: "120px", maxWidth: "120px" }}>
-                        <div
-                          title={customerName}
-                          style={{
-                            maxWidth: "96px",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {customerName}
-                        </div>
+                        <Tooltip content={customerName}>
+                          <div
+                            style={{
+                              maxWidth: "96px",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              cursor: "default",
+                            }}
+                          >
+                            {customerName}
+                          </div>
+                        </Tooltip>
                       </td>
                       <td style={{ textAlign: "center", padding: "10px 8px", width: "85px", minWidth: "85px", maxWidth: "85px" }}>
                         <span
@@ -267,34 +275,35 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                         </span>
                       </td>
                       <td style={{ textAlign: "center", padding: "10px 6px", width: "60px", minWidth: "60px", maxWidth: "60px" }}>
-                        <button
-                          type="button"
-                          onClick={() => onViewDetail(inv)}
-                          title="Xem chi tiết hóa đơn"
-                          style={{
-                            padding: "6px",
-                            fontSize: "12px",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            background: "var(--color-primary-light)",
-                            border: "none",
-                            color: "var(--color-primary)",
-                            borderRadius: "var(--radius-sm)",
-                            cursor: "pointer",
-                            transition: "all 0.15s"
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "var(--color-primary)";
-                            e.currentTarget.style.color = "white";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "var(--color-primary-light)";
-                            e.currentTarget.style.color = "var(--color-primary)";
-                          }}
-                        >
-                          <Eye size={14} />
-                        </button>
+                        <Tooltip content="Xem chi tiết hóa đơn">
+                          <button
+                            type="button"
+                            onClick={() => onViewDetail(inv)}
+                            style={{
+                              padding: "6px",
+                              fontSize: "12px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              background: "var(--color-primary-light)",
+                              border: "none",
+                              color: "var(--color-primary)",
+                              borderRadius: "var(--radius-sm)",
+                              cursor: "pointer",
+                              transition: "all 0.15s"
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = "var(--color-primary)";
+                              e.currentTarget.style.color = "white";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = "var(--color-primary-light)";
+                              e.currentTarget.style.color = "var(--color-primary)";
+                            }}
+                          >
+                            <Eye size={14} />
+                          </button>
+                        </Tooltip>
                       </td>
                     </tr>
                   </React.Fragment>

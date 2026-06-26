@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../../store/useAuthStore";
+import { Tooltip } from "../../components/desktop/Tooltip";
 import { 
   CalendarRange, ChevronLeft, ChevronRight, Save, 
   Copy, Loader2, Info, Check, CalendarDays, RefreshCw 
 } from "lucide-react";
+import { useConfirm } from "../../components/desktop/ConfirmDialog";
 
 interface Staff {
   id: string;
@@ -33,6 +35,7 @@ interface LocalShift {
 
 export default function Shifts() {
   const { currentTenantId, currentBranchId, branches } = useAuthStore();
+  const confirm = useConfirm();
 
   // Navigation state (Start of the week - Monday)
   const [currentWeekMonday, setCurrentWeekMonday] = useState<Date>(() => {
@@ -273,7 +276,15 @@ export default function Shifts() {
   const handleCopyLastWeek = async () => {
     if (!currentTenantId || !currentBranchId) return;
 
-    if (!confirm("Bạn có chắc chắn muốn sao chép lịch trực tuần trước gán vào tuần này? Hành động này sẽ ghi đè lịch trực hiện có trong ô tương ứng.")) return;
+    if (
+      !(await confirm({
+        title: "Sao chép lịch tuần trước",
+        message: "Bạn có chắc chắn muốn sao chép lịch trực tuần trước gán vào tuần này? Hành động này sẽ ghi đè lịch trực hiện có trong ô tương ứng.",
+        type: "warning",
+        confirmText: "Sao chép",
+      }))
+    )
+      return;
 
     // Calculate last week monday
     const lastWeekMonday = new Date(currentWeekMonday);
@@ -373,14 +384,15 @@ export default function Shifts() {
 
         {/* Action Controls */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <button 
-            className="btn btn-secondary" 
-            onClick={handleCopyLastWeek}
-            disabled={loading || saving}
-            title="Sao chép toàn bộ lịch trực tuần trước sang tuần này"
-          >
-            <Copy size={16} /> Sao chép tuần trước
-          </button>
+          <Tooltip content="Sao chép toàn bộ lịch trực tuần trước sang tuần này" position="top">
+            <button 
+              className="btn btn-secondary" 
+              onClick={handleCopyLastWeek}
+              disabled={loading || saving}
+            >
+              <Copy size={16} /> Sao chép tuần trước
+            </button>
+          </Tooltip>
           
           <button 
             className="btn btn-primary" 

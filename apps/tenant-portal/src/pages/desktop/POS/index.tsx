@@ -4,6 +4,7 @@ import { formatCurrencyVND } from "@salon/shared-utils";
 import { POSLeftPanel } from "./POSLeftPanel";
 import { POSRightPanel } from "./POSRightPanel";
 import { POSReceiptModal } from "./POSReceiptModal";
+import { useConfirm } from "../../../components/desktop/ConfirmDialog";
 
 interface StaffMember {
   id: string;
@@ -19,6 +20,7 @@ interface ServiceItem {
   category?: { name: string; color?: string } | null;
   discountPrice?: number | null;
   additionalPrices?: number[] | null;
+  discountAmount?: number | null;
 }
 
 interface ProductItem {
@@ -26,6 +28,7 @@ interface ProductItem {
   name: string;
   sellPrice: number;
   quantity: number;
+  discountAmount?: number | null;
 }
 
 interface PackageItem {
@@ -34,6 +37,7 @@ interface PackageItem {
   price: number;
   description?: string | null;
   duration?: number | null;
+  discountAmount?: number | null;
 }
 
 // Fallback Mock Data for Demo/Empty States
@@ -45,7 +49,7 @@ const MOCK_STAFF: StaffMember[] = [
 ];
 
 const MOCK_SERVICES: ServiceItem[] = [
-  { id: "s1", name: "Cắt tóc nam Classic", price: 120000, duration: 30, category: { name: "Tóc" }, discountPrice: 100000, additionalPrices: [150000, 180000] },
+  { id: "s1", name: "Cắt tóc nam Classic", price: 120000, duration: 30, category: { name: "Tóc" }, discountPrice: 100000, discountAmount: 20000, additionalPrices: [150000, 180000] },
   { id: "s2", name: "Uốn tóc xoăn Hàn Quốc", price: 450000, duration: 90, category: { name: "Tóc" }, additionalPrices: [500000, 550000] },
   { id: "s3", name: "Nhuộm màu thời trang", price: 650000, duration: 120, category: { name: "Tóc" } },
   { id: "s4", name: "Gội đầu dưỡng sinh thảo dược", price: 150000, duration: 45, category: { name: "Spa" }, additionalPrices: [120000, 180000] },
@@ -150,6 +154,7 @@ const getInitialOrder = (key: string): string[] => {
 
 export default function POS() {
   const { currentTenantId, currentBranchId, branches, user } = useAuthStore();
+  const confirm = useConfirm();
 
   // Data states
   const [staff, setStaff] = useState<StaffMember[]>([]);
@@ -255,7 +260,7 @@ export default function POS() {
     setActiveInvoiceId(newId);
   };
 
-  const deleteInvoice = (invId: string, event: React.MouseEvent) => {
+  const deleteInvoice = async (invId: string, event: React.MouseEvent) => {
     event.stopPropagation();
     if (invoices.length === 1) {
       alert("Phải giữ lại ít nhất 1 hóa đơn!");
@@ -263,7 +268,14 @@ export default function POS() {
     }
     const target = invoices.find(inv => inv.id === invId);
     if (target && target.cart.length > 0) {
-      if (!confirm(`Hóa đơn này đang có ${target.cart.length} mặt hàng. Bạn có chắc muốn xóa không?`)) {
+      if (
+        !(await confirm({
+          title: "Xóa hóa đơn chờ",
+          message: `Hóa đơn này đang có ${target.cart.length} mặt hàng. Bạn có chắc muốn xóa không?`,
+          type: "danger",
+          confirmText: "Xóa",
+        }))
+      ) {
         return;
       }
     }
@@ -421,6 +433,7 @@ export default function POS() {
     }
     const price = type === "SERVICE" ? item.price : (type === "PRODUCT" ? item.sellPrice : item.price);
     const itemId = item.id;
+    const discount = Number(item.discountAmount || 0);
     const uniqueKey = `${itemId}-${selectedStylistId}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
 
     setInvoices((prev) => prev.map((inv) => {
@@ -435,7 +448,7 @@ export default function POS() {
           quantity: 1,
           itemType: type,
           staffId: selectedStylistId,
-          discount: 0
+          discount: discount
         }
       ];
       return { ...inv, cart: newCart };

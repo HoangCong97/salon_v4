@@ -1,6 +1,7 @@
 import React from "react";
 import { Edit2, Trash2 } from "lucide-react";
 import { ExcelInput, ExcelSelect, ExcelChipsInput } from "../../../components/desktop/TableComponents";
+import { Tooltip } from "../../../components/desktop/Tooltip";
 import { Service, ServiceCategory } from "./types";
 
 interface ServiceTableProps {
@@ -266,22 +267,24 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                 </td>
                 <td style={{ padding: "0 8px", verticalAlign: "middle", textAlign: "center", height: "38px" }}>
                   <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>
-                    <button
-                      className="btn btn-secondary"
-                      style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
-                      onClick={() => handleOpenEditModal(service)}
-                      title="Chỉnh sửa chi tiết"
-                    >
-                      <Edit2 size={13} />
-                    </button>
-                    <button
-                      className="btn btn-danger"
-                      style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
-                      onClick={() => handleDelete(service.id)}
-                      title="Xóa dịch vụ"
-                    >
-                      <Trash2 size={13} />
-                    </button>
+                    <Tooltip content="Chỉnh sửa chi tiết">
+                      <button
+                        className="btn btn-secondary"
+                        style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                        onClick={() => handleOpenEditModal(service)}
+                      >
+                        <Edit2 size={13} />
+                      </button>
+                    </Tooltip>
+                    <Tooltip content="Xóa dịch vụ">
+                      <button
+                        className="btn btn-danger"
+                        style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                        onClick={() => handleDelete(service.id)}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </Tooltip>
                   </div>
                 </td>
               </tr>
