@@ -90,6 +90,7 @@ export class ServiceController {
       categoryId?: string;
       price: number;
       discountPrice?: number;
+      discountAmount?: number;
       duration?: number;
       imageUrl?: string;
       branchId?: string;
@@ -101,6 +102,10 @@ export class ServiceController {
         throw new HttpException("Service name is required", HttpStatus.BAD_REQUEST);
       }
 
+      const price = body.price || 0;
+      const discountAmount = body.discountAmount ?? (body.discountPrice !== undefined && body.discountPrice !== null ? (price - body.discountPrice) : 0);
+      const discountPrice = body.discountPrice ?? (price - discountAmount);
+
       return await prisma.service.create({
         data: {
           tenantId,
@@ -108,8 +113,9 @@ export class ServiceController {
           name: body.name,
           serviceCategory: body.serviceCategory || null,
           categoryId: body.categoryId || null,
-          price: body.price || 0,
-          discountPrice: body.discountPrice ?? body.price ?? 0,
+          price: price,
+          discountPrice: discountPrice,
+          discountAmount: discountAmount,
           additionalPrices: body.additionalPrices ? body.additionalPrices.map(Number) : [],
           duration: body.duration || null,
           imageUrl: body.imageUrl || null
@@ -138,6 +144,7 @@ export class ServiceController {
       categoryId?: string;
       price: number;
       discountPrice?: number;
+      discountAmount?: number;
       duration?: number;
       imageUrl?: string;
       branchId?: string;
@@ -158,6 +165,10 @@ export class ServiceController {
         throw new HttpException("Service not found", HttpStatus.NOT_FOUND);
       }
 
+      const price = body.price || 0;
+      const discountAmount = body.discountAmount ?? (body.discountPrice !== undefined && body.discountPrice !== null ? (price - body.discountPrice) : 0);
+      const discountPrice = body.discountPrice ?? (price - discountAmount);
+
       return await prisma.service.update({
         where: { id },
         data: {
@@ -165,8 +176,9 @@ export class ServiceController {
           branchId: body.branchId || null,
           serviceCategory: body.serviceCategory ?? null,
           categoryId: body.categoryId ?? null,
-          price: body.price || 0,
-          discountPrice: body.discountPrice ?? body.price ?? 0,
+          price: price,
+          discountPrice: discountPrice,
+          discountAmount: discountAmount,
           additionalPrices: body.additionalPrices ? body.additionalPrices.map(Number) : undefined,
           duration: body.duration || null,
           imageUrl: body.imageUrl ?? null,

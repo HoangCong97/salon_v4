@@ -1,0 +1,4 @@
+Mã hóa đơn,Tên người mua,Nhân viên thanh toán,Thời gian vào,Thời gian ra,Tổng tiền trước giảm,Mức chiết khấu,Khách phải trả,Phương thức thanh toán,Tình trạng,Chi tiết thêm
+HD-2026-0001,Nguyễn Anh Tuấn,Phạm Minh Thư,2026-06-26 09:00:00,2026-06-26 09:45:00,100000,20000,80000,CASH,PAID,Khách dùng dịch vụ cắt tóc nam
+HD-2026-0002,Vũ Hoàng Hải,Phạm Minh Thư,2026-06-26 10:15:00,2026-06-26 11:50:00,350000,50000,300000,BANK_TRANSFER,PAID,Khách uốn tóc kiểu Hàn Quốc
+HD-2026-0003,Lê Minh Huy,Phạm Minh Thư,2026-06-26 13:00:00,2026-06-26 13:30:00,150000,0,150000,CASH,PAID,Khách sử dụng dịch vụ gội đầu

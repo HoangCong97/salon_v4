@@ -180,6 +180,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
     }
 
     const calculatedDiscountPrice = hasDiscount ? Math.max(0, basePrice - discountDeduction) : basePrice;
+    const discountAmount = hasDiscount ? discountDeduction : 0;
 
     const payload = {
       name,
@@ -187,6 +188,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
       serviceCategory: serviceCategory || null,
       price: basePrice,
       discountPrice: calculatedDiscountPrice,
+      discountAmount,
       duration,
       imageUrl: imageUrl || null,
       branchId: currentBranchId || null,
@@ -448,6 +450,19 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
               </div>
               <div className="form-group" style={{ margin: 0 }}>
                 <label className="form-label" style={{ fontSize: "11px" }}>
+                  Hoa hồng mặc định (%)
+                </label>
+                <CustomNumberInput
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={categoryCommission}
+                  onChange={setCategoryCommission}
+                  style={{ padding: "6px 10px", fontSize: "13px" }}
+                />
+              </div>
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label" style={{ fontSize: "11px" }}>
                   Màu sắc đại diện *
                 </label>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "6px" }}>
@@ -461,7 +476,8 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                         style={{
                           padding: "6px 2px",
                           borderRadius: "var(--radius-sm)",
-                          border: isActive ? `2px solid var(--color-primary)` : "1px solid hsl(210, 40%, 88%)",
+                          border: isActive ? `1px solid var(--color-primary)` : "1px solid hsl(210, 40%, 88%)",
+                          boxShadow: isActive ? "inset 0 0 0 1px var(--color-primary)" : "none",
                           backgroundColor: colorObj.bg,
                           color: colorObj.text,
                           cursor: "pointer",
@@ -477,19 +493,6 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                     );
                   })}
                 </div>
-              </div>
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label" style={{ fontSize: "11px" }}>
-                  Hoa hồng mặc định (%)
-                </label>
-                <CustomNumberInput
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={categoryCommission}
-                  onChange={setCategoryCommission}
-                  style={{ padding: "6px 10px", fontSize: "13px" }}
-                />
               </div>
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "4px" }}>
                 <button

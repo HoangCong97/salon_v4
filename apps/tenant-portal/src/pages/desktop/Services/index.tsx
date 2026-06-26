@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useAuthStore } from "../../../store/useAuthStore";
-import { Layers, Plus, Loader2, Search } from "lucide-react";
+import { Layers, Plus, Loader2, Search, Upload } from "lucide-react";
 import { Service, ServiceCategory, getColorStyle } from "./types";
 import { ServiceTable } from "./ServiceTable";
 import { CategoryModal } from "./CategoryModal";
 import { ServiceFormModal } from "./ServiceFormModal";
+import { ImportWizardModal } from "../../../components/desktop/ImportWizard/ImportWizardModal";
+import { TargetField } from "../../../hooks/useImportWizard";
 
 export default function Services() {
   const { currentTenantId, currentBranchId } = useAuthStore();
@@ -27,6 +29,104 @@ export default function Services() {
   // Category Modal State
   const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
+
+  // Import Modal State
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [droppedFile, setDroppedFile] = useState<File | null>(null);
+  const [isDragActive, setIsDragActive] = useState(false);
+  const dragCounter = useRef(0);
+
+  // Dynamic Service Schema for Import Matcher
+  const serviceSchema = useMemo<TargetField[]>(() => [
+    { field: "name", label: "Tên dịch vụ", type: "string", required: true, description: "Tên hiển thị của dịch vụ" },
+    { field: "price", label: "Giá bán", type: "number", required: true, description: "Giá gốc của dịch vụ (VND)" },
+    { field: "discountPrice", label: "Giá khuyến mãi", type: "number", required: false, description: "Giá bán thực tế sau giảm giá (VND)" },
+    { field: "discountAmount", label: "Mức giảm giá", type: "number", required: false, description: "Số tiền giảm giá (VND)" },
+    { field: "duration", label: "Thời lượng (phút)", type: "number", required: true, description: "Thời gian thực hiện dịch vụ" },
+    {
+      field: "categoryId",
+      label: "Nhóm dịch vụ",
+      type: "select",
+      required: false,
+      options: categories.map((c) => ({ value: c.id, label: c.name })),
+      description: "Nhóm phân loại dịch vụ. Nếu không có sẵn, AI sẽ tự động map hoặc tạo mới dựa trên tên nhóm."
+    }
+  ], [categories]);
+
+  // Drag and Drop handlers for import
+  const isSpreadsheetDrag = (dt: DataTransfer) => {
+    if (!dt.items || dt.items.length === 0) return false;
+    const items = Array.from(dt.items);
+    
+    const hasFiles = items.some(item => item.kind === "file");
+    if (!hasFiles) return false;
+
+    const hasImages = items.some(item => item.kind === "file" && item.type.startsWith("image/"));
+    if (hasImages) return false;
+
+    const spreadsheetTypes = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // xlsx
+      "application/vnd.ms-excel", // xls
+      "text/csv", // csv
+      "application/csv",
+      "text/x-csv",
+    ];
+
+    return items.some(item => 
+      item.kind === "file" && 
+      (spreadsheetTypes.includes(item.type) || item.type === "")
+    );
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (e.dataTransfer && isSpreadsheetDrag(e.dataTransfer)) {
+      dragCounter.current++;
+      setIsDragActive(true);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer && isSpreadsheetDrag(e.dataTransfer)) {
+      e.dataTransfer.dropEffect = "copy";
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (e.dataTransfer && isSpreadsheetDrag(e.dataTransfer)) {
+      dragCounter.current--;
+      if (dragCounter.current <= 0) {
+        dragCounter.current = 0;
+        setIsDragActive(false);
+      }
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    dragCounter.current = 0;
+
+    if (e.dataTransfer && isSpreadsheetDrag(e.dataTransfer)) {
+      const files = e.dataTransfer.files;
+      if (files && files.length > 0) {
+        const file = files[0];
+        const ext = file.name.split(".").pop()?.toLowerCase();
+        if (ext === "xlsx" || ext === "xls" || ext === "csv") {
+          setDroppedFile(file);
+          setIsImportModalOpen(true);
+        }
+      }
+    }
+  };
 
   // Inline editing helper functions
   const [inlineEdits, setInlineEdits] = useState<Record<string, Partial<Service>>>({});
@@ -144,15 +244,20 @@ export default function Services() {
       }
     }
 
+    const priceVal = Number(updatedService.price);
+    const promoPriceVal =
+      updatedService.discountPrice !== undefined && updatedService.discountPrice !== null
+        ? Number(updatedService.discountPrice)
+        : priceVal;
+    const discountAmountVal = Math.max(0, priceVal - promoPriceVal);
+
     const payload = {
       name: updatedService.name,
       categoryId: updatedService.categoryId || null,
       serviceCategory: serviceCategory || null,
-      price: Number(updatedService.price),
-      discountPrice:
-        updatedService.discountPrice !== undefined && updatedService.discountPrice !== null
-          ? Number(updatedService.discountPrice)
-          : Number(updatedService.price),
+      price: priceVal,
+      discountPrice: promoPriceVal,
+      discountAmount: discountAmountVal,
       duration: Number(updatedService.duration),
       imageUrl: updatedService.imageUrl || null,
       branchId: updatedService.branchId || null,
@@ -263,7 +368,14 @@ export default function Services() {
 
   return (
     <>
-      <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      <div
+        className="animate-fade-in"
+        style={{ display: "flex", flexDirection: "column", gap: "24px", minHeight: "100%" }}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
         {/* Filter, Actions and Search Bar */}
         <div
           className="card"
@@ -277,7 +389,25 @@ export default function Services() {
           }}
         >
           {/* Category Tabs */}
-          <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px" }}>
+          <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px", alignItems: "center" }}>
+            <button
+              className="btn btn-secondary"
+              onClick={handleOpenCategoriesModal}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 16px",
+                borderRadius: "var(--radius-full)",
+                fontSize: "13px",
+                fontWeight: "600",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+                height: "36px",
+              }}
+            >
+              <Layers size={16} /> Phân loại
+            </button>
             <button
               onClick={() => setSelectedCategory("Tất cả")}
               style={{
@@ -346,13 +476,27 @@ export default function Services() {
                 style={{ paddingLeft: "36px" }}
               />
             </div>
+
             <button
               className="btn btn-secondary"
-              onClick={handleOpenCategoriesModal}
-              style={{ display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", flexShrink: 0 }}
+              onClick={() => {
+                setDroppedFile(null);
+                setIsImportModalOpen(true);
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+                borderColor: "hsl(142, 76%, 36%)",
+                color: "hsl(142, 76%, 36%)",
+                backgroundColor: "hsl(142, 76%, 97%)",
+              }}
             >
-              <Layers size={18} /> Phân loại
+              <Upload size={16} /> Nhập dữ liệu
             </button>
+
             <button
               className="btn btn-primary"
               onClick={handleOpenCreateModal}
@@ -420,6 +564,65 @@ export default function Services() {
         currentTenantId={currentTenantId}
         currentBranchId={currentBranchId}
       />
+
+      {/* Import Excel/CSV Wizard Modal */}
+      <ImportWizardModal
+        isOpen={isImportModalOpen}
+        onClose={() => {
+          setIsImportModalOpen(false);
+          setDroppedFile(null);
+        }}
+        onSuccess={() => {
+          fetchServices(true);
+          fetchCategories(true);
+        }}
+        entity="service"
+        entityLabel="Dịch vụ"
+        targetSchema={serviceSchema}
+        droppedFile={droppedFile}
+      />
+
+      {/* Global Drag-and-Drop Overlay */}
+      {isDragActive && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(59, 130, 246, 0.15)",
+            backdropFilter: "blur(4px)",
+            border: "4px dashed var(--color-primary)",
+            zIndex: 9999,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "var(--color-primary)",
+            pointerEvents: "none",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "white",
+              padding: "32px 48px",
+              borderRadius: "var(--radius-lg)",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "16px",
+            }}
+          >
+            <Upload size={48} className="animate-bounce" />
+            <h3 style={{ fontSize: "18px", fontWeight: "700" }}>Thả file Excel/CSV vào đây để nhập dịch vụ</h3>
+            <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
+              Hệ thống sẽ tự động phân tích và đối chiếu cột dữ liệu bằng AI.
+            </p>
+          </div>
+        </div>
+      )}
     </>
   );
 }

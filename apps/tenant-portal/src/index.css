@@ -42,13 +42,17 @@
 
 /* Remove default arrows for number input */
 .excel-input[type=number]::-webkit-inner-spin-button,
-.excel-input[type=number]::-webkit-outer-spin-button {
+.excel-input[type=number]::-webkit-outer-spin-button,
+.custom-number-input::-webkit-inner-spin-button,
+.custom-number-input::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-.excel-input[type=number] {
+.excel-input[type=number],
+.custom-number-input[type=number] {
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 .excel-select {

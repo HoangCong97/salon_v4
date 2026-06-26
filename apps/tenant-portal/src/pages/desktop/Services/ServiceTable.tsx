@@ -32,6 +32,75 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
   formatNumber,
   getColorStyle,
 }) => {
+  const handleDiscountInputChange = (service: Service, valStr: string) => {
+    const P = Number(getInlineValue(service, "price") || 0);
+    handleInlineChange(service.id, "discountInput" as keyof Service, valStr);
+
+    if (valStr.trim() === "") {
+      handleInlineChange(service.id, "discountPrice", null);
+      return;
+    }
+
+    if (valStr.includes("%")) {
+      const pct = parseFloat(valStr);
+      if (!isNaN(pct)) {
+        const discountAmt = P * (pct / 100);
+        const D = Math.max(0, P - discountAmt);
+        handleInlineChange(service.id, "discountPrice", Math.round(D));
+      }
+    } else {
+      const cleaned = valStr.replace(/\D/g, "");
+      const amt = parseInt(cleaned, 10);
+      if (!isNaN(amt)) {
+        const D = Math.max(0, P - amt);
+        handleInlineChange(service.id, "discountPrice", Math.round(D));
+      }
+    }
+  };
+
+  const handleDiscountInputBlur = async (service: Service) => {
+    const finalDiscountPrice = getInlineValue(service, "discountPrice");
+    await handleAutoSave(service.id, { discountPrice: finalDiscountPrice });
+    
+    // Clear temporary inputs
+    handleInlineChange(service.id, "discountInput" as keyof Service, undefined);
+    handleInlineChange(service.id, "promoInput" as keyof Service, undefined);
+  };
+
+  const handlePromoInputChange = (service: Service, valStr: string) => {
+    const P = Number(getInlineValue(service, "price") || 0);
+    handleInlineChange(service.id, "promoInput" as keyof Service, valStr);
+
+    if (valStr.trim() === "") {
+      handleInlineChange(service.id, "discountPrice", null);
+      return;
+    }
+
+    if (valStr.includes("%")) {
+      const pct = parseFloat(valStr);
+      if (!isNaN(pct)) {
+        const D = Math.min(P, P * (pct / 100));
+        handleInlineChange(service.id, "discountPrice", Math.round(D));
+      }
+    } else {
+      const cleaned = valStr.replace(/\D/g, "");
+      const amt = parseInt(cleaned, 10);
+      if (!isNaN(amt)) {
+        const D = Math.min(P, Math.max(0, amt));
+        handleInlineChange(service.id, "discountPrice", Math.round(D));
+      }
+    }
+  };
+
+  const handlePromoInputBlur = async (service: Service) => {
+    const finalDiscountPrice = getInlineValue(service, "discountPrice");
+    await handleAutoSave(service.id, { discountPrice: finalDiscountPrice });
+
+    // Clear temporary inputs
+    handleInlineChange(service.id, "discountInput" as keyof Service, undefined);
+    handleInlineChange(service.id, "promoInput" as keyof Service, undefined);
+  };
+
   return (
     <div className="data-table-container" style={{ overflow: "visible" }}>
       <table className="data-table">
@@ -42,6 +111,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
             <th style={{ padding: "6px 10px", fontSize: "13px", width: "100px", textAlign: "center" }}>Thời lượng</th>
             <th style={{ padding: "6px 10px", fontSize: "13px", width: "140px", textAlign: "center" }}>Giá bán</th>
             <th style={{ padding: "6px 10px", fontSize: "13px", width: "140px", textAlign: "center" }}>Giá bán khác</th>
+            <th style={{ padding: "6px 10px", fontSize: "13px", width: "140px", textAlign: "center" }}>Giảm giá</th>
             <th style={{ padding: "6px 10px", fontSize: "13px", width: "140px", textAlign: "center" }}>Giá KM</th>
             <th style={{ padding: "6px 10px", fontSize: "13px", width: "100px", textAlign: "center" }}>Hoa hồng (%)</th>
             <th style={{ padding: "6px 10px", fontSize: "13px", width: "100px", textAlign: "center" }}>Thao tác</th>
@@ -55,10 +125,10 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
             // Calculate discount values to only show if active and less than original price
             const hasInlineDiscount = inlineEdits[service.id] && inlineEdits[service.id].hasOwnProperty("discountPrice");
             const isDiscountActive = hasInlineDiscount
-              ? (inlineEdits[service.id].discountPrice !== null)
-              : (service.discountPrice !== undefined && service.discountPrice !== null && service.discountPrice < service.price);
+              ? (inlineEdits[service.id].discountPrice !== null && (inlineEdits[service.id].discountPrice ?? 0) < (inlineEdits[service.id].price ?? service.price))
+              : (service.discountAmount !== undefined && service.discountAmount !== null && Number(service.discountAmount) > 0);
             const displayDiscountVal = isDiscountActive
-              ? (hasInlineDiscount ? inlineEdits[service.id].discountPrice : service.discountPrice)
+              ? (hasInlineDiscount ? (inlineEdits[service.id].discountPrice ?? null) : (service.discountPrice ?? null))
               : null;
 
             return (
@@ -112,15 +182,54 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                 </td>
                 <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
                   <ExcelInput
-                    value={displayDiscountVal !== null ? formatNumber(displayDiscountVal) : ""}
-                    onChange={(val) => handlePriceChange(service.id, "discountPrice", val)}
-                    onBlur={() => handleAutoSave(service.id, { discountPrice: getInlineValue(service, "discountPrice") as number })}
+                    value={
+                      getInlineValue(service, "discountInput" as keyof Service) !== undefined
+                        ? (getInlineValue(service, "discountInput" as keyof Service) as string)
+                        : (displayDiscountVal !== null && service.price > displayDiscountVal
+                            ? formatNumber(Number(service.price) - Number(displayDiscountVal))
+                            : "")
+                    }
+                    onChange={(val) => handleDiscountInputChange(service, val)}
+                    onBlur={() => handleDiscountInputBlur(service)}
+                    placeholder="--"
+                    textAlign="center"
+                    fontWeight="600"
+                    textColor="var(--color-danger)"
+                    unit={
+                      getInlineValue(service, "discountInput" as keyof Service)?.toString().includes("%")
+                        ? "%"
+                        : "đ"
+                    }
+                    showUnit={
+                      getInlineValue(service, "discountInput" as keyof Service) !== undefined
+                        ? getInlineValue(service, "discountInput" as keyof Service)?.toString() !== ""
+                        : displayDiscountVal !== null && service.price > displayDiscountVal
+                    }
+                  />
+                </td>
+                <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                  <ExcelInput
+                    value={
+                      getInlineValue(service, "promoInput" as keyof Service) !== undefined
+                        ? (getInlineValue(service, "promoInput" as keyof Service) as string)
+                        : (displayDiscountVal !== null ? formatNumber(displayDiscountVal) : "")
+                    }
+                    onChange={(val) => handlePromoInputChange(service, val)}
+                    onBlur={() => handlePromoInputBlur(service)}
                     placeholder="--"
                     textAlign="center"
                     fontWeight="600"
                     textColor="var(--color-success)"
-                    unit="đ"
-                    showUnit={displayDiscountVal !== null}
+                    unit={
+                      getInlineValue(service, "promoInput" as keyof Service)?.toString().includes("%")
+                        ? "%"
+                        : "đ"
+                    }
+                    showUnit={
+                      getInlineValue(service, "promoInput" as keyof Service) !== undefined
+                        ? getInlineValue(service, "promoInput" as keyof Service)?.toString() !== ""
+                        : displayDiscountVal !== null
+                    }
                   />
                 </td>
                 <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>

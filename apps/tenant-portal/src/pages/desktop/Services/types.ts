@@ -15,6 +15,7 @@ export interface Service {
   category?: ServiceCategory;
   price: number;
   discountPrice?: number;
+  discountAmount?: number;
   duration?: number;
   imageUrl?: string;
   branchId?: string;

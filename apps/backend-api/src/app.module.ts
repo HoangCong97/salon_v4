@@ -12,9 +12,10 @@ import { ShiftsController } from "./shifts.controller";
 import { TurnsController } from "./turns.controller";
 import { InvoiceController } from "./invoice.controller";
 import { TenantSubscriptionController } from "./tenant-subscription.controller";
+import { ImportEngineModule } from "./import-engine/import-engine.module";
 
 @Module({
-  imports: [],
+  imports: [ImportEngineModule],
   controllers: [
     AppController, 
     SuperAdminController,
