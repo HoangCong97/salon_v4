@@ -21,7 +21,7 @@ export const ColumnMapper: React.FC<ColumnMapperProps> = ({
   onMappingChange,
   onDefaultValueChange,
 }) => {
-  
+
   // Find which file header is currently mapped to a target field
   const getMappedHeaderForField = (field: string) => {
     return Object.keys(mappings).find(key => mappings[key] === field) || "";
@@ -47,9 +47,9 @@ export const ColumnMapper: React.FC<ColumnMapperProps> = ({
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", textAlign: "left" }}>
           <thead>
             <tr style={{ backgroundColor: "hsl(210, 40%, 97%)", borderBottom: "1px solid hsl(210, 40%, 90%)" }}>
-              <th style={{ padding: "10px 12px", fontWeight: "600", width: "220px" }}>Cột trong file Excel</th>
-              <th style={{ padding: "10px 12px", fontWeight: "600", width: "240px" }}>Trường hệ thống tương ứng</th>
-              <th style={{ padding: "10px 12px", fontWeight: "600" }}>Dữ liệu mẫu (3 dòng đầu)</th>
+              <th style={{ padding: "10px 12px", fontWeight: "600", width: "220px", minWidth: "150px" }}>Cột trong file</th>
+              <th style={{ padding: "10px 12px", fontWeight: "600", width: "240px", minWidth: "180px" }}>Cột trong hệ thống</th>
+              <th style={{ padding: "10px 12px", fontWeight: "600", }}>Dữ liệu xem trước</th>
             </tr>
           </thead>
           <tbody>
@@ -75,7 +75,7 @@ export const ColumnMapper: React.FC<ColumnMapperProps> = ({
                         backgroundColor: mappedField ? "hsl(210, 100%, 99%)" : "white"
                       }}
                     >
-                      <option value="">-- Bỏ qua cột này --</option>
+                      <option value="">--</option>
                       {targetSchema.map((field) => (
                         <option key={field.field} value={field.field}>
                           {field.label} {field.required ? "*" : ""}
@@ -144,7 +144,7 @@ export const ColumnMapper: React.FC<ColumnMapperProps> = ({
                     </span>
                   )}
                 </label>
-                
+
                 {target.type === "select" ? (
                   <select
                     className="form-input"

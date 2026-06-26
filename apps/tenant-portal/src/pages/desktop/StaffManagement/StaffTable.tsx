@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, Plus, Users, Edit2, Trash2 } from "lucide-react";
+import { Search, Plus, Users, Edit2, Trash2, Upload } from "lucide-react";
 import { ExcelInput, ExcelSelect, ExcelMultipleSelect, ExcelRow } from "../../../components/desktop/TableComponents";
 import { StaffMember, Role, Branch, getRoleColorStyle, getStatusColorStyle } from "./types";
 import { useAuthStore } from "../../../store/useAuthStore";
@@ -20,6 +20,7 @@ interface StaffTableProps {
   getInlineValue: (item: StaffMember, field: keyof StaffMember) => any;
   formatNumber: (val: number | string | undefined | null) => string;
   adminUserId?: string;
+  handleOpenImportModal: () => void;
 }
 
 export const StaffTable: React.FC<StaffTableProps> = ({
@@ -38,6 +39,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
   getInlineValue,
   formatNumber,
   adminUserId,
+  handleOpenImportModal,
 }) => {
   const currentUser = useAuthStore((state) => state.user);
   const currentTenantId = useAuthStore((state) => state.currentTenantId);
@@ -95,9 +97,26 @@ export const StaffTable: React.FC<StaffTableProps> = ({
             style={{ paddingLeft: "36px" }}
           />
         </div>
-        <button className="btn btn-primary" onClick={handleOpenCreateModal}>
-          <Plus size={18} /> Thêm nhân viên mới
-        </button>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <button
+            className="btn btn-secondary"
+            onClick={handleOpenImportModal}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              whiteSpace: "nowrap",
+              borderColor: "hsl(142, 76%, 36%)",
+              color: "hsl(142, 76%, 36%)",
+              backgroundColor: "hsl(142, 76%, 97%)",
+            }}
+          >
+            <Upload size={16} /> Nhập dữ liệu
+          </button>
+          <button className="btn btn-primary" onClick={handleOpenCreateModal}>
+            <Plus size={18} /> Thêm nhân viên mới
+          </button>
+        </div>
       </div>
 
       {filteredStaff.length === 0 ? (
@@ -107,11 +126,6 @@ export const StaffTable: React.FC<StaffTableProps> = ({
           <p style={{ color: "var(--text-secondary)", marginBottom: "20px" }}>
             {searchTerm ? "Không tìm thấy kết quả phù hợp với từ khóa." : "Salon của bạn hiện chưa có nhân viên nào."}
           </p>
-          {!searchTerm && (
-            <button className="btn btn-primary" onClick={handleOpenCreateModal}>
-              <Plus size={18} /> Thêm nhân viên ngay
-            </button>
-          )}
         </div>
       ) : (
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
@@ -151,19 +165,19 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                         return b ? { id: b.id, name: b.name } : null;
                       })
                       .filter(Boolean) as Branch[];
-                    
+
                     handleInlineChange(item.id, "branches", newBranchesObj);
                     handleAutoSave(item.id, { branches: newBranchesObj });
                   };
 
                   return (
-                    <ExcelRow 
+                    <ExcelRow
                       key={item.id}
                       onImageDrop={(file) => handleImageDrop(item.id, file)}
                     >
                       <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingLeft: "10px", width: "100%", height: "100%" }}>
-                           {item.avatar ? (
+                          {item.avatar ? (
                             <img
                               src={item.avatar}
                               alt={item.name}

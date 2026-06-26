@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ServiceImportStrategy } from "./strategies/service-import.strategy";
+import { StaffImportStrategy } from "./strategies/staff-import.strategy";
 import { ImportStrategy } from "./interfaces/import-strategy.interface";
 
 @Injectable()
@@ -8,10 +9,12 @@ export class ImportEngineService {
   private readonly strategies = new Map<string, ImportStrategy>();
 
   constructor(
-    private readonly serviceImportStrategy: ServiceImportStrategy
+    private readonly serviceImportStrategy: ServiceImportStrategy,
+    private readonly staffImportStrategy: StaffImportStrategy
   ) {
     // Register available strategies
     this.strategies.set("service", serviceImportStrategy);
+    this.strategies.set("staff", staffImportStrategy);
   }
 
   /**
@@ -117,12 +120,17 @@ Instructions:
 
     // Map common synonyms (Vietnamese)
     const synonyms: Record<string, string[]> = {
-      name: ["ten", "tendichvu", "tensanpham", "tenhanghoa", "dichvu", "sanpham", "name", "title"],
+      name: ["ten", "hoten", "tennhanvien", "tennv", "name", "fullname", "tendichvu", "tensanpham", "tenhanghoa", "dichvu", "sanpham", "title"],
       price: ["gia", "giaban", "dongia", "giagoc", "price", "rate"],
       discountPrice: ["giakm", "giakhuyenmai", "giadasautrung", "giadasaukhuyenmai", "promo", "promoprice"],
       discountAmount: ["giamgia", "mucgiam", "tiengiam", "chietkhau", "discount", "deduction"],
       duration: ["thoiluong", "duration", "sophut", "phut", "thoigian", "mins", "minutes"],
-      categoryName: ["nhom", "phankhoa", "phanloai", "nhomdichvu", "category", "group"]
+      categoryName: ["nhom", "phankhoa", "phanloai", "nhomdichvu", "category", "group"],
+      email: ["email", "thudientu", "thudientu", "mail"],
+      phone: ["sodt", "sodienthoai", "phone", "dienthoai", "tel", "contact"],
+      sex: ["gioitinh", "sex", "gender", "phai"],
+      baseSalary: ["luongcoban", "luong", "salary", "basesalary", "mucluong", "tienluong"],
+      roleName: ["chucvu", "role", "rolename", "vitri", "chucdanh", "nhomquyen"]
     };
 
     for (const header of fileHeaders) {

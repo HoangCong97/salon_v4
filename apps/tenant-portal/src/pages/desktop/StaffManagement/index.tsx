@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useAuthStore } from "../../../store/useAuthStore";
-import { Users, Shield, RefreshCw, Info, Loader2 } from "lucide-react";
+import { Users, Shield, RefreshCw, Info, Loader2, Upload } from "lucide-react";
 import { Role, Branch, StaffMember, SystemPermission, DailyTurn } from "./types";
 import { StaffTable } from "./StaffTable";
 import { RolePermissionPanel } from "./RolePermissionPanel";
@@ -8,6 +8,9 @@ import { DailyTurnsTable } from "./DailyTurnsTable";
 import { StaffFormModal } from "./StaffFormModal";
 import { RoleModal } from "./RoleModal";
 import { AddStaffToQueueModal } from "./AddStaffToQueueModal";
+import { ImportWizardModal } from "../../../components/desktop/ImportWizard/ImportWizardModal";
+import { TargetField } from "../../../hooks/useImportWizard";
+import { useFileDragAndDrop } from "../../../hooks/useFileDragAndDrop";
 
 export default function StaffManagement() {
   const { currentTenantId, currentBranchId, branches } = useAuthStore();
@@ -52,6 +55,44 @@ export default function StaffManagement() {
 
   // Manual Add Staff to Queue Modal State
   const [isAddStaffToQueueOpen, setIsAddStaffToQueueOpen] = useState(false);
+
+  // Import Modal State
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [droppedFile, setDroppedFile] = useState<File | null>(null);
+
+  const { isDragActive } = useFileDragAndDrop((file) => {
+    if (activeTab === "staff") {
+      setDroppedFile(file);
+      setIsImportModalOpen(true);
+    }
+  });
+
+  // Dynamic Staff Schema for Import Matcher
+  const staffSchema = useMemo<TargetField[]>(() => [
+    { field: "name", label: "Tên nhân viên", type: "string", required: true, description: "Họ và tên của nhân viên" },
+    { field: "email", label: "Email", type: "string", required: true, description: "Địa chỉ email duy nhất dùng để đăng nhập" },
+    { field: "phone", label: "Số điện thoại", type: "string", required: false, description: "Số điện thoại liên hệ" },
+    {
+      field: "sex",
+      label: "Giới tính",
+      type: "select",
+      required: false,
+      options: [
+        { value: "Nam", label: "Nam" },
+        { value: "Nữ", label: "Nữ" }
+      ],
+      description: "Giới tính của nhân viên"
+    },
+    { field: "baseSalary", label: "Lương cơ bản", type: "number", required: false, description: "Mức lương cơ bản của nhân viên (VND)" },
+    {
+      field: "roleName",
+      label: "Chức vụ",
+      type: "select",
+      required: false,
+      options: roles.map((r) => ({ value: r.name, label: r.name })),
+      description: "Tên chức vụ. Nếu chưa tồn tại, hệ thống sẽ tự động tạo mới."
+    }
+  ], [roles]);
 
   // 1. FETCH MAIN DATA
   const fetchStaffAndRoles = async (silent = false) => {
@@ -623,6 +664,10 @@ export default function StaffManagement() {
                 getInlineValue={getInlineValue}
                 formatNumber={formatNumber}
                 adminUserId={adminUserId}
+                handleOpenImportModal={() => {
+                  setDroppedFile(null);
+                  setIsImportModalOpen(true);
+                }}
               />
             )}
 
@@ -696,6 +741,64 @@ export default function StaffManagement() {
         currentBranchId={currentBranchId}
         fetchDailyTurns={fetchDailyTurns}
       />
+
+      {/* Import Excel/CSV Wizard Modal */}
+      <ImportWizardModal
+        isOpen={isImportModalOpen}
+        onClose={() => {
+          setIsImportModalOpen(false);
+          setDroppedFile(null);
+        }}
+        onSuccess={() => {
+          fetchStaffAndRoles(true);
+        }}
+        entity="staff"
+        entityLabel="Nhân sự"
+        targetSchema={staffSchema}
+        droppedFile={droppedFile}
+      />
+
+      {/* Global Drag-and-Drop Overlay */}
+      {isDragActive && activeTab === "staff" && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(59, 130, 246, 0.15)",
+            backdropFilter: "blur(4px)",
+            border: "4px dashed var(--color-primary)",
+            zIndex: 9999,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "var(--color-primary)",
+            pointerEvents: "none",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "white",
+              padding: "32px 48px",
+              borderRadius: "var(--radius-lg)",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "16px",
+            }}
+          >
+            <Upload size={48} className="animate-bounce" />
+            <h3 style={{ fontSize: "18px", fontWeight: "700" }}>Thả file Excel/CSV vào đây để nhập nhân sự</h3>
+            <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
+              Hệ thống sẽ tự động phân tích và đối chiếu cột dữ liệu bằng AI.
+            </p>
+          </div>
+        </div>
+      )}
     </>
   );
 }

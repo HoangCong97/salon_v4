@@ -54,7 +54,7 @@ export function useImportWizard(targetSchema: TargetField[]) {
     reader.onload = async (e) => {
       try {
         const buffer = e.target?.result as ArrayBuffer;
-        const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
+        const workbook = XLSX.read(new Uint8Array(buffer), { type: "array", codepage: 65001 });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         

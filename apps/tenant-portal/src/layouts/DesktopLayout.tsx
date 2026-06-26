@@ -12,7 +12,7 @@ export default function DesktopLayout() {
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
       {/* Main Panel */}
-      <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, overflow: "hidden" }}>
+      <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, overflow: "hidden", position: "relative" }}>
         {/* Topbar Controls */}
         <Topbar />
 

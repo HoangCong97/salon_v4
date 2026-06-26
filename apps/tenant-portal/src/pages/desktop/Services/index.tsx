@@ -7,6 +7,7 @@ import { CategoryModal } from "./CategoryModal";
 import { ServiceFormModal } from "./ServiceFormModal";
 import { ImportWizardModal } from "../../../components/desktop/ImportWizard/ImportWizardModal";
 import { TargetField } from "../../../hooks/useImportWizard";
+import { useFileDragAndDrop } from "../../../hooks/useFileDragAndDrop";
 
 export default function Services() {
   const { currentTenantId, currentBranchId } = useAuthStore();
@@ -33,8 +34,11 @@ export default function Services() {
   // Import Modal State
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [droppedFile, setDroppedFile] = useState<File | null>(null);
-  const [isDragActive, setIsDragActive] = useState(false);
-  const dragCounter = useRef(0);
+
+  const { isDragActive } = useFileDragAndDrop((file) => {
+    setDroppedFile(file);
+    setIsImportModalOpen(true);
+  });
 
   // Dynamic Service Schema for Import Matcher
   const serviceSchema = useMemo<TargetField[]>(() => [
@@ -52,81 +56,6 @@ export default function Services() {
       description: "Nhóm phân loại dịch vụ. Nếu không có sẵn, AI sẽ tự động map hoặc tạo mới dựa trên tên nhóm."
     }
   ], [categories]);
-
-  // Drag and Drop handlers for import
-  const isSpreadsheetDrag = (dt: DataTransfer) => {
-    if (!dt.items || dt.items.length === 0) return false;
-    const items = Array.from(dt.items);
-    
-    const hasFiles = items.some(item => item.kind === "file");
-    if (!hasFiles) return false;
-
-    const hasImages = items.some(item => item.kind === "file" && item.type.startsWith("image/"));
-    if (hasImages) return false;
-
-    const spreadsheetTypes = [
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // xlsx
-      "application/vnd.ms-excel", // xls
-      "text/csv", // csv
-      "application/csv",
-      "text/x-csv",
-    ];
-
-    return items.some(item => 
-      item.kind === "file" && 
-      (spreadsheetTypes.includes(item.type) || item.type === "")
-    );
-  };
-
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (e.dataTransfer && isSpreadsheetDrag(e.dataTransfer)) {
-      dragCounter.current++;
-      setIsDragActive(true);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.dataTransfer && isSpreadsheetDrag(e.dataTransfer)) {
-      e.dataTransfer.dropEffect = "copy";
-    }
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (e.dataTransfer && isSpreadsheetDrag(e.dataTransfer)) {
-      dragCounter.current--;
-      if (dragCounter.current <= 0) {
-        dragCounter.current = 0;
-        setIsDragActive(false);
-      }
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragActive(false);
-    dragCounter.current = 0;
-
-    if (e.dataTransfer && isSpreadsheetDrag(e.dataTransfer)) {
-      const files = e.dataTransfer.files;
-      if (files && files.length > 0) {
-        const file = files[0];
-        const ext = file.name.split(".").pop()?.toLowerCase();
-        if (ext === "xlsx" || ext === "xls" || ext === "csv") {
-          setDroppedFile(file);
-          setIsImportModalOpen(true);
-        }
-      }
-    }
-  };
 
   // Inline editing helper functions
   const [inlineEdits, setInlineEdits] = useState<Record<string, Partial<Service>>>({});
@@ -371,10 +300,6 @@ export default function Services() {
       <div
         className="animate-fade-in"
         style={{ display: "flex", flexDirection: "column", gap: "24px", minHeight: "100%" }}
-        onDragEnter={handleDragEnter}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
       >
         {/* Filter, Actions and Search Bar */}
         <div
@@ -586,7 +511,7 @@ export default function Services() {
       {isDragActive && (
         <div
           style={{
-            position: "fixed",
+            position: "absolute",
             top: 0,
             left: 0,
             right: 0,
