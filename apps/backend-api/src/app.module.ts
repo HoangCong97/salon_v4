@@ -13,6 +13,7 @@ import { TurnsController } from "./turns.controller";
 import { InvoiceController } from "./invoice.controller";
 import { TenantSubscriptionController } from "./tenant-subscription.controller";
 import { ImportEngineModule } from "./import-engine/import-engine.module";
+import { CustomerController } from "./customer.controller";
 
 @Module({
   imports: [ImportEngineModule],
@@ -28,7 +29,8 @@ import { ImportEngineModule } from "./import-engine/import-engine.module";
     ShiftsController,
     TurnsController,
     InvoiceController,
-    TenantSubscriptionController
+    TenantSubscriptionController,
+    CustomerController
   ],
   providers: [AppService],
 })

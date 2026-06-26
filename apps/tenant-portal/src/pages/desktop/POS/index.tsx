@@ -177,16 +177,37 @@ export default function POS() {
   // Customers dynamic state
   const [customers, setCustomers] = useState(getInitialCustomers);
 
-  const handleCreateCustomer = (name: string, phone: string) => {
-    const newCust = {
-      id: `c-${Date.now()}`,
-      name,
-      phone,
-      rank: "Khách mới"
-    };
-    setCustomers(prev => [...prev, newCust]);
-    setSelectedCustomerId(newCust.id);
-    return newCust;
+  const handleCreateCustomer = async (name: string, phone: string) => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/customers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          phone: phone || null,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      const newCust = await res.json();
+      const mappedCust = {
+        ...newCust,
+        rank: `Điểm: ${newCust.credibilityScore || 100}`,
+      };
+      setCustomers((prev) => [...prev, mappedCust]);
+      setSelectedCustomerId(newCust.id);
+      return mappedCust;
+    } catch (e) {
+      console.warn("Failed to create customer on server, using local fallback", e);
+      const newCust = {
+        id: `c-${Date.now()}`,
+        name,
+        phone,
+        rank: "Khách mới",
+      };
+      setCustomers((prev) => [...prev, newCust]);
+      setSelectedCustomerId(newCust.id);
+      return newCust;
+    }
   };
 
   // Selection & UI States
@@ -314,17 +335,29 @@ export default function POS() {
       if (!currentTenantId || !currentBranchId) return;
       setLoading(true);
       try {
-        const [staffRes, servicesRes, inventoriesRes, packagesRes] = await Promise.all([
+        const [staffRes, servicesRes, inventoriesRes, packagesRes, customersRes] = await Promise.all([
           fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/shifts/staff`),
           fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services?branchId=${currentBranchId}`),
           fetch(`http://localhost:3000/api/tenants/${currentTenantId}/inventories?branchId=${currentBranchId}`),
-          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services/packages?branchId=${currentBranchId}`)
+          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services/packages?branchId=${currentBranchId}`),
+          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/customers`)
         ]);
 
         if (staffRes.ok) setStaff(await staffRes.json());
         if (servicesRes.ok) setServices(await servicesRes.json());
         if (inventoriesRes.ok) setInventories(await inventoriesRes.json());
         if (packagesRes.ok) setPackages(await packagesRes.json());
+        if (customersRes.ok) {
+          const dbCustomers = await customersRes.json();
+          const mappedCustomers = [
+            { id: "c1", name: "Khách vãng lai", phone: "", rank: "Khách mới" },
+            ...dbCustomers.map((c: any) => ({
+              ...c,
+              rank: `Điểm: ${c.credibilityScore ?? 100}`
+            }))
+          ];
+          setCustomers(mappedCustomers);
+        }
       } catch (err: any) {
         console.warn("Failed fetching POS data, using mock values", err);
       } finally {

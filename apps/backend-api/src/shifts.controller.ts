@@ -83,6 +83,7 @@ export class ShiftsController {
           name: true,
           email: true,
           phone: true,
+          avatar: true,
           role: {
             select: {
               id: true,
@@ -100,6 +101,7 @@ export class ShiftsController {
         name: user.name,
         email: user.email,
         phone: user.phone || "",
+        avatar: user.avatar || "",
         role: user.role ? user.role.name : "Employee"
       }));
     } catch (error) {

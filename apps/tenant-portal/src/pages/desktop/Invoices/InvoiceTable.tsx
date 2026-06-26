@@ -64,27 +64,45 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
 
           return (
             <Tooltip key={String(sId)} content={sObj ? sObj.name : "Nhân viên"}>
-              <div
-                style={{
-                  width: "34px",
-                  height: "34px",
-                  borderRadius: "50%",
-                  background: empColor.color,
-                  border: "1.5px solid white",
-                  color: "white",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "12px",
-                  fontWeight: "800",
-                  marginLeft: idx > 0 ? "-12px" : "0",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                  flexShrink: 0,
-                  zIndex: 10 - idx,
-                }}
-              >
-                {initials}
-              </div>
+              {sObj && sObj.avatar ? (
+                <img
+                  src={sObj.avatar}
+                  alt={sObj.name}
+                  style={{
+                    width: "34px",
+                    height: "34px",
+                    borderRadius: "50%",
+                    border: "1.5px solid white",
+                    marginLeft: idx > 0 ? "-12px" : "0",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                    flexShrink: 0,
+                    zIndex: 10 - idx,
+                    objectFit: "cover",
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: "34px",
+                    height: "34px",
+                    borderRadius: "50%",
+                    background: empColor.color,
+                    border: "1.5px solid white",
+                    color: "white",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "12px",
+                    fontWeight: "800",
+                    marginLeft: idx > 0 ? "-12px" : "0",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                    flexShrink: 0,
+                    zIndex: 10 - idx,
+                  }}
+                >
+                  {initials}
+                </div>
+              )}
             </Tooltip>
           );
         })}

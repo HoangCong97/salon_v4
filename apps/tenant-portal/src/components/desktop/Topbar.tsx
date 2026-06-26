@@ -1,6 +1,7 @@
 import React from "react";
 import { useAuthStore, UserRole } from "../../store/useAuthStore";
 import { useLocation } from "react-router-dom";
+import { Bell } from "lucide-react";
 
 export default function Topbar() {
   const { user, branches, currentBranchId, setBranch, setRole } = useAuthStore();
@@ -135,7 +136,7 @@ export default function Topbar() {
 
         {/* MOCK notification button */}
         <button style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", position: "relative" }}>
-          🔔
+          <Bell size={20} />
           <span style={{ position: "absolute", top: "-2px", right: "-2px", width: "8px", height: "8px", background: "var(--color-danger)", borderRadius: "50%" }}></span>
         </button>
 

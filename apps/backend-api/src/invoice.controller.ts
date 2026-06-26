@@ -122,13 +122,20 @@ export class InvoiceController {
 
       const finalAmount = Math.max(0, totalPrice - discountAmount);
 
+      const isUuid = (str?: string) => {
+        if (!str) return false;
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(str);
+      };
+      const dbCustomerId = isUuid(customerId) ? customerId : null;
+
       // Save Invoice and items in transaction
       const savedInvoice = await prisma.$transaction(async (tx) => {
         const inv = await tx.invoice.create({
           data: {
             tenantId,
             branchId,
-            customerId: customerId || null,
+            customerId: dbCustomerId,
             staffId: cashierId || null,
             totalPrice,
             discountAmount,
