@@ -1,9 +1,9 @@
 import { AppointmentStatus, Staff, AppointmentService } from "./types";
 
-export const SLOT_HEIGHT = 56;   // px per 30-min slot
+export const SLOT_HEIGHT = 28;   // px per 15-min slot
 export const START_HOUR  = 7;
 export const END_HOUR    = 22;
-export const TOTAL_SLOTS = (END_HOUR - START_HOUR) * 2;
+export const TOTAL_SLOTS = (END_HOUR - START_HOUR) * 4;
 export const TIME_COL_W  = 62;
 export const SIDEBAR_W   = 288;
 

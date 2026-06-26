@@ -65,7 +65,7 @@ export default function Appointments() {
   const isToday = selectedDate === todayStr();
   const currentTimePx = useMemo(() => {
     const m = nowMins - START_HOUR * 60;
-    return (m < 0 || m > (END_HOUR - START_HOUR) * 60) ? -1 : (m / 30) * SLOT_HEIGHT;
+    return (m < 0 || m > (END_HOUR - START_HOUR) * 60) ? -1 : (m / 15) * SLOT_HEIGHT;
   }, [nowMins]);
   const nowLabel = useMemo(() =>
     `${String(Math.floor(nowMins / 60)).padStart(2, "0")}:${String(nowMins % 60).padStart(2, "0")}`,
@@ -196,6 +196,12 @@ export default function Appointments() {
     setModal(null);
   };
 
+  const handleCardResize = useCallback((id: string, newDuration: number) => {
+    setItems(prev => prev.map(item =>
+      item.id === id ? { ...item, service: { ...item.service, duration: newDuration } } : item
+    ));
+  }, []);
+
   const timeSlots = useMemo(() => Array.from({ length: TOTAL_SLOTS }, (_, i) => i), []);
   const gridH = TOTAL_SLOTS * SLOT_HEIGHT;
 
@@ -301,7 +307,13 @@ export default function Appointments() {
               const active = selectedCustomer === cust.name;
               const cc = hashColor(cust.name);
               return (
-                <button key={cust.name} onClick={() => setSelectedCustomer(cust.name)}
+                <button key={cust.name}
+                  onClick={() => {
+                    setSelectedCustomer(cust.name);
+                    const targetScrollTop = cust.earliest * SLOT_HEIGHT - 40;
+                    if (gridScrollRef.current) gridScrollRef.current.scrollTop = Math.max(0, targetScrollTop);
+                    if (sidebarScrollRef.current) sidebarScrollRef.current.scrollTop = Math.max(0, targetScrollTop);
+                  }}
                   style={{
                     display: "flex",
                     flexDirection: "column",
@@ -437,8 +449,8 @@ export default function Appointments() {
                 {/* Time gutter */}
                 <div style={{ width: TIME_COL_W, flexShrink: 0, background: "var(--bg-app)", borderRight: "1px solid var(--border-color)" }}>
                   {timeSlots.map(slot => (
-                    <div key={slot} style={{ height: SLOT_HEIGHT, borderBottom: slot % 2 === 0 ? "1px solid var(--border-color)" : "1px dashed var(--border-color)", display: "flex", alignItems: "flex-start", justifyContent: "flex-end", paddingRight: 8, paddingTop: 4 }}>
-                      {slot % 2 === 0 && <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text-muted)", whiteSpace: "nowrap" }}>{slotToTime(slot)}</span>}
+                    <div key={slot} style={{ height: SLOT_HEIGHT, borderBottom: (slot + 1) % 4 === 0 ? "1px solid var(--border-color)" : "1px dashed var(--border-color)", display: "flex", alignItems: "flex-start", justifyContent: "flex-end", paddingRight: 8, paddingTop: 4 }}>
+                      {slot % 4 === 0 && <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text-muted)", whiteSpace: "nowrap" }}>{slotToTime(slot)}</span>}
                     </div>
                   ))}
                 </div>
@@ -481,28 +493,6 @@ export default function Appointments() {
                         }
                         setDragOverKey(null);
                       }}
-                      onClick={e => {
-                        if (dragState) return;
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const y = e.clientY - rect.top;
-                        const slot = Math.floor(y / SLOT_HEIGHT);
-                        if (slot >= 0 && slot < TOTAL_SLOTS) {
-                          const cellKey = `${colId}:${slot}`;
-                          const hasOtherStart = colItems.some(i => timeToSlot(i.startTime) === slot);
-                          const isBodyOfOther = occupiedBodySlots.has(cellKey);
-                          const blocked = hasOtherStart || isBodyOfOther;
-                          if (!blocked) {
-                            setModal({
-                              mode: "create",
-                              prefill: {
-                                staffId: viewMode === "by-staff" ? colId : MOCK_STAFF[0].id,
-                                startTime: slotToTime(slot),
-                                date: selectedDate
-                              }
-                            });
-                          }
-                        }
-                      }}
                       style={{
                         width: colW, flexShrink: 0,
                         borderRight: "1px solid var(--border-color)",
@@ -513,7 +503,7 @@ export default function Appointments() {
                       {/* Layer 1: Background slots for grid lines & drop hover */}
                       {timeSlots.map(slot => {
                         const cellKey = `${colId}:${slot}`;
-                        const isHour = slot % 2 === 0;
+                        const isHour = (slot + 1) % 4 === 0;
                         const draggedItem = items.find(i => i.id === dragState?.id);
                         const slotsNeeded = draggedItem ? durationSlots(draggedItem.service.duration) : 1;
 
@@ -587,7 +577,8 @@ export default function Appointments() {
                             isBeingDragged={dragState?.id === item.id}
                             onDragStart={e => handleDragStart(e, item.id, "grid")}
                             onDragEnd={() => handleDragEnd(item.id)}
-                            onClick={() => setModal({ mode: "edit", item })}
+                            onDoubleClick={() => setModal({ mode: "edit", item })}
+                            onResize={handleCardResize}
                           />
                         );
                       })}
@@ -626,8 +617,8 @@ export default function Appointments() {
             {/* Time gutter */}
             <div style={{ width: 48, flexShrink: 0, borderRight: "1px solid var(--border-color)", background: "var(--bg-app)" }}>
               {timeSlots.map(slot => (
-                <div key={slot} style={{ height: SLOT_HEIGHT, borderBottom: slot % 2 === 0 ? "1px solid var(--border-color)" : "1px dashed var(--border-color)", display: "flex", alignItems: "flex-start", justifyContent: "flex-end", paddingRight: 6, paddingTop: 4 }}>
-                  {slot % 2 === 0 && <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text-muted)", whiteSpace: "nowrap" }}>{slotToTime(slot)}</span>}
+                <div key={slot} style={{ height: SLOT_HEIGHT, borderBottom: (slot + 1) % 4 === 0 ? "1px solid var(--border-color)" : "1px dashed var(--border-color)", display: "flex", alignItems: "flex-start", justifyContent: "flex-end", paddingRight: 6, paddingTop: 4 }}>
+                  {slot % 4 === 0 && <span style={{ fontSize: 10, fontWeight: 600, color: "var(--text-muted)", whiteSpace: "nowrap" }}>{slotToTime(slot)}</span>}
                 </div>
               ))}
             </div>
@@ -638,7 +629,7 @@ export default function Appointments() {
               {timeSlots.map(slot => (
                 <div key={slot} style={{
                   position: "absolute", top: slot * SLOT_HEIGHT, left: 0, right: 0, height: SLOT_HEIGHT,
-                  borderBottom: slot % 2 === 0 ? "1px solid var(--border-color)" : "1px dashed var(--border-color)",
+                  borderBottom: (slot + 1) % 4 === 0 ? "1px solid var(--border-color)" : "1px dashed var(--border-color)",
                 }} />
               ))}
 
@@ -672,23 +663,34 @@ export default function Appointments() {
                       borderRadius: 8, background: hashBg(item.customerName),
                       border: `1.5px solid ${hashBorder(item.customerName)}`,
                       borderLeft: `4px solid ${cc}`,
-                      padding: "5px 8px", cursor: "grab",
+                      padding: height < 40 ? "2px 6px" : "5px 8px", cursor: "grab",
                       opacity: isBeingDragged ? 0.3 : 1,
                       overflow: "hidden", boxShadow: `0 2px 8px ${cc}22`,
                       userSelect: "none", zIndex: 2, boxSizing: "border-box",
                       pointerEvents: dragState && !isBeingDragged ? "none" : "auto",
                     }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      <Scissors size={9} style={{ marginRight: 3, verticalAlign: "middle" }} />{item.service.name}
-                    </div>
-                    {height >= 52 && <div style={{ fontSize: 9, color: "#64748b", marginTop: 2, display: "flex", alignItems: "center", gap: 3 }}><Clock size={8} />{item.startTime} · {item.service.duration}p</div>}
-                    {height >= 70 && staff && (
-                      <div style={{ marginTop: 4, display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 6px", borderRadius: 6, background: staff.color + "15", border: `1px solid ${staff.color}44` }}>
-                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: staff.color }} />
-                        <span style={{ fontSize: 9, fontWeight: 600, color: staff.color }}>{staff.name.split(" ").pop()}</span>
+                    {height < 40 ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, height: "100%", overflow: "hidden" }}>
+                        <Scissors size={9} style={{ flexShrink: 0 }} />
+                        <span style={{ fontSize: 10, fontWeight: 700, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {item.service.name}
+                        </span>
                       </div>
+                    ) : (
+                      <>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          <Scissors size={9} style={{ marginRight: 3, verticalAlign: "middle" }} />{item.service.name}
+                        </div>
+                        {height >= 52 && <div style={{ fontSize: 9, color: "#64748b", marginTop: 2, display: "flex", alignItems: "center", gap: 3 }}><Clock size={8} />{item.startTime} · {item.service.duration}p</div>}
+                        {height >= 70 && staff && (
+                          <div style={{ marginTop: 4, display: "inline-flex", alignItems: "center", gap: 4, padding: "2px 6px", borderRadius: 6, background: staff.color + "15", border: `1px solid ${staff.color}44` }}>
+                            <div style={{ width: 6, height: 6, borderRadius: "50%", background: staff.color }} />
+                            <span style={{ fontSize: 9, fontWeight: 600, color: staff.color }}>{staff.name.split(" ").pop()}</span>
+                          </div>
+                        )}
+                      </>
                     )}
-                    <div style={{ position: "absolute", top: 5, right: 6, width: 7, height: 7, borderRadius: "50%", background: cfg.dot }} />
+                    <div style={{ position: "absolute", top: height < 40 ? 6 : 5, right: 6, width: 7, height: 7, borderRadius: "50%", background: cfg.dot }} />
                   </div>
                 );
               })}

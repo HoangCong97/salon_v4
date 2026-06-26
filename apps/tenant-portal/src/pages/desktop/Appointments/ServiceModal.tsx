@@ -67,7 +67,9 @@ export function ServiceModal({ state, staffList, onClose, onSave, onDelete }: Se
   const timeOpts: string[] = [];
   for (let h = START_HOUR; h < END_HOUR; h++) {
     timeOpts.push(`${String(h).padStart(2, "0")}:00`);
+    timeOpts.push(`${String(h).padStart(2, "0")}:15`);
     timeOpts.push(`${String(h).padStart(2, "0")}:30`);
+    timeOpts.push(`${String(h).padStart(2, "0")}:45`);
   }
   const inp: React.CSSProperties = { width: "100%", height: 38, padding: "0 10px", boxSizing: "border-box", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", fontSize: 14, outline: "none", fontFamily: "inherit" };
 

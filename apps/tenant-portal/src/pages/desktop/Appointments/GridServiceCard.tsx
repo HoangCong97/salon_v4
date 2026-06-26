@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Scissors, Clock } from "lucide-react";
 import { ServiceItem } from "./types";
-import { STATUS_CFG } from "./constants";
+import { STATUS_CFG, SLOT_HEIGHT } from "./constants";
 import { hashColor, hashBg, hashBorder } from "./helpers";
 
 interface GridServiceCardProps {
@@ -15,15 +15,18 @@ interface GridServiceCardProps {
   isBeingDragged: boolean;
   onDragStart: (e: React.DragEvent) => void;
   onDragEnd: () => void;
-  onClick: () => void;
+  onDoubleClick: () => void;
+  onResize?: (id: string, newDuration: number) => void;
 }
 
 export function GridServiceCard({
   item, topPx, height, accentColor, bgColor, bdColor,
   dragActive, isBeingDragged,
-  onDragStart, onDragEnd, onClick,
+  onDragStart, onDragEnd, onDoubleClick, onResize,
 }: GridServiceCardProps) {
   const cfg = STATUS_CFG[item.status];
+
+  const [isResizing, setIsResizing] = useState(false);
 
   const handleDragStart = (e: React.DragEvent) => {
     const ghost = document.createElement("div");
@@ -61,13 +64,41 @@ export function GridServiceCard({
     onDragStart(e);
   };
 
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+
+    const startY = e.clientY;
+    const startHeight = height;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaY = moveEvent.clientY - startY;
+      const newHeight = Math.max(SLOT_HEIGHT - 6, startHeight + deltaY);
+      const slots = Math.max(1, Math.round((newHeight + 6) / SLOT_HEIGHT));
+      const newDuration = slots * 15; // 15 mins per slot
+      if (onResize) {
+        onResize(item.id, newDuration);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
+
   return (
     <div
       id={`gc-${item.id}`}
-      draggable
+      draggable={!isResizing}
       onDragStart={handleDragStart}
       onDragEnd={onDragEnd}
-      onClick={e => { e.stopPropagation(); onClick(); }}
+      onDoubleClick={e => { e.stopPropagation(); onDoubleClick(); }}
       style={{
         position: "absolute",
         left: 3, right: 3,
@@ -78,9 +109,9 @@ export function GridServiceCard({
         border: `1.5px solid ${bdColor}`,
         borderLeft: `4px solid ${accentColor}`,
         boxShadow: `0 2px 8px ${accentColor}22`,
-        padding: "5px 8px",
+        padding: height < 40 ? "2px 6px" : "5px 8px",
         cursor: isBeingDragged ? "grabbing" : "grab",
-        overflow: "hidden",
+        overflow: "visible", // Allowed to let handle bleed out
         opacity: isBeingDragged ? 0.3 : 1,
         pointerEvents: dragActive && !isBeingDragged ? "none" : "auto",
         userSelect: "none",
@@ -101,28 +132,61 @@ export function GridServiceCard({
         el.style.zIndex = "2";
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
-        <div style={{ width: 6, height: 6, borderRadius: "50%", background: cfg.dot, flexShrink: 0 }} />
-        <span style={{ fontSize: 9, fontWeight: 700, color: cfg.text, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {cfg.label}
-        </span>
-        <span style={{ fontSize: 8, fontWeight: 600, padding: "1px 4px", borderRadius: 10, whiteSpace: "nowrap", background: item.source === "ONLINE" ? "#ede9fe" : "#fff7ed", color: item.source === "ONLINE" ? "#6d28d9" : "#c2410c" }}>
-          {item.source === "ONLINE" ? "🌐" : "🏠"}
-        </span>
+      {/* Content wrapper with overflow hidden to keep design clean */}
+      <div style={{ width: "100%", height: "100%", overflow: "hidden", position: "relative" }}>
+        {height < 40 ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 4, height: "100%", overflow: "hidden" }}>
+            <div style={{ width: 5, height: 5, borderRadius: "50%", background: cfg.dot, flexShrink: 0 }} />
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 0 }}>
+              {item.customerName}
+            </span>
+            <span style={{ fontSize: 9, color: "#475569", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              · {item.service.name}
+            </span>
+          </div>
+        ) : (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
+              <div style={{ width: 6, height: 6, borderRadius: "50%", background: cfg.dot, flexShrink: 0 }} />
+              <span style={{ fontSize: 9, fontWeight: 700, color: cfg.text, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {cfg.label}
+              </span>
+              <span style={{ fontSize: 8, fontWeight: 600, padding: "1px 4px", borderRadius: 10, whiteSpace: "nowrap", background: item.source === "ONLINE" ? "#ede9fe" : "#fff7ed", color: item.source === "ONLINE" ? "#6d28d9" : "#c2410c" }}>
+                {item.source === "ONLINE" ? "🌐" : "🏠"}
+              </span>
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {item.customerName}
+            </div>
+            {height >= 70 && (
+              <div style={{ fontSize: 10, color: "#475569", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <Scissors size={9} style={{ marginRight: 3, verticalAlign: "middle" }} />
+                {item.service.name}
+              </div>
+            )}
+            {height >= 88 && (
+              <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 2, display: "flex", alignItems: "center", gap: 3 }}>
+                <Clock size={8} />{item.startTime} · {item.service.duration}p
+              </div>
+            )}
+          </>
+        )}
       </div>
-      <div style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-        {item.customerName}
-      </div>
-      {height >= 70 && (
-        <div style={{ fontSize: 10, color: "#475569", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          <Scissors size={9} style={{ marginRight: 3, verticalAlign: "middle" }} />
-          {item.service.name}
-        </div>
-      )}
-      {height >= 88 && (
-        <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 2, display: "flex", alignItems: "center", gap: 3 }}>
-          <Clock size={8} />{item.startTime} · {item.service.duration}p
-        </div>
+
+      {onResize && !dragActive && (
+        <div
+          onMouseDown={handleResizeMouseDown}
+          style={{
+            position: "absolute",
+            bottom: -10,
+            left: 0,
+            right: 0,
+            height: 8,
+            cursor: "ns-resize",
+            background: "transparent",
+            zIndex: 100,
+          }}
+        />
       )}
     </div>
   );

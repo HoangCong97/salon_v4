@@ -18,15 +18,15 @@ export function hashBorder(s: string) {
 
 export function timeToSlot(t: string): number {
   const [h, m] = t.split(":").map(Number);
-  return (h - START_HOUR) * 2 + (m >= 30 ? 1 : 0);
+  return (h - START_HOUR) * 4 + Math.floor(m / 15);
 }
 export function slotToTime(slot: number): string {
-  const mins = START_HOUR * 60 + slot * 30;
+  const mins = START_HOUR * 60 + slot * 15;
   return `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
 }
-/** Number of 30-min slots needed for this service duration */
+/** Number of 15-min slots needed for this service duration */
 export function durationSlots(mins: number): number {
-  return Math.max(1, Math.ceil(mins / 30));
+  return Math.max(1, Math.ceil(mins / 15));
 }
 export function addMinutes(time: string, mins: number): string {
   const [h, m] = time.split(":").map(Number);
@@ -51,7 +51,12 @@ export function getClosestTimeOption(startHour: number, endHour: number): string
   let closestOpt = `${String(startHour).padStart(2, "0")}:00`;
   let minDiff = Infinity;
   for (let h = startHour; h < endHour; h++) {
-    const opts = [`${String(h).padStart(2, "0")}:00`, `${String(h).padStart(2, "0")}:30`];
+    const opts = [
+      `${String(h).padStart(2, "0")}:00`,
+      `${String(h).padStart(2, "0")}:15`,
+      `${String(h).padStart(2, "0")}:30`,
+      `${String(h).padStart(2, "0")}:45`
+    ];
     for (const opt of opts) {
       const [oh, om] = opt.split(":").map(Number);
       const optMins = oh * 60 + om;
