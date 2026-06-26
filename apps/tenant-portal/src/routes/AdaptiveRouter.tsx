@@ -20,6 +20,7 @@ import Inventories from "../pages/desktop/Inventories";
 import Shifts from "../pages/desktop/Shifts";
 import Invoices from "../pages/desktop/Invoices";
 import Customers from "../pages/desktop/Customers";
+import Appointments from "../pages/desktop/Appointments";
 
 // Mobile Pages
 import Schedule from "../pages/mobile/Schedule";
@@ -160,6 +161,14 @@ export default function AdaptiveRouter() {
             element={
               user.role === "ADMIN" || user.role === "MANAGER" || user.role === "CASHIER"
                 ? <Customers /> 
+                : <Navigate to="/" replace />
+            } 
+          />
+          <Route 
+            path="/appointments" 
+            element={
+              user.role === "ADMIN" || user.role === "MANAGER" || user.role === "CASHIER"
+                ? <Appointments /> 
                 : <Navigate to="/" replace />
             } 
           />
