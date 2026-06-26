@@ -306,7 +306,6 @@ model Service {
   serviceCategory String?   @map("service_category") @db.VarChar(100)
   categoryId      String?   @map("category_id") @db.Uuid
   price           Decimal   @default(0) @db.Decimal(15, 0)
-  discountPrice   Decimal?  @default(0) @map("discount_price") @db.Decimal(15, 0)
   discountAmount  Decimal?  @default(0) @map("discount_amount") @db.Decimal(15, 0)
   additionalPrices Decimal[] @default([]) @map("additional_prices") @db.Decimal(15, 0)
   duration        Int?      // In minutes
@@ -333,7 +332,6 @@ model Inventory {
   costPrice     Decimal   @default(0) @map("cost_price") @db.Decimal(15, 0)
   sellPrice     Decimal   @default(0) @map("sell_price") @db.Decimal(15, 0)
   quantity      Int       @default(0)
-  discountPrice Decimal?  @default(0) @map("discount_price") @db.Decimal(15, 0)
   discountAmount Decimal?  @default(0) @map("discount_amount") @db.Decimal(15, 0)
   imageUrl      String?   @map("image_url")
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
@@ -353,7 +351,6 @@ model ServicePackage {
   name          String    @db.VarChar(255)
   description   String?
   price         Decimal   @default(0) @db.Decimal(15, 0)
-  discountPrice Decimal?  @default(0) @map("discount_price") @db.Decimal(15, 0)
   discountAmount Decimal?  @default(0) @map("discount_amount") @db.Decimal(15, 0)
   duration      Int?      // Expiration period in days
   imageUrl      String?   @map("image_url")

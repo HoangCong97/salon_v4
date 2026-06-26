@@ -679,7 +679,6 @@ async function main() {
       name: "Combo Thư Giãn Dưỡng Sinh 5 Lần",
       description: "Thẻ gội đầu dưỡng sinh thảo dược combo 5 lần",
       price: 500000,
-      discountPrice: 400000,
       discountAmount: 100000,
       duration: 90 // 90 days validity
     }

@@ -23,12 +23,17 @@ export class InventoryController {
         ];
       }
 
-      return await prisma.inventory.findMany({
+      const inventories = await prisma.inventory.findMany({
         where: whereClause,
         orderBy: {
           createdAt: "desc"
         }
       });
+
+      return inventories.map((item) => ({
+        ...item,
+        discountPrice: Number(item.sellPrice) - Number(item.discountAmount || 0)
+      }));
     } catch (error) {
       throw new HttpException(
         `Failed to fetch inventory: ${(error as any).message}`,
@@ -56,18 +61,27 @@ export class InventoryController {
         throw new HttpException("Product name is required", HttpStatus.BAD_REQUEST);
       }
 
-      return await prisma.inventory.create({
+      const sellPrice = body.sellPrice || 0;
+      const discountPrice = body.discountPrice !== undefined && body.discountPrice !== null ? body.discountPrice : sellPrice;
+      const discountAmount = Math.max(0, sellPrice - discountPrice);
+
+      const created = await prisma.inventory.create({
         data: {
           tenantId,
           branchId: body.branchId || null,
           name: body.name,
           costPrice: body.costPrice || 0,
-          sellPrice: body.sellPrice || 0,
+          sellPrice: sellPrice,
           quantity: body.quantity ?? 0,
-          discountPrice: body.discountPrice ?? body.sellPrice ?? 0,
+          discountAmount: discountAmount,
           imageUrl: body.imageUrl || null
         }
       });
+
+      return {
+        ...created,
+        discountPrice: Number(created.sellPrice) - Number(created.discountAmount || 0)
+      };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
@@ -106,19 +120,28 @@ export class InventoryController {
         throw new HttpException("Product not found", HttpStatus.NOT_FOUND);
       }
 
-      return await prisma.inventory.update({
+      const sellPrice = body.sellPrice || 0;
+      const discountPrice = body.discountPrice !== undefined && body.discountPrice !== null ? body.discountPrice : sellPrice;
+      const discountAmount = Math.max(0, sellPrice - discountPrice);
+
+      const updated = await prisma.inventory.update({
         where: { id },
         data: {
           name: body.name,
           branchId: body.branchId || null,
           costPrice: body.costPrice || 0,
-          sellPrice: body.sellPrice || 0,
+          sellPrice: sellPrice,
           quantity: body.quantity ?? 0,
-          discountPrice: body.discountPrice ?? body.sellPrice ?? 0,
+          discountAmount: discountAmount,
           imageUrl: body.imageUrl ?? null,
           updatedAt: new Date()
         }
       });
+
+      return {
+        ...updated,
+        discountPrice: Number(updated.sellPrice) - Number(updated.discountAmount || 0)
+      };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(

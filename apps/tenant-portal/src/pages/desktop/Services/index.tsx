@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useAuthStore } from "../../../store/useAuthStore";
-import { Layers, Plus, Loader2, Search, Upload } from "lucide-react";
+import { Layers, Plus, Loader2, Search, Upload, Download } from "lucide-react";
 import { Service, ServiceCategory, getColorStyle } from "./types";
 import { ServiceTable } from "./ServiceTable";
 import { CategoryModal } from "./CategoryModal";
@@ -8,6 +8,8 @@ import { ServiceFormModal } from "./ServiceFormModal";
 import { ImportWizardModal } from "../../../components/desktop/ImportWizard/ImportWizardModal";
 import { TargetField } from "../../../hooks/useImportWizard";
 import { useFileDragAndDrop } from "../../../hooks/useFileDragAndDrop";
+import { ExportButton } from "../../../components/desktop/ExportButton";
+import { ExportColumnMapping } from "../../../utils/exportData";
 
 export default function Services() {
   const { currentTenantId, currentBranchId } = useAuthStore();
@@ -54,6 +56,23 @@ export default function Services() {
       required: false,
       options: categories.map((c) => ({ value: c.id, label: c.name })),
       description: "Nhóm phân loại dịch vụ. Nếu không có sẵn, AI sẽ tự động map hoặc tạo mới dựa trên tên nhóm."
+    }
+  ], [categories]);
+
+  // Export Columns Mapping for Services
+  const serviceExportColumns = useMemo<ExportColumnMapping[]>(() => [
+    { key: "name", header: "Tên dịch vụ" },
+    { key: "price", header: "Giá bán (VND)", transform: (val) => Number(val) },
+    { key: "discountPrice", header: "Giá khuyến mãi (VND)", transform: (val) => val !== null && val !== undefined ? Number(val) : "" },
+    { key: "discountAmount", header: "Mức giảm giá (VND)", transform: (val) => val !== null && val !== undefined ? Number(val) : "" },
+    { key: "duration", header: "Thời lượng (phút)", transform: (val) => val ? Number(val) : "" },
+    { 
+      key: "categoryId", 
+      header: "Nhóm dịch vụ", 
+      transform: (val) => {
+        const cat = categories.find((c) => c.id === val);
+        return cat ? cat.name : "";
+      }
     }
   ], [categories]);
 
@@ -417,10 +436,23 @@ export default function Services() {
                 borderColor: "hsl(142, 76%, 36%)",
                 color: "hsl(142, 76%, 36%)",
                 backgroundColor: "hsl(142, 76%, 97%)",
+                transition: "background-color 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "hsl(142, 76%, 92%)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "hsl(142, 76%, 97%)";
               }}
             >
-              <Upload size={16} /> Nhập dữ liệu
+              <Download size={16} /> Nhập dữ liệu
             </button>
+
+            <ExportButton
+              data={filteredServices}
+              fileName="danh_sach_dich_vu"
+              columns={serviceExportColumns}
+            />
 
             <button
               className="btn btn-primary"

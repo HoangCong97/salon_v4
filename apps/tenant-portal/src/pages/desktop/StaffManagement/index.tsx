@@ -247,6 +247,7 @@ export default function StaffManagement() {
         body: JSON.stringify({
           name: finalFields.name,
           email: finalFields.email,
+          password: finalFields.password,
           phone: finalFields.phone,
           sex: finalFields.sex,
           baseSalary: finalFields.baseSalary,

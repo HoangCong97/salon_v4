@@ -152,7 +152,6 @@ export class ServiceImportStrategy extends BaseImportStrategy {
               categoryId: categoryId || undefined,
               serviceCategory: serviceCategory || undefined,
               price: price,
-              discountPrice: discountPrice,
               discountAmount: discountAmount,
               duration: duration,
               updatedAt: new Date()
@@ -167,7 +166,6 @@ export class ServiceImportStrategy extends BaseImportStrategy {
               categoryId: categoryId || undefined,
               serviceCategory: serviceCategory || undefined,
               price: price,
-              discountPrice: discountPrice,
               discountAmount: discountAmount,
               duration: duration
             }

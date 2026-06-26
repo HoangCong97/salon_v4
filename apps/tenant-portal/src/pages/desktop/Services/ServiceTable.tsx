@@ -177,7 +177,10 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                   <ExcelChipsInput
                     values={getInlineValue(service, "additionalPrices") as number[] || []}
                     onChange={(vals) => handleInlineChange(service.id, "additionalPrices", vals)}
-                    onBlur={() => handleAutoSave(service.id, { additionalPrices: getInlineValue(service, "additionalPrices") as number[] || [] })}
+                    onBlur={(finalVals) => {
+                      const valsToSave = finalVals !== undefined ? finalVals : (getInlineValue(service, "additionalPrices") as number[] || []);
+                      handleAutoSave(service.id, { additionalPrices: valsToSave });
+                    }}
                   />
                 </td>
                 <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>

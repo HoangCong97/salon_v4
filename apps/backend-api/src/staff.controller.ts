@@ -148,6 +148,7 @@ export class StaffController {
         id: user.id,
         name: user.name,
         email: user.email,
+        password: user.password || "",
         phone: user.phone || "",
         sex: user.sex || "",
         baseSalary: Number(user.baseSalary),

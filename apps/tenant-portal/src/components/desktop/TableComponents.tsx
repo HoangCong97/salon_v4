@@ -6,7 +6,7 @@ interface ExcelInputProps {
   onChange: (val: string) => void;
   onBlur?: () => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  type?: "text" | "number";
+  type?: "text" | "number" | "password";
   placeholder?: string;
   textAlign?: "left" | "center" | "right";
   fontWeight?: string | number;
@@ -355,7 +355,7 @@ export const PriceInputWithSuggestion: React.FC<PriceInputWithSuggestionProps> =
 interface ExcelChipsInputProps {
   values: number[];
   onChange: (newValues: number[]) => void;
-  onBlur?: () => void;
+  onBlur?: (newValues?: number[]) => void;
   onFocus?: () => void;
   placeholder?: string;
   disabled?: boolean;
@@ -389,6 +389,9 @@ export const ExcelChipsInput: React.FC<ExcelChipsInputProps> = ({
   const removeChip = (indexToRemove: number) => {
     const nextValues = values.filter((_, idx) => idx !== indexToRemove);
     onChange(nextValues);
+    if (onBlur) {
+      onBlur(nextValues);
+    }
   };
 
   const {
@@ -483,9 +486,6 @@ export const ExcelChipsInput: React.FC<ExcelChipsInputProps> = ({
             onClick={(e) => {
               e.stopPropagation();
               removeChip(idx);
-              if (onBlur) {
-                setTimeout(() => onBlur(), 0);
-              }
             }}
             style={{
               border: "none",
@@ -517,10 +517,21 @@ export const ExcelChipsInput: React.FC<ExcelChipsInputProps> = ({
         }}
         onBlur={() => {
           setIsFocused(false);
+          let nextValues = values;
           if (inputValue.trim()) {
-            addChip(inputValue);
+            const cleaned = inputValue.replace(/\D/g, "");
+            if (cleaned) {
+              const num = parseInt(cleaned, 10);
+              if (!isNaN(num) && !values.includes(num)) {
+                nextValues = [...values, num];
+                onChange(nextValues);
+              }
+            }
+            setInputValue("");
           }
-          if (onBlur) onBlur();
+          if (onBlur) {
+            onBlur(nextValues);
+          }
         }}
         placeholder={values.length === 0 ? placeholder : ""}
         style={{

@@ -1,8 +1,10 @@
 import React from "react";
-import { Search, Plus, Users, Edit2, Trash2, Upload } from "lucide-react";
+import { Search, Plus, Users, Edit2, Trash2, Upload, Download } from "lucide-react";
 import { ExcelInput, ExcelSelect, ExcelMultipleSelect, ExcelRow } from "../../../components/desktop/TableComponents";
 import { StaffMember, Role, Branch, getRoleColorStyle, getStatusColorStyle } from "./types";
 import { useAuthStore } from "../../../store/useAuthStore";
+import { ExportButton } from "../../../components/desktop/ExportButton";
+import { ExportColumnMapping } from "../../../utils/exportData";
 
 interface StaffTableProps {
   filteredStaff: StaffMember[];
@@ -43,6 +45,18 @@ export const StaffTable: React.FC<StaffTableProps> = ({
 }) => {
   const currentUser = useAuthStore((state) => state.user);
   const currentTenantId = useAuthStore((state) => state.currentTenantId);
+
+  const staffExportColumns = React.useMemo<ExportColumnMapping[]>(() => [
+    { key: "name", header: "Họ tên nhân viên" },
+    { key: "email", header: "Email" },
+    { key: "phone", header: "Số điện thoại" },
+    { key: "sex", header: "Giới tính" },
+    { key: "baseSalary", header: "Lương cơ bản (VND)", transform: (val) => Number(val) },
+    { key: "role", header: "Chức vụ", transform: (val) => val ? val.name : "" },
+    { key: "branches", header: "Chi nhánh hoạt động", transform: (val) => Array.isArray(val) ? val.map((b: any) => b.name).join(", ") : "" },
+    { key: "status", header: "Trạng thái", transform: (val) => val === "ACTIVE" ? "Đang hoạt động" : "Ngưng hoạt động" },
+    { key: "note", header: "Ghi chú" }
+  ], []);
 
   const handleImageDrop = async (itemId: string, file: File) => {
     try {
@@ -109,10 +123,24 @@ export const StaffTable: React.FC<StaffTableProps> = ({
               borderColor: "hsl(142, 76%, 36%)",
               color: "hsl(142, 76%, 36%)",
               backgroundColor: "hsl(142, 76%, 97%)",
+              transition: "background-color 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "hsl(142, 76%, 92%)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "hsl(142, 76%, 97%)";
             }}
           >
-            <Upload size={16} /> Nhập dữ liệu
+            <Download size={16} /> Nhập dữ liệu
           </button>
+
+          <ExportButton
+            data={filteredStaff}
+            fileName="danh_sach_nhan_vien"
+            columns={staffExportColumns}
+          />
+
           <button className="btn btn-primary" onClick={handleOpenCreateModal}>
             <Plus size={18} /> Thêm nhân viên mới
           </button>
@@ -136,6 +164,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                   <th style={{ padding: "12px 16px", fontSize: "13px", width: "220px" }}>Họ tên nhân viên</th>
                   <th style={{ padding: "12px 16px", fontSize: "13px", width: "150px" }}>Số điện thoại</th>
                   <th style={{ padding: "12px 16px", fontSize: "13px", width: "200px" }}>Email</th>
+                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "150px" }}>Mật khẩu</th>
                   <th style={{ padding: "12px 16px", fontSize: "13px", width: "150px" }}>Chức vụ</th>
                   <th style={{ padding: "12px 16px", fontSize: "13px", width: "150px", textAlign: "center" }}>Lương cơ bản</th>
                   <th style={{ padding: "12px 16px", fontSize: "13px", minWidth: "220px" }}>Chi nhánh hoạt động</th>
@@ -201,7 +230,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                               </span>
                             </div>
                           )}
-                          <div style={{ flexGrow: 1, minWidth: 0 }}>
+                          <div style={{ flexGrow: 1, minWidth: 0, height: "100%" }}>
                             <ExcelInput
                               value={getInlineValue(item, "name") as string}
                               onChange={(val) => handleInlineChange(item.id, "name", val)}
@@ -226,6 +255,16 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           value={getInlineValue(item, "email") as string}
                           onChange={(val) => handleInlineChange(item.id, "email", val)}
                           onBlur={() => handleAutoSave(item.id, { email: getInlineValue(item, "email") as string })}
+                          disabled={isSelfAdmin}
+                        />
+                      </td>
+
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                        <ExcelInput
+                          type="password"
+                          value={getInlineValue(item, "password") as string || ""}
+                          onChange={(val) => handleInlineChange(item.id, "password", val)}
+                          onBlur={() => handleAutoSave(item.id, { password: getInlineValue(item, "password") as string })}
                           disabled={isSelfAdmin}
                         />
                       </td>

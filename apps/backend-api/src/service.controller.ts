@@ -23,7 +23,7 @@ export class ServiceController {
         ];
       }
 
-      return await prisma.service.findMany({
+      const services = await prisma.service.findMany({
         where: whereClause,
         include: {
           category: true
@@ -32,6 +32,11 @@ export class ServiceController {
           createdAt: "desc"
         }
       });
+
+      return services.map((s) => ({
+        ...s,
+        discountPrice: Number(s.price) - Number(s.discountAmount || 0)
+      }));
     } catch (error) {
       throw new HttpException(
         `Failed to fetch services: ${(error as any).message}`,
@@ -59,7 +64,7 @@ export class ServiceController {
         ];
       }
 
-      return await prisma.servicePackage.findMany({
+      const packages = await prisma.servicePackage.findMany({
         where: whereClause,
         include: {
           details: {
@@ -72,6 +77,18 @@ export class ServiceController {
           createdAt: "desc"
         }
       });
+
+      return packages.map((pkg) => ({
+        ...pkg,
+        discountPrice: Number(pkg.price) - Number(pkg.discountAmount || 0),
+        details: pkg.details.map((detail) => ({
+          ...detail,
+          service: detail.service ? {
+            ...detail.service,
+            discountPrice: Number(detail.service.price) - Number(detail.service.discountAmount || 0)
+          } : null
+        }))
+      }));
     } catch (error) {
       throw new HttpException(
         `Failed to fetch service packages: ${(error as any).message}`,
@@ -104,9 +121,8 @@ export class ServiceController {
 
       const price = body.price || 0;
       const discountAmount = body.discountAmount ?? (body.discountPrice !== undefined && body.discountPrice !== null ? (price - body.discountPrice) : 0);
-      const discountPrice = body.discountPrice ?? (price - discountAmount);
 
-      return await prisma.service.create({
+      const created = await prisma.service.create({
         data: {
           tenantId,
           branchId: body.branchId || null,
@@ -114,7 +130,6 @@ export class ServiceController {
           serviceCategory: body.serviceCategory || null,
           categoryId: body.categoryId || null,
           price: price,
-          discountPrice: discountPrice,
           discountAmount: discountAmount,
           additionalPrices: body.additionalPrices ? body.additionalPrices.map(Number) : [],
           duration: body.duration || null,
@@ -124,6 +139,11 @@ export class ServiceController {
           category: true
         }
       });
+
+      return {
+        ...created,
+        discountPrice: Number(created.price) - Number(created.discountAmount || 0)
+      };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
@@ -167,9 +187,8 @@ export class ServiceController {
 
       const price = body.price || 0;
       const discountAmount = body.discountAmount ?? (body.discountPrice !== undefined && body.discountPrice !== null ? (price - body.discountPrice) : 0);
-      const discountPrice = body.discountPrice ?? (price - discountAmount);
 
-      return await prisma.service.update({
+      const updated = await prisma.service.update({
         where: { id },
         data: {
           name: body.name,
@@ -177,7 +196,6 @@ export class ServiceController {
           serviceCategory: body.serviceCategory ?? null,
           categoryId: body.categoryId ?? null,
           price: price,
-          discountPrice: discountPrice,
           discountAmount: discountAmount,
           additionalPrices: body.additionalPrices ? body.additionalPrices.map(Number) : undefined,
           duration: body.duration || null,
@@ -188,6 +206,11 @@ export class ServiceController {
           category: true
         }
       });
+
+      return {
+        ...updated,
+        discountPrice: Number(updated.price) - Number(updated.discountAmount || 0)
+      };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
