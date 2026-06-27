@@ -21,6 +21,8 @@ import Shifts from "../pages/desktop/Shifts";
 import Invoices from "../pages/desktop/Invoices";
 import Customers from "../pages/desktop/Customers";
 import Appointments from "../pages/desktop/Appointments";
+import Payroll from "../pages/desktop/Payroll";
+import AttendanceCalendar from "../pages/desktop/AttendanceCalendar";
 
 // Mobile Pages
 import Schedule from "../pages/mobile/Schedule";
@@ -142,8 +144,16 @@ export default function AdaptiveRouter() {
             element={hasPermission("staff.view") ? <StaffManagement /> : <Navigate to="/" replace />} 
           />
           <Route 
+            path="/payroll" 
+            element={hasPermission("staff.view") ? <Payroll /> : <Navigate to="/" replace />} 
+          />
+          <Route 
             path="/shifts" 
             element={hasPermission("shift.view") ? <Shifts /> : <Navigate to="/" replace />} 
+          />
+          <Route 
+            path="/attendance" 
+            element={hasPermission("shift.view") ? <AttendanceCalendar /> : <Navigate to="/" replace />} 
           />
           <Route 
             path="/reports" 

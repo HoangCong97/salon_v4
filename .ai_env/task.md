@@ -75,15 +75,15 @@ Tài liệu này chia nhỏ toàn bộ các chức năng màn hình và nghiệp
 
 ## 📱 PHẦN 4: PHÁT TRIỂN SITE KHÁCH HÀNG (CUSTOMER PORTAL)
 
-### [ ] MODULE 11: SITE KHÁCH HÀNG ĐẶT LỊCH (apps/customer-booking)
-- [ ] **Task 11.1**: Xây dựng trang Landing Page (Next.js SSR): Tìm kiếm chi nhánh gần nhất, hiển thị thông tin giới thiệu salon, hình ảnh thực tế.
-- [ ] **Task 11.2**: Quy trình đặt lịch trực tuyến 4 bước: 
+### [x] MODULE 11: SITE KHÁCH HÀNG ĐẶT LỊCH (apps/customer-booking)
+- [x] **Task 11.1**: Xây dựng trang Landing Page (Next.js SSR): Tìm kiếm chi nhánh gần nhất, hiển thị thông tin giới thiệu salon, hình ảnh thực tế.
+- [x] **Task 11.2**: Quy trình đặt lịch trực tuyến 4 bước: 
   - Bước 1: Chọn dịch vụ (hoặc gói liệu trình).
   - Bước 2: Chọn kỹ thuật viên mong muốn (hoặc ngẫu nhiên).
   - Bước 3: Chọn ngày & khung giờ trống.
   - Bước 4: Xác nhận thông tin và tạo lịch hẹn (PENDING).
-- [ ] **Task 11.3**: Trang Hồ sơ cá nhân (Profile): Quản lý điểm tích lũy, hạng thành viên, danh sách thẻ dịch vụ đang sở hữu (số buổi còn lại), lịch sử đặt lịch.
-- [ ] **Task 11.4**: Đánh giá & Phản hồi (Reviews): Form gửi đánh giá 1-5 sao và bình luận chất lượng phục vụ cho lịch hẹn đã hoàn thành.
+- [x] **Task 11.3**: Trang Hồ sơ cá nhân (Profile): Quản lý điểm tích lũy, hạng thành viên, danh sách thẻ dịch vụ đang sở hữu (số buổi còn lại), lịch sử đặt lịch.
+- [x] **Task 11.4**: Đánh giá & Phản hồi (Reviews): Form gửi đánh giá 1-5 sao và bình luận chất lượng phục vụ cho lịch hẹn đã hoàn thành.
 
 ---
 

@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuthStore, SubscriptionData } from "../../store/useAuthStore";
-import { LayoutDashboard, Store, Users, BarChart3, MapPin, Layers, Package, CalendarDays, Receipt, Contact, CalendarClock, Crown, Sparkles, Award } from "lucide-react";
+import { LayoutDashboard, Store, Users, BarChart3, MapPin, Layers, Package, CalendarDays, Receipt, Contact, CalendarClock, Crown, Sparkles, Award, Coins } from "lucide-react";
 import { Tooltip } from "./Tooltip";
 
 interface SidebarProps {
@@ -170,7 +170,9 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
     { path: "/services", label: "Danh mục dịch vụ", icon: Layers, permission: "service.view" },
     { path: "/inventories", label: "Quản lý kho hàng", icon: Package, permission: "inventory.view" },
     { path: "/staff", label: "Nhân sự", icon: Users, permission: "staff.view" },
+    { path: "/payroll", label: "Bảng lương", icon: Coins, permission: "staff.view" },
     { path: "/shifts", label: "Lịch trực ca", icon: CalendarDays, permission: "shift.view" },
+    { path: "/attendance", label: "Lịch điểm danh & Ứng tiền", icon: CalendarDays, permission: "shift.view" },
     { path: "/reports", label: "Báo cáo", icon: BarChart3, permission: "report.view" },
     { path: "/branches", label: "Cơ sở & Chi nhánh", icon: MapPin, permission: "branch.view" },
   ];

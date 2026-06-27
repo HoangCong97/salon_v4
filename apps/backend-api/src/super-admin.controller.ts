@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, HttpStatus, HttpException } from "@nestjs/common";
+import { Controller, Get, Post, Put, Delete, Body, Param, HttpStatus, HttpException } from "@nestjs/common";
 import { prisma } from "@salon/database";
 
 @Controller("api/super-admin")
@@ -382,6 +382,88 @@ export class SuperAdminController {
       };
     } catch (error) {
       throw new HttpException(`Failed to approve invoice: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // 10. UPDATE TENANT DETAILS
+  @Put("tenants/:id")
+  async updateTenant(
+    @Param("id") id: string,
+    @Body() body: { name: string; owner: string; phone: string; email: string; address: string }
+  ) {
+    try {
+      const updated = await prisma.tenant.update({
+        where: { id },
+        data: {
+          name: body.name,
+          ownerName: body.owner,
+          phone: body.phone,
+          email: body.email,
+          address: body.address,
+          updatedAt: new Date()
+        },
+        include: {
+          plan: true,
+          _count: {
+            select: { branches: true }
+          }
+        }
+      });
+
+      return {
+        id: updated.id,
+        name: updated.name,
+        owner: updated.ownerName || "Chưa thiết lập",
+        phone: updated.phone || "",
+        email: updated.email || "",
+        address: updated.address || "",
+        status: updated.status,
+        plan: updated.plan ? updated.plan.code : "FREE",
+        branchesCount: updated._count.branches,
+        createdAt: updated.createdAt.toISOString()
+      };
+    } catch (error) {
+      throw new HttpException(`Failed to update tenant: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // 11. DELETE TENANT (SOFT DELETE)
+  @Delete("tenants/:id")
+  async deleteTenant(@Param("id") id: string) {
+    try {
+      await prisma.tenant.update({
+        where: { id },
+        data: {
+          deletedAt: new Date(),
+          updatedAt: new Date()
+        }
+      });
+      return { id };
+    } catch (error) {
+      throw new HttpException(`Failed to delete tenant: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // 12. GET INVOICES FOR A TENANT
+  @Get("tenants/:id/invoices")
+  async getTenantInvoices(@Param("id") id: string) {
+    try {
+      const invoicesList = await prisma.saasInvoice.findMany({
+        where: { tenantId: id, deletedAt: null },
+        include: { plan: true },
+        orderBy: { createdAt: "desc" }
+      });
+      return invoicesList.map((inv: any) => ({
+        id: inv.invoiceNumber,
+        dbId: inv.id,
+        planName: inv.plan ? inv.plan.name : "Free",
+        amount: Number(inv.amount),
+        date: inv.createdAt.toISOString(),
+        status: inv.paymentStatus,
+        paymentMethod: inv.paymentMethod || "Chưa xác định"
+      }));
+    } catch (error) {
+      throw new HttpException(`Failed to fetch tenant invoices: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

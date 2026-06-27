@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ServiceImportStrategy } from "./strategies/service-import.strategy";
 import { StaffImportStrategy } from "./strategies/staff-import.strategy";
 import { CustomerImportStrategy } from "./strategies/customer-import.strategy";
+import { PayrollImportStrategy } from "./strategies/payroll-import.strategy";
 import { ImportStrategy } from "./interfaces/import-strategy.interface";
 
 @Injectable()
@@ -12,12 +13,14 @@ export class ImportEngineService {
   constructor(
     private readonly serviceImportStrategy: ServiceImportStrategy,
     private readonly staffImportStrategy: StaffImportStrategy,
-    private readonly customerImportStrategy: CustomerImportStrategy
+    private readonly customerImportStrategy: CustomerImportStrategy,
+    private readonly payrollImportStrategy: PayrollImportStrategy
   ) {
     // Register available strategies
     this.strategies.set("service", serviceImportStrategy);
     this.strategies.set("staff", staffImportStrategy);
     this.strategies.set("customer", customerImportStrategy);
+    this.strategies.set("payroll", payrollImportStrategy);
   }
 
   /**
@@ -123,17 +126,23 @@ Instructions:
 
     // Map common synonyms (Vietnamese)
     const synonyms: Record<string, string[]> = {
-      name: ["ten", "hoten", "tennhanvien", "tennv", "name", "fullname", "tendichvu", "tensanpham", "tenhanghoa", "dichvu", "sanpham", "title"],
+      name: ["ten", "hoten", "tennhanvien", "tennv", "name", "fullname", "tendichvu", "tensanpham", "tenhanghoa", "dichvu", "sanpham", "title", "nhanvien", "staffname"],
       price: ["gia", "giaban", "dongia", "giagoc", "price", "rate"],
       discountPrice: ["giakm", "giakhuyenmai", "giadasautrung", "giadasaukhuyenmai", "promo", "promoprice"],
       discountAmount: ["giamgia", "mucgiam", "tiengiam", "chietkhau", "discount", "deduction"],
       duration: ["thoiluong", "duration", "sophut", "phut", "thoigian", "mins", "minutes"],
       categoryName: ["nhom", "phankhoa", "phanloai", "nhomdichvu", "category", "group"],
       email: ["email", "thudientu", "thudientu", "mail"],
-      phone: ["sodt", "sodienthoai", "phone", "dienthoai", "tel", "contact"],
+      phone: ["sodt", "sodienthoai", "phone", "dienthoai", "tel", "contact", "sdt", "staffphone"],
       sex: ["gioitinh", "sex", "gender", "phai"],
       baseSalary: ["luongcoban", "luong", "salary", "basesalary", "mucluong", "tienluong"],
-      roleName: ["chucvu", "role", "rolename", "vitri", "chucdanh", "nhomquyen"]
+      roleName: ["chucvu", "role", "rolename", "vitri", "chucdanh", "nhomquyen"],
+      allowance: ["phucap", "trocap", "allowance", "phucapkhac"],
+      commissionAmount: ["hoahong", "commission", "tienhoahong", "hoahongnhanvien"],
+      tipAmount: ["tip", "tientip", "bot", "tienbot", "tips"],
+      deductionAmount: ["khautru", "deduction", "truluong", "phat", "tientru"],
+      finalSalary: ["thucnhan", "thuclethuan", "luongthucnhan", "finalsalary", "thucnhanluong"],
+      salaryPeriod: ["chu-ky-luong", "chukyluong", "period", "thang", "salaryperiod", "chuky"]
     };
 
     for (const header of fileHeaders) {

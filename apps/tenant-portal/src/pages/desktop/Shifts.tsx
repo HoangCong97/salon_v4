@@ -368,29 +368,45 @@ export default function Shifts() {
   return (
     <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       
-      {/* Top Header Section */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "40px", height: "40px", backgroundColor: "var(--color-primary-light)", color: "var(--color-primary)", borderRadius: "var(--radius-md)" }}>
-            <CalendarRange size={22} />
+      {/* Time Navigation Bar & Actions Card */}
+      <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 20px", flexWrap: "wrap", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "6px" }}>
+            <button className="btn btn-secondary" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={handlePrevWeek}>
+              <ChevronLeft size={16} /> Tuần trước
+            </button>
+            <button className="btn btn-secondary" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={handleCurrentWeek}>
+              Tuần này
+            </button>
+            <button className="btn btn-secondary" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={handleNextWeek}>
+              Tuần sau <ChevronRight size={16} />
+            </button>
           </div>
-          <div>
-            <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Lịch ca trực tuần nhân viên</h2>
-            <p style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
-              Chi nhánh: <strong>{currentBranchName}</strong>
-            </p>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600", fontSize: "14px", color: "var(--color-primary)" }}>
+            <CalendarDays size={18} />
+            <span>
+              {weekDates[0].getDate()}/{weekDates[0].getMonth() + 1} - {weekDates[6].getDate()}/{weekDates[6].getMonth() + 1}/{weekDates[6].getFullYear()}
+            </span>
           </div>
+
+          {hasLocalChanges && (
+            <span style={{ fontSize: "12px", color: "var(--color-warning)", fontWeight: "600", display: "flex", alignItems: "center", gap: "4px" }}>
+              <Info size={14} /> Có lịch chưa lưu
+            </span>
+          )}
         </div>
 
         {/* Action Controls */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <Tooltip content="Sao chép toàn bộ lịch trực tuần trước sang tuần này" position="top">
             <button 
               className="btn btn-secondary" 
               onClick={handleCopyLastWeek}
               disabled={loading || saving}
+              style={{ padding: "8px 12px", fontSize: "13px" }}
             >
-              <Copy size={16} /> Sao chép tuần trước
+              <Copy size={15} /> Sao chép tuần trước
             </button>
           </Tooltip>
           
@@ -398,47 +414,19 @@ export default function Shifts() {
             className="btn btn-primary" 
             onClick={handleSaveShifts}
             disabled={saving || loading || !hasLocalChanges}
-            style={{ minWidth: "140px" }}
+            style={{ minWidth: "130px", padding: "8px 12px", fontSize: "13px" }}
           >
             {saving ? (
               <>
-                <Loader2 className="animate-spin" size={16} /> Đang lưu...
+                <Loader2 className="animate-spin" size={15} /> Đang lưu...
               </>
             ) : (
               <>
-                <Save size={16} /> Lưu lịch trực
+                <Save size={15} /> Lưu lịch trực
               </>
             )}
           </button>
         </div>
-      </div>
-
-      {/* Time Navigation Bar */}
-      <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 20px" }}>
-        <div style={{ display: "flex", gap: "6px" }}>
-          <button className="btn btn-secondary" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={handlePrevWeek}>
-            <ChevronLeft size={16} /> Tuần trước
-          </button>
-          <button className="btn btn-secondary" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={handleCurrentWeek}>
-            Tuần này
-          </button>
-          <button className="btn btn-secondary" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={handleNextWeek}>
-            Tuần sau <ChevronRight size={16} />
-          </button>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600", fontSize: "15px", color: "var(--color-primary)" }}>
-          <CalendarDays size={18} />
-          <span>
-            {weekDates[0].getDate()}/{weekDates[0].getMonth() + 1} - {weekDates[6].getDate()}/{weekDates[6].getMonth() + 1}/{weekDates[6].getFullYear()}
-          </span>
-        </div>
-
-        {hasLocalChanges && (
-          <span style={{ fontSize: "12px", color: "var(--color-warning)", fontWeight: "600", display: "flex", alignItems: "center", gap: "4px" }}>
-            <Info size={14} /> Có lịch chưa lưu
-          </span>
-        )}
       </div>
 
       {/* Main Grid Table */}

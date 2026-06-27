@@ -4,6 +4,7 @@ import { ImportEngineService } from "./import-engine.service";
 import { ServiceImportStrategy } from "./strategies/service-import.strategy";
 import { StaffImportStrategy } from "./strategies/staff-import.strategy";
 import { CustomerImportStrategy } from "./strategies/customer-import.strategy";
+import { PayrollImportStrategy } from "./strategies/payroll-import.strategy";
 
 @Module({
   controllers: [ImportEngineController],
@@ -11,7 +12,8 @@ import { CustomerImportStrategy } from "./strategies/customer-import.strategy";
     ImportEngineService,
     ServiceImportStrategy,
     StaffImportStrategy,
-    CustomerImportStrategy
+    CustomerImportStrategy,
+    PayrollImportStrategy
   ],
   exports: [ImportEngineService]
 })

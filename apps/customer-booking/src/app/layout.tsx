@@ -1,4 +1,14 @@
 import React from "react";
+import "./globals.css";
+import Navigation from "./components/Navigation";
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
 
 export const metadata = {
   title: "Đặt lịch Salon Trực tuyến",
@@ -12,7 +22,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi">
-      <body style={{ margin: 0, fontFamily: "sans-serif" }}>{children}</body>
+      <body>
+        <div className="app-shell">
+          {children}
+          <Navigation />
+        </div>
+      </body>
     </html>
   );
 }

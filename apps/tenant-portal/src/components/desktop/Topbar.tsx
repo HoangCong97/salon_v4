@@ -51,6 +51,21 @@ export default function Topbar() {
           title: "Lịch sử hoá đơn",
           description: "Thống kê doanh số theo ca, lọc danh sách hóa đơn theo ngày, thợ gán lượt, khách hàng và nguồn đơn."
         };
+      case "/payroll":
+        return {
+          title: "Bảng lương nhân viên",
+          description: "Quản lý chi trả lương, phụ cấp, hoa hồng và khấu trừ tạm ứng hàng tháng."
+        };
+      case "/shifts":
+        return {
+          title: "Lịch ca trực tuần nhân viên",
+          description: "Xếp ca trực tuần cho nhân sự và điều hành lịch trực chi nhánh."
+        };
+      case "/attendance":
+        return {
+          title: "Lịch điểm danh & Ứng tiền",
+          description: "Thống kê những ngày làm việc bất thường (vắng, muộn) và các phiếu tạm ứng lương."
+        };
       default:
         return {
           title: "Hệ thống Quản lý Salon",
