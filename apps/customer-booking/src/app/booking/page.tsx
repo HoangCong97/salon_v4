@@ -346,7 +346,7 @@ function BookingWizard() {
                   >
                     <div>
                       <h4 style={{ fontSize: "0.9rem", fontWeight: "600", color: "var(--text-main)", marginBottom: "4px" }}>{s.name}</h4>
-                      <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>⏱️ {s.duration} phút</span>
+                      <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Thời gian: {s.duration} phút</span>
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontSize: "0.95rem", fontWeight: "700", color: "var(--text-main)" }}>
@@ -449,11 +449,12 @@ function BookingWizard() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "1.5rem",
-                color: "#05070a"
+                fontSize: "0.8rem",
+                fontWeight: "700",
+                color: "#ffffff"
               }}
             >
-              ⭐
+              AUTO
             </div>
             <div>
               <h4 style={{ fontSize: "0.95rem", color: "var(--text-main)" }}>Kỹ thuật viên bất kỳ</h4>
@@ -581,7 +582,7 @@ function BookingWizard() {
           <h2 style={{ fontSize: "1.2rem", marginBottom: "16px", color: "var(--text-main)" }}>Bước 4: Nhập Thông Tin Đặt Lịch</h2>
 
           {/* Booking Summary Box */}
-          <div className="card" style={{ background: "rgba(255,255,255,0.02)", marginBottom: "20px" }}>
+          <div className="card" style={{ background: "var(--bg-card)", marginBottom: "20px" }}>
             <h3 style={{ fontSize: "0.95rem", color: "var(--primary)", borderBottom: "1px solid var(--border-color)", paddingBottom: "8px", marginBottom: "10px" }}>
               Tóm tắt lịch hẹn
             </h3>
@@ -663,7 +664,7 @@ function BookingWizard() {
 
             {errorMsg && (
               <div style={{ color: "var(--danger)", fontSize: "0.85rem", marginBottom: "16px", textAlign: "center" }}>
-                ⚠️ {errorMsg}
+                {errorMsg}
               </div>
             )}
 
@@ -693,7 +694,7 @@ function BookingWizard() {
             Mã đặt lịch của bạn đã được khởi tạo ở trạng thái Chờ xác nhận (PENDING).
           </p>
 
-          <div className="card" style={{ textAlign: "left", background: "rgba(16,185,129,0.03)", border: "1px solid rgba(16,185,129,0.2)", fontSize: "0.85rem", marginBottom: "24px" }}>
+          <div className="card" style={{ textAlign: "left", background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.3)", fontSize: "0.85rem", marginBottom: "24px" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               <div><strong style={{ color: "var(--text-muted)" }}>Khách hàng:</strong> {successDetails.customer.name} ({successDetails.customer.phone})</div>
               <div><strong style={{ color: "var(--text-muted)" }}>Chi nhánh:</strong> {successDetails.branchName}</div>

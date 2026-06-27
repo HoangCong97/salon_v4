@@ -121,11 +121,11 @@ function ReviewFormContent() {
                 ))}
               </div>
               <div style={{ textAlign: "center", fontSize: "0.85rem", color: "var(--primary)", fontWeight: "600", marginBottom: "20px" }}>
-                {rating === 5 ? "Rất hài lòng 😍" : ""}
-                {rating === 4 ? "Hài lòng 😊" : ""}
-                {rating === 3 ? "Bình thường 🙂" : ""}
-                {rating === 2 ? "Không hài lòng 🙁" : ""}
-                {rating === 1 ? "Rất tệ 😡" : ""}
+                {rating === 5 ? "Rất hài lòng" : ""}
+                {rating === 4 ? "Hài lòng" : ""}
+                {rating === 3 ? "Bình thường" : ""}
+                {rating === 2 ? "Chưa hài lòng" : ""}
+                {rating === 1 ? "Không hài lòng" : ""}
               </div>
 
               {/* Comment field */}

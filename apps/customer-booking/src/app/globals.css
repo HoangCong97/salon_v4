@@ -2,22 +2,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Premium Dark Theme Color Tokens */
-  --bg-main: #090d16;
-  --bg-card: rgba(18, 26, 47, 0.6);
-  --bg-input: rgba(10, 15, 30, 0.8);
+  /* Premium Light Theme Color Tokens */
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-input: #f1f5f9;
   
-  --primary: #f59e0b; /* Golden Amber */
-  --primary-glow: rgba(245, 158, 11, 0.15);
+  --primary: #d97706; /* Golden Amber - slightly darker for contrast on white background */
+  --primary-glow: rgba(217, 119, 6, 0.1);
   --primary-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  --secondary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  --secondary-gradient: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
   
-  --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
-  --text-disabled: #4b5563;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-disabled: #94a3b8;
   
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-active: rgba(245, 158, 11, 0.5);
+  --border-color: #e2e8f0;
+  --border-active: rgba(217, 119, 6, 0.4);
   
   --success: #10b981;
   --danger: #ef4444;
@@ -38,7 +38,7 @@
 }
 
 body {
-  background-color: #05070a;
+  background-color: #f1f5f9;
   color: var(--text-main);
   font-family: var(--font-body);
   display: flex;
@@ -53,7 +53,7 @@ body {
   max-width: 480px;
   min-height: 100vh;
   background-color: var(--bg-main);
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.05);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -76,7 +76,7 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
   max-width: 480px;
   height: calc(64px + var(--safe-bottom));
-  background: rgba(10, 15, 30, 0.85);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(var(--glass-blur));
   border-top: 1px solid var(--border-color);
   display: flex;
@@ -91,7 +91,7 @@ h1, h2, h3, h4, h5, h6 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted);
+  color: var(--text-disabled);
   text-decoration: none;
   font-size: 0.75rem;
   font-weight: 500;
@@ -102,7 +102,6 @@ h1, h2, h3, h4, h5, h6 {
 
 .bottom-nav-item.active {
   color: var(--primary);
-  text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
 }
 
 .bottom-nav-icon {
@@ -117,7 +116,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .header {
   padding: 20px 16px;
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, rgba(0,0,0,0) 100%);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.04) 0%, rgba(0,0,0,0) 100%);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -140,11 +139,11 @@ h1, h2, h3, h4, h5, h6 {
 /* Card layout styling */
 .card {
   background: var(--bg-card);
-  backdrop-filter: blur(8px);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 16px;
   margin-bottom: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
@@ -154,8 +153,8 @@ h1, h2, h3, h4, h5, h6 {
 
 .card.selected {
   border-color: var(--primary);
-  background: rgba(245, 158, 11, 0.04);
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.08);
+  background: rgba(217, 119, 6, 0.03);
+  box-shadow: 0 0 15px rgba(217, 119, 6, 0.05);
 }
 
 /* Inputs & Form controls */
@@ -186,7 +185,8 @@ h1, h2, h3, h4, h5, h6 {
 
 .input-field:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
+  background: var(--bg-card);
+  box-shadow: 0 0 10px rgba(217, 119, 6, 0.1);
 }
 
 /* Primary/Secondary Buttons */
@@ -204,32 +204,32 @@ h1, h2, h3, h4, h5, h6 {
   gap: 8px;
   transition: all 0.2s ease;
   font-family: var(--font-title);
-  color: #05070a;
 }
 
 .btn-primary {
   background: var(--primary-gradient);
-  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
 }
 
 .btn-primary:active {
-  transform: translateY(2px);
-  box-shadow: 0 2px 5px rgba(245, 158, 11, 0.3);
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.2);
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
+  background: #f8fafc;
   color: var(--text-main);
   border: 1px solid var(--border-color);
 }
 
 .btn-secondary:active {
-  background: rgba(255, 255, 255, 0.12);
+  background: #f1f5f9;
 }
 
 .btn:disabled {
-  background: var(--text-disabled);
-  color: var(--text-muted);
+  background: #e2e8f0;
+  color: var(--text-disabled);
   box-shadow: none;
   cursor: not-allowed;
   transform: none;
@@ -324,7 +324,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .slot-item {
-  background: rgba(255, 255, 255, 0.03);
+  background: #f1f5f9;
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 10px;
@@ -341,7 +341,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .slot-item.selected {
   background: var(--primary);
-  color: #05070a;
+  color: #ffffff;
   border-color: var(--primary);
   box-shadow: 0 0 10px var(--primary-glow);
 }
@@ -370,7 +370,7 @@ h1, h2, h3, h4, h5, h6 {
   flex: 0 0 60px;
   height: 80px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
+  background: #f1f5f9;
   border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
@@ -383,7 +383,7 @@ h1, h2, h3, h4, h5, h6 {
 .calendar-day.selected {
   background: var(--primary-gradient);
   border-color: var(--primary);
-  color: #05070a;
+  color: #ffffff;
 }
 
 .calendar-weekday {

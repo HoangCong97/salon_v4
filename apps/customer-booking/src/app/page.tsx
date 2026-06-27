@@ -163,16 +163,16 @@ export default function Home() {
           </p>
           <div style={{ display: "flex", gap: "16px", marginTop: "16px" }}>
             <div style={{ flex: 1, textAlign: "center" }}>
-              <div style={{ fontSize: "1.5rem", marginBottom: "4px" }}>✂️</div>
-              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Chuyên Nghiệp</div>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)', margin: '0 auto 8px', display: 'block' }}><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "500" }}>Chuyên Nghiệp</div>
             </div>
             <div style={{ flex: 1, textAlign: "center" }}>
-              <div style={{ fontSize: "1.5rem", marginBottom: "4px" }}>💎</div>
-              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Premium Spa</div>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)', margin: '0 auto 8px', display: 'block' }}><path d="M6 3h12l4 6-10 13L2 9z"></path><path d="M11 3 8 9l3 13h2l3-13-3-6z"></path><path d="M2 9h20"></path></svg>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "500" }}>Premium Spa</div>
             </div>
             <div style={{ flex: 1, textAlign: "center" }}>
-              <div style={{ fontSize: "1.5rem", marginBottom: "4px" }}>✨</div>
-              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Ưu Đãi Lớn</div>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--primary)', margin: '0 auto 8px', display: 'block' }}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: "500" }}>Ưu Đãi Lớn</div>
             </div>
           </div>
         </div>
@@ -181,7 +181,7 @@ export default function Home() {
         {selectedTenant && (
           <Link href={`/booking?tenantId=${selectedTenant.id}`} style={{ textDecoration: "none", display: "block", marginBottom: "28px" }}>
             <button className="btn btn-primary">
-              <span>📅 Đặt Lịch Hẹn Ngay</span>
+              <span>Đặt Lịch Hẹn Ngay</span>
             </button>
           </Link>
         )}
@@ -212,8 +212,8 @@ export default function Home() {
               <div key={b.id} className="card" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 <div>
                   <h3 style={{ fontSize: "1rem", color: "var(--text-main)", marginBottom: "4px" }}>{b.name}</h3>
-                  <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "6px" }}>📍 {b.address}</p>
-                  <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>📞 {b.phone}</p>
+                  <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "6px" }}>Địa chỉ: {b.address}</p>
+                  <p style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>Điện thoại: {b.phone}</p>
                 </div>
                 <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "10px", marginTop: "4px", display: "flex", justifyContent: "flex-end" }}>
                   <Link href={`/booking?tenantId=${b.tenantId}&branchId=${b.id}`} style={{ textDecoration: "none" }}>

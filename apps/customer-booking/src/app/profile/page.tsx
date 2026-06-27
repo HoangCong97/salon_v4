@@ -174,7 +174,7 @@ function ProfileContent() {
               
               {errorMsg && (
                 <div style={{ color: "var(--danger)", fontSize: "0.85rem", marginBottom: "16px", textAlign: "center" }}>
-                  ⚠️ {errorMsg}
+                  {errorMsg}
                 </div>
               )}
 
@@ -204,7 +204,7 @@ function ProfileContent() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
               <div>
                 <h2 style={{ fontSize: "1.2rem", fontWeight: "700", marginBottom: "4px" }}>{profile.name}</h2>
-                <p style={{ fontSize: "0.8rem", opacity: 0.8 }}>📞 {profile.phone}</p>
+                <p style={{ fontSize: "0.8rem", opacity: 0.8 }}>SĐT: {profile.phone}</p>
               </div>
               <span className="badge badge-pending" style={{ background: "rgba(255,255,255,0.15)", color: "#fff", border: "1px solid rgba(255,255,255,0.25)" }}>
                 {profile.membershipTier}
@@ -259,7 +259,7 @@ function ProfileContent() {
                       {translateStatus(item.status)}
                     </span>
                     <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                      📅 {item.date} lúc {item.time}
+                      Ngày: {item.date} lúc {item.time}
                     </span>
                   </div>
 
@@ -268,7 +268,7 @@ function ProfileContent() {
                       {item.serviceName}
                     </h4>
                     <p style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                      📍 {item.branchName} • 👤 Thợ: {item.staffName}
+                      Chi nhánh: {item.branchName} • KTV: {item.staffName}
                     </p>
                   </div>
 
@@ -289,7 +289,7 @@ function ProfileContent() {
                               borderRadius: "8px"
                             }}
                           >
-                            Đánh giá chất lượng ⭐️
+                            Đánh giá chất lượng
                           </button>
                         </Link>
                       )}
@@ -305,7 +305,7 @@ function ProfileContent() {
           </div>
 
           <button onClick={handleLogout} className="btn btn-secondary" style={{ marginTop: "16px" }}>
-            🚪 Thoát tài khoản
+            Đăng xuất
           </button>
         </div>
       )}
