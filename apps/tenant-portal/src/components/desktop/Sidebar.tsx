@@ -14,16 +14,16 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
 
   const menuItems = [
     { path: "/", label: "Tổng quan", icon: LayoutDashboard, roles: ["ADMIN", "MANAGER", "CASHIER"] },
+    { path: "/appointments",  label: "Lịch hẹn",            icon: CalendarClock, roles: ["ADMIN", "MANAGER", "CASHIER"] },
     { path: "/pos", label: "Bán hàng POS", icon: Store, roles: ["ADMIN", "MANAGER", "CASHIER"] },
     { path: "/invoices", label: "Lịch sử hóa đơn", icon: Receipt, roles: ["ADMIN", "MANAGER", "CASHIER"] },
     { path: "/customers",     label: "Khách hàng",          icon: Contact,       roles: ["ADMIN", "MANAGER", "CASHIER"] },
-    { path: "/appointments",  label: "Lịch hẹn",            icon: CalendarClock, roles: ["ADMIN", "MANAGER", "CASHIER"] },
-    { path: "/branches", label: "Cơ sở & Chi nhánh", icon: MapPin, roles: ["ADMIN", "MANAGER"] },
     { path: "/services", label: "Danh mục dịch vụ", icon: Layers, roles: ["ADMIN", "MANAGER"] },
     { path: "/inventories", label: "Quản lý kho hàng", icon: Package, roles: ["ADMIN", "MANAGER"] },
     { path: "/staff", label: "Nhân sự", icon: Users, roles: ["ADMIN", "MANAGER"] },
     { path: "/shifts", label: "Lịch trực ca", icon: CalendarDays, roles: ["ADMIN", "MANAGER"] },
     { path: "/reports", label: "Báo cáo", icon: BarChart3, roles: ["ADMIN", "MANAGER"] },
+    { path: "/branches", label: "Cơ sở & Chi nhánh", icon: MapPin, roles: ["ADMIN", "MANAGER"] },
   ];
 
   const allowedItems = menuItems.filter(item =>

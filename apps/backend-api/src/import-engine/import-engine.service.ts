@@ -39,7 +39,7 @@ export class ImportEngineService {
     const apiKey = process.env.AI_API_KEY;
     const baseUrl = process.env.AI_BASE_URL || "https://api.deepseek.com/v1";
     const model = process.env.AI_MODEL || "deepseek-chat";
-
+    console.log("analyzeMapping");
     if (!apiKey) {
       this.logger.warn("AI_API_KEY is not defined in environment. Falling back to local semantic matching.");
       return this.fallbackMatching(fileHeaders, targetSchema);
@@ -118,7 +118,7 @@ Instructions:
   ): { mappings: Array<{ fileHeader: string; targetField: string; confidence: number }>; unmapped: string[] } {
     const mappings: Array<{ fileHeader: string; targetField: string; confidence: number }> = [];
     const mappedTargets = new Set<string>();
-
+    console.log("fallbackMatching");
     const clean = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, "").trim();
 
     // Map common synonyms (Vietnamese)

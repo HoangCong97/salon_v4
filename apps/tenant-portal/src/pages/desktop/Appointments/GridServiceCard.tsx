@@ -156,7 +156,7 @@ export function GridServiceCard({
               </span>
             </div>
             <div style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {item.customerName}
+              {item.customerName}{height < 70 && <span style={{ fontWeight: 500, color: "#475569" }}> · {item.service.name}</span>}
             </div>
             {height >= 70 && (
               <div style={{ fontSize: 10, color: "#475569", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -178,10 +178,10 @@ export function GridServiceCard({
           onMouseDown={handleResizeMouseDown}
           style={{
             position: "absolute",
-            bottom: -10,
+            bottom: -8,
             left: 0,
             right: 0,
-            height: 8,
+            height: 10,
             cursor: "ns-resize",
             background: "transparent",
             zIndex: 100,

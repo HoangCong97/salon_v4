@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { X, Check, Loader2 } from "lucide-react";
 import { useImportWizard, TargetField } from "../../../hooks/useImportWizard";
+import * as XLSX from "xlsx";
 import { FileUploader } from "./FileUploader";
 import { ColumnMapper } from "./ColumnMapper";
 import { ImportReport } from "./ImportReport";
@@ -86,6 +87,45 @@ export const ImportWizardModal: React.FC<ImportWizardModalProps> = ({
   const handleFinish = () => {
     onSuccess();
     onClose();
+  };
+
+  const handleDownloadTemplate = () => {
+    try {
+      const headers = targetSchema.map(t => t.label);
+      const worksheet = XLSX.utils.aoa_to_sheet([headers]);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "MauNhapLieu");
+
+      // Add a helpful sample row based on the field types to guide users
+      const sampleRow = targetSchema.map(t => {
+        if (t.field === "name") {
+          return `Ví dụ ${entityLabel} A`;
+        }
+        if (t.type === "number") {
+          if (t.field.toLowerCase().includes("price") || t.field.toLowerCase().includes("amount") || t.field.toLowerCase().includes("salary")) {
+            return 150000;
+          }
+          if (t.field.toLowerCase().includes("duration")) {
+            return 45;
+          }
+          return 1;
+        }
+        if (t.type === "boolean") {
+          return "Có";
+        }
+        if (t.type === "select") {
+          return t.options?.[0]?.label || "";
+        }
+        return "";
+      });
+
+      XLSX.utils.sheet_add_aoa(worksheet, [sampleRow], { origin: "A2" });
+      
+      const cleanLabel = entityLabel.toLowerCase().replace(/\s+/g, "_");
+      XLSX.writeFile(workbook, `mau_nhap_lieu_${cleanLabel}.xlsx`);
+    } catch (err: any) {
+      setError("Không thể tải file mẫu. Vui lòng thử lại hoặc tải lại trang.");
+    }
   };
 
   return (
@@ -232,6 +272,7 @@ export const ImportWizardModal: React.FC<ImportWizardModalProps> = ({
               onFileSelect={handleFileSelect}
               isAnalyzing={isAnalyzing}
               error={error}
+              onDownloadTemplate={handleDownloadTemplate}
             />
           )}
 

@@ -425,17 +425,20 @@ model PackageUsageHistory {
 }
 
 model Booking {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  tenantId   String    @map("tenant_id") @db.Uuid
-  branchId   String    @map("branch_id") @db.Uuid
-  customerId String?   @map("customer_id") @db.Uuid
-  startTime  DateTime  @map("start_time") @db.Timestamptz
-  endTime    DateTime  @map("end_time") @db.Timestamptz
-  status     String    @default("PENDING") @db.VarChar(50)
-  note       String?
-  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  branchId      String    @map("branch_id") @db.Uuid
+  customerId    String?   @map("customer_id") @db.Uuid
+  startTime     DateTime  @map("start_time") @db.Timestamptz
+  endTime       DateTime  @map("end_time") @db.Timestamptz
+  status        String    @default("PENDING") @db.VarChar(50)
+  source        String    @default("WALK_IN") @db.VarChar(50)
+  customerName  String?   @map("customer_name") @db.VarChar(255)
+  customerPhone String?   @map("customer_phone") @db.VarChar(50)
+  note          String?
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz
 
   tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   branch         Branch          @relation(fields: [branchId], references: [id], onDelete: Cascade)
@@ -452,6 +455,9 @@ model BookingDetail {
   bookingId String    @map("booking_id") @db.Uuid
   serviceId String    @map("service_id") @db.Uuid
   staffId   String?   @map("staff_id") @db.Uuid
+  startTime DateTime? @map("start_time") @db.Timestamptz
+  duration  Int?      // Override duration in minutes
+  status    String    @default("PENDING") @db.VarChar(50)
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz

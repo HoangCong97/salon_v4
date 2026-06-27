@@ -72,7 +72,7 @@ export default function StaffManagement() {
   // Dynamic Staff Schema for Import Matcher
   const staffSchema = useMemo<TargetField[]>(() => [
     { field: "name", label: "Tên nhân viên", type: "string", required: true, description: "Họ và tên của nhân viên" },
-    { field: "email", label: "Email", type: "string", required: true, description: "Địa chỉ email duy nhất dùng để đăng nhập" },
+    { field: "email", label: "Email", type: "string", required: true, description: "" },
     { field: "phone", label: "Số điện thoại", type: "string", required: false, description: "Số điện thoại liên hệ" },
     {
       field: "sex",

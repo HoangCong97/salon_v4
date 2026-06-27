@@ -1,16 +1,18 @@
 import React, { useState, useRef } from "react";
-import { Upload, Loader2, FileSpreadsheet, AlertCircle } from "lucide-react";
+import { Upload, Loader2, FileSpreadsheet, AlertCircle, Download } from "lucide-react";
 
 interface FileUploaderProps {
   onFileSelect: (file: File) => void;
   isAnalyzing: boolean;
   error: string | null;
+  onDownloadTemplate?: () => void;
 }
 
 export const FileUploader: React.FC<FileUploaderProps> = ({
   onFileSelect,
   isAnalyzing,
   error,
+  onDownloadTemplate,
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -119,21 +121,29 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
               <h4 style={{ fontWeight: "600", fontSize: "15px", marginBottom: "6px" }}>
                 Kéo thả file bảng tính vào đây
               </h4>
-              <p style={{ color: "var(--text-secondary)", fontSize: "13px", marginBottom: "12px" }}>
+              <p style={{ color: "var(--text-secondary)", fontSize: "13px", marginBottom: "16px" }}>
                 Hỗ trợ định dạng .xlsx, .xls, .csv. Dung lượng tối đa 10MB.
               </p>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: "var(--radius-md)",
-                  fontSize: "13px",
-                  fontWeight: "600",
-                }}
-              >
-                Chọn file từ máy tính
-              </button>
+              <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDownloadTemplate?.();
+                  }}
+                >
+                  <Download size={15} />
+                  Tải file mẫu Excel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                >
+                  Chọn file từ máy tính
+                </button>
+                
+              </div>
             </div>
           </>
         )}

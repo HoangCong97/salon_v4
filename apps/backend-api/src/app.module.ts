@@ -14,6 +14,7 @@ import { InvoiceController } from "./invoice.controller";
 import { TenantSubscriptionController } from "./tenant-subscription.controller";
 import { ImportEngineModule } from "./import-engine/import-engine.module";
 import { CustomerController } from "./customer.controller";
+import { BookingController } from "./booking.controller";
 
 @Module({
   imports: [ImportEngineModule],
@@ -30,7 +31,8 @@ import { CustomerController } from "./customer.controller";
     TurnsController,
     InvoiceController,
     TenantSubscriptionController,
-    CustomerController
+    CustomerController,
+    BookingController
   ],
   providers: [AppService],
 })

@@ -7,31 +7,38 @@ import {
 } from "lucide-react";
 
 import {
-  ViewMode, ServiceItem, AppointmentStatus, AppointmentSource,
+  ViewMode, ServiceItem, AppointmentStatus, AppointmentSource, Staff, AppointmentService,
 } from "./types";
 
 import {
   SLOT_HEIGHT, START_HOUR, END_HOUR, TOTAL_SLOTS, TIME_COL_W, SIDEBAR_W,
-  STATUS_CFG, MOCK_STAFF,
+  STATUS_CFG,
 } from "./constants";
 
 import {
-  todayStr, hashColor, hashBg, hashBorder, timeToSlot, slotToTime,
-  durationSlots, getInitials, fmtDateVN, genMockItems,
+  todayStr, toLocalDateStr, hashColor, hashBg, hashBorder, timeToSlot, slotToTime,
+  durationSlots, getInitials, fmtDateVN,
   getClosestTimeOption
 } from "./helpers";
 
 import { GridServiceCard } from "./GridServiceCard";
 import { ServiceModal } from "./ServiceModal";
 
+// ─── Staff color palette ────────────────────────────────────────────────────────
+const STAFF_COLORS = ["#6366f1","#ec4899","#f59e0b","#10b981","#ef4444","#8b5cf6","#06b6d4","#f97316","#14b8a6","#e11d48"];
+const assignColor = (index: number) => STAFF_COLORS[index % STAFF_COLORS.length];
+
 // ─── Main Component ─────────────────────────────────────────────────────────────
 
 export default function Appointments() {
-  const { currentBranchId } = useAuthStore();
+  const { currentBranchId, currentTenantId } = useAuthStore();
+  const API = `http://localhost:3000/api/tenants/${currentTenantId}`;
 
   const [selectedDate, setSelectedDate] = useState(todayStr());
   const [items, setItems] = useState<ServiceItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [staffList, setStaffList] = useState<Staff[]>([]);
+  const [serviceList, setServiceList] = useState<AppointmentService[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("by-staff");
   const [dragState, setDragState] = useState<any>(null);
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
@@ -71,15 +78,50 @@ export default function Appointments() {
     `${String(Math.floor(nowMins / 60)).padStart(2, "0")}:${String(nowMins % 60).padStart(2, "0")}`,
     [nowMins]);
 
+  // Load staff & services once when tenant/branch changes
   useEffect(() => {
-    setLoading(true);
-    fetch(`http://localhost:3000/api/appointments?date=${selectedDate}&branchId=${currentBranchId}`)
-      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .catch(() => null)
-      .then(data => { setTimeout(() => { setItems(data ?? genMockItems(selectedDate)); setLoading(false); }, data ? 0 : 300); });
-  }, [selectedDate, currentBranchId]);
+    if (!currentTenantId || !currentBranchId) return;
+    // Fetch staff for this branch
+    fetch(`${API}/staff`)
+      .then(r => r.ok ? r.json() : [])
+      .then((data: any[]) => {
+        const mapped: Staff[] = data
+          .filter(s => s.status === "ACTIVE" && s.branches?.some((b: any) => b.id === currentBranchId))
+          .map((s, i) => ({ id: s.id, name: s.name, color: assignColor(i) }));
+        setStaffList(mapped.length > 0 ? mapped : data.filter(s => s.status === "ACTIVE").map((s, i) => ({ id: s.id, name: s.name, color: assignColor(i) })));
+      })
+      .catch(() => setStaffList([]));
+    // Fetch services
+    fetch(`${API}/services?branchId=${currentBranchId}`)
+      .then(r => r.ok ? r.json() : [])
+      .then((data: any[]) => {
+        setServiceList(data.map(s => ({ id: s.id, name: s.name, duration: s.duration ?? 30, price: Number(s.price) })));
+      })
+      .catch(() => setServiceList([]));
+  }, [currentTenantId, currentBranchId]);
 
-  const todayItems = useMemo(() => items.filter(i => i.date === selectedDate), [items, selectedDate]);
+  // Load bookings for selected date
+  useEffect(() => {
+    if (!currentTenantId || !currentBranchId) return;
+    setLoading(true);
+    fetch(`${API}/bookings?branchId=${currentBranchId}&date=${selectedDate}`)
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+      .catch(() => [])
+      .then((data: ServiceItem[]) => {
+        setItems(data);
+        setSelectedCustomer(null);
+        setLoading(false);
+      });
+  }, [selectedDate, currentBranchId, currentTenantId]);
+
+  const _todayItems = useMemo(() => items.filter(i => i.date === selectedDate), [items, selectedDate]);
+
+  // Keep previous items visible during loading to prevent empty grid flash
+  const prevItemsRef = useRef<ServiceItem[]>([]);
+  const todayItems = _todayItems.length > 0 || !loading ? _todayItems : prevItemsRef.current;
+  useEffect(() => {
+    if (_todayItems.length > 0) prevItemsRef.current = _todayItems;
+  }, [_todayItems]);
 
   const customerList = useMemo(() => {
     const map = new Map<string, { name: string; phone?: string; earliest: number }>();
@@ -110,7 +152,7 @@ export default function Appointments() {
 
   // ── Columns ────────────────────────────────────────────────────────────────────
 
-  const staffCols = MOCK_STAFF;
+  const staffCols = staffList;
   const customerCols = useMemo(() => {
     const seen = new Set<string>();
     const cols: { id: string; name: string; phone?: string }[] = [];
@@ -161,7 +203,7 @@ export default function Appointments() {
     if (viewMode === "by-staff") {
       return { accentColor: hashColor(item.customerName), bgColor: hashBg(item.customerName), bdColor: hashBorder(item.customerName) };
     } else {
-      const c = MOCK_STAFF.find(s => s.id === item.staffId)?.color ?? "#6366f1";
+      const c = staffList.find(s => s.id === item.staffId)?.color ?? "#6366f1";
       return { accentColor: c, bgColor: c + "14", bdColor: c + "55" };
     }
   };
@@ -178,18 +220,58 @@ export default function Appointments() {
 
   const handleDrop = useCallback((colId: string, slot: number) => {
     if (!dragState) return;
+    const newStaffId = viewMode === "by-staff" ? colId : undefined;
+    const newStartTime = slotToTime(slot);
+    // Optimistic update
     setItems(prev => prev.map(item => {
       if (item.id !== dragState.id) return item;
-      return { ...item, staffId: viewMode === "by-staff" ? colId : item.staffId, startTime: slotToTime(slot), date: selectedDate };
+      return { ...item, staffId: newStaffId ?? item.staffId, startTime: newStartTime, date: selectedDate };
     }));
     setDragState(null); setDragOverKey(null);
-  }, [dragState, viewMode, selectedDate]);
+    // Persist to backend
+    fetch(`${API}/bookings/${dragState.id}/assign`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ staffId: newStaffId, startTime: newStartTime, date: selectedDate }),
+    }).catch(console.error);
+  }, [dragState, viewMode, selectedDate, API]);
 
   // ── Modal ──────────────────────────────────────────────────────────────────────
 
-  const handleModalSave = (newItems: ServiceItem[]) => {
+  const handleModalSave = async (newItems: ServiceItem[]) => {
     if (modal?.mode === "create") {
-      setItems(prev => [...prev, ...newItems]);
+      // Call backend to create booking
+      try {
+        const first = newItems[0];
+        const res = await fetch(`${API}/bookings`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            branchId: currentBranchId,
+            customerName: first.customerName,
+            customerPhone: first.customerPhone,
+            source: first.source,
+            note: first.note,
+            date: first.date,
+            details: newItems.map(item => ({
+              serviceId: item.service.id,
+              staffId: item.staffId || undefined,
+              startTime: item.startTime,
+              duration: item.service.duration,
+              status: item.status,
+            })),
+          }),
+        });
+        if (res.ok) {
+          const created: ServiceItem[] = await res.json();
+          setItems(prev => [...prev, ...created]);
+        } else {
+          // Fallback: add locally with temp IDs
+          setItems(prev => [...prev, ...newItems]);
+        }
+      } catch {
+        setItems(prev => [...prev, ...newItems]);
+      }
     } else {
       setItems(prev => { const without = prev.filter(i => i.id !== modal?.item?.id); return [...without, ...newItems]; });
     }
@@ -200,14 +282,20 @@ export default function Appointments() {
     setItems(prev => prev.map(item =>
       item.id === id ? { ...item, service: { ...item.service, duration: newDuration } } : item
     ));
-  }, []);
+    // Persist to backend
+    fetch(`${API}/bookings/${id}/resize`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ duration: newDuration }),
+    }).catch(console.error);
+  }, [API]);
 
   const timeSlots = useMemo(() => Array.from({ length: TOTAL_SLOTS }, (_, i) => i), []);
   const gridH = TOTAL_SLOTS * SLOT_HEIGHT;
 
   const navigateDate = (d: number) => {
     const dt = new Date(selectedDate + "T00:00:00"); dt.setDate(dt.getDate() + d);
-    setSelectedDate(dt.toISOString().split("T")[0]);
+    setSelectedDate(toLocalDateStr(dt));
   };
 
   return (
@@ -298,11 +386,11 @@ export default function Appointments() {
         </div>
 
         {/* Right Customer Tabs Header */}
-        <div style={{ width: SIDEBAR_W, borderLeft: "1px solid var(--border-color)", padding: "12px 14px 0", background: "var(--bg-card)", display: "flex", flexDirection: "column", flexShrink: 0, boxSizing: "border-box" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-secondary)", letterSpacing: "0.05em" }}>
+        <div style={{ width: SIDEBAR_W, borderLeft: "1px solid var(--border-color)", padding: "12px 14px 0", background: "var(--bg-card)", display: "flex", flexDirection: "column", flexShrink: 0, boxSizing: "border-box", height: 68, overflow: "hidden" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-secondary)", letterSpacing: "0.05em", flexShrink: 0 }}>
             DANH SÁCH KHÁCH CHỜ
           </div>
-          <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingTop: 6, paddingBottom: 6, scrollbarWidth: "none" }}>
+          <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingTop: 6, paddingBottom: 6, scrollbarWidth: "none", flex: 1, alignItems: "center" }}>
             {customerList.map(cust => {
               const active = selectedCustomer === cust.name;
               const cc = hashColor(cust.name);
@@ -340,14 +428,14 @@ export default function Appointments() {
       </div>
 
       {/* ══ Row 2: Left Legend & Right Selected Customer Info ══════════════════════ */}
-      <div style={{ display: "flex", borderBottom: "1px solid var(--border-color)", flexShrink: 0 }}>
+      <div style={{ display: "flex", borderBottom: "1px solid var(--border-color)", flexShrink: 0, height: 36 }}>
         {/* Left Legend */}
-        <div style={{ flex: 1, padding: "8px 20px", background: "var(--bg-app)", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ flex: 1, padding: "8px 20px", background: "var(--bg-app)", display: "flex", alignItems: "center", gap: 12, overflow: "hidden" }}>
           {viewMode === "by-staff" ? (
             <>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-secondary)" }}>Màu = khách hàng:</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-secondary)", flexShrink: 0 }}>Màu = khách hàng:</span>
               {Array.from(new Set(todayItems.map(i => i.customerName))).slice(0, 8).map(name => (
-                <div key={name} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div key={name} style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
                   <div style={{ width: 10, height: 10, borderRadius: "4px", background: hashColor(name) }} />
                   <span style={{ fontSize: 11, color: "var(--text-primary)" }}>{name}</span>
                 </div>
@@ -355,9 +443,9 @@ export default function Appointments() {
             </>
           ) : (
             <>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-secondary)" }}>Màu = nhân viên:</span>
-              {MOCK_STAFF.filter(s => todayItems.some(i => i.staffId === s.id)).map(s => (
-                <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-secondary)", flexShrink: 0 }}>Màu = nhân viên:</span>
+              {staffList.filter(s => todayItems.some(i => i.staffId === s.id)).map(s => (
+                <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
                   <div style={{ width: 10, height: 10, borderRadius: "4px", background: s.color }} />
                   <span style={{ fontSize: 11, color: "var(--text-primary)" }}>{s.name}</span>
                 </div>
@@ -366,7 +454,7 @@ export default function Appointments() {
           )}
 
           {/* Current Time Line Legend on the right */}
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: "auto" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: "auto", flexShrink: 0 }}>
             <div style={{ width: 16, height: 2, background: "var(--color-danger)" }} />
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--color-danger)" }} />
             <span style={{ fontSize: 10, color: "var(--text-secondary)" }}>Giờ hiện tại</span>
@@ -374,9 +462,9 @@ export default function Appointments() {
         </div>
 
         {/* Right Selected Customer Info */}
-        <div style={{ width: SIDEBAR_W, borderLeft: "1px solid var(--border-color)", padding: "10px 14px", background: "var(--bg-card)", display: "flex", flexDirection: "column", flexShrink: 0, boxSizing: "border-box", justifyContent: "center" }}>
+        <div style={{ width: SIDEBAR_W, borderLeft: "1px solid var(--border-color)", padding: "0 14px", background: "var(--bg-card)", display: "flex", alignItems: "center", flexShrink: 0, boxSizing: "border-box" }}>
           {selCust ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%" }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 130 }}>
                 {selCust.name}
               </div>
@@ -395,12 +483,13 @@ export default function Appointments() {
       {/* ══ Row 3: Grid (Left) & Timeline (Right) ══════════════════════════════════ */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         {/* Left Grid Container */}
-        <div ref={gridScrollRef} onScroll={handleGridScroll} style={{ flex: 1, overflowY: "auto", overflowX: "auto", display: "flex", flexDirection: "column" }}>
-          {loading ? (
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, color: "var(--text-secondary)" }}>
+        <div ref={gridScrollRef} onScroll={handleGridScroll} style={{ flex: 1, overflowY: "auto", overflowX: "auto", display: "flex", flexDirection: "column", position: "relative" }}>
+          {/* Loading overlay – grid stays mounted underneath */}
+          {loading && (
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, color: "var(--text-secondary)", background: "rgba(255,255,255,0.7)", zIndex: 30, backdropFilter: "blur(2px)" }}>
               <Loader2 size={20} style={{ animation: "spin 1s linear infinite" }} />Đang tải lịch hẹn...
             </div>
-          ) : (
+          )}
             <>
               {/* Sticky column headers */}
               <div style={{ display: "flex", position: "sticky", top: 0, zIndex: 20, background: "var(--bg-card)", borderBottom: "1px solid var(--border-color)", boxShadow: "var(--shadow-sm)", height: 52, boxSizing: "border-box" }}>
@@ -587,7 +676,6 @@ export default function Appointments() {
                 })}
               </div>
             </>
-          )}
         </div>
 
         {/* Right Timeline Container */}
@@ -641,7 +729,7 @@ export default function Appointments() {
                 const height = slots * SLOT_HEIGHT - 6;
                 const cc = hashColor(item.customerName);
                 const isBeingDragged = dragState?.id === item.id;
-                const staff = MOCK_STAFF.find(s => s.id === item.staffId);
+                const staff = staffList.find(s => s.id === item.staffId);
                 const cfg = STATUS_CFG[item.status];
 
                 return (
@@ -717,10 +805,16 @@ export default function Appointments() {
       {/* ══ Modal ══════════════════════════════════════════════════════════════════ */}
       {modal && (
         <ServiceModal
-          state={modal} staffList={MOCK_STAFF}
+          state={modal} staffList={staffList} serviceList={serviceList}
           onClose={() => setModal(null)}
           onSave={handleModalSave}
-          onDelete={modal.mode === "edit" ? id => { setItems(prev => prev.filter(i => i.id !== id)); setModal(null); } : undefined}
+          onDelete={modal.mode === "edit" ? id => {
+            // Optimistic delete
+            setItems(prev => prev.filter(i => i.id !== id));
+            setModal(null);
+            // Persist to backend
+            fetch(`${API}/bookings/${id}`, { method: "DELETE" }).catch(console.error);
+          } : undefined}
         />
       )}
     </div>

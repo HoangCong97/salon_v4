@@ -1,7 +1,15 @@
 import { ServiceItem } from "./types";
 import { START_HOUR, MOCK_SERVICES } from "./constants";
 
-export const todayStr = () => new Date().toISOString().split("T")[0];
+/** Format a Date to "YYYY-MM-DD" using LOCAL timezone */
+export const toLocalDateStr = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+export const todayStr = () => toLocalDateStr(new Date());
 
 export function hashColor(s: string) {
   let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);

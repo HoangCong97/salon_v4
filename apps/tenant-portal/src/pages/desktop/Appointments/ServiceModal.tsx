@@ -1,18 +1,19 @@
 import React, { useState } from "react";
 import { CalendarClock, X, Search, Phone, MessageSquare, CheckCircle2 } from "lucide-react";
-import { ModalState, Staff, ServiceItem, AppointmentStatus, AppointmentSource } from "./types";
-import { START_HOUR, END_HOUR, MOCK_SERVICES, STATUS_CFG } from "./constants";
+import { ModalState, Staff, ServiceItem, AppointmentStatus, AppointmentSource, AppointmentService } from "./types";
+import { START_HOUR, END_HOUR, STATUS_CFG } from "./constants";
 import { todayStr, getClosestTimeOption, addMinutes, fmtCurrency, getInitials } from "./helpers";
 
 interface ServiceModalProps {
   state: ModalState;
   staffList: Staff[];
+  serviceList: AppointmentService[];
   onClose: () => void;
   onSave: (items: ServiceItem[]) => void;
   onDelete?: (id: string) => void;
 }
 
-export function ServiceModal({ state, staffList, onClose, onSave, onDelete }: ServiceModalProps) {
+export function ServiceModal({ state, staffList, serviceList, onClose, onSave, onDelete }: ServiceModalProps) {
   const isEdit = state.mode === "edit";
   const [form, setForm] = useState({
     customerName: state.item?.customerName ?? "",
@@ -28,10 +29,10 @@ export function ServiceModal({ state, staffList, onClose, onSave, onDelete }: Se
   const [svcSearch, setSvcSearch] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const selSvcs = MOCK_SERVICES.filter(s => form.selectedServiceIds.includes(s.id));
+  const selSvcs = serviceList.filter(s => form.selectedServiceIds.includes(s.id));
   const totalDur = selSvcs.reduce((a, s) => a + s.duration, 0);
   const totalPrice = selSvcs.reduce((a, s) => a + s.price, 0);
-  const filteredSvcs = MOCK_SERVICES.filter(s => s.name.toLowerCase().includes(svcSearch.toLowerCase()));
+  const filteredSvcs = serviceList.filter(s => s.name.toLowerCase().includes(svcSearch.toLowerCase()));
 
   const validate = () => {
     const e: Record<string, string> = {};
