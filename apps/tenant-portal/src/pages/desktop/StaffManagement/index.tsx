@@ -588,7 +588,17 @@ export default function StaffManagement() {
 
   return (
     <>
-      <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      <div
+        className="animate-fade-in"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "24px",
+          height: activeTab === "permissions" ? "calc(100vh - 120px)" : "auto",
+          overflow: activeTab === "permissions" ? "hidden" : "visible",
+          minHeight: 0,
+        }}
+      >
         {/* Navigation Tabs Header */}
         <div style={{ display: "flex", borderBottom: "1px solid var(--border-color)", paddingBottom: "2px", gap: "8px" }}>
           <button
@@ -672,7 +682,15 @@ export default function StaffManagement() {
             <p style={{ color: "var(--color-danger)", fontSize: "13px", marginTop: "4px" }}>{error}</p>
           </div>
         ) : (
-          <>
+          <div
+            style={{
+              flexGrow: 1,
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+              overflow: activeTab === "permissions" ? "hidden" : "visible",
+            }}
+          >
             {/* VIEW TAB 1: STAFF LIST */}
             {activeTab === "staff" && (
               <StaffTable
@@ -730,7 +748,7 @@ export default function StaffManagement() {
                 getInlineTurnValue={getInlineTurnValue}
               />
             )}
-          </>
+          </div>
         )}
       </div>
 

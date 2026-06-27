@@ -7,8 +7,8 @@ interface PricingPlan {
   name: string;
   price: number;
   features: string[];
-  maxBranches: string;
-  maxStaff: string;
+  maxBranches: number;
+  maxStaff: number;
 }
 
 interface BillingInvoice {
@@ -32,7 +32,20 @@ const Subscriptions: React.FC = () => {
   const [viewingInvoice, setViewingInvoice] = useState<BillingInvoice | null>(null);
 
   // Form State for editing plan
-  const [editForm, setEditForm] = useState({ price: 0, maxBranches: "", maxStaff: "" });
+  const [editForm, setEditForm] = useState<{
+    price: number;
+    maxBranches: number;
+    maxStaff: number;
+    features: string[];
+  }>({
+    price: 0,
+    maxBranches: -1,
+    maxStaff: -1,
+    features: []
+  });
+
+  const [branchSelectValue, setBranchSelectValue] = useState("-1");
+  const [staffSelectValue, setStaffSelectValue] = useState("-1");
 
   const fetchData = async () => {
     try {
@@ -44,8 +57,8 @@ const Subscriptions: React.FC = () => {
         id: p.id,
         name: p.name,
         price: Number(p.price),
-        maxBranches: p.maxBranches === -1 ? "Không giới hạn" : `${p.maxBranches} chi nhánh`,
-        maxStaff: p.maxStaff === -1 ? "Không giới hạn" : `${p.maxStaff} nhân viên`,
+        maxBranches: p.maxBranches,
+        maxStaff: p.maxStaff,
         features: p.features
       }));
       setPlans(mappedPlans);
@@ -88,8 +101,25 @@ const Subscriptions: React.FC = () => {
     setEditForm({
       price: plan.price,
       maxBranches: plan.maxBranches,
-      maxStaff: plan.maxStaff
+      maxStaff: plan.maxStaff,
+      features: [...plan.features]
     });
+
+    const presetsBranches = [1, 2, 3, 5, 10];
+    const initialBranchSelect = plan.maxBranches === -1
+      ? "-1"
+      : presetsBranches.includes(plan.maxBranches)
+        ? String(plan.maxBranches)
+        : "custom";
+    setBranchSelectValue(initialBranchSelect);
+
+    const presetsStaff = [5, 10, 20, 50, 100];
+    const initialStaffSelect = plan.maxStaff === -1
+      ? "-1"
+      : presetsStaff.includes(plan.maxStaff)
+        ? String(plan.maxStaff)
+        : "custom";
+    setStaffSelectValue(initialStaffSelect);
   };
 
   const handleSavePlan = async (e: React.FormEvent) => {
@@ -105,7 +135,8 @@ const Subscriptions: React.FC = () => {
         body: JSON.stringify({
           price: editForm.price,
           maxBranches: editForm.maxBranches,
-          maxStaff: editForm.maxStaff
+          maxStaff: editForm.maxStaff,
+          features: editForm.features
         })
       });
       if (res.ok) {
@@ -116,7 +147,8 @@ const Subscriptions: React.FC = () => {
                 ...p,
                 price: editForm.price,
                 maxBranches: editForm.maxBranches,
-                maxStaff: editForm.maxStaff
+                maxStaff: editForm.maxStaff,
+                features: editForm.features
               }
               : p
           )
@@ -129,7 +161,8 @@ const Subscriptions: React.FC = () => {
   };
 
   return (
-    <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+    <>
+      <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
 
       {/* 1. Plans Configuration Grid */}
       <div>
@@ -191,8 +224,8 @@ const Subscriptions: React.FC = () => {
                   gap: "6px"
                 }}
               >
-                <div><strong>Chi nhánh tối đa:</strong> {plan.maxBranches}</div>
-                <div><strong>Thợ làm tối đa:</strong> {plan.maxStaff}</div>
+                <div><strong>Chi nhánh tối đa:</strong> {plan.maxBranches === -1 ? "Không giới hạn" : `${plan.maxBranches} chi nhánh`}</div>
+                <div><strong>Thợ làm tối đa:</strong> {plan.maxStaff === -1 ? "Không giới hạn" : `${plan.maxStaff} nhân viên`}</div>
               </div>
 
               {/* Feature list */}
@@ -306,18 +339,21 @@ const Subscriptions: React.FC = () => {
         </div>
       </div>
 
-      {/* Interactive Modal: Edit Pricing Plans Quotas */}
+      {/* Close the animated container */}
+      </div>
+
+      {/* Interactive Modal: Edit Pricing Plans Quotas & Features */}
       {editingPlan && (
         <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", backgroundColor: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 110 }}>
-          <div className="card animate-fade-in" style={{ width: "420px", padding: "24px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px", marginBottom: "16px" }}>
-              <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 600 }}>Cấu hình Quotas: {editingPlan.name}</h3>
+          <div className="card animate-fade-in" style={{ width: "480px", padding: "24px", maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--border-color)", paddingBottom: "12px", marginBottom: "16px", flexShrink: 0 }}>
+              <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 600 }}>Cấu hình Quotas & Tính năng: {editingPlan.name}</h3>
               <button onClick={() => setEditingPlan(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }}>
                 <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSavePlan} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            <form onSubmit={handleSavePlan} style={{ display: "flex", flexDirection: "column", gap: "14px", overflowY: "auto", paddingRight: "4px", flexGrow: 1 }}>
               <div className="form-group">
                 <label className="form-label">Giá Thuê Mỗi Tháng (VNĐ)</label>
                 <input
@@ -328,30 +364,140 @@ const Subscriptions: React.FC = () => {
                   required
                 />
               </div>
+
               <div className="form-group">
                 <label className="form-label">Giới Hạn Chi Nhánh (Branches limit)</label>
-                <input
-                  type="text"
+                <select
                   className="form-input"
-                  value={editForm.maxBranches}
-                  onChange={(e) => setEditForm({ ...editForm, maxBranches: e.target.value })}
-                  placeholder="Ví dụ: 3 chi nhánh hoặc Không giới hạn"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Giới Hạn Nhân Sự (Staff limit)</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={editForm.maxStaff}
-                  onChange={(e) => setEditForm({ ...editForm, maxStaff: e.target.value })}
-                  placeholder="Ví dụ: 10 nhân viên hoặc Không giới hạn"
-                  required
-                />
+                  value={branchSelectValue}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setBranchSelectValue(val);
+                    if (val === "custom") {
+                      const currentNum = editForm.maxBranches > 0 ? editForm.maxBranches : 1;
+                      setEditForm(prev => ({ ...prev, maxBranches: currentNum }));
+                    } else {
+                      setEditForm(prev => ({ ...prev, maxBranches: parseInt(val) }));
+                    }
+                  }}
+                >
+                  <option value="-1">Không giới hạn</option>
+                  <option value="1">1 chi nhánh</option>
+                  <option value="2">2 chi nhánh</option>
+                  <option value="3">3 chi nhánh</option>
+                  <option value="5">5 chi nhánh</option>
+                  <option value="10">10 chi nhánh</option>
+                  <option value="custom">Nhập số lượng khác...</option>
+                </select>
+                {branchSelectValue === "custom" && (
+                  <input
+                    type="number"
+                    className="form-input"
+                    style={{ marginTop: "8px" }}
+                    min="1"
+                    value={editForm.maxBranches}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, maxBranches: Math.max(1, parseInt(e.target.value) || 1) }))}
+                    placeholder="Nhập số lượng chi nhánh"
+                    required
+                  />
+                )}
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", borderTop: "1px solid var(--border-color)", paddingTop: "16px", marginTop: "6px" }}>
+              <div className="form-group">
+                <label className="form-label">Giới Hạn Nhân Sự (Staff limit)</label>
+                <select
+                  className="form-input"
+                  value={staffSelectValue}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setStaffSelectValue(val);
+                    if (val === "custom") {
+                      const currentNum = editForm.maxStaff > 0 ? editForm.maxStaff : 5;
+                      setEditForm(prev => ({ ...prev, maxStaff: currentNum }));
+                    } else {
+                      setEditForm(prev => ({ ...prev, maxStaff: parseInt(val) }));
+                    }
+                  }}
+                >
+                  <option value="-1">Không giới hạn</option>
+                  <option value="5">5 nhân viên</option>
+                  <option value="10">10 nhân viên</option>
+                  <option value="20">20 nhân viên</option>
+                  <option value="50">50 nhân viên</option>
+                  <option value="100">100 nhân viên</option>
+                  <option value="custom">Nhập số lượng khác...</option>
+                </select>
+                {staffSelectValue === "custom" && (
+                  <input
+                    type="number"
+                    className="form-input"
+                    style={{ marginTop: "8px" }}
+                    min="1"
+                    value={editForm.maxStaff}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, maxStaff: Math.max(1, parseInt(e.target.value) || 1) }))}
+                    placeholder="Nhập số lượng nhân viên"
+                    required
+                  />
+                )}
+              </div>
+
+              <div className="form-group">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <label className="form-label" style={{ margin: 0 }}>Các Dòng Lợi Ích / Tính Năng</label>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ padding: "4px 8px", fontSize: "12px" }}
+                    onClick={() => setEditForm(prev => ({ ...prev, features: [...prev.features, ""] }))}
+                  >
+                    + Thêm dòng
+                  </button>
+                </div>
+                
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "180px", overflowY: "auto", paddingRight: "4px" }}>
+                  {editForm.features.map((feature, index) => (
+                    <div key={index} style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={feature}
+                        placeholder={`Dòng lợi ích thứ ${index + 1}`}
+                        onChange={(e) => {
+                          const newFeatures = [...editForm.features];
+                          newFeatures[index] = e.target.value;
+                          setEditForm(prev => ({ ...prev, features: newFeatures }));
+                        }}
+                        required
+                      />
+                      <button
+                        type="button"
+                        style={{
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "var(--color-danger)",
+                          padding: "4px",
+                          display: "flex",
+                          alignItems: "center"
+                        }}
+                        onClick={() => {
+                          const newFeatures = editForm.features.filter((_, i) => i !== index);
+                          setEditForm(prev => ({ ...prev, features: newFeatures }));
+                        }}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
+                  {editForm.features.length === 0 && (
+                    <div style={{ fontSize: "12px", color: "var(--text-muted)", textAlign: "center", padding: "12px 0" }}>
+                      Chưa có dòng lợi ích nào. Click "+ Thêm dòng" để bắt đầu.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", borderTop: "1px solid var(--border-color)", paddingTop: "16px", marginTop: "12px", flexShrink: 0 }}>
                 <button type="button" className="btn btn-secondary" onClick={() => setEditingPlan(null)}>Hủy bỏ</button>
                 <button type="submit" className="btn btn-primary">Lưu Thay Đổi</button>
               </div>
@@ -428,8 +574,7 @@ const Subscriptions: React.FC = () => {
           </div>
         </div>
       )}
-
-    </div>
+    </>
   );
 };
 

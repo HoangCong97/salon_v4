@@ -1,6 +1,7 @@
 import React from "react";
 import { Plus, Edit2, Trash2, Loader2, Check } from "lucide-react";
 import { Role, SystemPermission } from "./types";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 interface RolePermissionPanelProps {
   roles: Role[];
@@ -29,6 +30,9 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
   handlePermissionCheckboxChange,
   handleSavePermissions,
 }) => {
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const canManage = hasPermission("staff.manage");
+
   // Group system permissions by groupName
   const groupedPermissions: Record<string, SystemPermission[]> = {};
   permissions.forEach((p) => {
@@ -41,12 +45,12 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
   const activeRole = roles.find((r) => r.id === selectedRoleId);
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "250px 1fr", gap: "24px" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "250px 1fr", gap: "24px", height: "100%", minHeight: 0 }}>
       {/* Left Panel: Role List */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        <div className="card" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-            <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)" }}>Danh sách vai trò</span>
+      <div className="card" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "10px", height: "100%", minHeight: 0 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexShrink: 0 }}>
+          <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)" }}>Danh sách vai trò</span>
+          {canManage && (
             <button
               onClick={() => handleOpenRoleModal("create")}
               style={{
@@ -63,68 +67,68 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
             >
               <Plus size={14} /> Thêm
             </button>
-          </div>
+          )}
+        </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {roles.map((role) => {
-              const isSelected = selectedRoleId === role.id;
-              const isBuiltin = ["ADMIN", "MANAGER", "CASHIER", "EMPLOYEE"].includes(role.name.toUpperCase());
-              return (
-                <div
-                  key={role.id}
-                  onClick={() => setSelectedRoleId(role.id)}
-                  style={{
-                    padding: "10px 14px",
-                    borderRadius: "var(--radius-sm)",
-                    backgroundColor: isSelected ? "var(--color-primary-light)" : "transparent",
-                    border: isSelected ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
-                    cursor: "pointer",
-                    transition: "all 0.15s",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                    <span
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: "600",
-                        color: isSelected ? "var(--color-primary)" : "var(--text-primary)",
-                      }}
-                    >
-                      {role.name}
-                    </span>
-                    {role.description && (
-                      <span style={{ fontSize: "11px", color: "var(--text-muted)", lineClamp: 1 }}>{role.description}</span>
-                    )}
-                  </div>
-
-                  {isSelected && !isBuiltin && (
-                    <div style={{ display: "flex", gap: "4px" }} onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => handleOpenRoleModal("edit")}
-                        style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)", padding: "2px" }}
-                      >
-                        <Edit2 size={12} />
-                      </button>
-                      <button
-                        onClick={handleDeleteRole}
-                        style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-danger)", padding: "2px" }}
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", flexGrow: 1, overflowY: "auto", paddingRight: "4px" }}>
+          {roles.map((role) => {
+            const isSelected = selectedRoleId === role.id;
+            const isBuiltin = ["ADMIN", "MANAGER", "CASHIER", "EMPLOYEE"].includes(role.name.toUpperCase());
+            return (
+              <div
+                key={role.id}
+                onClick={() => setSelectedRoleId(role.id)}
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: "var(--radius-sm)",
+                  backgroundColor: isSelected ? "var(--color-primary-light)" : "transparent",
+                  border: isSelected ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                  <span
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      color: isSelected ? "var(--color-primary)" : "var(--text-primary)",
+                    }}
+                  >
+                    {role.name}
+                  </span>
+                  {role.description && (
+                    <span style={{ fontSize: "11px", color: "var(--text-muted)", lineClamp: 1 }}>{role.description}</span>
                   )}
                 </div>
-              );
-            })}
-          </div>
+
+                {isSelected && !isBuiltin && canManage && (
+                  <div style={{ display: "flex", gap: "4px" }} onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => handleOpenRoleModal("edit")}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)", padding: "2px" }}
+                    >
+                      <Edit2 size={12} />
+                    </button>
+                    <button
+                      onClick={handleDeleteRole}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-danger)", padding: "2px" }}
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {/* Right Panel: Permissions Setup Matrix */}
-      <div className="card" style={{ display: "flex", flexDirection: "column", gap: "20px", padding: "24px" }}>
+      <div className="card" style={{ display: "flex", flexDirection: "column", gap: "20px", padding: "24px", height: "100%", minHeight: 0 }}>
         <div
           style={{
             display: "flex",
@@ -132,6 +136,7 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
             alignItems: "center",
             borderBottom: "1px solid var(--border-color)",
             paddingBottom: "14px",
+            flexShrink: 0,
           }}
         >
           <div>
@@ -147,7 +152,7 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
           <button
             className="btn btn-primary"
             onClick={handleSavePermissions}
-            disabled={savingPermissions || permissionsLoading}
+            disabled={savingPermissions || permissionsLoading || !canManage}
             style={{ minWidth: "150px" }}
           >
             {savingPermissions ? (
@@ -163,11 +168,11 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
         </div>
 
         {permissionsLoading ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
+          <div style={{ display: "flex", justifyContent: "center", padding: "60px 0", flexGrow: 1 }}>
             <Loader2 className="animate-spin" size={28} style={{ color: "var(--color-primary)" }} />
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px", flexGrow: 1, overflowY: "auto", paddingRight: "8px" }}>
             {Object.keys(groupedPermissions).map((group) => {
               const isSystemAdminRole = activeRole?.name.toUpperCase() === "ADMIN";
               return (
@@ -198,7 +203,7 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
                             padding: "12px",
                             border: "1px solid var(--border-color)",
                             borderRadius: "var(--radius-sm)",
-                            cursor: isSystemAdminRole ? "not-allowed" : "pointer",
+                            cursor: (isSystemAdminRole || !canManage) ? "not-allowed" : "pointer",
                             backgroundColor: isChecked ? "var(--color-primary-light)" : "transparent",
                             borderColor: isChecked ? "var(--border-focus)" : "var(--border-color)",
                             transition: "all 0.15s",
@@ -207,8 +212,8 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
                           <input
                             type="checkbox"
                             checked={isChecked}
-                            disabled={isSystemAdminRole}
-                            onChange={() => handlePermissionCheckboxChange(perm.id)}
+                            disabled={isSystemAdminRole || !canManage}
+                            onChange={() => canManage && handlePermissionCheckboxChange(perm.id)}
                             style={{ marginTop: "3px", width: "16px", height: "16px" }}
                           />
                           <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>

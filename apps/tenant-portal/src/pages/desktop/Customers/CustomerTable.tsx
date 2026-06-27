@@ -3,6 +3,7 @@ import { Edit2, Trash2 } from "lucide-react";
 import { ExcelInput } from "../../../components/desktop/TableComponents";
 import { Tooltip } from "../../../components/desktop/Tooltip";
 import { Customer } from "./types";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 interface CustomerTableProps {
   filteredCustomers: Customer[];
@@ -23,6 +24,9 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   handleDelete,
   getInlineValue,
 }) => {
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const canManage = hasPermission("customer.manage");
+
   const formatDateDMY = (dateStr: string) => {
     if (!dateStr) return "-";
     const date = new Date(dateStr);
@@ -43,13 +47,13 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
             <th style={{ padding: "6px 10px", fontSize: "13px", width: "250px", textAlign: "center" }}>Email</th>
             <th style={{ padding: "6px 10px", fontSize: "13px", width: "150px", textAlign: "center" }}>Điểm uy tín</th>
             <th style={{ padding: "6px 10px", fontSize: "13px", width: "150px", textAlign: "center" }}>Ngày tham gia</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "120px", textAlign: "center" }}>Thao tác</th>
+            {canManage && <th style={{ padding: "6px 10px", fontSize: "13px", width: "120px", textAlign: "center" }}>Thao tác</th>}
           </tr>
         </thead>
         <tbody>
           {filteredCustomers.length === 0 ? (
             <tr>
-              <td colSpan={6} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)", fontWeight: "500" }}>
+              <td colSpan={canManage ? 6 : 5} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)", fontWeight: "500" }}>
                 Không tìm thấy khách hàng nào phù hợp.
               </td>
             </tr>
@@ -72,6 +76,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
                       onChange={(val) => handleInlineChange(customer.id, "name", val)}
                       onBlur={() => handleAutoSave(customer.id, { name: getInlineValue(customer, "name") as string })}
                       fontWeight="600"
+                      disabled={!canManage}
                     />
                   </td>
                   <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
@@ -80,6 +85,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
                       onChange={(val) => handleInlineChange(customer.id, "phone", val)}
                       onBlur={() => handleAutoSave(customer.id, { phone: getInlineValue(customer, "phone") as string })}
                       textAlign="center"
+                      disabled={!canManage}
                     />
                   </td>
                   <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
@@ -88,6 +94,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
                       onChange={(val) => handleInlineChange(customer.id, "email", val)}
                       onBlur={() => handleAutoSave(customer.id, { email: getInlineValue(customer, "email") as string })}
                       textAlign="center"
+                      disabled={!canManage}
                     />
                   </td>
                   <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
@@ -100,33 +107,36 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
                       textColor={getScoreColor(Number(currentScore))}
                       fontWeight="700"
                       unit="/100"
+                      disabled={!canManage}
                     />
                   </td>
                   <td style={{ textAlign: "center", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "500" }}>
                     {formatDateDMY(customer.createdAt)}
                   </td>
-                  <td style={{ padding: "0 8px", verticalAlign: "middle", textAlign: "center", height: "38px" }}>
-                    <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>
-                      <Tooltip content="Chỉnh sửa chi tiết">
-                        <button
-                          className="btn btn-secondary"
-                          style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
-                          onClick={() => handleOpenEditModal(customer)}
-                        >
-                          <Edit2 size={13} />
-                        </button>
-                      </Tooltip>
-                      <Tooltip content="Xóa khách hàng">
-                        <button
-                          className="btn btn-danger"
-                          style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
-                          onClick={() => handleDelete(customer.id)}
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </Tooltip>
-                    </div>
-                  </td>
+                  {canManage && (
+                    <td style={{ padding: "0 8px", verticalAlign: "middle", textAlign: "center", height: "38px" }}>
+                      <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>
+                        <Tooltip content="Chỉnh sửa chi tiết">
+                          <button
+                            className="btn btn-secondary"
+                            style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                            onClick={() => handleOpenEditModal(customer)}
+                          >
+                            <Edit2 size={13} />
+                          </button>
+                        </Tooltip>
+                        <Tooltip content="Xóa khách hàng">
+                          <button
+                            className="btn btn-danger"
+                            style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                            onClick={() => handleDelete(customer.id)}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </Tooltip>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               );
             })

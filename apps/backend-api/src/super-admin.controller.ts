@@ -89,21 +89,38 @@ export class SuperAdminController {
   @Put("plans/:id")
   async updatePlan(
     @Param("id") id: string,
-    @Body() body: { price: number; maxBranches: string; maxStaff: string }
+    @Body() body: { price: number; maxBranches: any; maxStaff: any; features?: string[] }
   ) {
     try {
       // Parse values
-      const maxBranchesInt = body.maxBranches.includes("Không giới hạn") ? -1 : parseInt(body.maxBranches) || 1;
-      const maxStaffInt = body.maxStaff.includes("Không giới hạn") ? -1 : parseInt(body.maxStaff) || 5;
+      let maxBranchesInt = 1;
+      if (typeof body.maxBranches === "number") {
+        maxBranchesInt = body.maxBranches;
+      } else if (typeof body.maxBranches === "string") {
+        maxBranchesInt = body.maxBranches.includes("Không giới hạn") ? -1 : parseInt(body.maxBranches) || 1;
+      }
+
+      let maxStaffInt = 5;
+      if (typeof body.maxStaff === "number") {
+        maxStaffInt = body.maxStaff;
+      } else if (typeof body.maxStaff === "string") {
+        maxStaffInt = body.maxStaff.includes("Không giới hạn") ? -1 : parseInt(body.maxStaff) || 5;
+      }
+
+      const updateData: any = {
+        price: body.price,
+        maxBranches: maxBranchesInt,
+        maxStaff: maxStaffInt,
+        updatedAt: new Date()
+      };
+
+      if (body.features) {
+        updateData.features = body.features;
+      }
 
       return await prisma.saasPlan.update({
         where: { id },
-        data: {
-          price: body.price,
-          maxBranches: maxBranchesInt,
-          maxStaff: maxStaffInt,
-          updatedAt: new Date()
-        }
+        data: updateData
       });
     } catch (error) {
       throw new HttpException(`Failed to update plan: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);

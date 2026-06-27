@@ -42,7 +42,7 @@ function useWindowWidth() {
 }
 
 export default function AdaptiveRouter() {
-  const { user, setRole, initializeSession } = useAuthStore();
+  const { user, setRole, initializeSession, hasPermission } = useAuthStore();
   const width = useWindowWidth();
   const isMobileScreen = width <= 768;
 
@@ -114,63 +114,52 @@ export default function AdaptiveRouter() {
   }
 
   // Case 3: Admin/Manager/Cashier roles on DESKTOP screens
-  const isManagerOrAdmin = user.role === "ADMIN" || user.role === "MANAGER";
-
   return (
     <HashRouter>
       <Routes>
         <Route element={<DesktopLayout />}>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/pos" element={<POS />} />
+          <Route 
+            path="/pos" 
+            element={hasPermission("pos.view") ? <POS /> : <Navigate to="/" replace />} 
+          />
           
           {/* Permission-restricted routes */}
           <Route 
             path="/branches" 
-            element={isManagerOrAdmin ? <Branches /> : <Navigate to="/" replace />} 
+            element={hasPermission("branch.view") ? <Branches /> : <Navigate to="/" replace />} 
           />
           <Route 
             path="/services" 
-            element={isManagerOrAdmin ? <Services /> : <Navigate to="/" replace />} 
+            element={hasPermission("service.view") ? <Services /> : <Navigate to="/" replace />} 
           />
           <Route 
             path="/inventories" 
-            element={isManagerOrAdmin ? <Inventories /> : <Navigate to="/" replace />} 
+            element={hasPermission("inventory.view") ? <Inventories /> : <Navigate to="/" replace />} 
           />
           <Route 
             path="/staff" 
-            element={isManagerOrAdmin ? <StaffManagement /> : <Navigate to="/" replace />} 
+            element={hasPermission("staff.view") ? <StaffManagement /> : <Navigate to="/" replace />} 
           />
           <Route 
             path="/shifts" 
-            element={isManagerOrAdmin ? <Shifts /> : <Navigate to="/" replace />} 
+            element={hasPermission("shift.view") ? <Shifts /> : <Navigate to="/" replace />} 
           />
           <Route 
             path="/reports" 
-            element={isManagerOrAdmin ? <Reports /> : <Navigate to="/" replace />} 
+            element={hasPermission("report.view") ? <Reports /> : <Navigate to="/" replace />} 
           />
           <Route 
             path="/invoices" 
-            element={
-              user.role === "ADMIN" || user.role === "MANAGER" || user.role === "CASHIER"
-                ? <Invoices /> 
-                : <Navigate to="/" replace />
-            } 
+            element={hasPermission("invoice.view") ? <Invoices /> : <Navigate to="/" replace />} 
           />
           <Route 
             path="/customers" 
-            element={
-              user.role === "ADMIN" || user.role === "MANAGER" || user.role === "CASHIER"
-                ? <Customers /> 
-                : <Navigate to="/" replace />
-            } 
+            element={hasPermission("customer.view") ? <Customers /> : <Navigate to="/" replace />} 
           />
           <Route 
             path="/appointments" 
-            element={
-              user.role === "ADMIN" || user.role === "MANAGER" || user.role === "CASHIER"
-                ? <Appointments /> 
-                : <Navigate to="/" replace />
-            } 
+            element={hasPermission("booking.view") ? <Appointments /> : <Navigate to="/" replace />} 
           />
           
           <Route path="*" element={<Navigate to="/" replace />} />

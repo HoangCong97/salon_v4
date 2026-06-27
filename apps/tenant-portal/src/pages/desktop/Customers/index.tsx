@@ -12,7 +12,8 @@ import { ExportColumnMapping } from "../../../utils/exportData";
 import { useConfirm } from "../../../components/desktop/ConfirmDialog";
 
 export default function Customers() {
-  const { currentTenantId, currentBranchId } = useAuthStore();
+  const { currentTenantId, currentBranchId, hasPermission } = useAuthStore();
+  const canManage = hasPermission("customer.manage");
   const confirm = useConfirm();
 
   // Data State
@@ -33,8 +34,10 @@ export default function Customers() {
   const [droppedFile, setDroppedFile] = useState<File | null>(null);
 
   const { isDragActive } = useFileDragAndDrop((file) => {
-    setDroppedFile(file);
-    setIsImportModalOpen(true);
+    if (canManage) {
+      setDroppedFile(file);
+      setIsImportModalOpen(true);
+    }
   });
 
   // Dynamic Customer Schema for Import Matcher
@@ -238,13 +241,15 @@ export default function Customers() {
 
         {/* Action buttons */}
         <div style={{ display: "flex", gap: "10px" }}>
-          <button
-            className="btn btn-secondary"
-            onClick={() => setIsImportModalOpen(true)}
-            style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", padding: "8px 14px" }}
-          >
-            <Upload size={14} /> Nhập Excel/CSV
-          </button>
+          {canManage && (
+            <button
+              className="btn btn-secondary"
+              onClick={() => setIsImportModalOpen(true)}
+              style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", padding: "8px 14px" }}
+            >
+              <Upload size={14} /> Nhập Excel/CSV
+            </button>
+          )}
           
           <ExportButton
             data={filteredCustomers}
@@ -252,13 +257,15 @@ export default function Customers() {
             columns={customerExportColumns}
           />
 
-          <button
-            className="btn btn-primary"
-            onClick={handleOpenCreateModal}
-            style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", padding: "8px 14px" }}
-          >
-            <Plus size={16} /> Thêm khách hàng
-          </button>
+          {canManage && (
+            <button
+              className="btn btn-primary"
+              onClick={handleOpenCreateModal}
+              style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", padding: "8px 14px" }}
+            >
+              <Plus size={16} /> Thêm khách hàng
+            </button>
+          )}
         </div>
       </div>
 
@@ -348,7 +355,7 @@ export default function Customers() {
       </div>
 
       {/* Drag & Drop Visual Overlay */}
-      {isDragActive && (
+      {isDragActive && canManage && (
         <div
           style={{
             position: "absolute",

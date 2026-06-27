@@ -9,6 +9,7 @@ export interface UserSession {
   role: UserRole;
   avatar?: string;
   tenantId?: string;
+  permissions?: string[];
 }
 
 export interface BranchInfo {
@@ -23,6 +24,33 @@ export interface TenantInfo {
   status: string;
 }
 
+export interface SubscriptionData {
+  tenantId: string;
+  tenantName: string;
+  planId: string | null;
+  planName: string;
+  planCode: string;
+  planPrice: number;
+  planStartedAt: string | null;
+  planExpiresAt: string | null;
+  planStatus: string;
+  maxBranches: number;
+  maxStaff: number;
+  currentBranchesCount: number;
+  currentStaffCount: number;
+  features: string[];
+}
+
+export interface SaasPlan {
+  id: string;
+  name: string;
+  code: string;
+  price: number;
+  maxBranches: number;
+  maxStaff: number;
+  features: string[];
+}
+
 interface AuthState {
   user: UserSession | null;
   tenants: TenantInfo[];
@@ -32,14 +60,32 @@ interface AuthState {
   brandName: string | null;
   logoUrl: string | null;
   isLoading: boolean;
+  
+  // Subscription states
+  subscription: SubscriptionData | null;
+  subscriptionLoading: boolean;
+  fetchSubscription: () => Promise<void>;
+  
+  // Pricing Modal states
+  isPricingModalOpen: boolean;
+  setIsPricingModalOpen: (isOpen: boolean) => void;
+  plans: SaasPlan[];
+  plansLoading: boolean;
+  fetchPlans: () => Promise<void>;
+  checkoutInvoice: any;
+  setCheckoutInvoice: (invoice: any) => void;
+  isBuying: boolean;
+  handleBuyPlan: (planCode: string) => Promise<void>;
+
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  setRole: (role: UserRole) => void;
+  setRole: (role: UserRole) => void | Promise<void>;
   setBranch: (branchId: string) => void;
   setTenant: (tenantId: string) => Promise<void>;
   initializeSession: () => Promise<void>;
   setBrandInfo: (brandName: string | null, logoUrl: string | null) => void;
   fetchBrandInfo: () => Promise<void>;
+  hasPermission: (permission: string) => boolean;
 }
 
 // Initial mock data to make testing easier immediately
@@ -63,6 +109,77 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   brandName: null,
   logoUrl: null,
   isLoading: false,
+
+  // Subscription states
+  subscription: null,
+  subscriptionLoading: false,
+  fetchSubscription: async () => {
+    const { currentTenantId } = get();
+    if (!currentTenantId) return;
+    set({ subscriptionLoading: true });
+    try {
+      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/subscription`);
+      if (res.ok) {
+        const data = await res.json();
+        set({ subscription: data });
+      }
+    } catch (e) {
+      console.error("Failed to fetch subscription status:", e);
+    } finally {
+      set({ subscriptionLoading: false });
+    }
+  },
+
+  // Pricing Modal states
+  isPricingModalOpen: false,
+  setIsPricingModalOpen: (isOpen) => {
+    set({ isPricingModalOpen: isOpen });
+    if (isOpen && get().plans.length === 0) {
+      get().fetchPlans();
+    }
+  },
+  plans: [],
+  plansLoading: false,
+  fetchPlans: async () => {
+    set({ plansLoading: true });
+    try {
+      const res = await fetch("http://localhost:3000/api/tenants/plans");
+      if (res.ok) {
+        const data = await res.json();
+        set({ plans: data });
+      }
+    } catch (e) {
+      console.error("Failed to fetch plans list:", e);
+    } finally {
+      set({ plansLoading: false });
+    }
+  },
+  checkoutInvoice: null,
+  setCheckoutInvoice: (checkoutInvoice) => set({ checkoutInvoice }),
+  isBuying: false,
+  handleBuyPlan: async (planCode: string) => {
+    const { currentTenantId } = get();
+    if (!currentTenantId) return;
+    set({ isBuying: true });
+    try {
+      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/buy-plan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planCode })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        set({ checkoutInvoice: data });
+      } else {
+        const err = await res.json();
+        alert(err.message || "Không thể khởi tạo yêu cầu mua gói");
+      }
+    } catch (e: any) {
+      alert("Đã xảy ra lỗi: " + e.message);
+    } finally {
+      set({ isBuying: false });
+    }
+  },
   
   login: async (email, password) => {
     set({ isLoading: true });
@@ -97,6 +214,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             isLoading: false
           });
           await get().fetchBrandInfo();
+          await get().fetchSubscription();
           return true;
         }
       }
@@ -106,6 +224,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         currentBranchId: MOCK_BRANCHES[0].id,
         isLoading: false
       });
+      await get().fetchBrandInfo();
+      await get().fetchSubscription();
       return true;
     } catch (e: any) {
       set({ isLoading: false });
@@ -114,9 +234,89 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: () => set({ user: null, currentBranchId: null, currentTenantId: null, branches: [] }),
-  setRole: (role) => set((state) => ({
-    user: state.user ? { ...state.user, role } : null
-  })),
+  setRole: async (role) => {
+    const tenantId = get().currentTenantId;
+    if (!tenantId || !get().user) return;
+
+    try {
+      // 1. Fetch all roles of the tenant
+      const rolesRes = await fetch(`http://localhost:3000/api/tenants/${tenantId}/roles`);
+      if (!rolesRes.ok) throw new Error();
+      const roles = await rolesRes.json();
+
+      // Find matching role case-insensitively
+      const matchedRole = roles.find((r: any) => r.name.toLowerCase() === role.toLowerCase());
+      if (matchedRole) {
+        // 2. Fetch role permission IDs
+        const rolePermsRes = await fetch(`http://localhost:3000/api/tenants/${tenantId}/roles/${matchedRole.id}/permissions`);
+        // 3. Fetch all system permissions (to map IDs to slugs)
+        const allPermsRes = await fetch(`http://localhost:3000/api/tenants/${tenantId}/permissions`);
+
+        if (rolePermsRes.ok && allPermsRes.ok) {
+          const assignedIds: string[] = await rolePermsRes.json();
+          const allPerms: any[] = await allPermsRes.json();
+
+          // Map assigned IDs to slugs
+          const permissionSlugs = allPerms
+            .filter((p: any) => assignedIds.includes(p.id))
+            .map((p: any) => p.slug);
+
+          set((state) => ({
+            user: state.user ? {
+              ...state.user,
+              role,
+              permissions: permissionSlugs
+            } : null
+          }));
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to fetch role permissions dynamically, falling back to static mocks", e);
+    }
+
+    // Fallback to static mock role permissions if API call fails
+    const mockRolePermissions: Record<string, string[]> = {
+      ADMIN: [
+        "booking.view", "booking.create", "booking.edit", "booking.delete",
+        "pos.view", "invoice.view", "invoice.create",
+        "customer.view", "customer.manage",
+        "service.view", "service.manage",
+        "inventory.view", "inventory.manage",
+        "staff.view", "staff.manage",
+        "shift.view", "shift.manage",
+        "report.view",
+        "branch.view", "branch.manage"
+      ],
+      MANAGER: [
+        "booking.view", "booking.create", "booking.edit", "booking.delete",
+        "pos.view", "invoice.view", "invoice.create",
+        "customer.view", "customer.manage",
+        "service.view", "service.manage",
+        "inventory.view", "inventory.manage",
+        "staff.view", "shift.view", "shift.manage",
+        "report.view",
+        "branch.view"
+      ],
+      CASHIER: [
+        "booking.view", "booking.create", "booking.edit",
+        "pos.view", "invoice.view", "invoice.create",
+        "customer.view", "customer.manage"
+      ],
+      EMPLOYEE: [
+        "booking.view",
+        "shift.view"
+      ]
+    };
+
+    set((state) => ({
+      user: state.user ? {
+        ...state.user,
+        role,
+        permissions: mockRolePermissions[role] || []
+      } : null
+    }));
+  },
   setBranch: (currentBranchId) => set({ currentBranchId }),
   
   setTenant: async (tenantId) => {
@@ -137,6 +337,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             isLoading: false
           });
           await get().fetchBrandInfo();
+          await get().fetchSubscription();
           return;
         }
       }
@@ -149,6 +350,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       currentBranchId: MOCK_BRANCHES[0].id,
       isLoading: false
     });
+    await get().fetchBrandInfo();
+    await get().fetchSubscription();
   },
 
   initializeSession: async () => {
@@ -188,6 +391,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 isLoading: false
               });
               await get().fetchBrandInfo();
+              await get().fetchSubscription();
               return;
             }
           }
@@ -206,6 +410,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       isLoading: false
     });
     await get().fetchBrandInfo();
+    await get().fetchSubscription();
   },
 
   setBrandInfo: (brandName, logoUrl) => set({ brandName, logoUrl }),
@@ -232,5 +437,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ brandName: "SALON Portal", logoUrl: null });
       }
     }
+  },
+
+  hasPermission: (permission) => {
+    const user = get().user;
+    if (!user) return false;
+    if (user.role === "ADMIN") return true;
+    return user.permissions?.includes(permission) || false;
   }
 }));

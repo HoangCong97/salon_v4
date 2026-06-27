@@ -1,8 +1,44 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, HttpStatus, HttpException } from "@nestjs/common";
 import { prisma } from "@salon/database";
 
-// Helper function to ensure standard roles exist for a tenant
-async function ensureStandardRoles(tenantId: string) {
+const defaultRolePermissions: Record<string, string[]> = {
+  admin: [
+    "booking.view", "booking.create", "booking.edit", "booking.delete",
+    "pos.view", "invoice.view", "invoice.create",
+    "customer.view", "customer.manage",
+    "service.view", "service.manage",
+    "inventory.view", "inventory.manage",
+    "staff.view", "staff.manage",
+    "shift.view", "shift.manage",
+    "report.view",
+    "branch.view", "branch.manage"
+  ],
+  manager: [
+    "booking.view", "booking.create", "booking.edit", "booking.delete",
+    "pos.view", "invoice.view", "invoice.create",
+    "customer.view", "customer.manage",
+    "service.view", "service.manage",
+    "inventory.view", "inventory.manage",
+    "staff.view", "shift.view", "shift.manage",
+    "report.view",
+    "branch.view"
+  ],
+  cashier: [
+    "booking.view", "booking.create", "booking.edit",
+    "pos.view", "invoice.view", "invoice.create",
+    "customer.view", "customer.manage"
+  ],
+  employee: [
+    "booking.view",
+    "shift.view"
+  ]
+};
+
+// Helper function to ensure standard roles exist for a tenant and link them to default permissions
+export async function ensureStandardRolesAndPermissions(tenantId: string) {
+  // Ensure permissions exist in DB first
+  const dbPermissions = await ensureStandardPermissions();
+
   const standardRoles = [
     { name: "Admin", description: "Quản trị viên tối cao của salon" },
     { name: "Manager", description: "Quản lý chi nhánh" },
@@ -22,6 +58,7 @@ async function ensureStandardRoles(tenantId: string) {
     let found = existingRoles.find(
       (er) => er.name.toLowerCase() === r.name.toLowerCase()
     );
+    let created = false;
     if (!found) {
       found = await prisma.role.create({
         data: {
@@ -30,20 +67,66 @@ async function ensureStandardRoles(tenantId: string) {
           description: r.description
         }
       });
+      created = true;
     }
     roles.push(found);
+
+    // If role was just created, or if it doesn't have any permissions linked, populate with defaults
+    const currentPermCount = await prisma.rolePermission.count({
+      where: { roleId: found.id }
+    });
+
+    if (created || currentPermCount === 0) {
+      const defaultSlugs = defaultRolePermissions[r.name.toLowerCase()] || [];
+      const permIdsToLink = dbPermissions
+        .filter(p => defaultSlugs.includes(p.slug))
+        .map(p => p.id);
+
+      if (permIdsToLink.length > 0) {
+        await prisma.rolePermission.createMany({
+          data: permIdsToLink.map(permissionId => ({
+            roleId: found.id,
+            permissionId
+          })),
+          skipDuplicates: true
+        });
+      }
+    }
   }
   return roles;
 }
 
 // Helper function to ensure system-wide standard permissions exist
-async function ensureStandardPermissions() {
+export async function ensureStandardPermissions() {
   const standardPermissions = [
-    { slug: "booking.create", groupName: "Booking", name: "Tạo lịch hẹn", description: "Cho phép đặt lịch hẹn mới" },
-    { slug: "booking.view", groupName: "Booking", name: "Xem lịch hẹn", description: "Xem danh sách lịch hẹn" },
-    { slug: "invoice.create", groupName: "Invoice", name: "Tạo hóa đơn", description: "Tạo và in hóa đơn thanh toán" },
-    { slug: "report.view", groupName: "Report", name: "Xem báo cáo", description: "Xem báo cáo thống kê doanh thu" },
-    { slug: "staff.manage", groupName: "Staff", name: "Quản lý nhân viên", description: "Quản lý thợ và phân ca ca kíp" }
+    { slug: "booking.view", groupName: "Lịch hẹn", name: "Xem lịch hẹn", description: "Xem danh sách lịch hẹn" },
+    { slug: "booking.create", groupName: "Lịch hẹn", name: "Tạo lịch hẹn", description: "Cho phép đặt lịch hẹn mới" },
+    { slug: "booking.edit", groupName: "Lịch hẹn", name: "Sửa lịch hẹn", description: "Cho phép chỉnh sửa lịch hẹn" },
+    { slug: "booking.delete", groupName: "Lịch hẹn", name: "Xóa lịch hẹn", description: "Cho phép hủy/xóa lịch hẹn" },
+
+    { slug: "pos.view", groupName: "Bán hàng POS", name: "Truy cập POS", description: "Cho phép truy cập màn hình bán hàng POS" },
+    { slug: "invoice.view", groupName: "Hóa đơn", name: "Xem hóa đơn", description: "Xem lịch sử danh sách hóa đơn" },
+    { slug: "invoice.create", groupName: "Hóa đơn", name: "Tạo hóa đơn", description: "Tạo và in hóa đơn thanh toán" },
+
+    { slug: "customer.view", groupName: "Khách hàng", name: "Xem khách hàng", description: "Xem danh sách khách hàng" },
+    { slug: "customer.manage", groupName: "Khách hàng", name: "Quản lý khách hàng", description: "Thêm, sửa, xóa khách hàng" },
+
+    { slug: "service.view", groupName: "Dịch vụ", name: "Xem dịch vụ", description: "Xem danh mục và bảng giá dịch vụ" },
+    { slug: "service.manage", groupName: "Dịch vụ", name: "Quản lý dịch vụ", description: "Thêm, sửa, xóa dịch vụ" },
+
+    { slug: "inventory.view", groupName: "Kho hàng", name: "Xem kho hàng", description: "Xem số lượng tồn kho sản phẩm" },
+    { slug: "inventory.manage", groupName: "Kho hàng", name: "Quản lý kho hàng", description: "Nhập, xuất, điều chỉnh kho hàng" },
+
+    { slug: "staff.view", groupName: "Nhân sự", name: "Xem nhân sự", description: "Xem danh sách thông tin nhân viên" },
+    { slug: "staff.manage", groupName: "Nhân sự", name: "Quản lý nhân sự", description: "Thêm, sửa, xóa và cấu hình lương nhân viên" },
+
+    { slug: "shift.view", groupName: "Lịch trực", name: "Xem lịch trực ca", description: "Xem lịch ca kíp của nhân viên" },
+    { slug: "shift.manage", groupName: "Lịch trực", name: "Phân ca xếp lịch", description: "Xếp lịch làm việc và chấm công" },
+
+    { slug: "report.view", groupName: "Báo cáo", name: "Xem báo cáo", description: "Xem báo cáo thống kê doanh thu và hoạt động" },
+
+    { slug: "branch.view", groupName: "Chi nhánh", name: "Xem chi nhánh", description: "Xem danh sách chi nhánh" },
+    { slug: "branch.manage", groupName: "Chi nhánh", name: "Quản lý chi nhánh", description: "Thêm, sửa, cấu hình chi nhánh" },
   ];
 
   const existing = await prisma.permission.findMany({
@@ -104,7 +187,7 @@ export class StaffController {
   @Get("roles")
   async getRoles(@Param("tenantId") tenantId: string) {
     try {
-      return await ensureStandardRoles(tenantId);
+      return await ensureStandardRolesAndPermissions(tenantId);
     } catch (error) {
       throw new HttpException(
         `Failed to fetch roles: ${(error as any).message}`,
@@ -118,7 +201,7 @@ export class StaffController {
   async getStaff(@Param("tenantId") tenantId: string) {
     try {
       // Ensure standard roles exist first
-      await ensureStandardRoles(tenantId);
+      await ensureStandardRolesAndPermissions(tenantId);
 
       const staffList = await prisma.user.findMany({
         where: {

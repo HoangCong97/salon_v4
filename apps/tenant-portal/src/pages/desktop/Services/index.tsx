@@ -13,7 +13,8 @@ import { ExportColumnMapping } from "../../../utils/exportData";
 import { useConfirm } from "../../../components/desktop/ConfirmDialog";
 
 export default function Services() {
-  const { currentTenantId, currentBranchId } = useAuthStore();
+  const { currentTenantId, currentBranchId, hasPermission } = useAuthStore();
+  const canManage = hasPermission("service.manage");
   const confirm = useConfirm();
 
   // Data State
@@ -40,8 +41,10 @@ export default function Services() {
   const [droppedFile, setDroppedFile] = useState<File | null>(null);
 
   const { isDragActive } = useFileDragAndDrop((file) => {
-    setDroppedFile(file);
-    setIsImportModalOpen(true);
+    if (canManage) {
+      setDroppedFile(file);
+      setIsImportModalOpen(true);
+    }
   });
 
   // Dynamic Service Schema for Import Matcher
@@ -344,24 +347,26 @@ export default function Services() {
         >
           {/* Category Tabs */}
           <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px", alignItems: "center" }}>
-            <button
-              className="btn btn-secondary"
-              onClick={handleOpenCategoriesModal}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 16px",
-                borderRadius: "var(--radius-full)",
-                fontSize: "13px",
-                fontWeight: "600",
-                whiteSpace: "nowrap",
-                flexShrink: 0,
-                height: "36px",
-              }}
-            >
-              <Layers size={16} /> Phân loại
-            </button>
+            {canManage && (
+              <button
+                className="btn btn-secondary"
+                onClick={handleOpenCategoriesModal}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "8px 16px",
+                  borderRadius: "var(--radius-full)",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  height: "36px",
+                }}
+              >
+                <Layers size={16} /> Phân loại
+              </button>
+            )}
             <button
               onClick={() => setSelectedCategory("Tất cả")}
               style={{
@@ -431,32 +436,34 @@ export default function Services() {
               />
             </div>
 
-            <button
-              className="btn btn-secondary"
-              onClick={() => {
-                setDroppedFile(null);
-                setIsImportModalOpen(true);
-              }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                whiteSpace: "nowrap",
-                flexShrink: 0,
-                borderColor: "hsl(142, 76%, 36%)",
-                color: "hsl(142, 76%, 36%)",
-                backgroundColor: "hsl(142, 76%, 97%)",
-                transition: "background-color 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "hsl(142, 76%, 92%)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "hsl(142, 76%, 97%)";
-              }}
-            >
-              <Download size={16} /> Nhập dữ liệu
-            </button>
+            {canManage && (
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setDroppedFile(null);
+                  setIsImportModalOpen(true);
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  borderColor: "hsl(142, 76%, 36%)",
+                  color: "hsl(142, 76%, 36%)",
+                  backgroundColor: "hsl(142, 76%, 97%)",
+                  transition: "background-color 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "hsl(142, 76%, 92%)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "hsl(142, 76%, 97%)";
+                }}
+              >
+                <Download size={16} /> Nhập dữ liệu
+              </button>
+            )}
 
             <ExportButton
               data={filteredServices}
@@ -464,13 +471,15 @@ export default function Services() {
               columns={serviceExportColumns}
             />
 
-            <button
-              className="btn btn-primary"
-              onClick={handleOpenCreateModal}
-              style={{ display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", flexShrink: 0 }}
-            >
-              <Plus size={18} /> Thêm dịch vụ
-            </button>
+            {canManage && (
+              <button
+                className="btn btn-primary"
+                onClick={handleOpenCreateModal}
+                style={{ display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", flexShrink: 0 }}
+              >
+                <Plus size={18} /> Thêm dịch vụ
+              </button>
+            )}
           </div>
         </div>
 
@@ -550,7 +559,7 @@ export default function Services() {
       />
 
       {/* Global Drag-and-Drop Overlay */}
-      {isDragActive && (
+      {isDragActive && canManage && (
         <div
           style={{
             position: "absolute",

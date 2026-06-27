@@ -3,6 +3,7 @@ import { Edit2, Trash2 } from "lucide-react";
 import { ExcelInput, ExcelSelect, ExcelChipsInput } from "../../../components/desktop/TableComponents";
 import { Tooltip } from "../../../components/desktop/Tooltip";
 import { Service, ServiceCategory } from "./types";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 interface ServiceTableProps {
   filteredServices: Service[];
@@ -33,6 +34,9 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
   formatNumber,
   getColorStyle,
 }) => {
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const canManage = hasPermission("service.manage");
+
   const handleDiscountInputChange = (service: Service, valStr: string) => {
     const P = Number(getInlineValue(service, "price") || 0);
     handleInlineChange(service.id, "discountInput" as keyof Service, valStr);
@@ -115,7 +119,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
             <th style={{ padding: "6px 10px", fontSize: "13px", width: "140px", textAlign: "center" }}>Giảm giá</th>
             <th style={{ padding: "6px 10px", fontSize: "13px", width: "140px", textAlign: "center" }}>Giá KM</th>
             <th style={{ padding: "6px 10px", fontSize: "13px", width: "100px", textAlign: "center" }}>Hoa hồng (%)</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "100px", textAlign: "center" }}>Thao tác</th>
+            {canManage && <th style={{ padding: "6px 10px", fontSize: "13px", width: "100px", textAlign: "center" }}>Thao tác</th>}
           </tr>
         </thead>
         <tbody>
@@ -140,6 +144,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                     onChange={(val) => handleInlineChange(service.id, "name", val)}
                     onBlur={() => handleAutoSave(service.id, { name: getInlineValue(service, "name") as string })}
                     fontWeight="600"
+                    disabled={!canManage}
                   />
                 </td>
                 <td style={{ padding: "3px 6px", verticalAlign: "middle", height: "38px", boxSizing: "border-box" }}>
@@ -152,6 +157,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                     options={categories.map((cat) => ({ value: cat.id, label: cat.name, colorStyle: getColorStyle(cat.color || "") }))}
                     colorStyle={getColorStyle(currentCategoryObj?.color || "")}
                     placeholder="-- Chưa phân loại --"
+                    disabled={!canManage}
                   />
                 </td>
                 <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
@@ -162,6 +168,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                     onBlur={() => handleAutoSave(service.id, { duration: getInlineValue(service, "duration") as number })}
                     textAlign="center"
                     unit="phút"
+                    disabled={!canManage}
                   />
                 </td>
                 <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
@@ -172,6 +179,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                     textAlign="center"
                     fontWeight="500"
                     unit="đ"
+                    disabled={!canManage}
                   />
                 </td>
                 <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
@@ -182,6 +190,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                       const valsToSave = finalVals !== undefined ? finalVals : (getInlineValue(service, "additionalPrices") as number[] || []);
                       handleAutoSave(service.id, { additionalPrices: valsToSave });
                     }}
+                    disabled={!canManage}
                   />
                 </td>
                 <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
@@ -209,6 +218,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                         ? getInlineValue(service, "discountInput" as keyof Service)?.toString() !== ""
                         : displayDiscountVal !== null && service.price > displayDiscountVal
                     }
+                    disabled={!canManage}
                   />
                 </td>
                 <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
@@ -234,6 +244,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                         ? getInlineValue(service, "promoInput" as keyof Service)?.toString() !== ""
                         : displayDiscountVal !== null
                     }
+                    disabled={!canManage}
                   />
                 </td>
                 <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
@@ -258,6 +269,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                       fontWeight="600"
                       textColor="var(--text-secondary)"
                       unit="%"
+                      disabled={!canManage}
                     />
                   ) : (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-muted)", fontSize: "13px" }}>
@@ -265,28 +277,30 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                     </div>
                   )}
                 </td>
-                <td style={{ padding: "0 8px", verticalAlign: "middle", textAlign: "center", height: "38px" }}>
-                  <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>
-                    <Tooltip content="Chỉnh sửa chi tiết">
-                      <button
-                        className="btn btn-secondary"
-                        style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
-                        onClick={() => handleOpenEditModal(service)}
-                      >
-                        <Edit2 size={13} />
-                      </button>
-                    </Tooltip>
-                    <Tooltip content="Xóa dịch vụ">
-                      <button
-                        className="btn btn-danger"
-                        style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
-                        onClick={() => handleDelete(service.id)}
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </Tooltip>
-                  </div>
-                </td>
+                {canManage && (
+                  <td style={{ padding: "0 8px", verticalAlign: "middle", textAlign: "center", height: "38px" }}>
+                    <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>
+                      <Tooltip content="Chỉnh sửa chi tiết">
+                        <button
+                          className="btn btn-secondary"
+                          style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                          onClick={() => handleOpenEditModal(service)}
+                        >
+                          <Edit2 size={13} />
+                        </button>
+                      </Tooltip>
+                      <Tooltip content="Xóa dịch vụ">
+                        <button
+                          className="btn btn-danger"
+                          style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                          onClick={() => handleDelete(service.id)}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </Tooltip>
+                    </div>
+                  </td>
+                )}
               </tr>
             );
           })}

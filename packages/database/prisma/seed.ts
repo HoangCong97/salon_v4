@@ -55,34 +55,34 @@ async function main() {
   console.log("🌱 Seeding SaaS Plans...");
   const freePlan = await prisma.saasPlan.create({
     data: {
-      name: "Dùng Thử (Free Trial)",
-      code: "FREE",
-      price: 0,
+      name: "Gói Basic",
+      code: "BASIC",
+      price: 199000,
       maxBranches: 1,
       maxStaff: 5,
-      features: ["Đặt lịch trực tuyến cơ bản", "Báo cáo doanh thu ngày", "Phân quyền Nhân viên/Khách hàng", "Thời hạn: 14 ngày"]
+      features: ["Đặt lịch trực tuyến cơ bản", "Báo cáo doanh thu ngày", "Phân quyền Nhân viên/Khách hàng"]
     }
   });
 
   const basicPlan = await prisma.saasPlan.create({
     data: {
-      name: "Gói Cơ Bản (Basic)",
-      code: "BASIC",
-      price: 299000,
+      name: "Gói Plus",
+      code: "PLUS",
+      price: 349000,
       maxBranches: 2,
       maxStaff: 15,
-      features: ["Tất cả tính năng gói Free", "Báo cáo doanh thu chi tiết", "Quản lý ca kíp và tua làm thợ", "Hóa đơn & Bán hàng POS cơ bản", "SMS OTP thông báo"]
+      features: ["Tất cả tính năng gói Basic", "Báo cáo doanh thu chi tiết", "Quản lý ca kíp và tua làm thợ", "Hóa đơn & Bán hàng POS cơ bản", "SMS OTP thông báo"]
     }
   });
 
   const premiumPlan = await prisma.saasPlan.create({
     data: {
-      name: "Gói Cao Cấp (Premium)",
+      name: "Gói Premium",
       code: "PREMIUM",
       price: 799000,
       maxBranches: -1, // Unlimited
       maxStaff: -1, // Unlimited
-      features: ["Tất cả tính năng gói Basic", "Cấu hình hoa hồng và lương thợ nâng cao", "Báo cáo chuyên sâu & biểu đồ phân tích", "Quản lý thẻ dịch vụ trả trước", "Hỗ trợ kỹ thuật 24/7 riêng biệt"]
+      features: ["Tất cả tính năng gói Plus", "Cấu hình hoa hồng và lương thợ nâng cao", "Báo cáo chuyên sâu & biểu đồ phân tích", "Quản lý thẻ dịch vụ trả trước", "Hỗ trợ kỹ thuật 24/7 riêng biệt"]
     }
   });
 
@@ -235,11 +235,44 @@ async function main() {
   console.log("🌱 Seeding Roles & Permissions...");
 
   // Create default permissions
-  const permBookCreate = await prisma.permission.create({ data: { slug: "booking.create", groupName: "Booking", name: "Tạo lịch hẹn", description: "Cho phép đặt lịch hẹn mới" } });
-  const permBookView = await prisma.permission.create({ data: { slug: "booking.view", groupName: "Booking", name: "Xem lịch hẹn", description: "Xem danh sách lịch hẹn" } });
-  const permInvoiceCreate = await prisma.permission.create({ data: { slug: "invoice.create", groupName: "Invoice", name: "Tạo hóa đơn", description: "Tạo và in hóa đơn thanh toán" } });
-  const permReportView = await prisma.permission.create({ data: { slug: "report.view", groupName: "Report", name: "Xem báo cáo", description: "Xem báo cáo thống kê doanh thu" } });
-  const permStaffManage = await prisma.permission.create({ data: { slug: "staff.manage", groupName: "Staff", name: "Quản lý nhân viên", description: "Quản lý thợ và phân ca ca kíp" } });
+  const standardPermissions = [
+    { slug: "booking.view", groupName: "Lịch hẹn", name: "Xem lịch hẹn", description: "Xem danh sách lịch hẹn" },
+    { slug: "booking.create", groupName: "Lịch hẹn", name: "Tạo lịch hẹn", description: "Cho phép đặt lịch hẹn mới" },
+    { slug: "booking.edit", groupName: "Lịch hẹn", name: "Sửa lịch hẹn", description: "Cho phép chỉnh sửa lịch hẹn" },
+    { slug: "booking.delete", groupName: "Lịch hẹn", name: "Xóa lịch hẹn", description: "Cho phép hủy/xóa lịch hẹn" },
+
+    { slug: "pos.view", groupName: "Bán hàng POS", name: "Truy cập POS", description: "Cho phép truy cập màn hình bán hàng POS" },
+    { slug: "invoice.view", groupName: "Hóa đơn", name: "Xem hóa đơn", description: "Xem lịch sử danh sách hóa đơn" },
+    { slug: "invoice.create", groupName: "Hóa đơn", name: "Tạo hóa đơn", description: "Tạo và in hóa đơn thanh toán" },
+
+    { slug: "customer.view", groupName: "Khách hàng", name: "Xem khách hàng", description: "Xem danh sách khách hàng" },
+    { slug: "customer.manage", groupName: "Khách hàng", name: "Quản lý khách hàng", description: "Thêm, sửa, xóa khách hàng" },
+
+    { slug: "service.view", groupName: "Dịch vụ", name: "Xem dịch vụ", description: "Xem danh mục và bảng giá dịch vụ" },
+    { slug: "service.manage", groupName: "Dịch vụ", name: "Quản lý dịch vụ", description: "Thêm, sửa, xóa dịch vụ" },
+
+    { slug: "inventory.view", groupName: "Kho hàng", name: "Xem kho hàng", description: "Xem số lượng tồn kho sản phẩm" },
+    { slug: "inventory.manage", groupName: "Kho hàng", name: "Quản lý kho hàng", description: "Nhập, xuất, điều chỉnh kho hàng" },
+
+    { slug: "staff.view", groupName: "Nhân sự", name: "Xem nhân sự", description: "Xem danh sách thông tin nhân viên" },
+    { slug: "staff.manage", groupName: "Nhân sự", name: "Quản lý nhân sự", description: "Thêm, sửa, xóa và cấu hình lương nhân viên" },
+
+    { slug: "shift.view", groupName: "Lịch trực", name: "Xem lịch trực ca", description: "Xem lịch ca kíp của nhân viên" },
+    { slug: "shift.manage", groupName: "Lịch trực", name: "Phân ca xếp lịch", description: "Xếp lịch làm việc và chấm công" },
+
+    { slug: "report.view", groupName: "Báo cáo", name: "Xem báo cáo", description: "Xem báo cáo thống kê doanh thu và hoạt động" },
+
+    { slug: "branch.view", groupName: "Chi nhánh", name: "Xem chi nhánh", description: "Xem danh sách chi nhánh" },
+    { slug: "branch.manage", groupName: "Chi nhánh", name: "Quản lý chi nhánh", description: "Thêm, sửa, cấu hình chi nhánh" },
+  ];
+
+  const dbPermissions = [];
+  for (const p of standardPermissions) {
+    const createdPerm = await prisma.permission.create({
+      data: p
+    });
+    dbPermissions.push(createdPerm);
+  }
 
   // Create roles for tenant 1
   const roleAdmin = await prisma.role.create({
@@ -258,24 +291,65 @@ async function main() {
     }
   });
 
-  // Link permissions to Admin Role
-  await prisma.rolePermission.createMany({
-    data: [
-      { roleId: roleAdmin.id, permissionId: permBookCreate.id },
-      { roleId: roleAdmin.id, permissionId: permBookView.id },
-      { roleId: roleAdmin.id, permissionId: permInvoiceCreate.id },
-      { roleId: roleAdmin.id, permissionId: permReportView.id },
-      { roleId: roleAdmin.id, permissionId: permStaffManage.id }
-    ]
+  const roleCashier = await prisma.role.create({
+    data: {
+      tenantId: tenant1.id,
+      name: "Cashier",
+      description: "Nhân viên thu ngân"
+    }
   });
 
-  // Link permissions to Manager Role
+  const roleEmployee = await prisma.role.create({
+    data: {
+      tenantId: tenant1.id,
+      name: "Employee",
+      description: "Kỹ thuật viên / Thợ làm tóc"
+    }
+  });
+
+  // Link permissions to Admin Role (All permissions)
   await prisma.rolePermission.createMany({
-    data: [
-      { roleId: roleManager.id, permissionId: permBookCreate.id },
-      { roleId: roleManager.id, permissionId: permBookView.id },
-      { roleId: roleManager.id, permissionId: permInvoiceCreate.id }
-    ]
+    data: dbPermissions.map(p => ({
+      roleId: roleAdmin.id,
+      permissionId: p.id
+    }))
+  });
+
+  // Link permissions to Manager Role (All except branch.manage and staff.manage)
+  const managerExclusions = ["branch.manage", "staff.manage"];
+  await prisma.rolePermission.createMany({
+    data: dbPermissions
+      .filter(p => !managerExclusions.includes(p.slug))
+      .map(p => ({
+        roleId: roleManager.id,
+        permissionId: p.id
+      }))
+  });
+
+  // Link permissions to Cashier Role
+  const cashierSlugs = [
+    "booking.view", "booking.create", "booking.edit",
+    "pos.view", "invoice.view", "invoice.create",
+    "customer.view", "customer.manage"
+  ];
+  await prisma.rolePermission.createMany({
+    data: dbPermissions
+      .filter(p => cashierSlugs.includes(p.slug))
+      .map(p => ({
+        roleId: roleCashier.id,
+        permissionId: p.id
+      }))
+  });
+
+  // Link permissions to Employee Role
+  const employeeSlugs = ["booking.view", "shift.view"];
+  await prisma.rolePermission.createMany({
+    data: dbPermissions
+      .filter(p => employeeSlugs.includes(p.slug))
+      .map(p => ({
+        roleId: roleEmployee.id,
+        permissionId: p.id
+      }))
   });
 
   console.log("✅ Roles & Permissions created!");
@@ -283,16 +357,17 @@ async function main() {
   // 7. CREATE USERS
   console.log("🌱 Seeding Users...");
 
+
   const user1 = await prisma.user.create({
     data: {
       tenantId: tenant1.id,
       roleId: roleAdmin.id,
-      name: "Nguyễn Văn A (Admin)",
+      name: "Hoàng Công",
       email: "admin@hairstar.vn",
       password: "hashedpassword123", // Mock password
-      phone: "0901234567",
+      phone: "0971218625",
       sex: "Nam",
-      baseSalary: 15000000,
+      baseSalary: 0,
       status: "ACTIVE"
     }
   });
@@ -314,6 +389,7 @@ async function main() {
   const user3 = await prisma.user.create({
     data: {
       tenantId: tenant1.id,
+      roleId: roleEmployee.id,
       name: "Lê Văn Stylist",
       email: "stylist@hairstar.vn",
       password: "hashedpassword123",
@@ -446,10 +522,10 @@ async function main() {
     { name: "kẹp giả", catId: catHair.id, serviceCategory: "Cơ bản", branches: ["CN3"], priceCN2: 0, priceCN3: 10000, additional: [100000], status: "Hoạt động" },
 
     // Hoá chất
-    { name: "Nhuộm đen", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 300000, priceCN3: 300000, additional: [100000, 150000, 200000, 250000, 300000, 350000, 400000, 450000, 500000], status: "Ngừng" },
-    { name: "Nhuộm màu", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 500000, priceCN3: 500000, additional: [200000, 250000, 300000, 350000, 400000, 450000, 500000, 550000, 600000, 700000, 800000, 900000], status: "Hoạt động" },
+    { name: "Nhuộm đen", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 300000, priceCN3: 300000, additional: [100000, 150000, 200000, 250000, 300000, 350000, 400000, 450000 ], status: "Ngừng" },
+    { name: "Nhuộm màu", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 500000, priceCN3: 500000, additional: [200000, 250000, 300000, 350000, 400000 ], status: "Hoạt động" },
     { name: "Tẩy tóc", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 300000, priceCN3: 300000, additional: [150000], status: "Hoạt động" },
-    { name: "Uốn", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 300000, priceCN3: 300000, additional: [200000, 250000, 300000, 350000, 380000, 400000, 450000, 500000, 550000, 600000, 700000, 800000, 900000], status: "Hoạt động" },
+    { name: "Uốn", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 300000, priceCN3: 300000, additional: [200000, 250000, 300000, 350000, 380000, 400000 ], status: "Hoạt động" },
     { name: "Duỗi", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 300000, priceCN3: 300000, additional: [200000, 250000, 300000, 350000, 400000, 450000, 500000], status: "Hoạt động" },
     { name: "Ép side", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 250000, priceCN3: 250000, additional: [270000, 350000], status: "Hoạt động" },
     { name: "Móc ligh", catId: catChemical.id, serviceCategory: "Hoá chất", branches: ["CN2", "CN3"], priceCN2: 70000, priceCN3: 70000, additional: [70000, 100000], status: "Hoạt động" },

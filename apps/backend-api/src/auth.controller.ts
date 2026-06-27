@@ -1,5 +1,6 @@
 import { Controller, Post, Body, HttpStatus, HttpException } from "@nestjs/common";
 import { prisma } from "@salon/database";
+import { ensureStandardRolesAndPermissions } from "./staff.controller";
 
 @Controller("api/auth")
 export class AuthController {
@@ -13,14 +14,11 @@ export class AuthController {
         throw new HttpException("Email and password are required", HttpStatus.BAD_REQUEST);
       }
 
-      // Query user and join with their role
+      // Query user first to check credentials
       const user = await prisma.user.findFirst({
         where: {
           email: email.toLowerCase(),
           deletedAt: null
-        },
-        include: {
-          role: true
         }
       });
 
@@ -37,10 +35,33 @@ export class AuthController {
         throw new HttpException("Tài khoản đã bị khóa", HttpStatus.FORBIDDEN);
       }
 
+      // Ensure all standard roles and permissions exist for this tenant
+      await ensureStandardRolesAndPermissions(user.tenantId);
+
+      // Re-query user and join with their role and permissions
+      const fullUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        include: {
+          role: {
+            include: {
+              permissions: {
+                include: {
+                  permission: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!fullUser) {
+        throw new HttpException("Không tìm thấy thông tin người dùng", HttpStatus.NOT_FOUND);
+      }
+
       // Map role name to standard frontend roles
       let mappedRole: "ADMIN" | "MANAGER" | "CASHIER" | "EMPLOYEE" = "EMPLOYEE";
-      if (user.role) {
-        const rName = user.role.name.toUpperCase();
+      if (fullUser.role) {
+        const rName = fullUser.role.name.toUpperCase();
         if (rName === "ADMIN" || rName === "SUPER_ADMIN") {
           mappedRole = "ADMIN";
         } else if (rName === "MANAGER") {
@@ -50,13 +71,17 @@ export class AuthController {
         }
       }
 
+      // Map all permissions assigned to this user's role
+      const permissions = fullUser.role?.permissions.map(rp => rp.permission.slug) || [];
+
       return {
-        id: user.id,
-        name: user.name,
-        email: user.email,
+        id: fullUser.id,
+        name: fullUser.name,
+        email: fullUser.email,
         role: mappedRole,
-        tenantId: user.tenantId,
-        avatar: user.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
+        tenantId: fullUser.tenantId,
+        avatar: fullUser.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80",
+        permissions
       };
 
     } catch (error) {

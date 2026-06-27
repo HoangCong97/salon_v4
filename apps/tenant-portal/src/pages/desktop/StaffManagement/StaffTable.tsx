@@ -45,6 +45,8 @@ export const StaffTable: React.FC<StaffTableProps> = ({
 }) => {
   const currentUser = useAuthStore((state) => state.user);
   const currentTenantId = useAuthStore((state) => state.currentTenantId);
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const canManage = hasPermission("staff.manage");
 
   const staffExportColumns = React.useMemo<ExportColumnMapping[]>(() => [
     { key: "name", header: "Họ tên nhân viên" },
@@ -59,6 +61,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
   ], []);
 
   const handleImageDrop = async (itemId: string, file: File) => {
+    if (!canManage) return;
     try {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -112,28 +115,30 @@ export const StaffTable: React.FC<StaffTableProps> = ({
           />
         </div>
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <button
-            className="btn btn-secondary"
-            onClick={handleOpenImportModal}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              whiteSpace: "nowrap",
-              borderColor: "hsl(142, 76%, 36%)",
-              color: "hsl(142, 76%, 36%)",
-              backgroundColor: "hsl(142, 76%, 97%)",
-              transition: "background-color 0.15s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "hsl(142, 76%, 92%)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "hsl(142, 76%, 97%)";
-            }}
-          >
-            <Download size={16} /> Nhập dữ liệu
-          </button>
+          {canManage && (
+            <button
+              className="btn btn-secondary"
+              onClick={handleOpenImportModal}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                whiteSpace: "nowrap",
+                borderColor: "hsl(142, 76%, 36%)",
+                color: "hsl(142, 76%, 36%)",
+                backgroundColor: "hsl(142, 76%, 97%)",
+                transition: "background-color 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "hsl(142, 76%, 92%)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "hsl(142, 76%, 97%)";
+              }}
+            >
+              <Download size={16} /> Nhập dữ liệu
+            </button>
+          )}
 
           <ExportButton
             data={filteredStaff}
@@ -141,9 +146,11 @@ export const StaffTable: React.FC<StaffTableProps> = ({
             columns={staffExportColumns}
           />
 
-          <button className="btn btn-primary" onClick={handleOpenCreateModal}>
-            <Plus size={18} /> Thêm nhân viên mới
-          </button>
+          {canManage && (
+            <button className="btn btn-primary" onClick={handleOpenCreateModal}>
+              <Plus size={18} /> Thêm nhân viên mới
+            </button>
+          )}
         </div>
       </div>
 
@@ -169,7 +176,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                   <th style={{ padding: "12px 16px", fontSize: "13px", width: "150px", textAlign: "center" }}>Lương cơ bản</th>
                   <th style={{ padding: "12px 16px", fontSize: "13px", minWidth: "220px" }}>Chi nhánh hoạt động</th>
                   <th style={{ padding: "12px 16px", fontSize: "13px", width: "140px" }}>Trạng thái</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "120px", textAlign: "center" }}>Hành động</th>
+                  {canManage && <th style={{ padding: "12px 16px", fontSize: "13px", width: "120px", textAlign: "center" }}>Hành động</th>}
                 </tr>
               </thead>
               <tbody>
@@ -236,6 +243,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                               onChange={(val) => handleInlineChange(item.id, "name", val)}
                               onBlur={() => handleAutoSave(item.id, { name: getInlineValue(item, "name") as string })}
                               fontWeight="600"
+                              disabled={!canManage}
                             />
                           </div>
                         </div>
@@ -246,7 +254,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           value={getInlineValue(item, "phone") as string}
                           onChange={(val) => handleInlineChange(item.id, "phone", val)}
                           onBlur={() => handleAutoSave(item.id, { phone: getInlineValue(item, "phone") as string })}
-                          disabled={isSelfAdmin}
+                          disabled={isSelfAdmin || !canManage}
                         />
                       </td>
 
@@ -255,7 +263,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           value={getInlineValue(item, "email") as string}
                           onChange={(val) => handleInlineChange(item.id, "email", val)}
                           onBlur={() => handleAutoSave(item.id, { email: getInlineValue(item, "email") as string })}
-                          disabled={isSelfAdmin}
+                          disabled={isSelfAdmin || !canManage}
                         />
                       </td>
 
@@ -265,7 +273,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           value={getInlineValue(item, "password") as string || ""}
                           onChange={(val) => handleInlineChange(item.id, "password", val)}
                           onBlur={() => handleAutoSave(item.id, { password: getInlineValue(item, "password") as string })}
-                          disabled={isSelfAdmin}
+                          disabled={isSelfAdmin || !canManage}
                         />
                       </td>
 
@@ -281,7 +289,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           options={filteredRoles.map((r) => ({ value: r.id, label: r.name, colorStyle: getRoleColorStyle(r.name) }))}
                           colorStyle={getRoleColorStyle(inlineRoleVal ? inlineRoleVal.name : "Employee")}
                           placeholder="-- Chọn vai trò --"
-                          disabled={isAdminRow}
+                          disabled={isAdminRow || !canManage}
                         />
                       </td>
 
@@ -293,6 +301,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           textAlign="center"
                           fontWeight="500"
                           unit="đ"
+                          disabled={!canManage}
                         />
                       </td>
 
@@ -302,6 +311,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           options={branches.map((b) => ({ value: b.id, label: b.name }))}
                           onChange={handleBranchChange}
                           placeholder="Chưa gán chi nhánh"
+                          disabled={!canManage}
                         />
                       </td>
 
@@ -317,35 +327,37 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                             { value: "INACTIVE", label: "Tạm khóa", colorStyle: getStatusColorStyle("INACTIVE") },
                           ]}
                           colorStyle={getStatusColorStyle(inlineStatusVal)}
-                          disabled={isSelfAdmin}
+                          disabled={isSelfAdmin || !canManage}
                         />
                       </td>
 
-                      <td style={{ padding: "0 8px", verticalAlign: "middle", height: "38px" }}>
-                        <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>
-                          <button
-                            className="btn btn-secondary"
-                            style={{ padding: "4px 8px", fontSize: "12px", borderRadius: "var(--radius-sm)" }}
-                            onClick={() => handleOpenEditModal(item)}
-                          >
-                            <Edit2 size={12} />
-                          </button>
-                          <button
-                            className="btn btn-danger"
-                            style={{
-                              padding: "4px 8px",
-                              fontSize: "12px",
-                              borderRadius: "var(--radius-sm)",
-                              opacity: isAdminRow ? 0.5 : 1,
-                              cursor: isAdminRow ? "not-allowed" : "pointer"
-                            }}
-                            disabled={isAdminRow}
-                            onClick={() => !isAdminRow && handleDeleteStaff(item.id)}
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </td>
+                      {canManage && (
+                        <td style={{ padding: "0 8px", verticalAlign: "middle", height: "38px" }}>
+                          <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>
+                            <button
+                              className="btn btn-secondary"
+                              style={{ padding: "4px 8px", fontSize: "12px", borderRadius: "var(--radius-sm)" }}
+                              onClick={() => handleOpenEditModal(item)}
+                            >
+                              <Edit2 size={12} />
+                            </button>
+                            <button
+                              className="btn btn-danger"
+                              style={{
+                                padding: "4px 8px",
+                                fontSize: "12px",
+                                borderRadius: "var(--radius-sm)",
+                                opacity: isAdminRow ? 0.5 : 1,
+                                cursor: isAdminRow ? "not-allowed" : "pointer"
+                              }}
+                              disabled={isAdminRow}
+                              onClick={() => !isAdminRow && handleDeleteStaff(item.id)}
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </ExcelRow>
                   );
                 })}
