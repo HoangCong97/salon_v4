@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { CreditCard, Check, ShieldAlert, Award, FileText, BadgeCheck, Clock, Eye, X, Edit, DollarSign } from "lucide-react";
 import { formatCurrencyVND } from "@salon/shared-utils";
+import { useWebSocket } from "../hooks/useWebSocket";
 
 interface PricingPlan {
   id: string;
@@ -47,9 +48,9 @@ const Subscriptions: React.FC = () => {
   const [branchSelectValue, setBranchSelectValue] = useState("-1");
   const [staffSelectValue, setStaffSelectValue] = useState("-1");
 
-  const fetchData = async () => {
+  const fetchData = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       // Fetch plans
       const plansRes = await fetch("http://localhost:3000/api/super-admin/plans");
       const plansData = await plansRes.json();
@@ -70,13 +71,21 @@ const Subscriptions: React.FC = () => {
     } catch (error) {
       console.error("Failed to load subscription data:", error);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(true);
   }, []);
+
+  // Tự động tải lại hóa đơn và gói khi có cập nhật mới
+  useWebSocket((event) => {
+    console.log("Subscriptions WebSocket event:", event);
+    if (event === "tenant.buy-plan" || event === "invoice.approved" || event === "tenant.plan-changed") {
+      fetchData(false); // Tải lại âm thầm không hiển thị vòng quay loading
+    }
+  });
 
   const approveInvoice = async (id: string) => {
     try {

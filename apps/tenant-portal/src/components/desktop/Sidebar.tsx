@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import { useAuthStore, SubscriptionData } from "../../store/useAuthStore";
 import { LayoutDashboard, Store, Users, BarChart3, MapPin, Layers, Package, CalendarDays, Receipt, Contact, CalendarClock, Crown, Sparkles, Award, Coins } from "lucide-react";
 import { Tooltip } from "./Tooltip";
+import { useWebSocket } from "../../hooks/useWebSocket";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -160,6 +161,18 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
       fetchSubscription();
     }
   }, [subscription, subscriptionLoading, currentTenantId]);
+
+  // Lắng nghe sự kiện WebSocket để cập nhật thông tin gói cước real-time khi Admin phê duyệt
+  useWebSocket((event, data) => {
+    const isOurTenant =
+      (event === "invoice.approved" && data.tenantId === currentTenantId) ||
+      (event === "tenant.plan-changed" && data.id === currentTenantId) ||
+      (event === "tenant.status-updated" && data.id === currentTenantId);
+
+    if (isOurTenant) {
+      fetchSubscription();
+    }
+  });
 
   const menuItems = [
     { path: "/", label: "Tổng quan", icon: LayoutDashboard, permission: "booking.view" },

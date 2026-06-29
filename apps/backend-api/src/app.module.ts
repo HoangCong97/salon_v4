@@ -17,6 +17,7 @@ import { CustomerController } from "./customer.controller";
 import { BookingController } from "./booking.controller";
 import { PayrollController } from "./payroll.controller";
 import { CustomerPortalController } from "./customer-portal.controller";
+import { NotificationGateway } from "./notification.gateway";
 
 @Module({
   imports: [ImportEngineModule],
@@ -38,7 +39,8 @@ import { CustomerPortalController } from "./customer-portal.controller";
     PayrollController,
     CustomerPortalController
   ],
-  providers: [AppService],
+  providers: [AppService, NotificationGateway],
+  exports: [NotificationGateway]
 })
 export class AppModule {}
 

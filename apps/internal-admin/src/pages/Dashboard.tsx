@@ -1,30 +1,103 @@
 import React, { useState, useEffect } from "react";
 import { Users, DollarSign, Activity, Calendar, ShieldCheck, TrendingUp } from "lucide-react";
 import { formatCurrencyVND } from "@salon/shared-utils";
+import { useWebSocket } from "../hooks/useWebSocket";
 
 const Dashboard: React.FC = () => {
   // State for database analytics data
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [actions, setActions] = useState([
+    { id: 1, type: "Tenant", message: "Salon 'HairSalon Việt' đăng ký dùng thử gói Basic", time: "10 phút trước", user: "Hệ thống" },
+    { id: 2, type: "Billing", message: "Duyệt hóa đơn gia hạn 6 tháng cho 'BarberShop Q1'", time: "42 phút trước", user: "Hoàng Admin" },
+    { id: 3, type: "Security", message: "Yêu cầu thay đổi mật khẩu từ chủ salon 'TinaSpa'", time: "2 giờ trước", user: "Hệ thống" },
+    { id: 4, type: "API", message: "Cập nhật cấu hình tích hợp SMS Brandname cho 'VinaBarber'", time: "5 giờ trước", user: "Thế Anh (Manager)" }
+  ]);
+
+  const fetchDashboardData = async (showLoading = true) => {
+    try {
+      if (showLoading) setLoading(true);
+      const statsRes = await fetch("http://localhost:3000/api/super-admin/dashboard/stats");
+
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        setData({ stats: statsData });
+      }
+    } catch (error) {
+      console.error("Failed to fetch dashboard data:", error);
+    } finally {
+      if (showLoading) setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        const statsRes = await fetch("http://localhost:3000/api/super-admin/dashboard/stats");
-
-        if (statsRes.ok) {
-          const statsData = await statsRes.json();
-          setData({ stats: statsData });
-        }
-      } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDashboardData();
+    fetchDashboardData(true);
   }, []);
+
+  // Lắng nghe sự kiện WebSocket để cập nhật dashboard real-time
+  useWebSocket((event, data) => {
+    console.log("Dashboard WebSocket event:", event, data);
+    
+    // Tải lại các số liệu thống kê (không hiện loading spinner quay tròn gây khó chịu)
+    fetchDashboardData(false);
+
+    let newAction = null;
+    const timeStr = "Vừa xong";
+
+    switch (event) {
+      case "tenant.buy-plan":
+        newAction = {
+          id: Date.now(),
+          type: "Billing",
+          message: `Salon '${data.tenantName}' đăng ký mua gói dịch vụ ${data.planName}`,
+          time: timeStr,
+          user: "Hệ thống"
+        };
+        break;
+      case "invoice.approved":
+        newAction = {
+          id: Date.now(),
+          type: "Billing",
+          message: `Duyệt hóa đơn ${data.id} cho Salon '${data.salonName}'`,
+          time: timeStr,
+          user: "Admin"
+        };
+        break;
+      case "tenant.created":
+        newAction = {
+          id: Date.now(),
+          type: "Tenant",
+          message: `Khởi tạo mới Salon '${data.name}' (Gói ${data.planCode})`,
+          time: timeStr,
+          user: "Admin"
+        };
+        break;
+      case "tenant.status-updated":
+        newAction = {
+          id: Date.now(),
+          type: "Tenant",
+          message: `Cập nhật trạng thái Salon '${data.name}' thành ${data.status === "ACTIVE" ? "Hoạt động" : "Tạm ngưng"}`,
+          time: timeStr,
+          user: "Admin"
+        };
+        break;
+      case "tenant.plan-changed":
+        newAction = {
+          id: Date.now(),
+          type: "Tenant",
+          message: `Đổi trực tiếp gói Salon '${data.name}' thành ${data.planCode}`,
+          time: timeStr,
+          user: "Admin"
+        };
+        break;
+      default:
+        break;
+    }
+
+    if (newAction) {
+      setActions((prev) => [newAction!, ...prev.slice(0, 7)]);
+    }
+  });
 
   // Compute plan distribution
   let premiumCount = 42;
@@ -78,13 +151,6 @@ const Dashboard: React.FC = () => {
     }
   ];
 
-  // System logs mock data
-  const recentActions = [
-    { id: 1, type: "Tenant", message: "Salon 'HairSalon Việt' đăng ký dùng thử gói Basic", time: "10 phút trước", user: "Hệ thống" },
-    { id: 2, type: "Billing", message: "Duyệt hóa đơn gia hạn 6 tháng cho 'BarberShop Q1'", time: "42 phút trước", user: "Hoàng Admin" },
-    { id: 3, type: "Security", message: "Yêu cầu thay đổi mật khẩu từ chủ salon 'TinaSpa'", time: "2 giờ trước", user: "Hệ thống" },
-    { id: 4, type: "API", message: "Cập nhật cấu hình tích hợp SMS Brandname cho 'VinaBarber'", time: "5 giờ trước", user: "Thế Anh (Manager)" }
-  ];
 
   if (loading) {
     return (
@@ -259,7 +325,7 @@ const Dashboard: React.FC = () => {
             Hoạt Động Gần Đây
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px", flexGrow: 1 }}>
-            {recentActions.map((action) => (
+            {actions.map((action) => (
               <div
                 key={action.id}
                 style={{

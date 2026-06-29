@@ -2,9 +2,11 @@ import { Controller, Get, Post, Put, Body, Param, HttpStatus, HttpException } fr
 import { prisma } from "@salon/database";
 import * as fs from "fs";
 import * as path from "path";
+import { NotificationGateway } from "./notification.gateway";
 
 @Controller("api/tenants")
 export class TenantSubscriptionController {
+  constructor(private readonly notificationGateway: NotificationGateway) {}
 
   // 1. GET TENANT SUBSCRIPTION STATUS AND RESOURCE LIMITS
   @Get(":tenantId/subscription")
@@ -130,6 +132,18 @@ export class TenantSubscriptionController {
         include: {
           plan: true
         }
+      });
+
+      // Emit WebSocket event to internal admin dashboard
+      this.notificationGateway.broadcast("tenant.buy-plan", {
+        id: invoice.id,
+        invoiceNumber: invoice.invoiceNumber,
+        tenantId,
+        tenantName: tenant.name,
+        planName: plan.name,
+        planCode: plan.code,
+        amount: Number(invoice.amount),
+        createdAt: invoice.createdAt.toISOString()
       });
 
       return {

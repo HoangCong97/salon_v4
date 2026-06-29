@@ -1,8 +1,10 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, HttpStatus, HttpException } from "@nestjs/common";
 import { prisma } from "@salon/database";
+import { NotificationGateway } from "./notification.gateway";
 
 @Controller("api/super-admin")
 export class SuperAdminController {
+  constructor(private readonly notificationGateway: NotificationGateway) {}
   
   // 1. GET DASHBOARD STATS
   @Get("dashboard/stats")
@@ -197,6 +199,17 @@ export class SuperAdminController {
         }
       });
 
+      // Emit WebSocket event
+      this.notificationGateway.broadcast("tenant.created", {
+        id: tenant.id,
+        name: tenant.name,
+        owner: tenant.ownerName,
+        phone: tenant.phone,
+        email: tenant.email,
+        planCode: tenant.plan ? tenant.plan.code : "FREE",
+        createdAt: tenant.createdAt.toISOString()
+      });
+
       return {
         id: tenant.id,
         name: tenant.name,
@@ -233,6 +246,13 @@ export class SuperAdminController {
             select: { branches: true }
           }
         }
+      });
+
+      // Emit WebSocket event
+      this.notificationGateway.broadcast("tenant.status-updated", {
+        id: updated.id,
+        name: updated.name,
+        status: updated.status
       });
 
       return {
@@ -280,6 +300,13 @@ export class SuperAdminController {
             select: { branches: true }
           }
         }
+      });
+
+      // Emit WebSocket event
+      this.notificationGateway.broadcast("tenant.plan-changed", {
+        id: updated.id,
+        name: updated.name,
+        planCode: updated.plan ? updated.plan.code : "FREE"
       });
 
       return {
@@ -369,6 +396,19 @@ export class SuperAdminController {
           }
         });
       }
+
+      // Emit WebSocket event
+      this.notificationGateway.broadcast("invoice.approved", {
+        id: updated.invoiceNumber,
+        dbId: updated.id,
+        salonName: updated.tenant.name,
+        tenantId: updated.tenantId,
+        planName: updated.plan ? updated.plan.name : "Free",
+        amount: Number(updated.amount),
+        date: updated.createdAt.toISOString(),
+        status: updated.paymentStatus,
+        paymentMethod: updated.paymentMethod || "Chuyển khoản ngân hàng"
+      });
 
       return {
         id: updated.invoiceNumber,
