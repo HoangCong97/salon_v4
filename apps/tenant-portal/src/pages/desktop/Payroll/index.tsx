@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../../store/useAuthStore";
 import { Coins, Upload, Loader2, AlertCircle } from "lucide-react";
 import { ImportWizardModal } from "../../../components/desktop/ImportWizard/ImportWizardModal";
@@ -6,6 +7,9 @@ import { TargetField } from "../../../hooks/useImportWizard";
 import { useFileDragAndDrop } from "../../../hooks/useFileDragAndDrop";
 import { useConfirm } from "../../../components/desktop/ConfirmDialog";
 import { ExportColumnMapping } from "../../../utils/exportData";
+import { useToast } from "../../../components/desktop/ToastProvider";
+import { api } from "../../../utils/apiClient";
+import { queryKeys } from "../../../utils/queryKeys";
 
 import { PayrollMember } from "./types";
 import { PayrollHeader } from "./components/PayrollHeader";
@@ -14,26 +18,20 @@ import { PayrollTable } from "./components/PayrollTable";
 export default function Payroll() {
   const { currentTenantId, currentBranchId, hasPermission } = useAuthStore();
   const confirm = useConfirm();
+  const toast = useToast();
+  const queryClient = useQueryClient();
   const canManage = hasPermission("staff.manage");
 
   // Date selection
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
 
-  // Data states
-  const [payrolls, setPayrolls] = useState<PayrollMember[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Search/filter
+  // Derived / local state
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Excel-like inline editing cache
   const [inlineEdits, setInlineEdits] = useState<Record<string, Partial<PayrollMember>>>({});
-
-  // Import Modal states
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [droppedFile, setDroppedFile] = useState<File | null>(null);
+  const [generating, setGenerating] = useState(false);
 
   // Drag & drop hook for import
   const { isDragActive } = useFileDragAndDrop((file) => {
@@ -70,42 +68,36 @@ export default function Payroll() {
     }
   ], []);
 
-  const fetchPayrolls = async (silent = false) => {
-    if (!currentTenantId || !currentBranchId) return;
-    if (!silent) setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(
-        `http://localhost:3000/api/tenants/${currentTenantId}/payrolls?period=${periodStr}&branchId=${currentBranchId}`
-      );
-      if (!res.ok) throw new Error("Không thể tải bảng lương");
-      const data = await res.json();
-      setPayrolls(data);
-    } catch (err: any) {
-      setError(err.message || "Đã xảy ra lỗi kết nối");
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  };
+  // TanStack Query
+  const { data: payrolls = [], isLoading: payrollsLoading, error: queryError } = useQuery<PayrollMember[]>({
+    queryKey: queryKeys.payrolls.list(currentTenantId!, currentBranchId!, periodStr),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/payrolls?period=${periodStr}&branchId=${currentBranchId}`),
+    enabled: !!currentTenantId && !!currentBranchId,
+  });
 
-  useEffect(() => {
-    fetchPayrolls();
-  }, [currentTenantId, currentBranchId, periodStr]);
+  const loading = payrollsLoading || generating;
+  const error = queryError ? (queryError as Error).message : null;
+
+  const fetchPayrolls = useCallback(async (silent = false) => {
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.payrolls.list(currentTenantId!, currentBranchId!, periodStr)
+    });
+  }, [queryClient, currentTenantId, currentBranchId, periodStr]);
 
   const handleGeneratePayroll = async () => {
     if (!currentTenantId || !currentBranchId) return;
-    setLoading(true);
+    setGenerating(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/payrolls/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ period: periodStr, branchId: currentBranchId })
+      await api.post(`/tenants/${currentTenantId}/payrolls/generate`, {
+        period: periodStr,
+        branchId: currentBranchId
       });
-      if (!res.ok) throw new Error("Không thể khởi tạo bảng lương");
-      await fetchPayrolls();
+      toast.success("Khởi tạo bảng lương thành công!");
+      await fetchPayrolls(true);
     } catch (err: any) {
-      alert("Lỗi: " + err.message);
-      setLoading(false);
+      toast.error("Lỗi: " + err.message);
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -158,33 +150,25 @@ export default function Payroll() {
     }
 
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/payrolls/${payrollId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          baseSalary: merged.baseSalary,
-          allowance: merged.allowance,
-          commissionAmount: merged.commissionAmount,
-          tipAmount: merged.tipAmount,
-          deductionAmount: merged.deductionAmount
-        })
+      await api.put(`/tenants/${currentTenantId}/payrolls/${payrollId}`, {
+        baseSalary: merged.baseSalary,
+        allowance: merged.allowance,
+        commissionAmount: merged.commissionAmount,
+        tipAmount: merged.tipAmount,
+        deductionAmount: merged.deductionAmount
       });
-
-      if (!res.ok) throw new Error("Không thể tự động lưu");
-      
-      // Update local payroll list silently
-      setPayrolls((prev) =>
-        prev.map((p) => (p.id === payrollId ? { ...p, ...merged } : p))
-      );
 
       // Clear edit cache
       setInlineEdits((prev) => {
-        const next = { ...prev };
-        delete next[payrollId];
-        return next;
+        const copy = { ...prev };
+        delete copy[payrollId];
+        return copy;
       });
+
+      toast.success("Lưu tự động thành công!");
+      await fetchPayrolls(true);
     } catch (err: any) {
-      alert("Lỗi lưu tự động: " + err.message);
+      toast.error("Lỗi lưu tự động: " + err.message);
       await fetchPayrolls(true);
     }
   };
@@ -202,15 +186,11 @@ export default function Payroll() {
       return;
 
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/payrolls/${payrollId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "PAID" })
-      });
-      if (!res.ok) throw new Error("Cập nhật thất bại");
+      await api.put(`/tenants/${currentTenantId}/payrolls/${payrollId}`, { status: "PAID" });
+      toast.success("Đã cập nhật thanh toán lương!");
       await fetchPayrolls(true);
     } catch (err: any) {
-      alert("Lỗi: " + err.message);
+      toast.error("Lỗi: " + err.message);
     }
   };
 
@@ -218,7 +198,7 @@ export default function Payroll() {
     if (!currentTenantId || payrolls.length === 0) return;
     const unpaid = payrolls.filter(p => p.status === "DRAFT");
     if (unpaid.length === 0) {
-      alert("Tất cả bảng lương của tháng này đã được thanh toán.");
+      toast.info("Tất cả bảng lương của tháng này đã được thanh toán.");
       return;
     }
 
@@ -243,15 +223,11 @@ export default function Payroll() {
         status: "PAID"
       }));
 
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/payrolls/bulk`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ payrolls: payload })
-      });
-      if (!res.ok) throw new Error("Cập nhật hàng loạt thất bại");
-      await fetchPayrolls();
+      await api.put(`/tenants/${currentTenantId}/payrolls/bulk`, { payrolls: payload });
+      toast.success("Thanh toán lương hàng loạt thành công!");
+      await fetchPayrolls(true);
     } catch (err: any) {
-      alert("Lỗi: " + err.message);
+      toast.error("Lỗi: " + err.message);
     }
   };
 

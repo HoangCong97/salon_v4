@@ -1,27 +1,30 @@
-import { useState, useEffect, useMemo } from "react";
+/**
+ * useStaffManagement Hook (v2 — TanStack Query + Optimistic UI)
+ * ---
+ * Toàn bộ data fetching sử dụng useQuery() với cache stale-while-revalidate.
+ * Mutations sử dụng useMutation() với Optimistic Updates.
+ * Error feedback dùng useToast() thay vì alert().
+ */
+
+import { useState, useMemo, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../../store/useAuthStore";
 import { Role, Branch, StaffMember, SystemPermission, DailyTurn, getAdminUser } from "./types";
 import { TargetField } from "../../../hooks/useImportWizard";
 import { useFileDragAndDrop } from "../../../hooks/useFileDragAndDrop";
 import { useConfirm } from "../../../components/desktop/ConfirmDialog";
+import { useToast } from "../../../components/desktop/ToastProvider";
+import { api } from "../../../utils/apiClient";
+import { queryKeys } from "../../../utils/queryKeys";
 
 export function useStaffManagement() {
   const { currentTenantId, currentBranchId, branches } = useAuthStore();
   const confirm = useConfirm();
+  const toast = useToast();
+  const queryClient = useQueryClient();
 
   // Navigation Tab State
   const [activeTab, setActiveTab] = useState<"staff" | "permissions" | "turns">("staff");
-
-  // Data States
-  const [staff, setStaff] = useState<StaffMember[]>([]);
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [branchList, setBranchList] = useState<Branch[]>([]);
-  const [permissions, setPermissions] = useState<SystemPermission[]>([]);
-  const [dailyTurns, setDailyTurns] = useState<DailyTurn[]>([]);
-
-  // Loading & Error States
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Search Filter State
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,8 +43,6 @@ export function useStaffManagement() {
   // Role Permission Assignment States
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
   const [assignedPermissionIds, setAssignedPermissionIds] = useState<string[]>([]);
-  const [permissionsLoading, setPermissionsLoading] = useState(false);
-  const [savingPermissions, setSavingPermissions] = useState(false);
 
   // Custom Role Modal States
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
@@ -62,120 +63,83 @@ export function useStaffManagement() {
     }
   });
 
-  // Dynamic Staff Schema for Import Matcher
-  const staffSchema = useMemo<TargetField[]>(() => [
-    { field: "name", label: "Tên nhân viên", type: "string", required: true, description: "Họ và tên của nhân viên" },
-    { field: "email", label: "Email", type: "string", required: true, description: "" },
-    { field: "phone", label: "Số điện thoại", type: "string", required: false, description: "Số điện thoại liên hệ" },
-    {
-      field: "sex",
-      label: "Giới tính",
-      type: "select",
-      required: false,
-      options: [
-        { value: "Nam", label: "Nam" },
-        { value: "Nữ", label: "Nữ" }
-      ],
-      description: "Giới tính của nhân viên"
+  // ==========================================================
+  // 1. DATA FETCHING WITH useQuery (stale-while-revalidate)
+  // ==========================================================
+
+  /** Fetch danh sách nhân viên */
+  const {
+    data: staff = [],
+    isLoading: staffLoading,
+    error: staffError,
+  } = useQuery<StaffMember[]>({
+    queryKey: queryKeys.staff.list(currentTenantId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/staff`),
+    enabled: !!currentTenantId,
+  });
+
+  /** Fetch danh sách chức vụ (roles) */
+  const { data: roles = [] } = useQuery<Role[]>({
+    queryKey: queryKeys.roles.list(currentTenantId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/roles`),
+    enabled: !!currentTenantId,
+    // Auto-select role đầu tiên nếu chưa chọn
+    select: (data) => {
+      if (data.length > 0 && !selectedRoleId) {
+        // Side-effect trong select: defer to next tick
+        setTimeout(() => setSelectedRoleId((prev) => prev ?? data[0].id), 0);
+      }
+      return data;
     },
-    { field: "baseSalary", label: "Lương cơ bản", type: "number", required: false, description: "Mức lương cơ bản của nhân viên (VND)" },
-    {
-      field: "roleName",
-      label: "Chức vụ",
-      type: "select",
-      required: false,
-      options: roles.map((r) => ({ value: r.name, label: r.name })),
-      description: "Tên chức vụ. Nếu chưa tồn tại, hệ thống sẽ tự động tạo mới."
+  });
+
+  /** Fetch danh sách chi nhánh */
+  const { data: branchList = [] } = useQuery<Branch[]>({
+    queryKey: queryKeys.branches.list(currentTenantId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/branches`),
+    enabled: !!currentTenantId,
+  });
+
+  /** Fetch danh sách quyền hệ thống */
+  const { data: permissions = [] } = useQuery<SystemPermission[]>({
+    queryKey: queryKeys.permissions.list(currentTenantId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/permissions`),
+    enabled: !!currentTenantId,
+  });
+
+  /** Fetch xoay tua thợ theo chi nhánh */
+  const { data: dailyTurns = [], isLoading: turnsLoading } = useQuery<DailyTurn[]>({
+    queryKey: queryKeys.dailyTurns.list(currentTenantId!, currentBranchId!),
+    queryFn: () =>
+      api.get(`/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns`),
+    enabled: !!currentTenantId && !!currentBranchId,
+  });
+
+  /** Fetch quyền hạn của chức vụ được chọn */
+  const { data: fetchedPermissionIds, isLoading: permissionsLoading } = useQuery<string[]>({
+    queryKey: queryKeys.roles.permissions(currentTenantId!, selectedRoleId!),
+    queryFn: () =>
+      api.get(`/tenants/${currentTenantId}/roles/${selectedRoleId}/permissions`),
+    enabled: !!currentTenantId && !!selectedRoleId && activeTab === "permissions",
+    // Sync vào local state khi data thay đổi
+  });
+
+  // Sync fetched permission IDs to local state khi role thay đổi
+  // Dùng pattern "controlled by query" — chỉ sync khi data mới về
+  useMemo(() => {
+    if (fetchedPermissionIds) {
+      setAssignedPermissionIds(fetchedPermissionIds);
     }
-  ], [roles]);
+  }, [fetchedPermissionIds]);
 
-  // 1. FETCH MAIN DATA
-  const fetchStaffAndRoles = async (silent = false) => {
-    if (!currentTenantId) return;
-    if (!silent) setLoading(true);
-    setError(null);
-    try {
-      const [staffRes, rolesRes, branchesRes, permissionsRes] = await Promise.all([
-        fetch(`http://localhost:3000/api/tenants/${currentTenantId}/staff`),
-        fetch(`http://localhost:3000/api/tenants/${currentTenantId}/roles`),
-        fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches`),
-        fetch(`http://localhost:3000/api/tenants/${currentTenantId}/permissions`),
-      ]);
+  // Composite loading/error state cho backward compatibility
+  const loading = staffLoading || (activeTab === "turns" && turnsLoading);
+  const error = staffError ? (staffError as Error).message : null;
 
-      if (!staffRes.ok) throw new Error("Không thể tải danh sách nhân viên");
-      if (!rolesRes.ok) throw new Error("Không thể tải danh sách chức vụ");
-      if (!branchesRes.ok) throw new Error("Không thể tải danh sách chi nhánh");
-      if (!permissionsRes.ok) throw new Error("Không thể tải danh sách quyền hệ thống");
-
-      const staffData = await staffRes.json();
-      const rolesData = await rolesRes.json();
-      const branchesData = await branchesRes.json();
-      const permissionsData = await permissionsRes.json();
-
-      setStaff(staffData);
-      setRoles(rolesData);
-      setBranchList(branchesData);
-      setPermissions(permissionsData);
-
-      if (rolesData.length > 0 && !selectedRoleId) {
-        setSelectedRoleId(rolesData[0].id);
-      }
-    } catch (err: any) {
-      setError(err.message || "Đã xảy ra lỗi khi kết nối máy chủ API");
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  };
-
-  // FETCH TURNS DATA FOR SELECTED BRANCH
-  const fetchDailyTurns = async (silent = false) => {
-    if (!currentTenantId || !currentBranchId) return;
-    if (!silent && activeTab === "turns") setLoading(true);
-    try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns`);
-      if (!res.ok) throw new Error("Không thể tải danh sách xoay tua thợ");
-      const data = await res.json();
-      setDailyTurns(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      if (!silent && activeTab === "turns") setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchStaffAndRoles();
-  }, [currentTenantId]);
-
-  useEffect(() => {
-    if (currentBranchId) {
-      fetchDailyTurns();
-    }
-  }, [currentTenantId, currentBranchId, activeTab]);
-
-  // FETCH PERMISSIONS FOR SELECTED ROLE
-  useEffect(() => {
-    const fetchRolePermissions = async () => {
-      if (!currentTenantId || !selectedRoleId) return;
-      setPermissionsLoading(true);
-      try {
-        const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/roles/${selectedRoleId}/permissions`);
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        setAssignedPermissionIds(data);
-      } catch (err) {
-        console.error("Lỗi khi tải danh sách quyền của chức vụ", err);
-      } finally {
-        setPermissionsLoading(false);
-      }
-    };
-
-    if (activeTab === "permissions") {
-      fetchRolePermissions();
-    }
-  }, [selectedRoleId, activeTab, currentTenantId]);
-
+  // ==========================================================
   // 2. INLINE EDIT HANDLERS (Excel-like table patterns)
+  // ==========================================================
+
   const formatNumber = (val: number | string | undefined | null): string => {
     if (val === undefined || val === null || val === "") return "";
     const cleaned = String(val).replace(/\D/g, "");
@@ -209,6 +173,59 @@ export function useStaffManagement() {
     return item[field];
   };
 
+  // ==========================================================
+  // 3. MUTATIONS WITH OPTIMISTIC UI
+  // ==========================================================
+
+  /** Mutation: Auto-save inline edit cho 1 nhân viên */
+  const autoSaveMutation = useMutation({
+    mutationFn: async ({ staffId, payload }: { staffId: string; payload: any }) => {
+      return api.put(`/tenants/${currentTenantId}/staff/${staffId}`, payload);
+    },
+    onMutate: async ({ staffId, payload }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: queryKeys.staff.list(currentTenantId!) });
+
+      // Snapshot previous value
+      const previousStaff = queryClient.getQueryData<StaffMember[]>(
+        queryKeys.staff.list(currentTenantId!)
+      );
+
+      // Optimistic update: cập nhật item trong cache ngay lập tức
+      queryClient.setQueryData<StaffMember[]>(
+        queryKeys.staff.list(currentTenantId!),
+        (old) =>
+          old?.map((s) =>
+            s.id === staffId ? { ...s, ...payload } : s
+          ) ?? []
+      );
+
+      return { previousStaff };
+    },
+    onError: (_err, { staffId }, context) => {
+      // Rollback on failure
+      if (context?.previousStaff) {
+        queryClient.setQueryData(
+          queryKeys.staff.list(currentTenantId!),
+          context.previousStaff
+        );
+      }
+      toast.error(`Lưu tự động thất bại: ${(_err as Error).message}`);
+    },
+    onSuccess: (_data, { staffId }) => {
+      // Clear inline edits for this staff
+      setInlineEdits((prev) => {
+        const next = { ...prev };
+        delete next[staffId];
+        return next;
+      });
+    },
+    onSettled: () => {
+      // Refetch to ensure server truth
+      queryClient.invalidateQueries({ queryKey: queryKeys.staff.all(currentTenantId!) });
+    },
+  });
+
   const handleAutoSave = async (staffId: string, updatedFields: Partial<StaffMember>) => {
     const originalStaff = staff.find((s) => s.id === staffId);
     if (!originalStaff) return;
@@ -232,58 +249,31 @@ export function useStaffManagement() {
     }
     if (!hasChanges) return;
 
-    try {
-      const roleIdToSave = finalFields.role ? finalFields.role.id : null;
-      const branchIdsToSave = finalFields.branches.map((b) => b.id);
+    const roleIdToSave = finalFields.role ? finalFields.role.id : null;
+    const branchIdsToSave = finalFields.branches.map((b) => b.id);
 
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/staff/${staffId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: finalFields.name,
-          email: finalFields.email,
-          password: finalFields.password,
-          phone: finalFields.phone,
-          sex: finalFields.sex,
-          baseSalary: finalFields.baseSalary,
-          roleId: roleIdToSave,
-          status: finalFields.status,
-          note: finalFields.note,
-          branchIds: branchIdsToSave,
-          avatar: finalFields.avatar,
-        }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Không thể tự động lưu");
-      }
-
-      await fetchStaffDataOnly();
-      setInlineEdits((prev) => {
-        const next = { ...prev };
-        delete next[staffId];
-        return next;
-      });
-    } catch (err: any) {
-      alert(`Lưu tự động thất bại: ${err.message}`);
-      await fetchStaffDataOnly();
-    }
+    autoSaveMutation.mutate({
+      staffId,
+      payload: {
+        name: finalFields.name,
+        email: finalFields.email,
+        password: finalFields.password,
+        phone: finalFields.phone,
+        sex: finalFields.sex,
+        baseSalary: finalFields.baseSalary,
+        roleId: roleIdToSave,
+        status: finalFields.status,
+        note: finalFields.note,
+        branchIds: branchIdsToSave,
+        avatar: finalFields.avatar,
+      },
+    });
   };
 
-  const fetchStaffDataOnly = async () => {
-    try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/staff`);
-      if (res.ok) {
-        const staffData = await res.json();
-        setStaff(staffData);
-      }
-    } catch (e) {
-      console.warn("Failed silent fetch staff", e);
-    }
-  };
+  // ==========================================================
+  // 4. FULL MODAL OPERATIONS
+  // ==========================================================
 
-  // 3. FULL MODAL OPERATIONS
   const handleOpenCreateModal = () => {
     setModalMode("create");
     setSelectedStaffId(null);
@@ -296,6 +286,43 @@ export function useStaffManagement() {
     setIsModalOpen(true);
   };
 
+  /** Mutation: Xóa nhân viên — Optimistic UI */
+  const deleteStaffMutation = useMutation({
+    mutationFn: (id: string) =>
+      api.delete(`/tenants/${currentTenantId}/staff/${id}`),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.staff.list(currentTenantId!) });
+
+      const previousStaff = queryClient.getQueryData<StaffMember[]>(
+        queryKeys.staff.list(currentTenantId!)
+      );
+
+      // Optimistic: Xóa item khỏi UI ngay lập tức
+      queryClient.setQueryData<StaffMember[]>(
+        queryKeys.staff.list(currentTenantId!),
+        (old) => old?.filter((s) => s.id !== id) ?? []
+      );
+
+      return { previousStaff };
+    },
+    onError: (_err, _id, context) => {
+      // Rollback
+      if (context?.previousStaff) {
+        queryClient.setQueryData(
+          queryKeys.staff.list(currentTenantId!),
+          context.previousStaff
+        );
+      }
+      toast.error("Xóa nhân viên thất bại!");
+    },
+    onSuccess: () => {
+      toast.success("Đã xóa nhân viên thành công!");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.staff.all(currentTenantId!) });
+    },
+  });
+
   const handleDeleteStaff = async (id: string) => {
     if (
       !(await confirm({
@@ -307,24 +334,17 @@ export function useStaffManagement() {
     )
       return;
 
-    try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/staff/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) throw new Error("Lỗi khi xóa nhân viên");
-
-      await fetchStaffAndRoles();
-    } catch (err: any) {
-      alert(err.message);
-    }
+    deleteStaffMutation.mutate(id);
   };
 
-  // 4. DYNAMIC ROLES & PERMISSIONS OPERATIONS
+  // ==========================================================
+  // 5. DYNAMIC ROLES & PERMISSIONS OPERATIONS
+  // ==========================================================
+
   const handlePermissionCheckboxChange = (permissionId: string) => {
     const activeRole = roles.find((r) => r.id === selectedRoleId);
     if (activeRole && activeRole.name.toUpperCase() === "ADMIN") {
-      alert("Quyền hạn của chức vụ Admin là tối cao và không thể thay đổi.");
+      toast.warning("Quyền hạn của chức vụ Admin là tối cao và không thể thay đổi.");
       return;
     }
 
@@ -333,26 +353,26 @@ export function useStaffManagement() {
     );
   };
 
+  /** Mutation: Lưu phân quyền chức vụ */
+  const savePermissionsMutation = useMutation({
+    mutationFn: () =>
+      api.put(`/tenants/${currentTenantId}/roles/${selectedRoleId}/permissions`, {
+        permissionIds: assignedPermissionIds,
+      }),
+    onSuccess: () => {
+      toast.success("Cập nhật phân quyền chức vụ thành công!");
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.roles.permissions(currentTenantId!, selectedRoleId!),
+      });
+    },
+    onError: (err) => {
+      toast.error((err as Error).message || "Đã xảy ra lỗi khi lưu phân quyền");
+    },
+  });
+
   const handleSavePermissions = async () => {
     if (!selectedRoleId) return;
-    setSavingPermissions(true);
-    try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/roles/${selectedRoleId}/permissions`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          permissionIds: assignedPermissionIds,
-        }),
-      });
-
-      if (!res.ok) throw new Error("Không thể cập nhật phân quyền chức vụ");
-
-      alert("Cập nhật phân quyền chức vụ thành công!");
-    } catch (err: any) {
-      alert(err.message || "Đã xảy ra lỗi");
-    } finally {
-      setSavingPermissions(false);
-    }
+    savePermissionsMutation.mutate();
   };
 
   // Create Custom Role
@@ -363,12 +383,49 @@ export function useStaffManagement() {
       if (!activeRole) return;
       const isBuiltin = ["ADMIN", "MANAGER", "CASHIER", "EMPLOYEE"].includes(activeRole.name.toUpperCase());
       if (isBuiltin) {
-        alert("Không thể sửa đổi thông tin của chức vụ hệ thống mặc định.");
+        toast.warning("Không thể sửa đổi thông tin của chức vụ hệ thống mặc định.");
         return;
       }
     }
     setIsRoleModalOpen(true);
   };
+
+  /** Mutation: Xóa chức vụ tùy chỉnh — Optimistic UI */
+  const deleteRoleMutation = useMutation({
+    mutationFn: (roleId: string) =>
+      api.delete(`/tenants/${currentTenantId}/roles/${roleId}`),
+    onMutate: async (roleId) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.roles.list(currentTenantId!) });
+
+      const previousRoles = queryClient.getQueryData<Role[]>(
+        queryKeys.roles.list(currentTenantId!)
+      );
+
+      // Optimistic: Xóa role khỏi UI
+      queryClient.setQueryData<Role[]>(
+        queryKeys.roles.list(currentTenantId!),
+        (old) => old?.filter((r) => r.id !== roleId) ?? []
+      );
+
+      return { previousRoles };
+    },
+    onError: (err, _roleId, context) => {
+      if (context?.previousRoles) {
+        queryClient.setQueryData(
+          queryKeys.roles.list(currentTenantId!),
+          context.previousRoles
+        );
+      }
+      toast.error((err as Error).message || "Xóa chức vụ thất bại!");
+    },
+    onSuccess: () => {
+      toast.success("Đã xóa chức vụ thành công!");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.roles.all(currentTenantId!) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.staff.all(currentTenantId!) });
+    },
+  });
 
   const handleDeleteRole = async () => {
     if (!selectedRoleId) return;
@@ -377,7 +434,7 @@ export function useStaffManagement() {
 
     const isBuiltin = ["ADMIN", "MANAGER", "CASHIER", "EMPLOYEE"].includes(activeRole.name.toUpperCase());
     if (isBuiltin) {
-      alert("Không thể xóa các chức vụ mặc định của hệ thống.");
+      toast.warning("Không thể xóa các chức vụ mặc định của hệ thống.");
       return;
     }
 
@@ -391,44 +448,79 @@ export function useStaffManagement() {
     )
       return;
 
-    try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/roles/${selectedRoleId}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || "Lỗi khi xóa vai trò");
-      }
-
-      setSelectedRoleId(roles[0]?.id || null);
-      await fetchStaffAndRoles();
-    } catch (err: any) {
-      alert(err.message);
-    }
+    setSelectedRoleId(roles[0]?.id || null);
+    deleteRoleMutation.mutate(selectedRoleId);
   };
 
-  // 5. DAILY TURNS LOGIC
-  const handleAssignTurn = async (staffId: string, turnType: "walkin" | "booked") => {
-    if (!currentTenantId || !currentBranchId) return;
-    try {
-      const res = await fetch(
-        `http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns/assign`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ staffId, turnType }),
-        }
+  // ==========================================================
+  // 6. DAILY TURNS LOGIC
+  // ==========================================================
+
+  /** Mutation: Gán lượt nhận khách — Optimistic UI */
+  const assignTurnMutation = useMutation({
+    mutationFn: ({ staffId, turnType }: { staffId: string; turnType: "walkin" | "booked" }) =>
+      api.post(
+        `/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns/assign`,
+        { staffId, turnType }
+      ),
+    onMutate: async ({ staffId, turnType }) => {
+      const turnsKey = queryKeys.dailyTurns.list(currentTenantId!, currentBranchId!);
+      await queryClient.cancelQueries({ queryKey: turnsKey });
+
+      const previousTurns = queryClient.getQueryData<DailyTurn[]>(turnsKey);
+
+      // Optimistic: tăng count ngay lập tức
+      queryClient.setQueryData<DailyTurn[]>(turnsKey, (old) =>
+        old?.map((t) =>
+          t.staffId === staffId
+            ? {
+                ...t,
+                totalWalkinCount: turnType === "walkin" ? t.totalWalkinCount + 1 : t.totalWalkinCount,
+                totalBookedCount: turnType === "booked" ? t.totalBookedCount + 1 : t.totalBookedCount,
+                totalCustomersToday: t.totalCustomersToday + 1,
+                lastAssignedAt: new Date().toISOString(),
+              }
+            : t
+        ) ?? []
       );
 
-      if (!res.ok) throw new Error("Không thể thực hiện gán lượt");
+      return { previousTurns };
+    },
+    onError: (err, _vars, context) => {
+      const turnsKey = queryKeys.dailyTurns.list(currentTenantId!, currentBranchId!);
+      if (context?.previousTurns) {
+        queryClient.setQueryData(turnsKey, context.previousTurns);
+      }
+      toast.error((err as Error).message || "Lỗi gán lượt");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.dailyTurns.list(currentTenantId!, currentBranchId!),
+      });
+    },
+  });
 
-      // Reload turns queue
-      await fetchDailyTurns(true);
-    } catch (e: any) {
-      alert(e.message || "Lỗi gán lượt");
-    }
+  const handleAssignTurn = async (staffId: string, turnType: "walkin" | "booked") => {
+    if (!currentTenantId || !currentBranchId) return;
+    assignTurnMutation.mutate({ staffId, turnType });
   };
+
+  /** Mutation: Reset xoay tua thợ */
+  const resetTurnsMutation = useMutation({
+    mutationFn: () =>
+      api.post(
+        `/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns/reset`
+      ),
+    onSuccess: () => {
+      toast.success("Khởi tạo lại lượt xoay tua hôm nay thành công!");
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.dailyTurns.list(currentTenantId!, currentBranchId!),
+      });
+    },
+    onError: () => {
+      toast.error("Reset lượt xoay tua thất bại");
+    },
+  });
 
   const handleResetTurns = async () => {
     if (!currentTenantId || !currentBranchId) return;
@@ -442,22 +534,7 @@ export function useStaffManagement() {
     )
       return;
 
-    try {
-      const res = await fetch(
-        `http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns/reset`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-
-      if (!res.ok) throw new Error();
-
-      alert("Khởi tạo lại lượt xoay tua hôm nay thành công!");
-      await fetchDailyTurns();
-    } catch (e) {
-      alert("Reset lượt xoay tua thất bại");
-    }
+    resetTurnsMutation.mutate();
   };
 
   const handleInlineTurnChange = (staffId: string, field: "walkin" | "booked", valueStr: string) => {
@@ -488,6 +565,30 @@ export function useStaffManagement() {
     return field === "walkin" ? turn.totalWalkinCount : turn.totalBookedCount;
   };
 
+  /** Mutation: Auto-save turn counts */
+  const autoSaveTurnMutation = useMutation({
+    mutationFn: ({ staffId, payload }: { staffId: string; payload: any }) =>
+      api.put(
+        `/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns/${staffId}`,
+        payload
+      ),
+    onError: (err) => {
+      toast.error((err as Error).message || "Không thể cập nhật lượt thủ công");
+    },
+    onSuccess: (_data, { staffId }) => {
+      setTurnEdits((prev) => {
+        const next = { ...prev };
+        delete next[staffId];
+        return next;
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.dailyTurns.list(currentTenantId!, currentBranchId!),
+      });
+    },
+  });
+
   const handleAutoSaveTurn = async (staffId: string, field: "walkin" | "booked") => {
     const turn = dailyTurns.find((t) => t.staffId === staffId);
     if (!turn) return;
@@ -499,32 +600,13 @@ export function useStaffManagement() {
     const currentVal = edits[field];
     if (originalVal === currentVal) return;
 
-    try {
-      const res = await fetch(
-        `http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns/${staffId}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            totalWalkinCount: edits.walkin,
-            totalBookedCount: edits.booked,
-          }),
-        }
-      );
-
-      if (!res.ok) throw new Error("Không thể cập nhật lượt thủ công");
-
-      await fetchDailyTurns(true);
-      // Clear edits cache
-      setTurnEdits((prev) => {
-        const next = { ...prev };
-        delete next[staffId];
-        return next;
-      });
-    } catch (e: any) {
-      alert(e.message);
-      await fetchDailyTurns(true);
-    }
+    autoSaveTurnMutation.mutate({
+      staffId,
+      payload: {
+        totalWalkinCount: edits.walkin,
+        totalBookedCount: edits.booked,
+      },
+    });
   };
 
   // Add staff cover to daily turns queue
@@ -536,12 +618,43 @@ export function useStaffManagement() {
     );
 
     if (availableStaff.length === 0) {
-      alert("Toàn bộ nhân sự chi nhánh đã có mặt trong hàng đợi hôm nay.");
+      toast.info("Toàn bộ nhân sự chi nhánh đã có mặt trong hàng đợi hôm nay.");
       return;
     }
 
     setIsAddStaffToQueueOpen(true);
   };
+
+  // ==========================================================
+  // 7. DERIVED DATA (useMemo)
+  // ==========================================================
+
+  // Dynamic Staff Schema for Import Matcher
+  const staffSchema = useMemo<TargetField[]>(() => [
+    { field: "name", label: "Tên nhân viên", type: "string", required: true, description: "Họ và tên của nhân viên" },
+    { field: "email", label: "Email", type: "string", required: true, description: "" },
+    { field: "phone", label: "Số điện thoại", type: "string", required: false, description: "Số điện thoại liên hệ" },
+    {
+      field: "sex",
+      label: "Giới tính",
+      type: "select",
+      required: false,
+      options: [
+        { value: "Nam", label: "Nam" },
+        { value: "Nữ", label: "Nữ" }
+      ],
+      description: "Giới tính của nhân viên"
+    },
+    { field: "baseSalary", label: "Lương cơ bản", type: "number", required: false, description: "Mức lương cơ bản của nhân viên (VND)" },
+    {
+      field: "roleName",
+      label: "Chức vụ",
+      type: "select",
+      required: false,
+      options: roles.map((r) => ({ value: r.name, label: r.name })),
+      description: "Tên chức vụ. Nếu chưa tồn tại, hệ thống sẽ tự động tạo mới."
+    }
+  ], [roles]);
 
   // Find the admin user (either by isAdmin flag or fallback to oldest createdAt)
   const adminUser = getAdminUser(staff);
@@ -571,6 +684,36 @@ export function useStaffManagement() {
     (s) => s.branches.some((b) => b.id === currentBranchId) && !inQueueIds.includes(s.id)
   );
 
+  // ==========================================================
+  // 8. BACKWARD-COMPATIBLE INVALIDATION HELPERS
+  //    (Dùng cho modals con vẫn cần callback refetch)
+  // ==========================================================
+
+  /** Invalidate & refetch staff + roles + branches + permissions */
+  const fetchStaffAndRoles = useCallback(
+    async (silent?: boolean) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.staff.all(currentTenantId!) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.roles.all(currentTenantId!) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.branches.all(currentTenantId!) }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.permissions.all(currentTenantId!) }),
+      ]);
+    },
+    [queryClient, currentTenantId]
+  );
+
+  /** Invalidate & refetch daily turns */
+  const fetchDailyTurns = useCallback(
+    async (silent?: boolean) => {
+      if (currentTenantId && currentBranchId) {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.dailyTurns.all(currentTenantId, currentBranchId),
+        });
+      }
+    },
+    [queryClient, currentTenantId, currentBranchId]
+  );
+
   return {
     currentTenantId,
     currentBranchId,
@@ -596,7 +739,7 @@ export function useStaffManagement() {
     setSelectedRoleId,
     assignedPermissionIds,
     permissionsLoading,
-    savingPermissions,
+    savingPermissions: savePermissionsMutation.isPending,
     isRoleModalOpen,
     setIsRoleModalOpen,
     roleModalMode,

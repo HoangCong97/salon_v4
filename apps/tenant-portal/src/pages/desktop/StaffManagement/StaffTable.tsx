@@ -5,6 +5,7 @@ import { StaffMember, Role, Branch, getRoleColorStyle, getStatusColorStyle } fro
 import { useAuthStore } from "../../../store/useAuthStore";
 import { ExportButton } from "../../../components/desktop/ExportButton";
 import { ExportColumnMapping } from "../../../utils/exportData";
+import { useToast } from "../../../components/desktop/ToastProvider";
 
 interface StaffTableProps {
   filteredStaff: StaffMember[];
@@ -43,6 +44,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
   adminUserId,
   handleOpenImportModal,
 }) => {
+  const toast = useToast();
   const currentUser = useAuthStore((state) => state.user);
   const currentTenantId = useAuthStore((state) => state.currentTenantId);
   const hasPermission = useAuthStore((state) => state.hasPermission);
@@ -88,7 +90,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
         await handleAutoSave(itemId, { avatar: imageUrl });
       };
     } catch (err: any) {
-      alert("Lỗi tải ảnh kéo thả: " + err.message);
+      toast.error("Lỗi tải ảnh kéo thả: " + err.message);
     }
   };
 

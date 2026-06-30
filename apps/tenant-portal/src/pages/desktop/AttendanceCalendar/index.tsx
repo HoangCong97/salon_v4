@@ -1,7 +1,11 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../../store/useAuthStore";
 import { useConfirm } from "../../../components/desktop/ConfirmDialog";
 import { Loader2, AlertTriangle } from "lucide-react";
+import { useToast } from "../../../components/desktop/ToastProvider";
+import { api } from "../../../utils/apiClient";
+import { queryKeys } from "../../../utils/queryKeys";
 
 import { Staff, AttendanceAnomaly, CashAdvance, TYPE_OPTIONS } from "./types";
 import { AttendanceHeader } from "./components/AttendanceHeader";
@@ -12,6 +16,8 @@ import { AttendanceModal } from "./components/AttendanceModal";
 export default function AttendanceCalendar() {
   const { currentTenantId, currentBranchId, hasPermission, branches, setBranch } = useAuthStore();
   const confirm = useConfirm();
+  const toast = useToast();
+  const queryClient = useQueryClient();
   const canManage = hasPermission("shift.manage");
 
   // Calendar states
@@ -26,8 +32,6 @@ export default function AttendanceCalendar() {
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [attendances, setAttendances] = useState<AttendanceAnomaly[]>([]);
   const [advances, setAdvances] = useState<CashAdvance[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Dialog State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,38 +51,47 @@ export default function AttendanceCalendar() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  const fetchCalendarData = async () => {
-    if (!currentTenantId || !currentBranchId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const [staffRes, attRes, advRes] = await Promise.all([
-        fetch(`http://localhost:3000/api/tenants/${currentTenantId}/staff`),
-        fetch(`http://localhost:3000/api/tenants/${currentTenantId}/payrolls/attendances?branchId=${currentBranchId}`),
-        fetch(`http://localhost:3000/api/tenants/${currentTenantId}/payrolls/advances?branchId=${currentBranchId}`)
-      ]);
+  // Queries
+  const { data: staffData } = useQuery<Staff[]>({
+    queryKey: queryKeys.staff.list(currentTenantId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/staff`),
+    enabled: !!currentTenantId,
+  });
 
-      if (!staffRes.ok || !attRes.ok || !advRes.ok) {
-        throw new Error("Không thể tải thông tin lịch nhân viên");
-      }
+  const { data: attData } = useQuery<AttendanceAnomaly[]>({
+    queryKey: queryKeys.payrolls.attendances(currentTenantId!, currentBranchId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/payrolls/attendances?branchId=${currentBranchId}`),
+    enabled: !!currentTenantId && !!currentBranchId,
+  });
 
-      const staffData = await staffRes.json();
-      const attData = await attRes.json();
-      const advData = await advRes.json();
-
-      setStaffList(staffData);
-      setAttendances(attData);
-      setAdvances(advData);
-    } catch (err: any) {
-      setError(err.message || "Lỗi tải dữ liệu lịch");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: advData } = useQuery<CashAdvance[]>({
+    queryKey: queryKeys.payrolls.advances(currentTenantId!, currentBranchId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/payrolls/advances?branchId=${currentBranchId}`),
+    enabled: !!currentTenantId && !!currentBranchId,
+  });
 
   useEffect(() => {
-    fetchCalendarData();
-  }, [currentTenantId, currentBranchId]);
+    if (staffData) setStaffList(staffData);
+  }, [staffData]);
+
+  useEffect(() => {
+    if (attData) setAttendances(attData);
+  }, [attData]);
+
+  useEffect(() => {
+    if (advData) setAdvances(advData);
+  }, [advData]);
+
+  const loading = !staffData || !attData || !advData;
+  const error = null;
+
+  const fetchCalendarData = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.staff.all(currentTenantId!) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.payrolls.attendances(currentTenantId!, currentBranchId!) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.payrolls.advances(currentTenantId!, currentBranchId!) }),
+    ]);
+  }, [queryClient, currentTenantId, currentBranchId]);
 
   // Sync selected staff when staffList changes (e.g. branch change)
   useEffect(() => {
@@ -259,13 +272,8 @@ export default function AttendanceCalendar() {
           note: formNote
         };
 
-        const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/payrolls/attendances`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        if (!res.ok) throw new Error("Không thể ghi nhận điểm danh bất thường");
+        await api.post(`/tenants/${currentTenantId}/payrolls/attendances`, payload);
+        toast.success("Ghi nhận điểm danh bất thường thành công!");
       } else {
         const payload = {
           branchId: currentBranchId,
@@ -276,28 +284,19 @@ export default function AttendanceCalendar() {
           note: formNote
         };
 
-        let res;
         if (modalMode === "edit" && selectedItemId) {
-          res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/payrolls/advances/${selectedItemId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
+          await api.put(`/tenants/${currentTenantId}/payrolls/advances/${selectedItemId}`, payload);
+          toast.success("Cập nhật phiếu ứng tiền thành công!");
         } else {
-          res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/payrolls/advances`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
+          await api.post(`/tenants/${currentTenantId}/payrolls/advances`, payload);
+          toast.success("Tạo phiếu ứng tiền thành công!");
         }
-
-        if (!res.ok) throw new Error("Không thể ghi nhận phiếu ứng tiền");
       }
 
       setIsModalOpen(false);
       await fetchCalendarData();
     } catch (err: any) {
-      alert("Lỗi: " + err.message);
+      toast.error("Lỗi: " + err.message);
     }
   };
 
@@ -320,16 +319,13 @@ export default function AttendanceCalendar() {
         ? `attendances/${selectedItemId}`
         : `advances/${selectedItemId}`;
 
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/payrolls/${endpoint}`, {
-        method: "DELETE"
-      });
-
-      if (!res.ok) throw new Error("Không thể xóa bỏ");
+      await api.delete(`/tenants/${currentTenantId}/payrolls/${endpoint}`);
+      toast.success("Đã xóa bỏ ghi chép thành công!");
 
       setIsModalOpen(false);
       await fetchCalendarData();
     } catch (err: any) {
-      alert("Lỗi: " + err.message);
+      toast.error("Lỗi: " + err.message);
     }
   };
 

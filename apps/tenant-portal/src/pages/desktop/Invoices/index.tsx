@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "../../../store/useAuthStore";
 import { InvoiceSummary } from "./InvoiceSummary";
 import { InvoiceFilter } from "./InvoiceFilter";
 import { InvoiceTable } from "./InvoiceTable";
 import { InvoiceDetailModal } from "./InvoiceDetailModal";
 import { FileText } from "lucide-react";
+import { api } from "../../../utils/apiClient";
+import { queryKeys } from "../../../utils/queryKeys";
 
 export default function Invoices() {
   const { currentTenantId, currentBranchId, branches } = useAuthStore();
@@ -16,7 +19,81 @@ export default function Invoices() {
   const [services, setServices] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [packages, setPackages] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+
+  // Queries
+  const { data: staffData } = useQuery<any[]>({
+    queryKey: queryKeys.shifts.staff(currentTenantId!, currentBranchId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/branches/${currentBranchId}/shifts/staff`),
+    enabled: !!currentTenantId && !!currentBranchId,
+  });
+
+  const { data: dbCustomers } = useQuery<any[]>({
+    queryKey: queryKeys.customers.list(currentTenantId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/customers`),
+    enabled: !!currentTenantId,
+  });
+
+  const { data: invoicesData } = useQuery<any[]>({
+    queryKey: queryKeys.invoices.list(currentTenantId!, currentBranchId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/branches/${currentBranchId}/invoices`),
+    enabled: !!currentTenantId && !!currentBranchId,
+  });
+
+  const { data: servicesData } = useQuery<any[]>({
+    queryKey: queryKeys.services.list(currentTenantId!, currentBranchId),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/services?branchId=${currentBranchId}`),
+    enabled: !!currentTenantId && !!currentBranchId,
+  });
+
+  const { data: inventoriesData } = useQuery<any[]>({
+    queryKey: queryKeys.inventories.list(currentTenantId!, currentBranchId),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/inventories?branchId=${currentBranchId}`),
+    enabled: !!currentTenantId && !!currentBranchId,
+  });
+
+  const { data: packagesData } = useQuery<any[]>({
+    queryKey: queryKeys.servicePackages.list(currentTenantId!, currentBranchId),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/services/packages?branchId=${currentBranchId}`),
+    enabled: !!currentTenantId && !!currentBranchId,
+  });
+
+  // Sync queries to local states
+  useEffect(() => {
+    if (staffData) setActiveStaff(staffData);
+  }, [staffData]);
+
+  useEffect(() => {
+    if (dbCustomers) {
+      setCustomers(dbCustomers);
+    } else {
+      const customerSaved = localStorage.getItem("pos_customers");
+      if (customerSaved) {
+        try {
+          const parsed = JSON.parse(customerSaved);
+          if (Array.isArray(parsed)) setCustomers(parsed);
+        } catch {}
+      }
+    }
+  }, [dbCustomers]);
+
+  useEffect(() => {
+    if (servicesData) setServices(servicesData);
+  }, [servicesData]);
+
+  useEffect(() => {
+    if (inventoriesData) setProducts(inventoriesData);
+  }, [inventoriesData]);
+
+  useEffect(() => {
+    if (packagesData) setPackages(packagesData);
+  }, [packagesData]);
+
+  useEffect(() => {
+    if (invoicesData) setInvoices(invoicesData);
+  }, [invoicesData]);
+
+  // Derived loading state
+  const loading = !staffData || !invoicesData || !servicesData || !inventoriesData || !packagesData;
 
   // Filter conditions
   const getTodayISO = () => new Date().toISOString().split("T")[0];
@@ -29,69 +106,6 @@ export default function Invoices() {
 
   // Selected Detail Invoice Modal
   const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
-
-  // Fetch initial filters and resources
-  useEffect(() => {
-    const fetchResources = async () => {
-      if (!currentTenantId || !currentBranchId) return;
-      setLoading(true);
-      try {
-        const [staffRes, customerSaved, invoicesRes, servicesRes, productsRes, packagesRes] = await Promise.all([
-          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/shifts/staff`),
-          Promise.resolve(localStorage.getItem("pos_customers")),
-          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/invoices`),
-          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services?branchId=${currentBranchId}`),
-          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/inventories?branchId=${currentBranchId}`),
-          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services/packages?branchId=${currentBranchId}`)
-        ]);
-
-        let loadedStaff = [];
-        if (staffRes.ok) {
-          try {
-            const resJson = await staffRes.json();
-            if (Array.isArray(resJson)) loadedStaff = resJson;
-          } catch {}
-        }
-        setActiveStaff(loadedStaff);
-
-        let loadedCustomers = [];
-        if (customerSaved) {
-          try {
-            const parsed = JSON.parse(customerSaved);
-            if (Array.isArray(parsed)) loadedCustomers = parsed;
-          } catch {}
-        }
-        setCustomers(loadedCustomers);
-
-        if (servicesRes.ok) {
-          try { setServices(await servicesRes.json()); } catch {}
-        }
-        if (productsRes.ok) {
-          try { setProducts(await productsRes.json()); } catch {}
-        }
-        if (packagesRes.ok) {
-          try { setPackages(await packagesRes.json()); } catch {}
-        }
-
-        // Populate invoices
-        let loadedInvoices = [];
-        if (invoicesRes.ok) {
-          try { loadedInvoices = await invoicesRes.json(); } catch {}
-        }
-        setInvoices(Array.isArray(loadedInvoices) ? loadedInvoices : []);
-
-      } catch (err) {
-        console.error("Failed to fetch invoices", err);
-        setActiveStaff([]);
-        setCustomers([]);
-        setInvoices([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchResources();
-  }, [currentTenantId, currentBranchId]);
 
   // Resolve item names from DB item ID & Type
   const resolvedInvoices = useMemo(() => {

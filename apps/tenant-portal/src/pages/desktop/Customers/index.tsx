@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../../store/useAuthStore";
 import { Users, Plus, Loader2, Search, Upload, Download } from "lucide-react";
 import { Customer } from "./types";
@@ -10,16 +11,30 @@ import { useFileDragAndDrop } from "../../../hooks/useFileDragAndDrop";
 import { ExportButton } from "../../../components/desktop/ExportButton";
 import { ExportColumnMapping } from "../../../utils/exportData";
 import { useConfirm } from "../../../components/desktop/ConfirmDialog";
+import { useToast } from "../../../components/desktop/ToastProvider";
+import { api } from "../../../utils/apiClient";
+import { queryKeys } from "../../../utils/queryKeys";
 
 export default function Customers() {
   const { currentTenantId, currentBranchId, hasPermission } = useAuthStore();
   const canManage = hasPermission("customer.manage");
   const confirm = useConfirm();
+  const toast = useToast();
+  const queryClient = useQueryClient();
 
-  // Data State
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Data State — useQuery (stale-while-revalidate cache)
+  const { data: customers = [], isLoading: loading, error: customersError } = useQuery<Customer[]>({
+    queryKey: queryKeys.customers.list(currentTenantId!, currentBranchId),
+    queryFn: () => {
+      const url = currentBranchId
+        ? `/tenants/${currentTenantId}/customers?branchId=${currentBranchId}`
+        : `/tenants/${currentTenantId}/customers`;
+      return api.get(url);
+    },
+    enabled: !!currentTenantId,
+  });
+
+  const error = customersError ? (customersError as Error).message : null;
 
   // Filters State
   const [searchTerm, setSearchTerm] = useState("");
@@ -110,13 +125,7 @@ export default function Customers() {
     };
 
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/customers/${customerId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error("Lỗi khi tự động lưu");
+      await api.put(`/tenants/${currentTenantId}/customers/${customerId}`, payload);
 
       setInlineEdits((prev) => {
         const copy = { ...prev };
@@ -124,35 +133,19 @@ export default function Customers() {
         return copy;
       });
 
-      await fetchCustomers(true);
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all(currentTenantId!) });
     } catch (err: any) {
       console.error("Auto save failed:", err);
     }
   };
 
-  const fetchCustomers = async (silent = false) => {
-    if (!currentTenantId) return;
-    if (!silent) setLoading(true);
-    setError(null);
-    try {
-      const url = currentBranchId
-        ? `http://localhost:3000/api/tenants/${currentTenantId}/customers?branchId=${currentBranchId}`
-        : `http://localhost:3000/api/tenants/${currentTenantId}/customers`;
-
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Không thể tải danh sách khách hàng");
-      const data = await res.json();
-      setCustomers(data);
-    } catch (err: any) {
-      setError(err.message || "Đã xảy ra lỗi");
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCustomers();
-  }, [currentTenantId, currentBranchId]);
+  /** Backward-compatible invalidation helper cho modals con */
+  const fetchCustomers = useCallback(
+    async (silent?: boolean) => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.customers.all(currentTenantId!) });
+    },
+    [queryClient, currentTenantId]
+  );
 
   // Filter Logic
   const filteredCustomers = useMemo(() => {
@@ -190,15 +183,11 @@ export default function Customers() {
       return;
 
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/customers/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) throw new Error("Lỗi khi xóa khách hàng");
-
+      await api.delete(`/tenants/${currentTenantId}/customers/${id}`);
+      toast.success("Đã xóa khách hàng thành công!");
       await fetchCustomers();
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 

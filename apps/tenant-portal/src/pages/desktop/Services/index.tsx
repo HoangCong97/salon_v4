@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../../store/useAuthStore";
 import { Layers, Plus, Loader2, Search, Upload, Download } from "lucide-react";
 import { Service, ServiceCategory, getColorStyle } from "./types";
@@ -11,17 +12,37 @@ import { useFileDragAndDrop } from "../../../hooks/useFileDragAndDrop";
 import { ExportButton } from "../../../components/desktop/ExportButton";
 import { ExportColumnMapping } from "../../../utils/exportData";
 import { useConfirm } from "../../../components/desktop/ConfirmDialog";
+import { useToast } from "../../../components/desktop/ToastProvider";
+import { api } from "../../../utils/apiClient";
+import { queryKeys } from "../../../utils/queryKeys";
 
 export default function Services() {
   const { currentTenantId, currentBranchId, hasPermission } = useAuthStore();
   const canManage = hasPermission("service.manage");
   const confirm = useConfirm();
+  const toast = useToast();
+  const queryClient = useQueryClient();
 
-  // Data State
-  const [services, setServices] = useState<Service[]>([]);
-  const [categories, setCategories] = useState<ServiceCategory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Data State — useQuery (stale-while-revalidate cache)
+  const { data: services = [], isLoading: servicesLoading, error: servicesError } = useQuery<Service[]>({
+    queryKey: queryKeys.services.list(currentTenantId!, currentBranchId),
+    queryFn: () => {
+      const url = currentBranchId
+        ? `/tenants/${currentTenantId}/services?branchId=${currentBranchId}`
+        : `/tenants/${currentTenantId}/services`;
+      return api.get(url);
+    },
+    enabled: !!currentTenantId,
+  });
+
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery<ServiceCategory[]>({
+    queryKey: queryKeys.serviceCategories.list(currentTenantId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/service-categories`),
+    enabled: !!currentTenantId,
+  });
+
+  const loading = servicesLoading;
+  const error = servicesError ? (servicesError as Error).message : null;
 
   // Filters State
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,7 +55,6 @@ export default function Services() {
 
   // Category Modal State
   const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
-  const [categoriesLoading, setCategoriesLoading] = useState(false);
 
   // Import Modal State
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -109,17 +129,11 @@ export default function Services() {
     if (Number(category.defaultCommission) === commissionVal) return;
 
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/service-categories/${service.categoryId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: category.name,
-          color: category.color,
-          defaultCommission: commissionVal,
-        }),
+      await api.put(`/tenants/${currentTenantId}/service-categories/${service.categoryId}`, {
+        name: category.name,
+        color: category.color,
+        defaultCommission: commissionVal,
       });
-
-      if (!res.ok) throw new Error("Lỗi khi tự động lưu hoa hồng");
 
       setInlineEdits((prev) => {
         const copy = { ...prev };
@@ -127,8 +141,8 @@ export default function Services() {
         return copy;
       });
 
-      await fetchCategories(true);
-      await fetchServices(true);
+      queryClient.invalidateQueries({ queryKey: queryKeys.serviceCategories.all(currentTenantId!) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.services.all(currentTenantId!) });
     } catch (err: any) {
       console.error("Commission auto save failed:", err);
     }
@@ -218,13 +232,7 @@ export default function Services() {
     };
 
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services/${serviceId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error("Lỗi khi tự động lưu");
+      await api.put(`/tenants/${currentTenantId}/services/${serviceId}`, payload);
 
       setInlineEdits((prev) => {
         const copy = { ...prev };
@@ -232,53 +240,26 @@ export default function Services() {
         return copy;
       });
 
-      await fetchServices(true);
+      queryClient.invalidateQueries({ queryKey: queryKeys.services.all(currentTenantId!) });
     } catch (err: any) {
       console.error("Auto save failed:", err);
     }
   };
 
-  const fetchServices = async (silent = false) => {
-    if (!currentTenantId) return;
-    if (!silent) setLoading(true);
-    setError(null);
-    try {
-      const url = currentBranchId
-        ? `http://localhost:3000/api/tenants/${currentTenantId}/services?branchId=${currentBranchId}`
-        : `http://localhost:3000/api/tenants/${currentTenantId}/services`;
+  /** Backward-compatible invalidation helpers cho modals con */
+  const fetchServices = useCallback(
+    async (silent?: boolean) => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.services.all(currentTenantId!) });
+    },
+    [queryClient, currentTenantId]
+  );
 
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Không thể tải danh mục dịch vụ");
-      const data = await res.json();
-      setServices(data);
-    } catch (err: any) {
-      setError(err.message || "Đã xảy ra lỗi");
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  };
-
-  const fetchCategories = async (silent = false) => {
-    if (!currentTenantId) return;
-    if (!silent) setCategoriesLoading(true);
-    try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/service-categories`);
-      if (!res.ok) throw new Error("Không thể tải danh sách nhóm dịch vụ");
-      const data = await res.json();
-      setCategories(data);
-    } catch (err: any) {
-      console.error("Lỗi tải danh mục:", err);
-    } finally {
-      if (!silent) setCategoriesLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (currentTenantId) {
-      fetchServices();
-      fetchCategories();
-    }
-  }, [currentTenantId, currentBranchId]);
+  const fetchCategories = useCallback(
+    async (silent?: boolean) => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.serviceCategories.all(currentTenantId!) });
+    },
+    [queryClient, currentTenantId]
+  );
 
   const handleOpenCreateModal = () => {
     setModalMode("create");
@@ -304,15 +285,11 @@ export default function Services() {
       return;
 
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) throw new Error("Lỗi khi xóa dịch vụ");
-
+      await api.delete(`/tenants/${currentTenantId}/services/${id}`);
+      toast.success("Đã xóa dịch vụ thành công!");
       await fetchServices();
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 

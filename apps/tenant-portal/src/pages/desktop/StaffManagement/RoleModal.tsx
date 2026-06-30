@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Key } from "lucide-react";
 import { Role } from "./types";
+import { useToast } from "../../../components/desktop/ToastProvider";
 
 interface RoleModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
   fetchStaffAndRoles,
   onRoleCreated,
 }) => {
+  const toast = useToast();
   const [roleName, setRoleName] = useState("");
   const [roleDescription, setRoleDescription] = useState("");
   const [savingRole, setSavingRole] = useState(false);
@@ -82,7 +84,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
         onRoleCreated(roleResult.id);
       }
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     } finally {
       setSavingRole(false);
     }

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../../store/useAuthStore";
 import { Plus, Loader2, Building2 } from "lucide-react";
 import { Branch } from "./types";
@@ -7,14 +8,15 @@ import BrandModal from "./BrandModal";
 import BranchCard from "./BranchCard";
 import BranchModal from "./BranchModal";
 import { useConfirm } from "../../../components/desktop/ConfirmDialog";
+import { useToast } from "../../../components/desktop/ToastProvider";
+import { api } from "../../../utils/apiClient";
+import { queryKeys } from "../../../utils/queryKeys";
 
 export default function Branches() {
   const { currentTenantId, setTenant } = useAuthStore();
   const confirm = useConfirm();
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [tenantInfo, setTenantInfo] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
+  const queryClient = useQueryClient();
 
   // Modals visibility states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,39 +25,28 @@ export default function Branches() {
 
   const [isBrandModalOpen, setIsBrandModalOpen] = useState(false);
 
-  const fetchTenantInfo = async () => {
-    if (!currentTenantId) return;
-    try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setTenantInfo(data);
-      }
-    } catch (err) {
-      console.error("Lỗi khi tải thông tin thương hiệu:", err);
-    }
-  };
+  // Queries
+  const { data: tenantInfo = null, error: tenantError } = useQuery<any>({
+    queryKey: queryKeys.tenant.info(currentTenantId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}`),
+    enabled: !!currentTenantId,
+  });
 
-  const fetchBranches = async () => {
-    if (!currentTenantId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches`);
-      if (!res.ok) throw new Error("Không thể tải danh sách chi nhánh");
-      const data = await res.json();
-      setBranches(data);
-    } catch (err: any) {
-      setError(err.message || "Đã xảy ra lỗi");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: branches = [], isLoading: loading, error: branchesError } = useQuery<Branch[]>({
+    queryKey: queryKeys.branches.list(currentTenantId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/branches`),
+    enabled: !!currentTenantId,
+  });
 
-  useEffect(() => {
-    fetchTenantInfo();
-    fetchBranches();
-  }, [currentTenantId]);
+  const error = (tenantError || branchesError) ? ((tenantError || branchesError) as Error).message : null;
+
+  const fetchTenantInfo = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.tenant.info(currentTenantId!) });
+  }, [queryClient, currentTenantId]);
+
+  const fetchBranches = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.branches.list(currentTenantId!) });
+  }, [queryClient, currentTenantId]);
 
   const handleOpenBrandModal = () => {
     setIsBrandModalOpen(true);
@@ -75,14 +66,8 @@ export default function Branches() {
 
   const handleSaveBrand = async (payload: any) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) throw new Error("Lỗi khi lưu thông tin thương hiệu");
-
+      await api.put(`/tenants/${currentTenantId}`, payload);
+      toast.success("Cập nhật thông tin thương hiệu thành công!");
       setIsBrandModalOpen(false);
       await fetchTenantInfo();
       await fetchBranches();
@@ -91,29 +76,20 @@ export default function Branches() {
         await setTenant(currentTenantId);
       }
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
       throw err;
     }
   };
 
   const handleSaveBranch = async (payload: any) => {
     try {
-      let res;
       if (modalMode === "create") {
-        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
+        await api.post(`/tenants/${currentTenantId}/branches`, payload);
+        toast.success("Thêm chi nhánh mới thành công!");
       } else {
-        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${selectedBranch?.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
+        await api.put(`/tenants/${currentTenantId}/branches/${selectedBranch?.id}`, payload);
+        toast.success("Cập nhật chi nhánh thành công!");
       }
-
-      if (!res.ok) throw new Error("Lỗi khi lưu thông tin chi nhánh");
 
       setIsModalOpen(false);
       await fetchBranches();
@@ -123,7 +99,7 @@ export default function Branches() {
         await setTenant(currentTenantId);
       }
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
       throw err;
     }
   };
@@ -140,12 +116,8 @@ export default function Branches() {
       return;
 
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${id}`, {
-        method: "DELETE"
-      });
-
-      if (!res.ok) throw new Error("Lỗi khi xóa chi nhánh");
-
+      await api.delete(`/tenants/${currentTenantId}/branches/${id}`);
+      toast.success("Đã xóa chi nhánh thành công!");
       await fetchBranches();
 
       // Update global context so branch selector gets updated
@@ -153,7 +125,7 @@ export default function Branches() {
         await setTenant(currentTenantId);
       }
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -177,36 +149,24 @@ export default function Branches() {
       ...fields
     };
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error("Không thể cập nhật thương hiệu");
+      await api.put(`/tenants/${currentTenantId}`, payload);
+      toast.success("Cập nhật thương hiệu thành công!");
       await fetchTenantInfo();
       await fetchBranches();
       if (currentTenantId) {
         await setTenant(currentTenantId);
       }
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
   const uploadFile = async (base64Data: string, category: string, originalFilename?: string): Promise<string> => {
-    const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/upload`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        file: base64Data,
-        category,
-        filename: originalFilename
-      })
+    const data = await api.post<{ url: string }>(`/tenants/${currentTenantId}/upload`, {
+      file: base64Data,
+      category,
+      filename: originalFilename
     });
-    if (!res.ok) {
-      throw new Error("Lỗi khi tải ảnh lên máy chủ");
-    }
-    const data = await res.json();
     return data.url;
   };
 
@@ -220,7 +180,7 @@ export default function Branches() {
         const fileUrl = await uploadFile(base64, "brand", file.name);
         await updateTenantField({ bannerUrl: fileUrl });
       } catch (err: any) {
-        alert(err.message);
+        toast.error(err.message);
       }
     };
     reader.readAsDataURL(file);
@@ -236,7 +196,7 @@ export default function Branches() {
         const fileUrl = await uploadFile(base64, "brand", file.name);
         await updateTenantField({ logoUrl: fileUrl });
       } catch (err: any) {
-        alert(err.message);
+        toast.error(err.message);
       }
     };
     reader.readAsDataURL(file);
@@ -261,15 +221,11 @@ export default function Branches() {
       ...fields
     };
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${branch.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) throw new Error("Không thể cập nhật chi nhánh");
+      await api.put(`/tenants/${currentTenantId}/branches/${branch.id}`, payload);
+      toast.success("Cập nhật chi nhánh thành công!");
       await fetchBranches();
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -283,7 +239,7 @@ export default function Branches() {
         const fileUrl = await uploadFile(base64, "branches", file.name);
         await updateBranchField(branch, { bannerUrl: fileUrl });
       } catch (err: any) {
-        alert(err.message);
+        toast.error(err.message);
       }
     };
     reader.readAsDataURL(file);
@@ -299,7 +255,7 @@ export default function Branches() {
         const fileUrl = await uploadFile(base64, "branches", file.name);
         await updateBranchField(branch, { logoUrl: fileUrl });
       } catch (err: any) {
-        alert(err.message);
+        toast.error(err.message);
       }
     };
     reader.readAsDataURL(file);

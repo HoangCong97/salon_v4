@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../../store/useAuthStore";
 import { formatCurrencyVND } from "@salon/shared-utils";
 import { POSLeftPanel } from "./POSLeftPanel";
 import { POSRightPanel } from "./POSRightPanel";
 import { POSReceiptModal } from "./POSReceiptModal";
 import { useConfirm } from "../../../components/desktop/ConfirmDialog";
+import { useToast } from "../../../components/desktop/ToastProvider";
+import { api } from "../../../utils/apiClient";
+import { queryKeys } from "../../../utils/queryKeys";
 
 interface StaffMember {
   id: string;
@@ -125,6 +129,8 @@ const getInitialOrder = (key: string): string[] => {
 export default function POS() {
   const { currentTenantId, currentBranchId, branches, user } = useAuthStore();
   const confirm = useConfirm();
+  const toast = useToast();
+  const queryClient = useQueryClient();
 
   // Data states
   const [staff, setStaff] = useState<StaffMember[]>([]);
@@ -147,24 +153,81 @@ export default function POS() {
   // Customers dynamic state
   const [customers, setCustomers] = useState(getInitialCustomers);
 
+  // TanStack Queries
+  const { data: staffData } = useQuery<StaffMember[]>({
+    queryKey: queryKeys.shifts.staff(currentTenantId!, currentBranchId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/branches/${currentBranchId}/shifts/staff`),
+    enabled: !!currentTenantId && !!currentBranchId,
+  });
+
+  const { data: servicesData } = useQuery<ServiceItem[]>({
+    queryKey: queryKeys.services.list(currentTenantId!, currentBranchId),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/services?branchId=${currentBranchId}`),
+    enabled: !!currentTenantId && !!currentBranchId,
+  });
+
+  const { data: inventoriesData } = useQuery<ProductItem[]>({
+    queryKey: queryKeys.inventories.list(currentTenantId!, currentBranchId),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/inventories?branchId=${currentBranchId}`),
+    enabled: !!currentTenantId && !!currentBranchId,
+  });
+
+  const { data: packagesData } = useQuery<PackageItem[]>({
+    queryKey: queryKeys.servicePackages.list(currentTenantId!, currentBranchId),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/services/packages?branchId=${currentBranchId}`),
+    enabled: !!currentTenantId && !!currentBranchId,
+  });
+
+  const { data: dbCustomers } = useQuery<any[]>({
+    queryKey: queryKeys.customers.list(currentTenantId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/customers`),
+    enabled: !!currentTenantId,
+  });
+
+  // Sync queries to local states
+  useEffect(() => {
+    if (staffData) setStaff(staffData);
+  }, [staffData]);
+
+  useEffect(() => {
+    if (servicesData) setServices(servicesData);
+  }, [servicesData]);
+
+  useEffect(() => {
+    if (inventoriesData) setInventories(inventoriesData);
+  }, [inventoriesData]);
+
+  useEffect(() => {
+    if (packagesData) setPackages(packagesData);
+  }, [packagesData]);
+
+  useEffect(() => {
+    if (dbCustomers) {
+      const mappedCustomers = [
+        { id: "c1", name: "Khách vãng lai", phone: "", rank: "Khách mới" },
+        ...dbCustomers.map((c: any) => ({
+          ...c,
+          rank: `Điểm: ${c.credibilityScore ?? 100}`
+        }))
+      ];
+      setCustomers(mappedCustomers);
+    }
+  }, [dbCustomers]);
+
   const handleCreateCustomer = async (name: string, phone: string) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/customers`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          phone: phone || null,
-        }),
+      const newCust = await api.post<any>(`/tenants/${currentTenantId}/customers`, {
+        name,
+        phone: phone || null,
       });
-      if (!res.ok) throw new Error();
-      const newCust = await res.json();
       const mappedCust = {
         ...newCust,
         rank: `Điểm: ${newCust.credibilityScore || 100}`,
       };
       setCustomers((prev) => [...prev, mappedCust]);
       setSelectedCustomerId(newCust.id);
+      toast.success("Thêm khách hàng thành công!");
+      queryClient.invalidateQueries({ queryKey: queryKeys.customers.all(currentTenantId!) });
       return mappedCust;
     } catch (e) {
       console.warn("Failed to create customer on server, using local fallback", e);
@@ -176,6 +239,7 @@ export default function POS() {
       };
       setCustomers((prev) => [...prev, newCust]);
       setSelectedCustomerId(newCust.id);
+      toast.info("Đã tạo khách hàng ngoại tuyến tạm thời.");
       return newCust;
     }
   };
@@ -254,7 +318,7 @@ export default function POS() {
   const deleteInvoice = async (invId: string, event: React.MouseEvent) => {
     event.stopPropagation();
     if (invoices.length === 1) {
-      alert("Phải giữ lại ít nhất 1 hóa đơn!");
+      toast.warning("Phải giữ lại ít nhất 1 hóa đơn!");
       return;
     }
     const target = invoices.find(inv => inv.id === invId);
@@ -293,50 +357,11 @@ export default function POS() {
     }));
   };
 
-  // Loading & receipt states
-  const [loading, setLoading] = useState(false);
+  // Derived loading state & checkingOut, showReceipt states
+  const loading = !staffData || !servicesData || !inventoriesData || !packagesData;
   const [checkingOut, setCheckingOut] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptData, setReceiptData] = useState<any>(null);
-
-  // Fetch POS dynamic data
-  useEffect(() => {
-    const fetchPOSData = async () => {
-      if (!currentTenantId || !currentBranchId) return;
-      setLoading(true);
-      try {
-        const [staffRes, servicesRes, inventoriesRes, packagesRes, customersRes] = await Promise.all([
-          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/shifts/staff`),
-          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services?branchId=${currentBranchId}`),
-          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/inventories?branchId=${currentBranchId}`),
-          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services/packages?branchId=${currentBranchId}`),
-          fetch(`http://localhost:3000/api/tenants/${currentTenantId}/customers`)
-        ]);
-
-        if (staffRes.ok) setStaff(await staffRes.json());
-        if (servicesRes.ok) setServices(await servicesRes.json());
-        if (inventoriesRes.ok) setInventories(await inventoriesRes.json());
-        if (packagesRes.ok) setPackages(await packagesRes.json());
-        if (customersRes.ok) {
-          const dbCustomers = await customersRes.json();
-          const mappedCustomers = [
-            { id: "c1", name: "Khách vãng lai", phone: "", rank: "Khách mới" },
-            ...dbCustomers.map((c: any) => ({
-              ...c,
-              rank: `Điểm: ${c.credibilityScore ?? 100}`
-            }))
-          ];
-          setCustomers(mappedCustomers);
-        }
-      } catch (err: any) {
-        console.warn("Failed fetching POS data, using mock values", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPOSData();
-  }, [currentTenantId, currentBranchId]);
 
   // Sync state changes to localStorage
   useEffect(() => {
@@ -531,12 +556,12 @@ export default function POS() {
     let percent = 0;
     if (code === "VOUCHER10%") {
       percent = 10;
-      alert("Áp dụng mã giảm giá 10% thành công!");
+      toast.success("Áp dụng mã giảm giá 10% thành công!");
     } else if (code === "VOUCHER20%") {
       percent = 20;
-      alert("Áp dụng mã giảm giá 20% thành công!");
+      toast.success("Áp dụng mã giảm giá 20% thành công!");
     } else {
-      alert("Mã giảm giá không hợp lệ (Thử dùng VOUCHER10% hoặc VOUCHER20%)");
+      toast.error("Mã giảm giá không hợp lệ (Thử dùng VOUCHER10% hoặc VOUCHER20%)");
       return;
     }
 
@@ -570,20 +595,12 @@ export default function POS() {
         paymentStatus: "PAID"
       };
 
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/invoices`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) {
-        throw new Error("API Offline");
-      }
-
-      const invoiceData = await res.json();
+      const invoiceData = await api.post<any>(`/tenants/${currentTenantId}/branches/${currentBranchId}/invoices`, payload);
       setReceiptData(invoiceData);
       setShowReceipt(true);
       resetActiveInvoice();
+      toast.success("Thanh toán và tạo hóa đơn thành công!");
+      queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all(currentTenantId!, currentBranchId!) });
     } catch (e: any) {
       // Offline fallback
       const mockInvoice = {
@@ -607,6 +624,7 @@ export default function POS() {
       setReceiptData(mockInvoice);
       setShowReceipt(true);
       resetActiveInvoice();
+      toast.info("Đã tạo hóa đơn ngoại tuyến (offline) và lưu tạm thời.");
     } finally {
       setCheckingOut(false);
     }

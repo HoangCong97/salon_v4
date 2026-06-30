@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../../store/useAuthStore";
 import { formatCurrencyVND } from "@salon/shared-utils";
 import { Package, Loader2 } from "lucide-react";
 import { useConfirm } from "../../../components/desktop/ConfirmDialog";
+import { useToast } from "../../../components/desktop/ToastProvider";
+import { api } from "../../../utils/apiClient";
+import { queryKeys } from "../../../utils/queryKeys";
 
 import { InventoryItem } from "./types";
 import { InventoryHeader } from "./components/InventoryHeader";
@@ -12,11 +16,28 @@ import { InventoryModal } from "./components/InventoryModal";
 export default function Inventories() {
   const { currentTenantId, currentBranchId } = useAuthStore();
   const confirm = useConfirm();
+  const toast = useToast();
+  const queryClient = useQueryClient();
 
-  // Data State
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Data State — useQuery
+  const { data: items = [], isLoading: loading, error: queryError } = useQuery<InventoryItem[]>({
+    queryKey: queryKeys.inventories.list(currentTenantId!, currentBranchId),
+    queryFn: () => {
+      const url = currentBranchId 
+        ? `/tenants/${currentTenantId}/inventories?branchId=${currentBranchId}`
+        : `/tenants/${currentTenantId}/inventories`;
+      return api.get(url);
+    },
+    enabled: !!currentTenantId,
+  });
+
+  const error = queryError ? (queryError as Error).message : null;
+
+  const fetchInventory = useCallback(async (silent = false) => {
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.inventories.list(currentTenantId!, currentBranchId)
+    });
+  }, [queryClient, currentTenantId, currentBranchId]);
 
   // Inline editing helper states & functions
   const [inlineEdits, setInlineEdits] = useState<Record<string, Partial<InventoryItem>>>({});
@@ -82,19 +103,11 @@ export default function Inventories() {
   };
 
   const uploadFile = async (base64Data: string, category: string, originalFilename?: string): Promise<string> => {
-    const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/upload`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        file: base64Data,
-        category,
-        filename: originalFilename
-      })
+    const data = await api.post<{ url: string }>(`/tenants/${currentTenantId}/upload`, {
+      file: base64Data,
+      category,
+      filename: originalFilename
     });
-    if (!res.ok) {
-      throw new Error("Lỗi khi tải ảnh lên máy chủ");
-    }
-    const data = await res.json();
     return data.url;
   };
 
@@ -166,13 +179,7 @@ export default function Inventories() {
     };
 
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/inventories/${itemId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) throw new Error("Lỗi khi tự động lưu");
+      await api.put(`/tenants/${currentTenantId}/inventories/${itemId}`, payload);
 
       // Clear inlineEdits for this item
       setInlineEdits(prev => {
@@ -181,36 +188,12 @@ export default function Inventories() {
         return copy;
       });
 
-      // Refresh list silently
-      fetchInventory(true);
+      toast.success("Lưu tự động thành công!");
+      await fetchInventory(true);
     } catch (err: any) {
-      console.error("Auto save failed:", err);
+      toast.error("Lỗi tự động lưu: " + err.message);
     }
   };
-
-  const fetchInventory = async (silent = false) => {
-    if (!currentTenantId) return;
-    if (!silent) setLoading(true);
-    setError(null);
-    try {
-      const url = currentBranchId 
-        ? `http://localhost:3000/api/tenants/${currentTenantId}/inventories?branchId=${currentBranchId}`
-        : `http://localhost:3000/api/tenants/${currentTenantId}/inventories`;
-
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Không thể tải danh sách sản phẩm trong kho");
-      const data = await res.json();
-      setItems(data);
-    } catch (err: any) {
-      setError(err.message || "Đã xảy ra lỗi");
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchInventory();
-  }, [currentTenantId, currentBranchId]);
 
   const handleOpenCreateModal = () => {
     setModalMode("create");
@@ -275,27 +258,18 @@ export default function Inventories() {
     };
 
     try {
-      let res;
       if (modalMode === "create") {
-        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/inventories`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
+        await api.post(`/tenants/${currentTenantId}/inventories`, payload);
+        toast.success("Tạo sản phẩm thành công!");
       } else {
-        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/inventories/${selectedItemId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
+        await api.put(`/tenants/${currentTenantId}/inventories/${selectedItemId}`, payload);
+        toast.success("Cập nhật sản phẩm thành công!");
       }
 
-      if (!res.ok) throw new Error("Lỗi khi lưu thông tin sản phẩm");
-
       setIsModalOpen(false);
-      fetchInventory();
+      await fetchInventory();
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -311,15 +285,11 @@ export default function Inventories() {
       return;
 
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/inventories/${id}`, {
-        method: "DELETE"
-      });
-
-      if (!res.ok) throw new Error("Lỗi khi xóa sản phẩm");
-
-      fetchInventory();
+      await api.delete(`/tenants/${currentTenantId}/inventories/${id}`);
+      toast.success("Đã xóa sản phẩm thành công!");
+      await fetchInventory();
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 

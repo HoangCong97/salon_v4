@@ -3,6 +3,7 @@ import { X, Users, Edit2, Camera, User } from "lucide-react";
 import { PriceInputWithSuggestion } from "../../../components/desktop/TableComponents";
 import { StaffMember, Role, Branch, getAdminUser } from "./types";
 import { useAuthStore } from "../../../store/useAuthStore";
+import { useToast } from "../../../components/desktop/ToastProvider";
 
 const compressAndGetBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -66,6 +67,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
   currentTenantId,
   fetchStaffAndRoles,
 }) => {
+  const toast = useToast();
   // Staff Form Fields State
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -167,7 +169,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
         const fileUrl = await uploadFile(base64, "staff", file.name);
         setAvatar(fileUrl);
       } catch (err: any) {
-        alert("Lỗi tải ảnh đại diện: " + err.message);
+        toast.error("Lỗi tải ảnh đại diện: " + err.message);
       }
     }
   };
@@ -177,7 +179,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
     if (!name.trim() || !email.trim()) return;
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      alert("Email không đúng định dạng!");
+      toast.warning("Email không đúng định dạng!");
       return;
     }
 
@@ -219,7 +221,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
       onClose();
       await fetchStaffAndRoles();
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -348,7 +350,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ví dụ: Nguyễn Văn A"
+                placeholder="Họ tên nhân viên..."
               />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
@@ -359,7 +361,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Ví dụ: email@gmail.com"
+                placeholder="Email liên hệ..."
                 disabled={isSelfAdmin}
               />
             </div>
@@ -374,7 +376,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 required={mode === "create"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder={mode === "create" ? "Nhập mật khẩu" : "••••••••"}
+                placeholder={mode === "create" ? "Mật khẩu" : "••••••••"}
               />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
@@ -384,7 +386,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 type="text"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="Ví dụ: 0901234567"
+                placeholder="Số điện thoại..."
                 disabled={isSelfAdmin}
               />
             </div>
@@ -401,9 +403,9 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Chức vụ (Phân quyền)</label>
-              <select 
-                className="form-input" 
-                value={roleId} 
+              <select
+                className="form-input"
+                value={roleId}
                 onChange={(e) => setRoleId(e.target.value)}
                 disabled={isAdminRow}
               >
@@ -425,18 +427,6 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 onChange={(val) => setBaseSalary(val)}
                 placeholder="Ví dụ: 8,000,000"
               />
-            </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Trạng thái tài khoản</label>
-              <select 
-                className="form-input" 
-                value={status} 
-                onChange={(e) => setStatus(e.target.value)}
-                disabled={isSelfAdmin}
-              >
-                <option value="ACTIVE">Hoạt động (Active)</option>
-                <option value="INACTIVE">Tạm khóa (Inactive)</option>
-              </select>
             </div>
           </div>
 

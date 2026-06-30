@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, UserPlus } from "lucide-react";
 import { StaffMember } from "./types";
+import { useToast } from "../../../components/desktop/ToastProvider";
 
 interface AddStaffToQueueModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export const AddStaffToQueueModal: React.FC<AddStaffToQueueModalProps> = ({
   currentBranchId,
   fetchDailyTurns,
 }) => {
+  const toast = useToast();
   const [staffToAddId, setStaffToAddId] = useState("");
 
   useEffect(() => {
@@ -50,7 +52,7 @@ export const AddStaffToQueueModal: React.FC<AddStaffToQueueModalProps> = ({
       onClose();
       await fetchDailyTurns();
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     }
   };
 

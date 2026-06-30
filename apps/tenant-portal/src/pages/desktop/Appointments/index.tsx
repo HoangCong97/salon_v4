@@ -1,10 +1,14 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../../store/useAuthStore";
 import {
   CalendarClock, ChevronLeft, ChevronRight, Plus,
   Clock, Phone, Loader2, Scissors,
   Globe, Home, Users, User,
 } from "lucide-react";
+import { useToast } from "../../../components/desktop/ToastProvider";
+import { api } from "../../../utils/apiClient";
+import { queryKeys } from "../../../utils/queryKeys";
 
 import {
   ViewMode, ServiceItem, AppointmentStatus, AppointmentSource, Staff, AppointmentService,
@@ -32,11 +36,11 @@ const assignColor = (index: number) => STAFF_COLORS[index % STAFF_COLORS.length]
 
 export default function Appointments() {
   const { currentBranchId, currentTenantId } = useAuthStore();
-  const API = `http://localhost:3000/api/tenants/${currentTenantId}`;
+  const toast = useToast();
+  const queryClient = useQueryClient();
 
   const [selectedDate, setSelectedDate] = useState(todayStr());
   const [items, setItems] = useState<ServiceItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [serviceList, setServiceList] = useState<AppointmentService[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("by-staff");
@@ -78,41 +82,49 @@ export default function Appointments() {
     `${String(Math.floor(nowMins / 60)).padStart(2, "0")}:${String(nowMins % 60).padStart(2, "0")}`,
     [nowMins]);
 
-  // Load staff & services once when tenant/branch changes
-  useEffect(() => {
-    if (!currentTenantId || !currentBranchId) return;
-    // Fetch staff for this branch
-    fetch(`${API}/staff`)
-      .then(r => r.ok ? r.json() : [])
-      .then((data: any[]) => {
-        const mapped: Staff[] = data
-          .filter(s => s.status === "ACTIVE" && s.branches?.some((b: any) => b.id === currentBranchId))
-          .map((s, i) => ({ id: s.id, name: s.name, color: assignColor(i) }));
-        setStaffList(mapped.length > 0 ? mapped : data.filter(s => s.status === "ACTIVE").map((s, i) => ({ id: s.id, name: s.name, color: assignColor(i) })));
-      })
-      .catch(() => setStaffList([]));
-    // Fetch services
-    fetch(`${API}/services?branchId=${currentBranchId}`)
-      .then(r => r.ok ? r.json() : [])
-      .then((data: any[]) => {
-        setServiceList(data.map(s => ({ id: s.id, name: s.name, duration: s.duration ?? 30, price: Number(s.price) })));
-      })
-      .catch(() => setServiceList([]));
-  }, [currentTenantId, currentBranchId]);
+  // TanStack Queries
+  const { data: dbStaff = [] } = useQuery<any[]>({
+    queryKey: queryKeys.staff.list(currentTenantId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/staff`),
+    enabled: !!currentTenantId,
+  });
 
-  // Load bookings for selected date
+  const { data: dbServices = [] } = useQuery<any[]>({
+    queryKey: queryKeys.services.list(currentTenantId!, currentBranchId),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/services?branchId=${currentBranchId}`),
+    enabled: !!currentTenantId && !!currentBranchId,
+  });
+
+  const { data: dbBookings = [], isLoading: bookingsLoading } = useQuery<ServiceItem[]>({
+    queryKey: [...queryKeys.appointments.list(currentTenantId!, currentBranchId!), selectedDate],
+    queryFn: () => api.get(`/tenants/${currentTenantId}/bookings?branchId=${currentBranchId}&date=${selectedDate}`),
+    enabled: !!currentTenantId && !!currentBranchId && !!selectedDate,
+  });
+
+  // Sync to local states for compatibility and mutations
   useEffect(() => {
-    if (!currentTenantId || !currentBranchId) return;
-    setLoading(true);
-    fetch(`${API}/bookings?branchId=${currentBranchId}&date=${selectedDate}`)
-      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .catch(() => [])
-      .then((data: ServiceItem[]) => {
-        setItems(data);
-        setSelectedCustomer(null);
-        setLoading(false);
-      });
-  }, [selectedDate, currentBranchId, currentTenantId]);
+    if (dbStaff.length > 0) {
+      const mapped: Staff[] = dbStaff
+        .filter(s => s.status === "ACTIVE" && s.branches?.some((b: any) => b.id === currentBranchId))
+        .map((s, i) => ({ id: s.id, name: s.name, color: assignColor(i) }));
+      setStaffList(mapped.length > 0 ? mapped : dbStaff.filter(s => s.status === "ACTIVE").map((s, i) => ({ id: s.id, name: s.name, color: assignColor(i) })));
+    }
+  }, [dbStaff, currentBranchId]);
+
+  useEffect(() => {
+    if (dbServices.length > 0) {
+      setServiceList(dbServices.map(s => ({ id: s.id, name: s.name, duration: s.duration ?? 30, price: Number(s.price) })));
+    }
+  }, [dbServices]);
+
+  useEffect(() => {
+    if (dbBookings) {
+      setItems(dbBookings);
+      setSelectedCustomer(null);
+    }
+  }, [dbBookings]);
+
+  const loading = bookingsLoading;
 
   const _todayItems = useMemo(() => items.filter(i => i.date === selectedDate), [items, selectedDate]);
 
@@ -229,12 +241,20 @@ export default function Appointments() {
     }));
     setDragState(null); setDragOverKey(null);
     // Persist to backend
-    fetch(`${API}/bookings/${dragState.id}/assign`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ staffId: newStaffId, startTime: newStartTime, date: selectedDate }),
-    }).catch(console.error);
-  }, [dragState, viewMode, selectedDate, API]);
+    api.put(`/tenants/${currentTenantId}/bookings/${dragState.id}/assign`, {
+      staffId: newStaffId,
+      startTime: newStartTime,
+      date: selectedDate
+    })
+      .then(() => {
+        toast.success("Xếp lịch nhân viên thành công!");
+        queryClient.invalidateQueries({ queryKey: queryKeys.appointments.all(currentTenantId!) });
+      })
+      .catch((err) => {
+        toast.error("Lỗi cập nhật lịch: " + err.message);
+        queryClient.invalidateQueries({ queryKey: queryKeys.appointments.all(currentTenantId!) });
+      });
+  }, [dragState, viewMode, selectedDate, currentTenantId, queryClient]);
 
   // ── Modal ──────────────────────────────────────────────────────────────────────
 
@@ -243,33 +263,26 @@ export default function Appointments() {
       // Call backend to create booking
       try {
         const first = newItems[0];
-        const res = await fetch(`${API}/bookings`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            branchId: currentBranchId,
-            customerName: first.customerName,
-            customerPhone: first.customerPhone,
-            source: first.source,
-            note: first.note,
-            date: first.date,
-            details: newItems.map(item => ({
-              serviceId: item.service.id,
-              staffId: item.staffId || undefined,
-              startTime: item.startTime,
-              duration: item.service.duration,
-              status: item.status,
-            })),
-          }),
+        const created: ServiceItem[] = await api.post(`/tenants/${currentTenantId}/bookings`, {
+          branchId: currentBranchId,
+          customerName: first.customerName,
+          customerPhone: first.customerPhone,
+          source: first.source,
+          note: first.note,
+          date: first.date,
+          details: newItems.map(item => ({
+            serviceId: item.service.id,
+            staffId: item.staffId || undefined,
+            startTime: item.startTime,
+            duration: item.service.duration,
+            status: item.status,
+          })),
         });
-        if (res.ok) {
-          const created: ServiceItem[] = await res.json();
-          setItems(prev => [...prev, ...created]);
-        } else {
-          // Fallback: add locally with temp IDs
-          setItems(prev => [...prev, ...newItems]);
-        }
-      } catch {
+        toast.success("Tạo lịch hẹn thành công!");
+        queryClient.invalidateQueries({ queryKey: queryKeys.appointments.all(currentTenantId!) });
+      } catch (err: any) {
+        toast.error("Lỗi tạo lịch hẹn: " + err.message);
+        // Fallback: add locally with temp IDs
         setItems(prev => [...prev, ...newItems]);
       }
     } else {
@@ -283,12 +296,16 @@ export default function Appointments() {
       item.id === id ? { ...item, service: { ...item.service, duration: newDuration } } : item
     ));
     // Persist to backend
-    fetch(`${API}/bookings/${id}/resize`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ duration: newDuration }),
-    }).catch(console.error);
-  }, [API]);
+    api.put(`/tenants/${currentTenantId}/bookings/${id}/resize`, { duration: newDuration })
+      .then(() => {
+        toast.success("Cập nhật thời lượng thành công!");
+        queryClient.invalidateQueries({ queryKey: queryKeys.appointments.all(currentTenantId!) });
+      })
+      .catch((err) => {
+        toast.error("Lỗi cập nhật thời lượng: " + err.message);
+        queryClient.invalidateQueries({ queryKey: queryKeys.appointments.all(currentTenantId!) });
+      });
+  }, [currentTenantId, queryClient]);
 
   const timeSlots = useMemo(() => Array.from({ length: TOTAL_SLOTS }, (_, i) => i), []);
   const gridH = TOTAL_SLOTS * SLOT_HEIGHT;
@@ -813,7 +830,15 @@ export default function Appointments() {
             setItems(prev => prev.filter(i => i.id !== id));
             setModal(null);
             // Persist to backend
-            fetch(`${API}/bookings/${id}`, { method: "DELETE" }).catch(console.error);
+            api.delete(`/tenants/${currentTenantId}/bookings/${id}`)
+              .then(() => {
+                toast.success("Xóa lịch hẹn thành công!");
+                queryClient.invalidateQueries({ queryKey: queryKeys.appointments.all(currentTenantId!) });
+              })
+              .catch((err) => {
+                toast.error("Lỗi xóa lịch hẹn: " + err.message);
+                queryClient.invalidateQueries({ queryKey: queryKeys.appointments.all(currentTenantId!) });
+              });
           } : undefined}
         />
       )}

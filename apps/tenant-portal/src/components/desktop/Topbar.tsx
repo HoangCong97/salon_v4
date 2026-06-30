@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useIsMutating, useIsFetching } from "@tanstack/react-query";
 import { useAuthStore, UserRole } from "../../store/useAuthStore";
 import { useLocation } from "react-router-dom";
 import { Bell } from "lucide-react";
@@ -6,6 +7,39 @@ import { Bell } from "lucide-react";
 export default function Topbar() {
   const { user, branches, currentBranchId, setBranch, setRole } = useAuthStore();
   const location = useLocation();
+
+  const isMutating = useIsMutating();
+  const isFetching = useIsFetching();
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  let syncColor = "var(--color-success)";
+  let syncGlow = "rgba(16, 185, 129, 0.4)";
+  let syncTooltip = "Đồng bộ hoàn toàn";
+
+  if (!isOnline) {
+    syncColor = "var(--color-danger)";
+    syncGlow = "rgba(239, 68, 68, 0.4)";
+    syncTooltip = "Mất kết nối Internet - Đang lưu ngoại tuyến";
+  } else if (isMutating > 0) {
+    syncColor = "var(--color-warning)";
+    syncGlow = "rgba(245, 158, 11, 0.4)";
+    syncTooltip = "Đang gửi dữ liệu lên máy chủ...";
+  } else if (isFetching > 0) {
+    syncColor = "var(--color-warning)";
+    syncGlow = "rgba(245, 158, 11, 0.4)";
+    syncTooltip = "Đang tải dữ liệu mới...";
+  }
 
   if (!user) return null;
 
@@ -147,6 +181,62 @@ export default function Topbar() {
             <option value="CASHIER">CASHIER (PC)</option>
             <option value="EMPLOYEE">EMPLOYEE (Mobile-first)</option>
           </select>
+        </div>
+
+        <style>{`
+          .sync-indicator-container {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+          }
+          .sync-indicator-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            transition: all 0.3s ease;
+          }
+          .sync-tooltip {
+            position: absolute;
+            top: 24px;
+            right: 50%;
+            transform: translateX(50%) translateY(0px);
+            background: rgba(15, 23, 42, 0.95);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 11px;
+            font-weight: 500;
+            white-space: nowrap;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1000;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+          }
+          .sync-indicator-container:hover .sync-tooltip {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(50%) translateY(4px);
+          }
+        `}</style>
+
+        {/* Sync Status Indicator */}
+        <div className="sync-indicator-container">
+          <span 
+            className="sync-indicator-dot" 
+            style={{ 
+              backgroundColor: syncColor, 
+              boxShadow: `0 0 8px ${syncGlow}` 
+            }} 
+          />
+          <div className="sync-tooltip">
+            {syncTooltip}
+          </div>
         </div>
 
         {/* MOCK notification button */}

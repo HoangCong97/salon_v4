@@ -15,7 +15,11 @@ Khi làm việc trong dự án này, AI Agent phải tuân thủ nghiêm ngặt 
     *   Sử dụng hiệu ứng hover sinh động và micro-animations tinh tế để nâng cao trải nghiệm người dùng.
 *   **Quản Lý State & Hiển Thị:**
     *   Sử dụng `useMemo` và `useCallback` một cách tối ưu để tránh render lại không cần thiết đối với danh sách lớn hoặc các bảng dữ liệu dạng Excel-like.
-
+*   **Chiến Lược Cache Dữ Liệu & Optimistic UI:**
+    *   **Cache dữ liệu ở Client**: Sử dụng thư viện [Điền tên vào, ví dụ: TanStack Query (React Query)] để lưu trữ và tái sử dụng dữ liệu cũ của API trong thời gian chờ fetch dữ liệu mới (chiến lược stale-while-revalidate), tránh nhấp nháy UI và giảm tải request lên server.
+    *   **Optimistic UI (Giao diện đáp ứng tức thì)**: Khi người dùng thực hiện các thao tác thêm, sửa, xóa nhanh (như đổi trạng thái, tích chọn ca làm việc, thêm nhanh sản phẩm vào giỏ hàng), React Custom Hook phải cập nhật state hiển thị ngay lập tức (dưới 50ms) trước khi gửi request tới API.
+    *   **Lưu ý khi Thêm mới**: Tự động tạo một ID tạm thời (ví dụ: dùng `crypto.randomUUID()` hoặc `Date.now().toString()`) cho phần tử mới để tránh lỗi render key khi chưa có ID từ Database.
+    *   **Xử lý lỗi**: Nếu API thất bại, thực hiện rollback trạng thái về trước đó và hiển thị thông báo lỗi (Toast notification).
 ---
 
 ## 2. Tiêu Chuẩn Backend (NestJS / Prisma)

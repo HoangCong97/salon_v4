@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../store/useAuthStore";
 import { Tooltip } from "../../components/desktop/Tooltip";
 import { 
@@ -6,6 +7,9 @@ import {
   Copy, Loader2, Info, Check, CalendarDays, RefreshCw 
 } from "lucide-react";
 import { useConfirm } from "../../components/desktop/ConfirmDialog";
+import { useToast } from "../../components/desktop/ToastProvider";
+import { api } from "../../utils/apiClient";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface Staff {
   id: string;
@@ -36,6 +40,8 @@ interface LocalShift {
 export default function Shifts() {
   const { currentTenantId, currentBranchId, branches } = useAuthStore();
   const confirm = useConfirm();
+  const toast = useToast();
+  const queryClient = useQueryClient();
 
   // Navigation state (Start of the week - Monday)
   const [currentWeekMonday, setCurrentWeekMonday] = useState<Date>(() => {
@@ -46,11 +52,8 @@ export default function Shifts() {
   });
 
   // Data States
-  const [staff, setStaff] = useState<Staff[]>([]);
-  const [shifts, setShifts] = useState<ShiftData[]>([]);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [copying, setCopying] = useState(false);
 
   // Local grid edits state: staffId -> workDate -> LocalShift
   const [gridEdits, setGridEdits] = useState<Record<string, Record<string, LocalShift>>>({});
@@ -84,37 +87,32 @@ export default function Shifts() {
     return `${dayName} (${datePart})`;
   };
 
-  // 2. FETCH DATA
-  const fetchStaffAndShifts = async () => {
-    if (!currentTenantId || !currentBranchId) return;
-    setLoading(true);
-    setError(null);
+  // 2. FETCH DATA with useQuery
+  const { data: staffData, isLoading: staffLoading } = useQuery<Staff[]>({
+    queryKey: queryKeys.shifts.staff(currentTenantId!, currentBranchId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/branches/${currentBranchId}/shifts/staff`),
+    enabled: !!currentTenantId && !!currentBranchId,
+  });
+
+  const { data: shiftsData, isLoading: shiftsLoading, error: shiftsError } = useQuery<ShiftData[]>({
+    queryKey: queryKeys.shifts.list(currentTenantId!, currentBranchId!, startDateStr, endDateStr),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/branches/${currentBranchId}/shifts?startDate=${startDateStr}&endDate=${endDateStr}`),
+    enabled: !!currentTenantId && !!currentBranchId,
+  });
+
+  const staff = staffData ?? [];
+  const shifts = shiftsData ?? [];
+  const loading = staffLoading || shiftsLoading || copying;
+  const error = shiftsError ? (shiftsError as Error).message : null;
+
+  /** Backward-compatible invalidation helper */
+  const fetchStaffAndShifts = useCallback(async () => {
     setGridEdits({});
-    try {
-      // Parallel fetches for staff assigned to branch and shifts in range
-      const [staffRes, shiftsRes] = await Promise.all([
-        fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/shifts/staff`),
-        fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/shifts?startDate=${startDateStr}&endDate=${endDateStr}`)
-      ]);
-
-      if (!staffRes.ok) throw new Error("Không thể tải danh sách nhân viên chi nhánh");
-      if (!shiftsRes.ok) throw new Error("Không thể tải ca trực tuần của chi nhánh");
-
-      const staffData = await staffRes.json();
-      const shiftsData = await shiftsRes.json();
-
-      setStaff(staffData);
-      setShifts(shiftsData);
-    } catch (err: any) {
-      setError(err.message || "Đã xảy ra lỗi khi tải dữ liệu ca trực");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchStaffAndShifts();
-  }, [currentTenantId, currentBranchId, currentWeekMonday]);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.shifts.staff(currentTenantId!, currentBranchId!) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.shifts.list(currentTenantId!, currentBranchId!, startDateStr, endDateStr) }),
+    ]);
+  }, [queryClient, currentTenantId, currentBranchId, startDateStr, endDateStr]);
 
   // Get current branch name
   const currentBranchName = branches.find(b => b.id === currentBranchId)?.name || "Chi nhánh";
@@ -250,24 +248,18 @@ export default function Shifts() {
     });
 
     if (shiftsToSave.length === 0) {
-      alert("Không có thay đổi nào cần lưu!");
+      toast.info("Không có thay đổi nào cần lưu!");
       return;
     }
 
     setSaving(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/shifts/bulk`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shifts: shiftsToSave })
-      });
+      await api.post(`/tenants/${currentTenantId}/branches/${currentBranchId}/shifts/bulk`, { shifts: shiftsToSave });
 
-      if (!res.ok) throw new Error("Lỗi khi cập nhật ca trực tuần");
-
-      alert("Lưu lịch trực tuần thành công!");
+      toast.success("Lưu lịch trực tuần thành công!");
       await fetchStaffAndShifts();
     } catch (err: any) {
-      alert(err.message || "Lưu lịch trực thất bại");
+      toast.error(err.message || "Lưu lịch trực thất bại");
     } finally {
       setSaving(false);
     }
@@ -295,15 +287,15 @@ export default function Shifts() {
     lastWeekSunday.setDate(lastWeekMonday.getDate() + 6);
     const lastWeekSundayStr = lastWeekSunday.toISOString().split("T")[0];
 
-    setLoading(true);
+    setCopying(true);
     try {
       const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/shifts?startDate=${lastWeekMondayStr}&endDate=${lastWeekSundayStr}`);
       if (!res.ok) throw new Error();
       const lastWeekShifts: ShiftData[] = await res.json();
 
       if (lastWeekShifts.length === 0) {
-        alert("Tuần trước chưa được xếp ca để sao chép!");
-        setLoading(false);
+        toast.info("Tuần trước chưa được xếp ca để sao chép!");
+        setCopying(false);
         return;
       }
 
@@ -333,11 +325,11 @@ export default function Shifts() {
       });
 
       setGridEdits(nextEdits);
-      alert("Đã sao chép lịch trực tuần trước vào bảng lưới! Hãy nhấn 'Lưu lịch trực' để đồng bộ.");
+      toast.success("Đã sao chép lịch trực tuần trước vào bảng lưới! Hãy nhấn 'Lưu lịch trực' để đồng bộ.");
     } catch (e) {
-      alert("Lỗi khi tải lịch trực tuần trước.");
+      toast.error("Lỗi khi tải lịch trực tuần trước.");
     } finally {
-      setLoading(false);
+      setCopying(false);
     }
   };
 
