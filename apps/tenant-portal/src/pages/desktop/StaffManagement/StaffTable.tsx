@@ -52,7 +52,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
 
   const staffExportColumns = React.useMemo<ExportColumnMapping[]>(() => [
     { key: "name", header: "Họ tên nhân viên" },
-    { key: "email", header: "Email" },
+    { key: "loginId", header: "ID đăng nhập" },
     { key: "phone", header: "Số điện thoại" },
     { key: "sex", header: "Giới tính" },
     { key: "baseSalary", header: "Lương cơ bản (VND)", transform: (val) => Number(val) },
@@ -171,12 +171,12 @@ export const StaffTable: React.FC<StaffTableProps> = ({
               <thead>
                 <tr>
                   <th style={{ padding: "12px 16px", fontSize: "13px", width: "220px" }}>Họ tên nhân viên</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "150px" }}>Số điện thoại</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "200px" }}>Email</th>
+                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "200px" }}>ID đăng nhập</th>
                   <th style={{ padding: "12px 16px", fontSize: "13px", width: "150px" }}>Mật khẩu</th>
+                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "150px" }}>Số điện thoại</th>
+                  <th style={{ padding: "12px 16px", fontSize: "13px", minWidth: "220px" }}>Chi nhánh hoạt động</th>
                   <th style={{ padding: "12px 16px", fontSize: "13px", width: "150px" }}>Chức vụ</th>
                   <th style={{ padding: "12px 16px", fontSize: "13px", width: "150px", textAlign: "center" }}>Lương cơ bản</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", minWidth: "220px" }}>Chi nhánh hoạt động</th>
                   <th style={{ padding: "12px 16px", fontSize: "13px", width: "140px" }}>Trạng thái</th>
                   {canManage && <th style={{ padding: "12px 16px", fontSize: "13px", width: "120px", textAlign: "center" }}>Hành động</th>}
                 </tr>
@@ -213,6 +213,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                       key={item.id}
                       onImageDrop={(file) => handleImageDrop(item.id, file)}
                     >
+                      {/* 1. Họ tên nhân viên */}
                       <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingLeft: "10px", width: "100%", height: "100%" }}>
                           {item.avatar ? (
@@ -251,24 +252,17 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                         </div>
                       </td>
 
+                      {/* 2. ID đăng nhập */}
                       <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
                         <ExcelInput
-                          value={getInlineValue(item, "phone") as string}
-                          onChange={(val) => handleInlineChange(item.id, "phone", val)}
-                          onBlur={() => handleAutoSave(item.id, { phone: getInlineValue(item, "phone") as string })}
+                          value={getInlineValue(item, "loginId") as string}
+                          onChange={(val) => handleInlineChange(item.id, "loginId", val)}
+                          onBlur={() => handleAutoSave(item.id, { loginId: getInlineValue(item, "loginId") as string })}
                           disabled={isSelfAdmin || !canManage}
                         />
                       </td>
 
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
-                        <ExcelInput
-                          value={getInlineValue(item, "email") as string}
-                          onChange={(val) => handleInlineChange(item.id, "email", val)}
-                          onBlur={() => handleAutoSave(item.id, { email: getInlineValue(item, "email") as string })}
-                          disabled={isSelfAdmin || !canManage}
-                        />
-                      </td>
-
+                      {/* 3. Mật khẩu */}
                       <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
                         <ExcelInput
                           type="password"
@@ -279,6 +273,28 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                         />
                       </td>
 
+                      {/* 4. Số điện thoại */}
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                        <ExcelInput
+                          value={getInlineValue(item, "phone") as string}
+                          onChange={(val) => handleInlineChange(item.id, "phone", val)}
+                          onBlur={() => handleAutoSave(item.id, { phone: getInlineValue(item, "phone") as string })}
+                          disabled={isSelfAdmin || !canManage}
+                        />
+                      </td>
+
+                      {/* 5. Chi nhánh hoạt động */}
+                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                        <ExcelMultipleSelect
+                          values={selectedBranchIds}
+                          options={branches.map((b) => ({ value: b.id, label: b.name }))}
+                          onChange={handleBranchChange}
+                          placeholder="Chưa gán chi nhánh"
+                          disabled={!canManage}
+                        />
+                      </td>
+
+                      {/* 6. Chức vụ */}
                       <td style={{ padding: "3px 6px", verticalAlign: "middle", height: "38px" }}>
                         <ExcelSelect
                           value={inlineRoleVal ? inlineRoleVal.id : ""}
@@ -295,6 +311,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                         />
                       </td>
 
+                      {/* 7. Lương cơ bản */}
                       <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
                         <ExcelInput
                           value={formatNumber(getInlineValue(item, "baseSalary") as number | string)}
@@ -307,16 +324,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                         />
                       </td>
 
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
-                        <ExcelMultipleSelect
-                          values={selectedBranchIds}
-                          options={branches.map((b) => ({ value: b.id, label: b.name }))}
-                          onChange={handleBranchChange}
-                          placeholder="Chưa gán chi nhánh"
-                          disabled={!canManage}
-                        />
-                      </td>
-
+                      {/* 8. Trạng thái */}
                       <td style={{ padding: "3px 6px", verticalAlign: "middle", height: "38px" }}>
                         <ExcelSelect
                           value={inlineStatusVal}
@@ -333,6 +341,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                         />
                       </td>
 
+                      {/* 9. Hành động */}
                       {canManage && (
                         <td style={{ padding: "0 8px", verticalAlign: "middle", height: "38px" }}>
                           <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>

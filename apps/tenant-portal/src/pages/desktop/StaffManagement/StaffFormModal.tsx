@@ -53,7 +53,7 @@ interface StaffFormModalProps {
   roles: Role[];
   branchList: Branch[];
   currentTenantId: string | null;
-  fetchStaffAndRoles: (silent?: boolean) => Promise<void>;
+  onSave: (payload: any, mode: "create" | "edit", staffId?: string | null) => Promise<void>;
 }
 
 export const StaffFormModal: React.FC<StaffFormModalProps> = ({
@@ -65,12 +65,12 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
   roles,
   branchList,
   currentTenantId,
-  fetchStaffAndRoles,
+  onSave,
 }) => {
   const toast = useToast();
   // Staff Form Fields State
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [sex, setSex] = useState("Nam");
@@ -107,7 +107,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
         const item = staff.find((s) => s.id === selectedStaffId);
         if (item) {
           setName(item.name);
-          setEmail(item.email);
+          setLoginId(item.loginId);
           setPassword("");
           setPhone(item.phone || "");
           setSex(item.sex || "Nam");
@@ -121,7 +121,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
       } else {
         // Create mode defaults
         setName("");
-        setEmail("");
+        setLoginId("");
         setPassword("");
         setPhone("");
         setSex("Nam");
@@ -176,16 +176,16 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
 
   const handleModalSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim()) return;
+    if (!name.trim() || !loginId.trim()) return;
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast.warning("Email không đúng định dạng!");
+    if (mode === "create" && !password.trim()) {
+      toast.warning("Mật khẩu là bắt buộc khi tạo mới!");
       return;
     }
 
     const payload = {
       name,
-      email,
+      loginId: loginId.trim(),
       password: password.trim() ? password : undefined,
       phone,
       sex,
@@ -198,30 +198,10 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
     };
 
     try {
-      let res;
-      if (mode === "create") {
-        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/staff`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      } else {
-        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/staff/${selectedStaffId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Lỗi khi lưu tài khoản nhân sự");
-      }
-
+      await onSave(payload, mode, selectedStaffId);
       onClose();
-      await fetchStaffAndRoles();
     } catch (err: any) {
-      toast.error(err.message);
+      // Error notifications are already handled by custom hook mutation callbacks
     }
   };
 
@@ -354,14 +334,14 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
               />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">Email liên hệ *</label>
+              <label className="form-label">ID đăng nhập *</label>
               <input
                 className="form-input"
-                type="email"
+                type="text"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email liên hệ..."
+                value={loginId}
+                onChange={(e) => setLoginId(e.target.value)}
+                placeholder="ID đăng nhập..."
                 disabled={isSelfAdmin}
               />
             </div>

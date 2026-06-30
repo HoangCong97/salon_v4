@@ -12,7 +12,8 @@ export interface Branch {
 export interface StaffMember {
   id: string;
   name: string;
-  email: string;
+  loginId: string;
+  email?: string;
   password?: string;
   phone: string;
   sex: string;

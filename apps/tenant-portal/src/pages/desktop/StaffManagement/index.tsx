@@ -47,6 +47,7 @@ export default function StaffManagement() {
     isDragActive,
     staffSchema,
     fetchStaffAndRoles,
+    handleSaveStaff,
     fetchDailyTurns,
     formatNumber,
     handleSalaryChange,
@@ -247,7 +248,7 @@ export default function StaffManagement() {
         roles={roles}
         branchList={branchList}
         currentTenantId={currentTenantId}
-        fetchStaffAndRoles={fetchStaffAndRoles}
+        onSave={handleSaveStaff}
       />
 
       {/* Custom Role creation/editing modal */}

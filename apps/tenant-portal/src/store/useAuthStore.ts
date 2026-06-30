@@ -5,7 +5,8 @@ export type UserRole = "ADMIN" | "MANAGER" | "CASHIER" | "EMPLOYEE";
 export interface UserSession {
   id: string;
   name: string;
-  email: string;
+  email?: string;
+  loginId: string;
   role: UserRole;
   avatar?: string;
   tenantId?: string;
@@ -77,7 +78,7 @@ interface AuthState {
   isBuying: boolean;
   handleBuyPlan: (planCode: string) => Promise<void>;
 
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (tenantRef: string, loginId: string, password: string, rememberMe?: boolean) => Promise<boolean>;
   logout: () => void;
   setRole: (role: UserRole) => void | Promise<void>;
   setBranch: (branchId: string) => void;
@@ -169,13 +170,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   
-  login: async (email, password) => {
+  login: async (tenantRef, loginId, password, rememberMe = true) => {
     set({ isLoading: true });
     try {
       const res = await fetch("http://localhost:3000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ tenantRef, loginId, password })
       });
 
       if (!res.ok) {
@@ -188,38 +189,64 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       // Fetch branches for logged in tenant
       const branchesRes = await fetch(`http://localhost:3000/api/tenants/${userData.tenantId}/branches`);
+      let mappedBranches: BranchInfo[] = [];
+      let currentBranchId: string | null = null;
+
       if (branchesRes.ok) {
         const branchData = await branchesRes.json();
         if (Array.isArray(branchData) && branchData.length > 0) {
-          const mappedBranches = branchData.map((b: any) => ({
+          mappedBranches = branchData.map((b: any) => ({
             id: b.id,
             name: b.name,
             address: b.address || ""
           }));
-          set({
-            branches: mappedBranches,
-            currentBranchId: mappedBranches[0].id,
-            isLoading: false
-          });
-          await get().fetchBrandInfo();
-          await get().fetchSubscription();
-          return true;
+          currentBranchId = mappedBranches[0].id;
         }
       }
-      
+
       set({
-        branches: [],
-        currentBranchId: null,
+        branches: mappedBranches,
+        currentBranchId,
         isLoading: false
       });
-      return false;
+
+      await get().fetchBrandInfo();
+      await get().fetchSubscription();
+
+      // Duy trì đăng nhập (Remember login)
+      const storage = rememberMe ? localStorage : sessionStorage;
+      storage.setItem("user", JSON.stringify(userData));
+      if (userData.tenantId) {
+        storage.setItem("tenantId", userData.tenantId);
+      }
+      if (currentBranchId) {
+        storage.setItem("branchId", currentBranchId);
+      }
+      storage.setItem("branches", JSON.stringify(mappedBranches));
+      storage.setItem("rememberMe", String(rememberMe));
+
+      return true;
     } catch (e: any) {
       set({ isLoading: false });
       throw e;
     }
   },
 
-  logout: () => set({ user: null, currentBranchId: null, currentTenantId: null, branches: [] }),
+  logout: () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("tenantId");
+    localStorage.removeItem("branchId");
+    localStorage.removeItem("branches");
+    localStorage.removeItem("rememberMe");
+
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("tenantId");
+    sessionStorage.removeItem("branchId");
+    sessionStorage.removeItem("branches");
+    sessionStorage.removeItem("rememberMe");
+
+    set({ user: null, currentBranchId: null, currentTenantId: null, branches: [] });
+  },
   setRole: async (role) => {
     const tenantId = get().currentTenantId;
     if (!tenantId || !get().user) return;
@@ -305,6 +332,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initializeSession: async () => {
     set({ isLoading: true });
     try {
+      // 1. Check if there is stored session
+      const storedUser = localStorage.getItem("user") || sessionStorage.getItem("user");
+      const storedTenantId = localStorage.getItem("tenantId") || sessionStorage.getItem("tenantId");
+      const storedBranchId = localStorage.getItem("branchId") || sessionStorage.getItem("branchId");
+      const storedBranches = localStorage.getItem("branches") || sessionStorage.getItem("branches");
+
+      if (storedUser) {
+        const parsedBranches = storedBranches ? JSON.parse(storedBranches) : [];
+        set({
+          user: JSON.parse(storedUser),
+          currentTenantId: storedTenantId,
+          currentBranchId: storedBranchId,
+          branches: parsedBranches,
+          isLoading: false
+        });
+        await get().fetchBrandInfo();
+        await get().fetchSubscription();
+        return;
+      }
+
+      // If no stored user, do default tenant list fetch
       const tenantsRes = await fetch("http://localhost:3000/api/super-admin/tenants");
       if (tenantsRes.ok) {
         const tenantData = await tenantsRes.json();

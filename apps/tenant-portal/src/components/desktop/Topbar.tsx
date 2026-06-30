@@ -2,11 +2,26 @@ import React, { useState, useEffect } from "react";
 import { useIsMutating, useIsFetching } from "@tanstack/react-query";
 import { useAuthStore, UserRole } from "../../store/useAuthStore";
 import { useLocation } from "react-router-dom";
-import { Bell } from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
+import { useConfirm } from "../../components/desktop/ConfirmDialog";
 
 export default function Topbar() {
-  const { user, branches, currentBranchId, setBranch, setRole } = useAuthStore();
+  const { user, branches, currentBranchId, setBranch, setRole, logout } = useAuthStore();
   const location = useLocation();
+  const confirm = useConfirm();
+
+  const handleLogout = async () => {
+    const ok = await confirm({
+      title: "Đăng xuất tài khoản",
+      message: "Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?",
+      type: "warning",
+      confirmText: "Đăng xuất",
+      cancelText: "Hủy bỏ"
+    });
+    if (ok) {
+      logout();
+    }
+  };
 
   const isMutating = useIsMutating();
   const isFetching = useIsFetching();
@@ -248,17 +263,39 @@ export default function Topbar() {
         {/* Divider */}
         <div style={{ width: "1px", height: "24px", background: "var(--border-color)" }}></div>
 
-        {/* User Info */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <img
-            src={user.avatar}
-            alt={user.name}
-            style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover" }}
-          />
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontWeight: "600", fontSize: "14px" }}>{user.name}</span>
-            <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: "500" }}>{user.role}</span>
+        {/* User Info & Logout */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <img
+              src={user.avatar}
+              alt={user.name}
+              style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover" }}
+            />
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontWeight: "600", fontSize: "14px" }}>{user.name}</span>
+              <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: "500" }}>{user.role}</span>
+            </div>
           </div>
+          <button
+            onClick={handleLogout}
+            title="Đăng xuất"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#ef4444",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "8px",
+              borderRadius: "50%",
+              transition: "background 0.2s"
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(239, 68, 68, 0.1)"}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+          >
+            <LogOut size={18} />
+          </button>
         </div>
       </div>
     </div>

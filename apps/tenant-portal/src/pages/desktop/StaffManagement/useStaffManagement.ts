@@ -256,7 +256,8 @@ export function useStaffManagement() {
       staffId,
       payload: {
         name: finalFields.name,
-        email: finalFields.email,
+        loginId: finalFields.loginId,
+        email: finalFields.email || "",
         password: finalFields.password,
         phone: finalFields.phone,
         sex: finalFields.sex,
@@ -335,6 +336,119 @@ export function useStaffManagement() {
       return;
 
     deleteStaffMutation.mutate(id);
+  };
+
+  /** Mutation: Tạo nhân sự mới với Optimistic UI */
+  const createStaffMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      return api.post(`/tenants/${currentTenantId}/staff`, payload);
+    },
+    onMutate: async (payload) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.staff.list(currentTenantId!) });
+      const previousStaff = queryClient.getQueryData<StaffMember[]>(
+        queryKeys.staff.list(currentTenantId!)
+      );
+
+      const tempId = `temp-${Date.now()}`;
+      const optimisticStaff: StaffMember = {
+        id: tempId,
+        name: payload.name,
+        loginId: payload.loginId,
+        email: payload.email || "",
+        phone: payload.phone || "",
+        sex: payload.sex || "Nam",
+        baseSalary: payload.baseSalary || 0,
+        status: payload.status || "ACTIVE",
+        note: payload.note || "",
+        avatar: payload.avatar || "",
+        role: roles.find((r) => r.id === payload.roleId) || null,
+        branches: branchList.filter((b) => payload.branchIds.includes(b.id)),
+        createdAt: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData<StaffMember[]>(
+        queryKeys.staff.list(currentTenantId!),
+        (old) => [...(old || []), optimisticStaff]
+      );
+
+      return { previousStaff };
+    },
+    onError: (err, payload, context) => {
+      if (context?.previousStaff) {
+        queryClient.setQueryData(
+          queryKeys.staff.list(currentTenantId!),
+          context.previousStaff
+        );
+      }
+      toast.error(`Thêm nhân sự thất bại: ${(err as Error).message}`);
+    },
+    onSuccess: () => {
+      toast.success("Thêm nhân sự mới thành công!");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.staff.all(currentTenantId!) });
+    },
+  });
+
+  /** Mutation: Cập nhật nhân sự với Optimistic UI */
+  const updateStaffMutation = useMutation({
+    mutationFn: async ({ staffId, payload }: { staffId: string; payload: any }) => {
+      return api.put(`/tenants/${currentTenantId}/staff/${staffId}`, payload);
+    },
+    onMutate: async ({ staffId, payload }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.staff.list(currentTenantId!) });
+      const previousStaff = queryClient.getQueryData<StaffMember[]>(
+        queryKeys.staff.list(currentTenantId!)
+      );
+
+      queryClient.setQueryData<StaffMember[]>(
+        queryKeys.staff.list(currentTenantId!),
+        (old) =>
+          old?.map((s) =>
+            s.id === staffId
+              ? {
+                  ...s,
+                  name: payload.name,
+                  loginId: payload.loginId,
+                  email: payload.email || "",
+                  phone: payload.phone || "",
+                  sex: payload.sex || "Nam",
+                  baseSalary: payload.baseSalary || 0,
+                  status: payload.status || "ACTIVE",
+                  note: payload.note || "",
+                  avatar: payload.avatar || "",
+                  role: roles.find((r) => r.id === payload.roleId) || null,
+                  branches: branchList.filter((b) => payload.branchIds.includes(b.id)),
+                }
+              : s
+          ) ?? []
+      );
+
+      return { previousStaff };
+    },
+    onError: (err, { staffId }, context) => {
+      if (context?.previousStaff) {
+        queryClient.setQueryData(
+          queryKeys.staff.list(currentTenantId!),
+          context.previousStaff
+        );
+      }
+      toast.error(`Cập nhật nhân sự thất bại: ${(err as Error).message}`);
+    },
+    onSuccess: () => {
+      toast.success("Cập nhật nhân sự thành công!");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.staff.all(currentTenantId!) });
+    },
+  });
+
+  const handleSaveStaff = async (payload: any, mode: "create" | "edit", staffId?: string | null) => {
+    if (mode === "create") {
+      await createStaffMutation.mutateAsync(payload);
+    } else if (mode === "edit" && staffId) {
+      await updateStaffMutation.mutateAsync({ staffId, payload });
+    }
   };
 
   // ==========================================================
@@ -632,7 +746,8 @@ export function useStaffManagement() {
   // Dynamic Staff Schema for Import Matcher
   const staffSchema = useMemo<TargetField[]>(() => [
     { field: "name", label: "Tên nhân viên", type: "string", required: true, description: "Họ và tên của nhân viên" },
-    { field: "email", label: "Email", type: "string", required: true, description: "" },
+    { field: "loginId", label: "ID đăng nhập", type: "string", required: true, description: "ID dùng để đăng nhập hệ thống" },
+    { field: "email", label: "Email liên hệ", type: "string", required: false, description: "Email liên hệ (tùy chọn)" },
     { field: "phone", label: "Số điện thoại", type: "string", required: false, description: "Số điện thoại liên hệ" },
     {
       field: "sex",
@@ -664,7 +779,8 @@ export function useStaffManagement() {
   const filteredStaffBase = staff.filter(
     (item) =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.loginId && item.loginId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.email && item.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (item.phone && item.phone.includes(searchTerm)) ||
       (item.role && item.role.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
@@ -761,6 +877,7 @@ export function useStaffManagement() {
     handleOpenCreateModal,
     handleOpenEditModal,
     handleDeleteStaff,
+    handleSaveStaff,
     handlePermissionCheckboxChange,
     handleSavePermissions,
     handleOpenRoleModal,

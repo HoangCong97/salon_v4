@@ -195,7 +195,8 @@ model User {
   tenantId   String    @map("tenant_id") @db.Uuid
   roleId     String?   @map("role_id") @db.Uuid
   name       String    @db.VarChar(255)
-  email      String    @db.VarChar(255)
+  loginId    String    @default("") @map("login_id") @db.VarChar(255)
+  email      String?   @db.VarChar(255)
   password   String    @db.VarChar(255)
   phone      String?   @db.VarChar(50)
   sex        String?   @db.VarChar(10)

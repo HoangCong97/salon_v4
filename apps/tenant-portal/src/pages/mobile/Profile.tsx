@@ -1,8 +1,23 @@
 import React from "react";
 import { useAuthStore, UserRole } from "../../store/useAuthStore";
+import { useConfirm } from "../../components/desktop/ConfirmDialog";
 
 export default function Profile() {
   const { user, setRole, logout } = useAuthStore();
+  const confirm = useConfirm();
+
+  const handleLogout = async () => {
+    const ok = await confirm({
+      title: "Đăng xuất tài khoản",
+      message: "Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?",
+      type: "warning",
+      confirmText: "Đăng xuất",
+      cancelText: "Hủy bỏ"
+    });
+    if (ok) {
+      logout();
+    }
+  };
 
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setRole(e.target.value as UserRole);
@@ -58,7 +73,7 @@ export default function Profile() {
           </select>
         </div>
 
-        <button className="btn btn-secondary" style={{ width: "100%" }} onClick={() => alert("Đang đăng xuất...")}>
+        <button className="btn btn-secondary" style={{ width: "100%" }} onClick={handleLogout}>
           Đăng xuất
         </button>
       </div>

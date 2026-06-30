@@ -8,18 +8,10 @@ export class StaffImportStrategy extends BaseImportStrategy {
   validate(row: any): string[] {
     const requiredFields = [
       { field: "name", label: "Tên nhân viên" },
-      { field: "email", label: "Email" }
+      { field: "loginId", label: "ID đăng nhập" }
     ];
     
     const errors = this.validateRequired(row, requiredFields);
-
-    const email = this.cleanString(row.email);
-    if (email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        errors.push("Email không đúng định dạng.");
-      }
-    }
 
     if (row.baseSalary !== undefined && row.baseSalary !== null && row.baseSalary !== "") {
       const baseSalary = this.cleanNumber(row.baseSalary, -1);
@@ -72,7 +64,8 @@ export class StaffImportStrategy extends BaseImportStrategy {
         }
 
         const name = this.cleanString(row.name);
-        const email = this.cleanString(row.email).toLowerCase();
+        const loginId = this.cleanString(row.loginId || row.email).toLowerCase();
+        const email = this.cleanString(row.email) || null;
         const phone = this.cleanString(row.phone) || null;
         const sex = this.cleanString(row.sex) || "Nam";
         const baseSalary = this.cleanNumber(row.baseSalary, 0);
@@ -102,11 +95,11 @@ export class StaffImportStrategy extends BaseImportStrategy {
           }
         }
 
-        // 3. Create or Update (Upsert by email + tenantId)
+        // 3. Create or Update (Upsert by loginId + tenantId)
         const existingUser = await prisma.user.findFirst({
           where: {
             tenantId,
-            email,
+            loginId,
             deletedAt: null
           }
         });
@@ -119,6 +112,8 @@ export class StaffImportStrategy extends BaseImportStrategy {
             where: { id: existingUser.id },
             data: {
               name,
+              loginId,
+              email: email || undefined,
               phone,
               sex,
               baseSalary,
@@ -136,6 +131,7 @@ export class StaffImportStrategy extends BaseImportStrategy {
             data: {
               tenantId,
               name,
+              loginId,
               email,
               password: defaultPassword,
               phone,

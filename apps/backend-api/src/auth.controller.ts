@@ -6,41 +6,42 @@ import { ensureStandardRolesAndPermissions } from "./staff.controller";
 export class AuthController {
 
   @Post("login")
-  async login(@Body() body: { email?: string; password?: string }) {
+  async login(@Body() body: { tenantRef?: string; loginId?: string; email?: string; password?: string }) {
     try {
-      const { email, password } = body;
+      const tenantRef = body.tenantRef;
+      const loginIdVal = body.loginId || body.email;
+      const { password } = body;
 
-      if (!email || !password) {
-        throw new HttpException("Email and password are required", HttpStatus.BAD_REQUEST);
+      if (!loginIdVal || !password) {
+        throw new HttpException("ID đăng nhập và Mật khẩu là bắt buộc", HttpStatus.BAD_REQUEST);
       }
 
-      // Query user first to check credentials
-      const user = await prisma.user.findFirst({
-        where: {
-          email: email.toLowerCase(),
-          deletedAt: null
+      let tenantId: string | undefined;
+      if (tenantRef && tenantRef.trim().length > 0) {
+        const tenant = await prisma.tenant.findFirst({
+          where: {
+            OR: [
+              { phone: tenantRef.trim() },
+              { name: { contains: tenantRef.trim(), mode: 'insensitive' } },
+              { brandName: { contains: tenantRef.trim(), mode: 'insensitive' } }
+            ],
+            deletedAt: null
+          }
+        });
+
+        if (!tenant) {
+          throw new HttpException("Cửa hàng / Thương hiệu không tồn tại", HttpStatus.NOT_FOUND);
         }
-      });
-
-      if (!user) {
-        throw new HttpException("Tài khoản không tồn tại trong hệ thống", HttpStatus.UNAUTHORIZED);
+        tenantId = tenant.id;
       }
 
-      // Plaintext password comparison for local development
-      if (user.password !== password) {
-        throw new HttpException("Mật khẩu không chính xác", HttpStatus.UNAUTHORIZED);
-      }
-
-      if (user.status !== "ACTIVE") {
-        throw new HttpException("Tài khoản đã bị khóa", HttpStatus.FORBIDDEN);
-      }
-
-      // Ensure all standard roles and permissions exist for this tenant
-      await ensureStandardRolesAndPermissions(user.tenantId);
-
-      // Re-query user and join with their role and permissions
-      const fullUser = await prisma.user.findUnique({
-        where: { id: user.id },
+      // Query users matching loginId with role and permissions included in a single query
+      const users = await prisma.user.findMany({
+        where: {
+          loginId: loginIdVal.toLowerCase().trim(),
+          tenantId: tenantId,
+          deletedAt: null
+        },
         include: {
           role: {
             include: {
@@ -54,9 +55,26 @@ export class AuthController {
         }
       });
 
-      if (!fullUser) {
-        throw new HttpException("Không tìm thấy thông tin người dùng", HttpStatus.NOT_FOUND);
+      if (users.length === 0) {
+        throw new HttpException("Tài khoản không tồn tại trong hệ thống", HttpStatus.UNAUTHORIZED);
       }
+
+      // Find user with correct password if duplicate loginIds exist across tenants
+      const fullUser = users.find(u => u.password === password) || users[0];
+
+      // Plaintext password comparison for local development
+      if (fullUser.password !== password) {
+        throw new HttpException("Mật khẩu không chính xác", HttpStatus.UNAUTHORIZED);
+      }
+
+      if (fullUser.status !== "ACTIVE") {
+        throw new HttpException("Tài khoản đã bị khóa", HttpStatus.FORBIDDEN);
+      }
+
+      // Ensure all standard roles and permissions exist for this tenant (run in background to avoid blocking login latency)
+      ensureStandardRolesAndPermissions(fullUser.tenantId).catch(err => {
+        console.error("Failed to ensure roles in background:", err);
+      });
 
       // Map role name to standard frontend roles
       let mappedRole: "ADMIN" | "MANAGER" | "CASHIER" | "EMPLOYEE" = "EMPLOYEE";
@@ -78,6 +96,7 @@ export class AuthController {
         id: fullUser.id,
         name: fullUser.name,
         email: fullUser.email,
+        loginId: fullUser.loginId,
         role: mappedRole,
         tenantId: fullUser.tenantId,
         avatar: fullUser.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80",

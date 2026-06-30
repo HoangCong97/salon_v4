@@ -193,7 +193,8 @@ async function getAdminUserId(tenantId: string): Promise<string | null> {
       tenantId,
       deletedAt: null,
       OR: [
-        { email: tenant?.email ? tenant.email.toLowerCase() : undefined },
+        { loginId: tenant?.phone ? tenant.phone : undefined },
+        { loginId: tenant?.email ? tenant.email.toLowerCase() : undefined },
         { phone: tenant?.phone ? tenant.phone : undefined }
       ]
     },
@@ -269,7 +270,8 @@ export class StaffController {
       return staffList.map((user) => ({
         id: user.id,
         name: user.name,
-        email: user.email,
+        loginId: user.loginId,
+        email: user.email || "",
         password: user.password || "",
         phone: user.phone || "",
         sex: user.sex || "",
@@ -299,7 +301,8 @@ export class StaffController {
     @Param("tenantId") tenantId: string,
     @Body() body: {
       name: string;
-      email: string;
+      loginId: string;
+      email?: string;
       password?: string;
       phone?: string;
       sex?: string;
@@ -312,32 +315,32 @@ export class StaffController {
     }
   ) {
     try {
-      if (!body.name || !body.email) {
-        throw new HttpException("Tên và Email là bắt buộc", HttpStatus.BAD_REQUEST);
+      if (!body.name || !body.loginId || !body.password) {
+        throw new HttpException("Tên, ID đăng nhập và Mật khẩu là bắt buộc", HttpStatus.BAD_REQUEST);
       }
 
-      // Check if email already exists for this tenant
+      // Check if loginId already exists for this tenant
       const existingUser = await prisma.user.findFirst({
         where: {
-          email: body.email.toLowerCase(),
+          loginId: body.loginId.toLowerCase().trim(),
           tenantId,
           deletedAt: null
         }
       });
 
       if (existingUser) {
-        throw new HttpException("Email này đã được sử dụng trong hệ thống", HttpStatus.CONFLICT);
+        throw new HttpException("ID đăng nhập này đã được sử dụng trong hệ thống", HttpStatus.CONFLICT);
       }
 
-      // Default password to 123456 if not provided
-      const password = body.password || "123456";
+      const password = body.password;
 
       // Create user
       const user = await prisma.user.create({
         data: {
           tenantId,
           name: body.name,
-          email: body.email.toLowerCase(),
+          loginId: body.loginId.toLowerCase().trim(),
+          email: body.email ? body.email.toLowerCase().trim() : null,
           password,
           phone: body.phone || null,
           sex: body.sex || null,
@@ -391,7 +394,8 @@ export class StaffController {
       return {
         id: createdUser.id,
         name: createdUser.name,
-        email: createdUser.email,
+        loginId: createdUser.loginId,
+        email: createdUser.email || "",
         phone: createdUser.phone || "",
         sex: createdUser.sex || "",
         baseSalary: Number(createdUser.baseSalary),
@@ -422,7 +426,8 @@ export class StaffController {
     @Param("id") id: string,
     @Body() body: {
       name: string;
-      email: string;
+      loginId: string;
+      email?: string;
       password?: string;
       phone?: string;
       sex?: string;
@@ -435,8 +440,8 @@ export class StaffController {
     }
   ) {
     try {
-      if (!body.name || !body.email) {
-        throw new HttpException("Tên và Email là bắt buộc", HttpStatus.BAD_REQUEST);
+      if (!body.name || !body.loginId) {
+        throw new HttpException("Tên và ID đăng nhập là bắt buộc", HttpStatus.BAD_REQUEST);
       }
 
       // Ensure staff member exists
@@ -448,26 +453,27 @@ export class StaffController {
         throw new HttpException("Không tìm thấy thông tin nhân viên", HttpStatus.NOT_FOUND);
       }
 
-      // Check email uniqueness if email changed
-      if (body.email.toLowerCase() !== existing.email.toLowerCase()) {
-        const emailExists = await prisma.user.findFirst({
+      // Check loginId uniqueness if loginId changed
+      if (body.loginId.toLowerCase() !== (existing.loginId || "").toLowerCase()) {
+        const loginIdExists = await prisma.user.findFirst({
           where: {
-            email: body.email.toLowerCase(),
+            loginId: body.loginId.toLowerCase(),
             tenantId,
             id: { not: id },
             deletedAt: null
           }
         });
 
-        if (emailExists) {
-          throw new HttpException("Email này đã được sử dụng bởi nhân viên khác", HttpStatus.CONFLICT);
+        if (loginIdExists) {
+          throw new HttpException("ID đăng nhập này đã được sử dụng bởi nhân viên khác", HttpStatus.CONFLICT);
         }
       }
 
       // Prepare updates
       const updateData: any = {
         name: body.name,
-        email: body.email.toLowerCase(),
+        loginId: body.loginId.toLowerCase(),
+        email: body.email ? body.email.toLowerCase() : null,
         phone: body.phone ?? null,
         sex: body.sex ?? null,
         baseSalary: body.baseSalary ?? 0,
@@ -530,7 +536,8 @@ export class StaffController {
       return {
         id: updatedUser.id,
         name: updatedUser.name,
-        email: updatedUser.email,
+        loginId: updatedUser.loginId,
+        email: updatedUser.email || "",
         phone: updatedUser.phone || "",
         sex: updatedUser.sex || "",
         baseSalary: Number(updatedUser.baseSalary),
