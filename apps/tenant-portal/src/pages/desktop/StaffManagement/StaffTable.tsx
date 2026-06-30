@@ -24,6 +24,12 @@ interface StaffTableProps {
   formatNumber: (val: number | string | undefined | null) => string;
   adminUserId?: string;
   handleOpenImportModal: () => void;
+  selectedBranchFilter: string;
+  setSelectedBranchFilter: (val: string) => void;
+  selectedRoleFilter: string;
+  setSelectedRoleFilter: (val: string) => void;
+  selectedStatusFilter: string;
+  setSelectedStatusFilter: (val: string) => void;
 }
 
 export const StaffTable: React.FC<StaffTableProps> = ({
@@ -43,6 +49,12 @@ export const StaffTable: React.FC<StaffTableProps> = ({
   formatNumber,
   adminUserId,
   handleOpenImportModal,
+  selectedBranchFilter,
+  setSelectedBranchFilter,
+  selectedRoleFilter,
+  setSelectedRoleFilter,
+  selectedStatusFilter,
+  setSelectedStatusFilter,
 }) => {
   const toast = useToast();
   const currentUser = useAuthStore((state) => state.user);
@@ -58,36 +70,51 @@ export const StaffTable: React.FC<StaffTableProps> = ({
     { key: "baseSalary", header: "Lương cơ bản (VND)", transform: (val) => Number(val) },
     { key: "role", header: "Chức vụ", transform: (val) => val ? val.name : "" },
     { key: "branches", header: "Chi nhánh hoạt động", transform: (val) => Array.isArray(val) ? val.map((b: any) => b.name).join(", ") : "" },
-    { key: "status", header: "Trạng thái", transform: (val) => val === "ACTIVE" ? "Đang hoạt động" : "Ngưng hoạt động" },
+    { key: "status", header: "Trạng thái", transform: (val) => val === "ACTIVE" ? "Đang hoạt động" : val === "SUSPENDED" ? "Tạm ngừng" : "Ngưng hoạt động" },
     { key: "note", header: "Ghi chú" }
   ], []);
 
   const handleImageDrop = async (itemId: string, file: File) => {
     if (!canManage) return;
     try {
+      const previewUrl = URL.createObjectURL(file);
+      // Update local state instantly with local object URL preview
+      handleInlineChange(itemId, "avatar", previewUrl);
+
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = async () => {
         const base64Data = reader.result as string;
-        const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/upload`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            file: base64Data,
-            category: "staff",
-            filename: file.name
-          })
-        });
+        try {
+          const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/upload`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              file: base64Data,
+              category: "staff",
+              filename: file.name
+            })
+          });
 
-        if (!res.ok) {
-          throw new Error("Lỗi khi tải ảnh lên máy chủ");
+          if (!res.ok) {
+            throw new Error("Lỗi khi tải ảnh lên máy chủ");
+          }
+
+          const data = await res.json();
+          const imageUrl = data.url;
+
+          // Revoke preview URL to free memory
+          if (previewUrl.startsWith("blob:")) {
+            URL.revokeObjectURL(previewUrl);
+          }
+
+          handleInlineChange(itemId, "avatar", imageUrl);
+          await handleAutoSave(itemId, { avatar: imageUrl });
+        } catch (err: any) {
+          toast.error("Lỗi tải ảnh kéo thả: " + err.message);
+          // Revert back to original avatar on error
+          handleInlineChange(itemId, "avatar", undefined);
         }
-
-        const data = await res.json();
-        const imageUrl = data.url;
-
-        handleInlineChange(itemId, "avatar", imageUrl);
-        await handleAutoSave(itemId, { avatar: imageUrl });
       };
     } catch (err: any) {
       toast.error("Lỗi tải ảnh kéo thả: " + err.message);
@@ -102,20 +129,80 @@ export const StaffTable: React.FC<StaffTableProps> = ({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-      {/* Search Bar & Action Button */}
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      {/* Search Bar, Filters & Action Buttons Row */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-        <div style={{ position: "relative", width: "100%", maxWidth: "320px" }}>
-          <Search size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-          <input
+        {/* Left: Search Bar & Filters */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", flexGrow: 1 }}>
+          <div style={{ position: "relative", width: "100%", maxWidth: "240px" }}>
+            <Search size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+            <input
+              className="form-input"
+              type="text"
+              placeholder="Tìm kiếm nhân viên..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ paddingLeft: "36px", height: "34px", fontSize: "13px" }}
+            />
+          </div>
+
+          {/* Filter by Branch */}
+          <select
             className="form-input"
-            type="text"
-            placeholder="Tìm kiếm nhân viên (Tên, SĐT, Chức vụ)..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ paddingLeft: "36px" }}
-          />
+            value={selectedBranchFilter}
+            onChange={(e) => setSelectedBranchFilter(e.target.value)}
+            style={{ width: "auto", minWidth: "150px", height: "34px", padding: "0 10px", fontSize: "13px" }}
+          >
+            <option value="">Chi nhánh (Tất cả)</option>
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+
+          {/* Filter by Role */}
+          <select
+            className="form-input"
+            value={selectedRoleFilter}
+            onChange={(e) => setSelectedRoleFilter(e.target.value)}
+            style={{ width: "auto", minWidth: "150px", height: "34px", padding: "0 10px", fontSize: "13px" }}
+          >
+            <option value="">Chức vụ (Tất cả)</option>
+            {roles.map((r) => (
+              <option key={r.id} value={r.id}>{r.name}</option>
+            ))}
+          </select>
+
+          {/* Filter by Status */}
+          <select
+            className="form-input"
+            value={selectedStatusFilter}
+            onChange={(e) => setSelectedStatusFilter(e.target.value)}
+            style={{ width: "auto", minWidth: "150px", height: "34px", padding: "0 10px", fontSize: "13px" }}
+          >
+            <option value="">Trạng thái (Tất cả)</option>
+            <option value="ACTIVE">Hoạt động</option>
+            <option value="SUSPENDED">Tạm ngừng</option>
+            <option value="INACTIVE">Tạm khóa</option>
+          </select>
+
+          {/* Reset Filter Button if any filters are active */}
+          {(selectedBranchFilter || selectedRoleFilter || selectedStatusFilter || searchTerm) && (
+            <button
+              className="btn btn-secondary"
+              onClick={() => {
+                setSelectedBranchFilter("");
+                setSelectedRoleFilter("");
+                setSelectedStatusFilter("");
+                setSearchTerm("");
+              }}
+              style={{ height: "34px", padding: "0 12px", fontSize: "12px", color: "var(--text-secondary)" }}
+            >
+              Xóa bộ lọc
+            </button>
+          )}
         </div>
+
+        {/* Right: Action Buttons */}
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
           {canManage && (
             <button
@@ -130,6 +217,9 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                 color: "hsl(142, 76%, 36%)",
                 backgroundColor: "hsl(142, 76%, 97%)",
                 transition: "background-color 0.15s ease",
+                height: "34px",
+                fontSize: "13px",
+                padding: "0 12px",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = "hsl(142, 76%, 92%)";
@@ -149,7 +239,11 @@ export const StaffTable: React.FC<StaffTableProps> = ({
           />
 
           {canManage && (
-            <button className="btn btn-primary" onClick={handleOpenCreateModal}>
+            <button 
+              className="btn btn-primary" 
+              onClick={handleOpenCreateModal}
+              style={{ height: "34px", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px", padding: "0 16px" }}
+            >
               <Plus size={18} /> Thêm nhân viên mới
             </button>
           )}
@@ -161,7 +255,9 @@ export const StaffTable: React.FC<StaffTableProps> = ({
           <Users size={48} style={{ color: "var(--text-muted)", marginBottom: "16px", marginInline: "auto" }} />
           <h3 style={{ fontSize: "16px", fontWeight: "600", marginBottom: "8px" }}>Không tìm thấy nhân viên</h3>
           <p style={{ color: "var(--text-secondary)", marginBottom: "20px" }}>
-            {searchTerm ? "Không tìm thấy kết quả phù hợp với từ khóa." : "Salon của bạn hiện chưa có nhân viên nào."}
+            {searchTerm || selectedBranchFilter || selectedRoleFilter || selectedStatusFilter
+              ? "Không tìm thấy kết quả phù hợp với các bộ lọc hiện tại."
+              : "Salon của bạn hiện chưa có nhân viên nào."}
           </p>
         </div>
       ) : (
@@ -187,10 +283,12 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                   const inlineStatusVal = getInlineValue(item, "status") as string;
                   const inlineBranchesVal = getInlineValue(item, "branches") as Branch[] || [];
                   const selectedBranchIds = inlineBranchesVal.map((b) => b.id);
+                  const inlineAvatarVal = getInlineValue(item, "avatar") as string || item.avatar;
 
                   const isAdminRow = item.isAdmin || item.id === adminUserId;
                   const isSelf = item.id === currentUser?.id;
                   const isSelfAdmin = isAdminRow && isSelf;
+                  const isSuspended = inlineStatusVal === "SUSPENDED";
 
                   const filteredRoles = roles.filter(
                     (r) => isAdminRow || r.name.toUpperCase() !== "ADMIN"
@@ -216,9 +314,9 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                       {/* 1. Họ tên nhân viên */}
                       <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingLeft: "10px", width: "100%", height: "100%" }}>
-                          {item.avatar ? (
+                          {inlineAvatarVal ? (
                             <img
-                              src={item.avatar}
+                              src={inlineAvatarVal}
                               alt={item.name}
                               style={{ width: "24px", height: "24px", borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
                             />
@@ -246,7 +344,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                               onChange={(val) => handleInlineChange(item.id, "name", val)}
                               onBlur={() => handleAutoSave(item.id, { name: getInlineValue(item, "name") as string })}
                               fontWeight="600"
-                              disabled={!canManage}
+                              disabled={isSuspended || !canManage}
                             />
                           </div>
                         </div>
@@ -258,7 +356,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           value={getInlineValue(item, "loginId") as string}
                           onChange={(val) => handleInlineChange(item.id, "loginId", val)}
                           onBlur={() => handleAutoSave(item.id, { loginId: getInlineValue(item, "loginId") as string })}
-                          disabled={isSelfAdmin || !canManage}
+                          disabled={isSuspended || isSelfAdmin || !canManage}
                         />
                       </td>
 
@@ -269,7 +367,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           value={getInlineValue(item, "password") as string || ""}
                           onChange={(val) => handleInlineChange(item.id, "password", val)}
                           onBlur={() => handleAutoSave(item.id, { password: getInlineValue(item, "password") as string })}
-                          disabled={isSelfAdmin || !canManage}
+                          disabled={isSuspended || isSelfAdmin || !canManage}
                         />
                       </td>
 
@@ -279,7 +377,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           value={getInlineValue(item, "phone") as string}
                           onChange={(val) => handleInlineChange(item.id, "phone", val)}
                           onBlur={() => handleAutoSave(item.id, { phone: getInlineValue(item, "phone") as string })}
-                          disabled={isSelfAdmin || !canManage}
+                          disabled={isSuspended || isSelfAdmin || !canManage}
                         />
                       </td>
 
@@ -290,7 +388,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           options={branches.map((b) => ({ value: b.id, label: b.name }))}
                           onChange={handleBranchChange}
                           placeholder="Chưa gán chi nhánh"
-                          disabled={!canManage}
+                          disabled={isSuspended || !canManage}
                         />
                       </td>
 
@@ -307,7 +405,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           options={filteredRoles.map((r) => ({ value: r.id, label: r.name, colorStyle: getRoleColorStyle(r.name) }))}
                           colorStyle={getRoleColorStyle(inlineRoleVal ? inlineRoleVal.name : "Employee")}
                           placeholder="-- Chọn vai trò --"
-                          disabled={isAdminRow || !canManage}
+                          disabled={isSuspended || isAdminRow || !canManage}
                         />
                       </td>
 
@@ -320,7 +418,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           textAlign="center"
                           fontWeight="500"
                           unit="đ"
-                          disabled={!canManage}
+                          disabled={isSuspended || !canManage}
                         />
                       </td>
 
@@ -334,6 +432,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           }}
                           options={[
                             { value: "ACTIVE", label: "Hoạt động", colorStyle: getStatusColorStyle("ACTIVE") },
+                            { value: "SUSPENDED", label: "Tạm ngừng", colorStyle: getStatusColorStyle("SUSPENDED") },
                             { value: "INACTIVE", label: "Tạm khóa", colorStyle: getStatusColorStyle("INACTIVE") },
                           ]}
                           colorStyle={getStatusColorStyle(inlineStatusVal)}
@@ -347,8 +446,16 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>
                             <button
                               className="btn btn-secondary"
-                              style={{ padding: "4px 8px", fontSize: "12px", borderRadius: "var(--radius-sm)" }}
-                              onClick={() => handleOpenEditModal(item)}
+                              style={{
+                                padding: "4px 8px",
+                                fontSize: "12px",
+                                borderRadius: "var(--radius-sm)",
+                                opacity: isSuspended ? 0.5 : 1,
+                                cursor: isSuspended ? "not-allowed" : "pointer"
+                              }}
+                              onClick={() => !isSuspended && handleOpenEditModal(item)}
+                              disabled={isSuspended}
+                              title={isSuspended ? "Tài khoản tạm ngừng không thể chỉnh sửa" : "Chỉnh sửa"}
                             >
                               <Edit2 size={12} />
                             </button>
@@ -358,11 +465,12 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                                 padding: "4px 8px",
                                 fontSize: "12px",
                                 borderRadius: "var(--radius-sm)",
-                                opacity: isAdminRow ? 0.5 : 1,
-                                cursor: isAdminRow ? "not-allowed" : "pointer"
+                                opacity: (isAdminRow || isSuspended) ? 0.5 : 1,
+                                cursor: (isAdminRow || isSuspended) ? "not-allowed" : "pointer"
                               }}
-                              disabled={isAdminRow}
-                              onClick={() => !isAdminRow && handleDeleteStaff(item.id)}
+                              disabled={isAdminRow || isSuspended}
+                              onClick={() => !isAdminRow && !isSuspended && handleDeleteStaff(item.id)}
+                              title={isSuspended ? "Tài khoản tạm ngừng không thể xóa" : "Xóa"}
                             >
                               <Trash2 size={12} />
                             </button>

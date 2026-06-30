@@ -39,7 +39,7 @@ export default function Login() {
   const handleQuickFill = (quickBrand: string, quickLoginId: string) => {
     setBrandName(quickBrand);
     setLoginId(quickLoginId);
-    setPassword("hashedpassword123");
+    setPassword("123456");
     setError(null);
   };
 
@@ -230,7 +230,7 @@ export default function Login() {
             <div style={{ position: "relative" }}>
               <KeyRound size={18} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
               <input
-                type={showPassword ? "text" : "password"}
+                type="text"
                 required
                 placeholder="Nhập mật khẩu..."
                 value={password}
@@ -245,8 +245,9 @@ export default function Login() {
                   borderRadius: "8px",
                   outline: "none",
                   fontSize: "14px",
-                  transition: "all 0.15s ease"
-                }}
+                  transition: "all 0.15s ease",
+                  WebkitTextSecurity: showPassword ? "none" : "disc",
+                } as any}
                 onFocus={(e) => {
                   e.target.style.borderColor = "#0070f3";
                   e.target.style.boxShadow = "0 0 0 3px rgba(0, 112, 243, 0.15)";
@@ -415,7 +416,7 @@ export default function Login() {
           </button>
 
           <button
-            onClick={() => handleQuickFill("0971218625", "stylist@hairstar.vn")}
+            onClick={() => handleQuickFill("0971218625", "tien.le")}
             style={{
               padding: "6px 8px",
               background: "rgba(255, 255, 255, 0.2)",
@@ -431,7 +432,7 @@ export default function Login() {
             onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)"}
           >
             <strong>Nhân viên (Mobile)</strong><br />
-            CH: 0971218625 / TK: stylist@hairstar.vn
+            CH: 0971218625 / TK: tien.le
           </button>
         </div>
       </div>

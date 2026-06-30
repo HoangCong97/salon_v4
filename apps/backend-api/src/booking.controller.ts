@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpStatus, HttpException } from "@nestjs/common";
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Headers, HttpStatus, HttpException } from "@nestjs/common";
 import { prisma } from "@salon/database";
+import { NotificationGateway } from "./notification.gateway";
 
 /**
  * BookingController — API for Appointments page
@@ -9,6 +10,7 @@ import { prisma } from "@salon/database";
  */
 @Controller("api/tenants/:tenantId/bookings")
 export class BookingController {
+  constructor(private readonly notificationGateway: NotificationGateway) {}
 
   // ─── Helper: format Date to "HH:mm" in Vietnam timezone ────────────────────
   private toVN(d: Date): Date {
@@ -115,6 +117,7 @@ export class BookingController {
   @Post()
   async createBooking(
     @Param("tenantId") tenantId: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: {
       branchId: string;
       customerId?: string;
@@ -195,6 +198,8 @@ export class BookingController {
       const custName = booking.customer?.name ?? booking.customerName ?? "Khách vãng lai";
       const custPhone = booking.customer?.phone ?? booking.customerPhone ?? undefined;
 
+      this.notificationGateway.broadcastToTenant(tenantId, "appointments.updated", { branchId, senderId });
+
       return booking.bookingDetails.map(detail => ({
         id: detail.id,
         groupId: booking.id,
@@ -230,6 +235,7 @@ export class BookingController {
   async assignDetail(
     @Param("tenantId") tenantId: string,
     @Param("detailId") detailId: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: { staffId?: string; startTime?: string; date?: string }
   ) {
     try {
@@ -245,7 +251,7 @@ export class BookingController {
         where: { id: detailId },
         data: updateData,
         include: {
-          booking: { select: { tenantId: true } },
+          booking: { select: { tenantId: true, branchId: true } },
         },
       });
 
@@ -253,6 +259,8 @@ export class BookingController {
       if (detail.booking.tenantId !== tenantId) {
         throw new HttpException("Forbidden", HttpStatus.FORBIDDEN);
       }
+
+      this.notificationGateway.broadcastToTenant(tenantId, "appointments.updated", { branchId: detail.booking.branchId, senderId });
 
       return { success: true, id: detail.id };
     } catch (error) {
@@ -272,6 +280,7 @@ export class BookingController {
   async resizeDetail(
     @Param("tenantId") tenantId: string,
     @Param("detailId") detailId: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: { duration: number }
   ) {
     try {
@@ -279,13 +288,15 @@ export class BookingController {
         where: { id: detailId },
         data: { duration: body.duration },
         include: {
-          booking: { select: { tenantId: true } },
+          booking: { select: { tenantId: true, branchId: true } },
         },
       });
 
       if (detail.booking.tenantId !== tenantId) {
         throw new HttpException("Forbidden", HttpStatus.FORBIDDEN);
       }
+
+      this.notificationGateway.broadcastToTenant(tenantId, "appointments.updated", { branchId: detail.booking.branchId, senderId });
 
       return { success: true, id: detail.id };
     } catch (error) {
@@ -305,6 +316,7 @@ export class BookingController {
   async updateStatus(
     @Param("tenantId") tenantId: string,
     @Param("detailId") detailId: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: { status: string }
   ) {
     try {
@@ -312,13 +324,15 @@ export class BookingController {
         where: { id: detailId },
         data: { status: body.status },
         include: {
-          booking: { select: { tenantId: true } },
+          booking: { select: { tenantId: true, branchId: true } },
         },
       });
 
       if (detail.booking.tenantId !== tenantId) {
         throw new HttpException("Forbidden", HttpStatus.FORBIDDEN);
       }
+
+      this.notificationGateway.broadcastToTenant(tenantId, "appointments.updated", { branchId: detail.booking.branchId, senderId });
 
       return { success: true, id: detail.id };
     } catch (error) {
@@ -337,7 +351,8 @@ export class BookingController {
   @Delete(":detailId")
   async deleteDetail(
     @Param("tenantId") tenantId: string,
-    @Param("detailId") detailId: string
+    @Param("detailId") detailId: string,
+    @Headers("x-user-id") senderId: string
   ) {
     try {
       const detail = await prisma.bookingDetail.update({
@@ -348,6 +363,7 @@ export class BookingController {
             select: {
               tenantId: true,
               id: true,
+              branchId: true,
               bookingDetails: { where: { deletedAt: null } },
             },
           },
@@ -365,6 +381,8 @@ export class BookingController {
           data: { deletedAt: new Date(), status: "CANCELLED" },
         });
       }
+
+      this.notificationGateway.broadcastToTenant(tenantId, "appointments.updated", { branchId: detail.booking.branchId, senderId });
 
       return { success: true, id: detail.id };
     } catch (error) {

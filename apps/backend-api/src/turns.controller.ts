@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpStatus, HttpException } from "@nestjs/common";
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Headers, HttpStatus, HttpException } from "@nestjs/common";
 import { prisma } from "@salon/database";
+import { NotificationGateway } from "./notification.gateway";
 
 // Helper function to get local today's date at midnight UTC
 function getLocalTodayUtc(customDate?: string): Date {
@@ -14,6 +15,7 @@ function getLocalTodayUtc(customDate?: string): Date {
 
 @Controller("api/tenants/:tenantId/branches/:branchId/daily-turns")
 export class TurnsController {
+  constructor(private readonly notificationGateway: NotificationGateway) {}
 
   // 1. GET QUEUE OF DAILY TURNS (AUTO-INITIALIZE IF EMPTY)
   @Get()
@@ -159,6 +161,7 @@ export class TurnsController {
   async assignTurn(
     @Param("tenantId") tenantId: string,
     @Param("branchId") branchId: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: {
       staffId: string;
       turnType: "walkin" | "booked";
@@ -193,7 +196,7 @@ export class TurnsController {
       const updatedBooked = existing.totalBookedCount + (turnType === "booked" ? 1 : 0);
       const totalCustomers = updatedWalkin + updatedBooked;
 
-      return await prisma.employeeDailyTurn.update({
+      const updated = await prisma.employeeDailyTurn.update({
         where: { id: existing.id },
         data: {
           totalWalkinCount: updatedWalkin,
@@ -203,6 +206,9 @@ export class TurnsController {
           updatedAt: new Date()
         }
       });
+
+      this.notificationGateway.broadcastToTenant(tenantId, "dailyTurns.updated", { branchId, senderId });
+      return updated;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
@@ -218,6 +224,7 @@ export class TurnsController {
     @Param("tenantId") tenantId: string,
     @Param("branchId") branchId: string,
     @Param("staffId") staffId: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: {
       totalWalkinCount: number;
       totalBookedCount: number;
@@ -247,7 +254,7 @@ export class TurnsController {
         throw new HttpException("Không tìm thấy hàng đợi của nhân viên này", HttpStatus.NOT_FOUND);
       }
 
-      return await prisma.employeeDailyTurn.update({
+      const updated = await prisma.employeeDailyTurn.update({
         where: { id: existing.id },
         data: {
           totalWalkinCount,
@@ -256,6 +263,9 @@ export class TurnsController {
           updatedAt: new Date()
         }
       });
+
+      this.notificationGateway.broadcastToTenant(tenantId, "dailyTurns.updated", { branchId, senderId });
+      return updated;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
@@ -270,6 +280,7 @@ export class TurnsController {
   async resetQueue(
     @Param("tenantId") tenantId: string,
     @Param("branchId") branchId: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: { date?: string }
   ) {
     try {
@@ -291,6 +302,7 @@ export class TurnsController {
         }
       });
 
+      this.notificationGateway.broadcastToTenant(tenantId, "dailyTurns.updated", { branchId, senderId });
       return { success: true, message: "Hàng đợi đã được khởi động lại về 0" };
     } catch (error) {
       throw new HttpException(
@@ -305,6 +317,7 @@ export class TurnsController {
   async addStaffToQueue(
     @Param("tenantId") tenantId: string,
     @Param("branchId") branchId: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: {
       staffId: string;
       date?: string;
@@ -346,6 +359,7 @@ export class TurnsController {
         }
       });
 
+      this.notificationGateway.broadcastToTenant(tenantId, "dailyTurns.updated", { branchId, senderId });
       return newTurn;
     } catch (error) {
       if (error instanceof HttpException) throw error;

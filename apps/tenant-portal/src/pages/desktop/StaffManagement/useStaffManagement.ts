@@ -28,6 +28,9 @@ export function useStaffManagement() {
 
   // Search Filter State
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBranchFilter, setSelectedBranchFilter] = useState("");
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState("");
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState("");
 
   // Inline Editing State for Staff
   const [inlineEdits, setInlineEdits] = useState<Record<string, Partial<StaffMember>>>({});
@@ -212,13 +215,41 @@ export function useStaffManagement() {
       }
       toast.error(`Lưu tự động thất bại: ${(_err as Error).message}`);
     },
-    onSuccess: (_data, { staffId }) => {
+    onSuccess: (_data, { staffId, payload }) => {
       // Clear inline edits for this staff
       setInlineEdits((prev) => {
         const next = { ...prev };
         delete next[staffId];
         return next;
       });
+
+      // Update auth store user if current user is updated
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser && staffId === currentUser.id) {
+        const roleName = payload.roleId ? roles.find((r) => r.id === payload.roleId)?.name?.toUpperCase() : currentUser.role;
+        useAuthStore.setState({
+          user: {
+            ...currentUser,
+            name: payload.name ?? currentUser.name,
+            avatar: payload.avatar ?? currentUser.avatar,
+            role: roleName as any,
+            status: payload.status ?? currentUser.status,
+          }
+        });
+        const rememberMe = localStorage.getItem("rememberMe") === "true";
+        const storage = rememberMe ? localStorage : sessionStorage;
+        const storedUser = storage.getItem("user");
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          storage.setItem("user", JSON.stringify({
+            ...parsedUser,
+            name: payload.name ?? parsedUser.name,
+            avatar: payload.avatar ?? parsedUser.avatar,
+            role: roleName,
+            status: payload.status ?? parsedUser.status,
+          }));
+        }
+      }
     },
     onSettled: () => {
       // Refetch to ensure server truth
@@ -435,19 +466,47 @@ export function useStaffManagement() {
       }
       toast.error(`Cập nhật nhân sự thất bại: ${(err as Error).message}`);
     },
-    onSuccess: () => {
+    onSuccess: (_data, { staffId, payload }) => {
       toast.success("Cập nhật nhân sự thành công!");
+
+      // Update auth store user if current user is updated
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser && staffId === currentUser.id) {
+        const roleName = payload.roleId ? roles.find((r) => r.id === payload.roleId)?.name?.toUpperCase() : currentUser.role;
+        useAuthStore.setState({
+          user: {
+            ...currentUser,
+            name: payload.name ?? currentUser.name,
+            avatar: payload.avatar ?? currentUser.avatar,
+            role: roleName as any,
+            status: payload.status ?? currentUser.status,
+          }
+        });
+        const rememberMe = localStorage.getItem("rememberMe") === "true";
+        const storage = rememberMe ? localStorage : sessionStorage;
+        const storedUser = storage.getItem("user");
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          storage.setItem("user", JSON.stringify({
+            ...parsedUser,
+            name: payload.name ?? parsedUser.name,
+            avatar: payload.avatar ?? parsedUser.avatar,
+            role: roleName,
+            status: payload.status ?? parsedUser.status,
+          }));
+        }
+      }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.staff.all(currentTenantId!) });
     },
   });
 
-  const handleSaveStaff = async (payload: any, mode: "create" | "edit", staffId?: string | null) => {
+  const handleSaveStaff = (payload: any, mode: "create" | "edit", staffId?: string | null) => {
     if (mode === "create") {
-      await createStaffMutation.mutateAsync(payload);
+      createStaffMutation.mutate(payload);
     } else if (mode === "edit" && staffId) {
-      await updateStaffMutation.mutateAsync({ staffId, payload });
+      updateStaffMutation.mutate({ staffId, payload });
     }
   };
 
@@ -775,14 +834,34 @@ export function useStaffManagement() {
   const adminUser = getAdminUser(staff);
   const adminUserId = adminUser?.id;
 
-  // Filter staff based on search query
+  // Filter staff based on search query & other filter criteria
   const filteredStaffBase = staff.filter(
-    (item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.loginId && item.loginId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (item.email && item.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (item.phone && item.phone.includes(searchTerm)) ||
-      (item.role && item.role.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    (item) => {
+      // 1. Text Search Filter
+      const matchesSearch =
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.loginId && item.loginId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (item.email && item.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (item.phone && item.phone.includes(searchTerm)) ||
+        (item.role && item.role.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      // 2. Branch Filter
+      const matchesBranch =
+        selectedBranchFilter === "" ||
+        item.branches.some((b) => b.id === selectedBranchFilter);
+
+      // 3. Role Filter
+      const matchesRole =
+        selectedRoleFilter === "" ||
+        (item.role && item.role.id === selectedRoleFilter);
+
+      // 4. Status Filter
+      const matchesStatus =
+        selectedStatusFilter === "" ||
+        item.status === selectedStatusFilter;
+
+      return matchesSearch && matchesBranch && matchesRole && matchesStatus;
+    }
   );
 
   // Sort: Admin user always goes first
@@ -836,6 +915,12 @@ export function useStaffManagement() {
     branches,
     activeTab,
     setActiveTab,
+    selectedBranchFilter,
+    setSelectedBranchFilter,
+    selectedRoleFilter,
+    setSelectedRoleFilter,
+    selectedStatusFilter,
+    setSelectedStatusFilter,
     staff,
     roles,
     branchList,

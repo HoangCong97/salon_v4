@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Param, Body, Query, HttpException, HttpStatus } from "@nestjs/common";
+import { Controller, Get, Post, Param, Body, Query, Headers, HttpException, HttpStatus } from "@nestjs/common";
 import { prisma } from "@salon/database";
+import { NotificationGateway } from "./notification.gateway";
 
 @Controller("api/tenants/:tenantId/branches/:branchId/invoices")
 export class InvoiceController {
+  constructor(private readonly notificationGateway: NotificationGateway) {}
 
   // 1. GET ALL INVOICES FOR A BRANCH
   @Get()
@@ -50,6 +52,7 @@ export class InvoiceController {
   async createInvoice(
     @Param("tenantId") tenantId: string,
     @Param("branchId") branchId: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: {
       customerId?: string;
       cashierId?: string;
@@ -206,6 +209,10 @@ export class InvoiceController {
 
         return inv;
       });
+
+      this.notificationGateway.broadcastToTenant(tenantId, "invoices.updated", { branchId, senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "inventories.updated", { branchId, senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "dailyTurns.updated", { branchId, senderId });
 
       return await prisma.invoice.findUnique({
         where: { id: savedInvoice.id },

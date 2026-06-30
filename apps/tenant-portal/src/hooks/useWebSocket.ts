@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useAuthStore } from "../store/useAuthStore";
 
 type MessageCallback = (event: string, data: any) => void;
 
@@ -20,9 +21,28 @@ class WebSocketService {
     return WebSocketService.instance;
   }
 
+  public updateTenant(tenantId: string | null) {
+    const newUrl = tenantId ? `ws://localhost:3000?tenantId=${tenantId}` : `ws://localhost:3000`;
+    if (this.url === newUrl && this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+      return; // No need to reconnect
+    }
+
+    this.url = newUrl;
+    console.log("Updating WebSocket tenant URL and reconnecting:", this.url);
+
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+
+    this.connect();
+  }
+
   private connect() {
     if (this.ws) {
       try {
+        this.ws.onclose = null;
+        this.ws.onerror = null;
         this.ws.close();
       } catch (e) {}
     }
@@ -87,6 +107,12 @@ class WebSocketService {
 export const useWebSocket = (onMessage?: MessageCallback) => {
   const onMessageRef = useRef(onMessage);
   onMessageRef.current = onMessage;
+  const currentTenantId = useAuthStore((state) => state.currentTenantId);
+
+  useEffect(() => {
+    const wsService = WebSocketService.getInstance();
+    wsService.updateTenant(currentTenantId);
+  }, [currentTenantId]);
 
   useEffect(() => {
     if (!onMessageRef.current) return;

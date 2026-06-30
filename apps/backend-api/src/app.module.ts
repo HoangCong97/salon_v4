@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Module, NestModule, MiddlewareConsumer, RequestMethod, HttpStatus, HttpException } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { SuperAdminController } from "./super-admin.controller";
@@ -18,6 +18,7 @@ import { BookingController } from "./booking.controller";
 import { PayrollController } from "./payroll.controller";
 import { CustomerPortalController } from "./customer-portal.controller";
 import { NotificationGateway } from "./notification.gateway";
+import { Request, Response, NextFunction } from "express";
 
 @Module({
   imports: [ImportEngineModule],
@@ -42,6 +43,29 @@ import { NotificationGateway } from "./notification.gateway";
   providers: [AppService, NotificationGateway],
   exports: [NotificationGateway]
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply((req: Request, res: Response, next: NextFunction) => {
+        const method = req.method;
+        const xUserStatus = req.headers["x-user-status"];
+        const path = req.path;
+
+        // If user is suspended, block any mutations (POST, PUT, DELETE) except login/auth paths
+        if (
+          xUserStatus === "SUSPENDED" &&
+          ["POST", "PUT", "DELETE"].includes(method) &&
+          !path.includes("/api/auth/login")
+        ) {
+          throw new HttpException(
+            "Tài khoản đang bị tạm ngưng, không được phép thực hiện thao tác này.",
+            HttpStatus.FORBIDDEN
+          );
+        }
+        next();
+      })
+      .forRoutes({ path: "*", method: RequestMethod.ALL });
+  }
+}
 
 

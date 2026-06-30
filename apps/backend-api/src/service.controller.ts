@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpStatus, HttpException } from "@nestjs/common";
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Headers, HttpStatus, HttpException } from "@nestjs/common";
 import { prisma } from "@salon/database";
+import { NotificationGateway } from "./notification.gateway";
 
 @Controller("api/tenants/:tenantId/services")
 export class ServiceController {
+  constructor(private readonly notificationGateway: NotificationGateway) {}
 
   // 1. GET ALL SERVICES FOR TENANT (OPTIONAL BRANCH FILTER)
   @Get()
@@ -101,6 +103,7 @@ export class ServiceController {
   @Post()
   async createService(
     @Param("tenantId") tenantId: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: {
       name: string;
       serviceCategory?: string;
@@ -140,6 +143,8 @@ export class ServiceController {
         }
       });
 
+      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", { branchId: created.branchId, senderId });
+
       return {
         ...created,
         discountPrice: Number(created.price) - Number(created.discountAmount || 0)
@@ -158,6 +163,7 @@ export class ServiceController {
   async updateService(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: {
       name: string;
       serviceCategory?: string;
@@ -207,6 +213,8 @@ export class ServiceController {
         }
       });
 
+      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", { branchId: updated.branchId, senderId });
+
       return {
         ...updated,
         discountPrice: Number(updated.price) - Number(updated.discountAmount || 0)
@@ -224,7 +232,8 @@ export class ServiceController {
   @Delete(":id")
   async deleteService(
     @Param("tenantId") tenantId: string,
-    @Param("id") id: string
+    @Param("id") id: string,
+    @Headers("x-user-id") senderId: string
   ) {
     try {
       // Ensure service exists and belongs to tenant
@@ -242,6 +251,8 @@ export class ServiceController {
           deletedAt: new Date()
         }
       });
+
+      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", { branchId: existing.branchId, senderId });
 
       return { success: true, message: "Service deleted successfully" };
     } catch (error) {

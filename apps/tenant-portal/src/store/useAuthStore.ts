@@ -11,6 +11,7 @@ export interface UserSession {
   avatar?: string;
   tenantId?: string;
   permissions?: string[];
+  status?: string;
 }
 
 export interface BranchInfo {
@@ -428,6 +429,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   hasPermission: (permission) => {
     const user = get().user;
     if (!user) return false;
+    // Suspended users can ONLY view (read-only), so any non-view permission is blocked
+    if (user.status === "SUSPENDED" && !permission.endsWith(".view")) {
+      return false;
+    }
     if (user.role === "ADMIN") return true;
     return user.permissions?.includes(permission) || false;
   }

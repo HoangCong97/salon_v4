@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, Param, Query, HttpStatus, HttpException } from "@nestjs/common";
+import { Controller, Get, Post, Body, Param, Query, Headers, HttpStatus, HttpException } from "@nestjs/common";
 import { prisma } from "@salon/database";
+import { NotificationGateway } from "./notification.gateway";
 
 @Controller("api/tenants/:tenantId")
 export class ShiftsController {
+  constructor(private readonly notificationGateway: NotificationGateway) {}
 
   // 1. GET ALL SHIFTS FOR A BRANCH IN DATE RANGE
   @Get("branches/:branchId/shifts")
@@ -117,6 +119,7 @@ export class ShiftsController {
   async bulkSaveShifts(
     @Param("tenantId") tenantId: string,
     @Param("branchId") branchId: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: {
       shifts: Array<{
         id?: string;
@@ -224,6 +227,8 @@ export class ShiftsController {
 
       const rawResults = await Promise.all(operations);
       const results = rawResults.filter((r) => r !== null);
+
+      this.notificationGateway.broadcastToTenant(tenantId, "shifts.updated", { branchId, senderId });
 
       return { success: true, count: results.length };
     } catch (error) {

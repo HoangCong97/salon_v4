@@ -67,7 +67,7 @@ export class AuthController {
         throw new HttpException("Mật khẩu không chính xác", HttpStatus.UNAUTHORIZED);
       }
 
-      if (fullUser.status !== "ACTIVE") {
+      if (fullUser.status !== "ACTIVE" && fullUser.status !== "SUSPENDED") {
         throw new HttpException("Tài khoản đã bị khóa", HttpStatus.FORBIDDEN);
       }
 
@@ -100,7 +100,8 @@ export class AuthController {
         role: mappedRole,
         tenantId: fullUser.tenantId,
         avatar: fullUser.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80",
-        permissions
+        permissions,
+        status: fullUser.status
       };
 
     } catch (error) {

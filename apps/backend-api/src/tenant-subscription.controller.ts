@@ -3,6 +3,7 @@ import { prisma } from "@salon/database";
 import * as fs from "fs";
 import * as path from "path";
 import { NotificationGateway } from "./notification.gateway";
+import { deleteOldFile } from "./file-utils";
 
 @Controller("api/tenants")
 export class TenantSubscriptionController {
@@ -218,6 +219,13 @@ export class TenantSubscriptionController {
 
       if (!existing) {
         throw new HttpException("Tenant not found", HttpStatus.NOT_FOUND);
+      }
+
+      if (body.logoUrl !== undefined && body.logoUrl !== existing.logoUrl) {
+        await deleteOldFile(existing.logoUrl);
+      }
+      if (body.bannerUrl !== undefined && body.bannerUrl !== existing.bannerUrl) {
+        await deleteOldFile(existing.bannerUrl);
       }
 
       return await prisma.tenant.update({

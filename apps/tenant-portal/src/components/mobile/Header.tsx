@@ -1,8 +1,24 @@
 import React from "react";
+import { LogOut } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
+import { useConfirm } from "../desktop/ConfirmDialog";
 
 export default function Header() {
-  const { user, branches, currentBranchId } = useAuthStore();
+  const { user, branches, currentBranchId, logout } = useAuthStore();
+  const confirm = useConfirm();
+
+  const handleLogout = async () => {
+    const ok = await confirm({
+      title: "Đăng xuất tài khoản",
+      message: "Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?",
+      type: "warning",
+      confirmText: "Đăng xuất",
+      cancelText: "Hủy bỏ"
+    });
+    if (ok) {
+      logout();
+    }
+  };
 
   const currentBranch = branches.find((b) => b.id === currentBranchId);
   const todayStr = new Date().toLocaleDateString("vi-VN", {
@@ -46,6 +62,26 @@ export default function Header() {
           alt={user?.name}
           style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover" }}
         />
+        <button
+          onClick={handleLogout}
+          title="Đăng xuất"
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "#ef4444",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "8px",
+            borderRadius: "50%",
+            transition: "background 0.2s"
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(239, 68, 68, 0.1)"}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+        >
+          <LogOut size={18} />
+        </button>
       </div>
     </div>
   );

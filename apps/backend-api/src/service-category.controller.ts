@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, HttpStatus, HttpException } from "@nestjs/common";
+import { Controller, Get, Post, Put, Delete, Body, Param, Headers, HttpStatus, HttpException } from "@nestjs/common";
 import { prisma } from "@salon/database";
+import { NotificationGateway } from "./notification.gateway";
 
 @Controller("api/tenants/:tenantId/service-categories")
 export class ServiceCategoryController {
+  constructor(private readonly notificationGateway: NotificationGateway) {}
 
   // 1. GET ALL CATEGORIES FOR TENANT
   @Get()
@@ -29,6 +31,7 @@ export class ServiceCategoryController {
   @Post()
   async createCategory(
     @Param("tenantId") tenantId: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: {
       name: string;
       color: string;
@@ -43,7 +46,7 @@ export class ServiceCategoryController {
         throw new HttpException("Category color is required", HttpStatus.BAD_REQUEST);
       }
 
-      return await prisma.serviceCategory.create({
+      const created = await prisma.serviceCategory.create({
         data: {
           tenantId,
           name: body.name,
@@ -51,6 +54,10 @@ export class ServiceCategoryController {
           defaultCommission: body.defaultCommission || 0
         }
       });
+
+      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", { senderId });
+
+      return created;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
@@ -65,6 +72,7 @@ export class ServiceCategoryController {
   async updateCategory(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: {
       name: string;
       color: string;
@@ -88,7 +96,7 @@ export class ServiceCategoryController {
         throw new HttpException("Service category not found", HttpStatus.NOT_FOUND);
       }
 
-      return await prisma.serviceCategory.update({
+      const updated = await prisma.serviceCategory.update({
         where: { id },
         data: {
           name: body.name,
@@ -97,6 +105,10 @@ export class ServiceCategoryController {
           updatedAt: new Date()
         }
       });
+
+      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", { senderId });
+
+      return updated;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
@@ -110,7 +122,8 @@ export class ServiceCategoryController {
   @Delete(":id")
   async deleteCategory(
     @Param("tenantId") tenantId: string,
-    @Param("id") id: string
+    @Param("id") id: string,
+    @Headers("x-user-id") senderId: string
   ) {
     try {
       // Ensure category exists and belongs to tenant
@@ -128,6 +141,8 @@ export class ServiceCategoryController {
           deletedAt: new Date()
         }
       });
+
+      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", { senderId });
 
       return { success: true, message: "Service category deleted successfully" };
     } catch (error) {

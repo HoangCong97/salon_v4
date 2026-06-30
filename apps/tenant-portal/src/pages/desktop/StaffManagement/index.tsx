@@ -25,6 +25,12 @@ export default function StaffManagement() {
     error,
     searchTerm,
     setSearchTerm,
+    selectedBranchFilter,
+    setSelectedBranchFilter,
+    selectedRoleFilter,
+    setSelectedRoleFilter,
+    selectedStatusFilter,
+    setSelectedStatusFilter,
     inlineEdits,
     isModalOpen,
     setIsModalOpen,
@@ -199,6 +205,12 @@ export default function StaffManagement() {
                   setDroppedFile(null);
                   setIsImportModalOpen(true);
                 }}
+                selectedBranchFilter={selectedBranchFilter}
+                setSelectedBranchFilter={setSelectedBranchFilter}
+                selectedRoleFilter={selectedRoleFilter}
+                setSelectedRoleFilter={setSelectedRoleFilter}
+                selectedStatusFilter={selectedStatusFilter}
+                setSelectedStatusFilter={setSelectedStatusFilter}
               />
             )}
 

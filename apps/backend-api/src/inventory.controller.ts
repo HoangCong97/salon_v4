@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpStatus, HttpException } from "@nestjs/common";
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Headers, HttpStatus, HttpException } from "@nestjs/common";
 import { prisma } from "@salon/database";
+import { NotificationGateway } from "./notification.gateway";
 
 @Controller("api/tenants/:tenantId/inventories")
 export class InventoryController {
+  constructor(private readonly notificationGateway: NotificationGateway) {}
 
   // 1. GET ALL INVENTORY ITEMS FOR TENANT (OPTIONAL BRANCH FILTER)
   @Get()
@@ -46,6 +48,7 @@ export class InventoryController {
   @Post()
   async createInventory(
     @Param("tenantId") tenantId: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: {
       name: string;
       costPrice: number;
@@ -78,6 +81,8 @@ export class InventoryController {
         }
       });
 
+      this.notificationGateway.broadcastToTenant(tenantId, "inventories.updated", { branchId: created.branchId, senderId });
+
       return {
         ...created,
         discountPrice: Number(created.sellPrice) - Number(created.discountAmount || 0)
@@ -96,6 +101,7 @@ export class InventoryController {
   async updateInventory(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: {
       name: string;
       costPrice: number;
@@ -138,6 +144,8 @@ export class InventoryController {
         }
       });
 
+      this.notificationGateway.broadcastToTenant(tenantId, "inventories.updated", { branchId: updated.branchId, senderId });
+
       return {
         ...updated,
         discountPrice: Number(updated.sellPrice) - Number(updated.discountAmount || 0)
@@ -155,7 +163,8 @@ export class InventoryController {
   @Delete(":id")
   async deleteInventory(
     @Param("tenantId") tenantId: string,
-    @Param("id") id: string
+    @Param("id") id: string,
+    @Headers("x-user-id") senderId: string
   ) {
     try {
       // Ensure item exists and belongs to tenant
@@ -173,6 +182,8 @@ export class InventoryController {
           deletedAt: new Date()
         }
       });
+
+      this.notificationGateway.broadcastToTenant(tenantId, "inventories.updated", { branchId: existing.branchId, senderId });
 
       return { success: true, message: "Product deleted successfully" };
     } catch (error) {

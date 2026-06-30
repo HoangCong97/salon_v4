@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpStatus, HttpException } from "@nestjs/common";
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Headers, HttpStatus, HttpException } from "@nestjs/common";
 import { prisma } from "@salon/database";
+import { NotificationGateway } from "./notification.gateway";
 
 @Controller("api/tenants/:tenantId/customers")
 export class CustomerController {
+  constructor(private readonly notificationGateway: NotificationGateway) {}
 
   // 1. GET ALL CUSTOMERS FOR TENANT (OPTIONAL BRANCH FILTER)
   @Get()
@@ -43,6 +45,7 @@ export class CustomerController {
   @Post()
   async createCustomer(
     @Param("tenantId") tenantId: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: {
       name: string;
       phone?: string;
@@ -69,6 +72,8 @@ export class CustomerController {
         }
       });
 
+      this.notificationGateway.broadcastToTenant(tenantId, "customers.updated", { branchId: created.branchId, senderId });
+
       return created;
     } catch (error) {
       if (error instanceof HttpException) throw error;
@@ -84,6 +89,7 @@ export class CustomerController {
   async updateCustomer(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: {
       name: string;
       phone?: string;
@@ -120,6 +126,8 @@ export class CustomerController {
         }
       });
 
+      this.notificationGateway.broadcastToTenant(tenantId, "customers.updated", { branchId: updated.branchId, senderId });
+
       return updated;
     } catch (error) {
       if (error instanceof HttpException) throw error;
@@ -134,7 +142,8 @@ export class CustomerController {
   @Delete(":id")
   async deleteCustomer(
     @Param("tenantId") tenantId: string,
-    @Param("id") id: string
+    @Param("id") id: string,
+    @Headers("x-user-id") senderId: string
   ) {
     try {
       // Ensure customer exists and belongs to tenant
@@ -152,6 +161,8 @@ export class CustomerController {
           deletedAt: new Date()
         }
       });
+
+      this.notificationGateway.broadcastToTenant(tenantId, "customers.updated", { branchId: existing.branchId, senderId });
 
       return { success: true, message: "Customer deleted successfully" };
     } catch (error) {

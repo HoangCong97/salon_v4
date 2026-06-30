@@ -10,6 +10,10 @@ export default function Topbar() {
   const location = useLocation();
   const confirm = useConfirm();
 
+  const storedUserStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+  const originalUser = storedUserStr ? JSON.parse(storedUserStr) : null;
+  const isOriginalAdmin = originalUser?.role === "ADMIN";
+
   const handleLogout = async () => {
     const ok = await confirm({
       title: "Đăng xuất tài khoản",
@@ -153,7 +157,7 @@ export default function Topbar() {
         {/* Branch Selector */}
         {branches && branches.length > 0 && (
           <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "hsl(210, 40%, 96%)", padding: "6px 12px", borderRadius: "var(--radius-sm)" }}>
-            <span style={{ fontSize: "14px" }}>🏢</span>
+            <span style={{ fontSize: "14px" }}>🏢 Chi nhánh:</span>
             <select
               value={currentBranchId || ""}
               onChange={(e) => setBranch(e.target.value)}
@@ -177,26 +181,28 @@ export default function Topbar() {
         )}
 
         {/* Test Tool: Role Switcher */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "hsl(210, 40%, 96%)", padding: "6px 12px", borderRadius: "var(--radius-sm)" }}>
-          <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)" }}>Test Role:</span>
-          <select
-            value={user.role}
-            onChange={(e) => setRole(e.target.value as any)}
-            style={{
-              background: "transparent",
-              border: "none",
-              fontWeight: "bold",
-              fontSize: "12px",
-              cursor: "pointer",
-              color: "var(--color-primary)",
-            }}
-          >
-            <option value="ADMIN">ADMIN (PC)</option>
-            <option value="MANAGER">MANAGER (PC)</option>
-            <option value="CASHIER">CASHIER (PC)</option>
-            <option value="EMPLOYEE">EMPLOYEE (Mobile-first)</option>
-          </select>
-        </div>
+        {isOriginalAdmin && (
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "hsl(210, 40%, 96%)", padding: "6px 12px", borderRadius: "var(--radius-sm)" }}>
+            <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)" }}>Test Role:</span>
+            <select
+              value={user.role}
+              onChange={(e) => setRole(e.target.value as any)}
+              style={{
+                background: "transparent",
+                border: "none",
+                fontWeight: "bold",
+                fontSize: "12px",
+                cursor: "pointer",
+                color: "var(--color-primary)",
+              }}
+            >
+              <option value="ADMIN">ADMIN (PC)</option>
+              <option value="MANAGER">MANAGER (PC)</option>
+              <option value="CASHIER">CASHIER (PC)</option>
+              <option value="EMPLOYEE">EMPLOYEE (Mobile-first)</option>
+            </select>
+          </div>
+        )}
 
         <style>{`
           .sync-indicator-container {
@@ -242,12 +248,12 @@ export default function Topbar() {
 
         {/* Sync Status Indicator */}
         <div className="sync-indicator-container">
-          <span 
-            className="sync-indicator-dot" 
-            style={{ 
-              backgroundColor: syncColor, 
-              boxShadow: `0 0 8px ${syncGlow}` 
-            }} 
+          <span
+            className="sync-indicator-dot"
+            style={{
+              backgroundColor: syncColor,
+              boxShadow: `0 0 8px ${syncGlow}`
+            }}
           />
           <div className="sync-tooltip">
             {syncTooltip}

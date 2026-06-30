@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, HttpStatus, HttpException } from "@nestjs/common";
 import { prisma } from "@salon/database";
+import { deleteOldFile } from "./file-utils";
 
 @Controller("api/tenants/:tenantId/branches")
 export class BranchController {
@@ -110,6 +111,13 @@ export class BranchController {
 
       if (!existing) {
         throw new HttpException("Branch not found", HttpStatus.NOT_FOUND);
+      }
+
+      if (body.logoUrl !== undefined && body.logoUrl !== existing.logoUrl) {
+        await deleteOldFile(existing.logoUrl);
+      }
+      if (body.bannerUrl !== undefined && body.bannerUrl !== existing.bannerUrl) {
+        await deleteOldFile(existing.bannerUrl);
       }
 
       return await prisma.branch.update({

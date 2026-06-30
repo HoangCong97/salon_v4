@@ -25,8 +25,27 @@ export async function apiClient<T = any>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
+  let userStatus = "";
+  let userId = "";
+  try {
+    const storedUser = localStorage.getItem("user") || sessionStorage.getItem("user");
+    if (storedUser) {
+      const parsed = JSON.parse(storedUser);
+      if (parsed && parsed.status) {
+        userStatus = parsed.status;
+      }
+      if (parsed && parsed.id) {
+        userId = parsed.id;
+      }
+    }
+  } catch (e) {
+    // Ignore storage parse error
+  }
+
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    ...(userStatus ? { "X-User-Status": userStatus } : {}),
+    ...(userId ? { "X-User-Id": userId } : {}),
     ...(options?.headers as Record<string, string>),
   };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Users, Edit2, Camera, User } from "lucide-react";
+import { X, Users, Edit2, Camera, User, Loader2 } from "lucide-react";
 import { PriceInputWithSuggestion } from "../../../components/desktop/TableComponents";
 import { StaffMember, Role, Branch, getAdminUser } from "./types";
 import { useAuthStore } from "../../../store/useAuthStore";
@@ -53,7 +53,7 @@ interface StaffFormModalProps {
   roles: Role[];
   branchList: Branch[];
   currentTenantId: string | null;
-  onSave: (payload: any, mode: "create" | "edit", staffId?: string | null) => Promise<void>;
+  onSave: (payload: any, mode: "create" | "edit", staffId?: string | null) => void;
 }
 
 export const StaffFormModal: React.FC<StaffFormModalProps> = ({
@@ -80,7 +80,12 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
   const [selectedBranchIds, setSelectedBranchIds] = useState<string[]>([]);
   const [note, setNote] = useState("");
   const [avatar, setAvatar] = useState("");
+  
+  // Avatar drag-and-drop & immediate upload preview states
   const [hoverAvatar, setHoverAvatar] = useState(false);
+  const [isDragOverAvatar, setIsDragOverAvatar] = useState(false);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const currentUser = useAuthStore((state) => state.user);
 
@@ -101,8 +106,20 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
     return new Intl.NumberFormat("en-US").format(parseInt(cleaned, 10));
   };
 
+  // Cleanup object URL
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl) {
+        URL.revokeObjectURL(avatarPreviewUrl);
+      }
+    };
+  }, [avatarPreviewUrl]);
+
   useEffect(() => {
     if (isOpen) {
+      setAvatarPreviewUrl(null);
+      setIsUploading(false);
+      setIsDragOverAvatar(false);
       if (mode === "edit" && selectedStaffId) {
         const item = staff.find((s) => s.id === selectedStaffId);
         if (item) {
@@ -160,21 +177,39 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
     return data.url;
   };
 
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      const file = files[0];
+  const processAndUploadFile = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Vui lòng chỉ chọn tệp hình ảnh!");
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setAvatarPreviewUrl(previewUrl);
+    setIsUploading(true);
+
+    // Defer heavy canvas compression and network request to next tick to let browser paint preview immediately
+    setTimeout(async () => {
       try {
         const base64 = await compressAndGetBase64(file);
         const fileUrl = await uploadFile(base64, "staff", file.name);
         setAvatar(fileUrl);
       } catch (err: any) {
         toast.error("Lỗi tải ảnh đại diện: " + err.message);
+        setAvatarPreviewUrl(null);
+      } finally {
+        setIsUploading(false);
       }
+    }, 50);
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      processAndUploadFile(files[0]);
     }
   };
 
-  const handleModalSave = async (e: React.FormEvent) => {
+  const handleModalSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !loginId.trim()) return;
 
@@ -198,7 +233,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
     };
 
     try {
-      await onSave(payload, mode, selectedStaffId);
+      onSave(payload, mode, selectedStaffId);
       onClose();
     } catch (err: any) {
       // Error notifications are already handled by custom hook mutation callbacks
@@ -259,20 +294,47 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
               height: "90px",
               borderRadius: "50%",
               overflow: "hidden",
-              border: "2px solid var(--border-color)",
+              border: isDragOverAvatar 
+                ? "2px dashed var(--color-primary)" 
+                : "2px solid var(--border-color)",
               cursor: "pointer",
-              backgroundColor: "#f1f5f9",
+              backgroundColor: isDragOverAvatar ? "rgba(0, 112, 243, 0.05)" : "#f1f5f9",
               display: "flex",
               alignItems: "center",
-              justifyContent: "center"
+              justifyContent: "center",
+              transform: isDragOverAvatar ? "scale(1.05)" : "scale(1)",
+              transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
             }}
             onClick={() => document.getElementById("staff-avatar-input")?.click()}
             onMouseEnter={() => setHoverAvatar(true)}
             onMouseLeave={() => setHoverAvatar(false)}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsDragOverAvatar(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsDragOverAvatar(false);
+            }}
+            onDrop={async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsDragOverAvatar(false);
+              const files = e.dataTransfer.files;
+              if (files && files.length > 0) {
+                await processAndUploadFile(files[0]);
+              }
+            }}
           >
-            {avatar ? (
+            {avatarPreviewUrl || avatar ? (
               <img
-                src={avatar}
+                src={avatarPreviewUrl || avatar}
                 alt="Avatar"
                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
               />
@@ -291,13 +353,37 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                opacity: hoverAvatar ? 1 : 0,
+                opacity: hoverAvatar && !isUploading ? 1 : 0,
                 transition: "opacity 0.15s ease",
                 color: "white"
               }}
             >
               <Camera size={20} />
             </div>
+
+            {isUploading && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  background: "rgba(15, 23, 42, 0.65)",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                  gap: "4px"
+                }}
+              >
+                <Loader2 className="animate-spin" size={18} />
+                <span>Đang tải...</span>
+              </div>
+            )}
           </div>
 
           <input
@@ -308,19 +394,26 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
             onChange={handleAvatarChange}
           />
 
-          {avatar && (
+          {(avatarPreviewUrl || avatar) && (
             <button
               type="button"
               className="btn btn-secondary"
               style={{ padding: "2px 8px", fontSize: "11px", height: "24px" }}
-              onClick={() => setAvatar("")}
+              onClick={() => {
+                setAvatar("");
+                setAvatarPreviewUrl(null);
+              }}
             >
               Xóa ảnh
             </button>
           )}
         </div>
 
-        <form onSubmit={handleModalSave} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+        <form onSubmit={handleModalSave} style={{ display: "flex", flexDirection: "column", gap: "16px" }} autoComplete="off">
+          {/* Dummy inputs to fool browser autofill */}
+          <input type="text" name="prevent_autofill_username" style={{ display: "none" }} tabIndex={-1} readOnly />
+          <input type="password" name="prevent_autofill_password" style={{ display: "none" }} tabIndex={-1} readOnly />
+
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Họ và tên nhân viên *</label>
@@ -339,6 +432,9 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 className="form-input"
                 type="text"
                 required
+                name="staff-new-username"
+                id="staff-new-username"
+                autoComplete="new-username"
                 value={loginId}
                 onChange={(e) => setLoginId(e.target.value)}
                 placeholder="ID đăng nhập..."
@@ -352,11 +448,17 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
               <label className="form-label">Mật khẩu {mode === "create" ? "*" : "(để trống nếu giữ nguyên)"}</label>
               <input
                 className="form-input"
-                type="password"
+                type="text"
                 required={mode === "create"}
+                name="staff-new-password"
+                id="staff-new-password"
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={mode === "create" ? "Mật khẩu" : "••••••••"}
+                style={{
+                  WebkitTextSecurity: "disc"
+                } as any}
               />
             </div>
             <div className="form-group" style={{ marginBottom: 0 }}>
@@ -407,6 +509,19 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 onChange={(val) => setBaseSalary(val)}
                 placeholder="Ví dụ: 8,000,000"
               />
+            </div>
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Trạng thái hoạt động</label>
+              <select
+                className="form-input"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                disabled={isSelfAdmin}
+              >
+                <option value="ACTIVE">Hoạt động</option>
+                <option value="SUSPENDED">Tạm ngừng</option>
+                <option value="INACTIVE">Tạm khóa</option>
+              </select>
             </div>
           </div>
 
@@ -481,8 +596,8 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Hủy bỏ
             </button>
-            <button type="submit" className="btn btn-primary" style={{ minWidth: "120px" }}>
-              Lưu thông tin
+            <button type="submit" className="btn btn-primary" style={{ minWidth: "120px" }} disabled={isUploading}>
+              {isUploading ? "Đang tải ảnh..." : "Lưu thông tin"}
             </button>
           </div>
         </form>

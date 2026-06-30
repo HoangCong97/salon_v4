@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
+import { useWebSocketSync } from "../hooks/useWebSocketSync";
 
 // Layouts
 import DesktopLayout from "../layouts/DesktopLayout";
@@ -47,6 +48,9 @@ export default function AdaptiveRouter() {
   const { user, setRole, initializeSession, hasPermission } = useAuthStore();
   const width = useWindowWidth();
   const isMobileScreen = width <= 768;
+
+  // Kích hoạt đồng bộ hóa dữ liệu qua WebSocket
+  useWebSocketSync();
 
   useEffect(() => {
     initializeSession();

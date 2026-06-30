@@ -63,6 +63,8 @@ export const getRoleColorStyle = (roleName: string) => {
 export const getStatusColorStyle = (status: string) => {
   if (status === "ACTIVE") {
     return { backgroundColor: "var(--color-success-light)", color: "var(--color-success)", border: "none" };
+  } else if (status === "SUSPENDED") {
+    return { backgroundColor: "var(--color-warning-light)", color: "var(--color-warning)", border: "none" };
   }
   return { backgroundColor: "var(--color-danger-light)", color: "var(--color-danger)", border: "none" };
 };

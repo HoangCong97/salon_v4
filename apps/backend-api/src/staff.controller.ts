@@ -1,5 +1,7 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, HttpStatus, HttpException } from "@nestjs/common";
+import { Controller, Get, Post, Put, Delete, Body, Param, Headers, HttpStatus, HttpException } from "@nestjs/common";
 import { prisma } from "@salon/database";
+import { deleteOldFile } from "./file-utils";
+import { NotificationGateway } from "./notification.gateway";
 
 const defaultRolePermissions: Record<string, string[]> = {
   admin: [
@@ -222,6 +224,7 @@ async function getAdminUserId(tenantId: string): Promise<string | null> {
 
 @Controller("api/tenants/:tenantId")
 export class StaffController {
+  constructor(private readonly notificationGateway: NotificationGateway) {}
 
   // 1. GET ALL ROLES (AND ENSURE STANDARD ROLES EXIST)
   @Get("roles")
@@ -299,6 +302,7 @@ export class StaffController {
   @Post("staff")
   async createStaff(
     @Param("tenantId") tenantId: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: {
       name: string;
       loginId: string;
@@ -391,6 +395,8 @@ export class StaffController {
 
       const adminUserId = await getAdminUserId(tenantId);
 
+      this.notificationGateway.broadcastToTenant(tenantId, "staff.updated", { senderId });
+
       return {
         id: createdUser.id,
         name: createdUser.name,
@@ -424,6 +430,7 @@ export class StaffController {
   async updateStaff(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: {
       name: string;
       loginId: string;
@@ -483,7 +490,8 @@ export class StaffController {
         updatedAt: new Date()
       };
 
-      if (body.avatar !== undefined) {
+      if (body.avatar !== undefined && body.avatar !== existing.avatar) {
+        await deleteOldFile(existing.avatar);
         updateData.avatar = body.avatar || null;
       }
 
@@ -533,6 +541,8 @@ export class StaffController {
 
       const adminUserId = await getAdminUserId(tenantId);
 
+      this.notificationGateway.broadcastToTenant(tenantId, "staff.updated", { senderId });
+
       return {
         id: updatedUser.id,
         name: updatedUser.name,
@@ -565,7 +575,8 @@ export class StaffController {
   @Delete("staff/:id")
   async deleteStaff(
     @Param("tenantId") tenantId: string,
-    @Param("id") id: string
+    @Param("id") id: string,
+    @Headers("x-user-id") senderId: string
   ) {
     try {
       const existing = await prisma.user.findFirst({
@@ -593,6 +604,8 @@ export class StaffController {
           deletedAt: new Date()
         }
       });
+
+      this.notificationGateway.broadcastToTenant(tenantId, "staff.updated", { senderId });
 
       return { success: true, message: "Nhân viên đã được xóa thành công" };
     } catch (error) {
@@ -638,6 +651,8 @@ export class StaffController {
   @Put("roles/:roleId/permissions")
   async updateRolePermissions(
     @Param("roleId") roleId: string,
+    @Param("tenantId") tenantId: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: { permissionIds: string[] }
   ) {
     try {
@@ -661,6 +676,8 @@ export class StaffController {
         });
       }
 
+      this.notificationGateway.broadcastToTenant(tenantId, "roles.updated", { senderId });
+
       return { success: true, message: "Permissions updated successfully" };
     } catch (error) {
       if (error instanceof HttpException) throw error;
@@ -675,6 +692,7 @@ export class StaffController {
   @Post("roles")
   async createRole(
     @Param("tenantId") tenantId: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: { name: string; description?: string }
   ) {
     try {
@@ -682,13 +700,17 @@ export class StaffController {
         throw new HttpException("Tên vai trò là bắt buộc", HttpStatus.BAD_REQUEST);
       }
 
-      return await prisma.role.create({
+      const role = await prisma.role.create({
         data: {
           tenantId,
           name: body.name,
           description: body.description || null
         }
       });
+
+      this.notificationGateway.broadcastToTenant(tenantId, "roles.updated", { senderId });
+
+      return role;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
@@ -703,6 +725,7 @@ export class StaffController {
   async updateRole(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
+    @Headers("x-user-id") senderId: string,
     @Body() body: { name: string; description?: string }
   ) {
     try {
@@ -718,7 +741,7 @@ export class StaffController {
         throw new HttpException("Không tìm thấy vai trò hoặc vai trò đã bị xóa", HttpStatus.NOT_FOUND);
       }
 
-      return await prisma.role.update({
+      const updated = await prisma.role.update({
         where: { id },
         data: {
           name: body.name,
@@ -726,6 +749,10 @@ export class StaffController {
           updatedAt: new Date()
         }
       });
+
+      this.notificationGateway.broadcastToTenant(tenantId, "roles.updated", { senderId });
+
+      return updated;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
@@ -739,7 +766,8 @@ export class StaffController {
   @Delete("roles/:id")
   async deleteRole(
     @Param("tenantId") tenantId: string,
-    @Param("id") id: string
+    @Param("id") id: string,
+    @Headers("x-user-id") senderId: string
   ) {
     try {
       const existing = await prisma.role.findFirst({
@@ -765,6 +793,8 @@ export class StaffController {
           deletedAt: new Date()
         }
       });
+
+      this.notificationGateway.broadcastToTenant(tenantId, "roles.updated", { senderId });
 
       return { success: true, message: "Xóa vai trò thành công" };
     } catch (error) {

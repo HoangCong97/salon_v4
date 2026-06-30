@@ -6,6 +6,10 @@ export default function Profile() {
   const { user, setRole, logout } = useAuthStore();
   const confirm = useConfirm();
 
+  const storedUserStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+  const originalUser = storedUserStr ? JSON.parse(storedUserStr) : null;
+  const isOriginalAdmin = originalUser?.role === "ADMIN";
+
   const handleLogout = async () => {
     const ok = await confirm({
       title: "Đăng xuất tài khoản",
@@ -61,17 +65,23 @@ export default function Profile() {
 
       {/* Quick Mock Switcher & Controls */}
       <div className="card" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        <h3 className="card-title">Thiết lập & Giả lập</h3>
+        {isOriginalAdmin && (
+          <>
+            <h3 className="card-title">Thiết lập & Giả lập</h3>
 
-        <div className="form-group" style={{ margin: "0" }}>
-          <label className="form-label">Giả lập Vai trò (Test Roles):</label>
-          <select className="form-input" value={user.role} onChange={handleRoleChange}>
-            <option value="EMPLOYEE">Employee (Nhân viên - Mobile)</option>
-            <option value="ADMIN">Admin (Quản trị viên - PC)</option>
-            <option value="MANAGER">Manager (Quản lý - PC)</option>
-            <option value="CASHIER">Cashier (Thu ngân - PC)</option>
-          </select>
-        </div>
+            <div className="form-group" style={{ margin: "0" }}>
+              <label className="form-label">Giả lập Vai trò (Test Roles):</label>
+              <select className="form-input" value={user.role} onChange={handleRoleChange}>
+                <option value="EMPLOYEE">Employee (Nhân viên - Mobile)</option>
+                <option value="ADMIN">Admin (Quản trị viên - PC)</option>
+                <option value="MANAGER">Manager (Quản lý - PC)</option>
+                <option value="CASHIER">Cashier (Thu ngân - PC)</option>
+              </select>
+            </div>
+            
+            <div style={{ height: "1px", background: "var(--border-color)", margin: "8px 0" }}></div>
+          </>
+        )}
 
         <button className="btn btn-secondary" style={{ width: "100%" }} onClick={handleLogout}>
           Đăng xuất
