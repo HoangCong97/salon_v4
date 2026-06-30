@@ -6,87 +6,6 @@ import { InvoiceTable } from "./InvoiceTable";
 import { InvoiceDetailModal } from "./InvoiceDetailModal";
 import { FileText } from "lucide-react";
 
-// Mock Fallback Data
-const MOCK_STAFF = [
-  { id: "s_m1", name: "Thợ A (Stylist)", role: { name: "Employee" } },
-  { id: "s_m2", name: "Thợ B (Nail Tech)", role: { name: "Employee" } },
-  { id: "s_m3", name: "Thợ C (Thợ phụ)", role: { name: "Employee" } },
-  { id: "s_m4", name: "Thợ D (Lễ tân)", role: { name: "Employee" } }
-];
-
-const MOCK_CUSTOMERS = [
-  { id: "c1", name: "Khách vãng lai", phone: "", rank: "Khách mới" },
-  { id: "c2", name: "Nguyễn Văn A", phone: "0901234567", rank: "Vàng" },
-  { id: "c3", name: "Trần Thị B", phone: "0918765432", rank: "Bạc" }
-];
-
-const generateMockInvoices = (staff: any[], customers: any[]) => {
-  const list = [];
-  const services = [
-    { name: "Cắt tóc nam Classic", price: 120000 },
-    { name: "Uốn tóc xoăn Hàn Quốc", price: 450000 },
-    { name: "Nhuộm màu thời trang", price: 650000 },
-    { name: "Gội đầu dưỡng sinh thảo dược", price: 150000 },
-    { name: "Massage cổ vai gáy", price: 200000 },
-    { name: "Sơn móng gel cao cấp", price: 180000 },
-  ];
-  
-  const paymentMethods = ["CASH", "BANK_TRANSFER"];
-  const orderSources = ["WALK_IN", "BOOKING"];
-  const cashiers = [{ name: "Thu ngân Chi nhánh" }, { name: "Lễ tân Quỳnh Anh" }];
-
-  const now = new Date();
-  for (let i = 0; i < 20; i++) {
-    // Distribute invoices across the last 5 days
-    const dateOffset = Math.floor(i / 4);
-    const date = new Date(now.getTime() - dateOffset * 24 * 60 * 60 * 1000 - (i % 4) * 3 * 60 * 60 * 1000 - 15 * 60 * 1000);
-    
-    const method = paymentMethods[i % 2];
-    const source = orderSources[i % 3 === 0 ? 1 : 0]; // 1/3 Booking, 2/3 Walk-in
-    const cashier = cashiers[i % 2];
-    
-    // Select customer: 60% walk-in, 40% registered customers
-    const useWalkIn = i % 3 !== 0;
-    const customer = useWalkIn ? { id: "c1", name: "Khách vãng lai" } : (customers[1 + (i % (customers.length - 1))] || { id: "c1", name: "Khách vãng lai" });
-    
-    // Random 1-2 services
-    const numItems = (i % 2) + 1;
-    const items = [];
-    let totalPrice = 0;
-    
-    for (let j = 0; j < numItems; j++) {
-      const service = services[(i + j) % services.length];
-      const stylist = staff[(i + j) % staff.length] || { id: "s_m1", name: "Thợ A" };
-      items.push({
-        name: service.name,
-        price: service.price,
-        quantity: 1,
-        staffId: stylist.id,
-        stylist: { id: stylist.id, name: stylist.name }
-      });
-      totalPrice += service.price;
-    }
-    
-    const discount = i % 5 === 0 ? Math.round(totalPrice * 0.1) : 0; 
-    const finalAmount = totalPrice - discount;
-    
-    list.push({
-      id: `INV-${10452 + i}`,
-      createdAt: date.toISOString(),
-      customerId: customer.id,
-      customer: { name: customer.name, phone: customer.phone || "" },
-      cashier,
-      items,
-      totalPrice,
-      discountAmount: discount,
-      finalAmount,
-      paymentMethod: method,
-      orderSource: source
-    });
-  }
-  return list;
-};
-
 export default function Invoices() {
   const { currentTenantId, currentBranchId, branches } = useAuthStore();
 
@@ -126,18 +45,20 @@ export default function Invoices() {
           fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services/packages?branchId=${currentBranchId}`)
         ]);
 
-        let loadedStaff = MOCK_STAFF;
+        let loadedStaff = [];
         if (staffRes.ok) {
-          const resJson = await staffRes.json();
-          if (Array.isArray(resJson) && resJson.length > 0) loadedStaff = resJson;
+          try {
+            const resJson = await staffRes.json();
+            if (Array.isArray(resJson)) loadedStaff = resJson;
+          } catch {}
         }
         setActiveStaff(loadedStaff);
 
-        let loadedCustomers = MOCK_CUSTOMERS;
+        let loadedCustomers = [];
         if (customerSaved) {
           try {
             const parsed = JSON.parse(customerSaved);
-            if (Array.isArray(parsed) && parsed.length > 0) loadedCustomers = parsed;
+            if (Array.isArray(parsed)) loadedCustomers = parsed;
           } catch {}
         }
         setCustomers(loadedCustomers);
@@ -155,25 +76,15 @@ export default function Invoices() {
         // Populate invoices
         let loadedInvoices = [];
         if (invoicesRes.ok) {
-          loadedInvoices = await invoicesRes.json();
+          try { loadedInvoices = await invoicesRes.json(); } catch {}
         }
-        
-        // If API is empty/offline, generate high-quality mock invoices for demo
-        if (!Array.isArray(loadedInvoices) || loadedInvoices.length === 0) {
-          loadedInvoices = generateMockInvoices(loadedStaff, loadedCustomers);
-        }
-        setInvoices(loadedInvoices);
+        setInvoices(Array.isArray(loadedInvoices) ? loadedInvoices : []);
 
       } catch (err) {
-        console.warn("API Offline, using local mocks", err);
-        const savedCustomers = localStorage.getItem("pos_customers");
-        let parsedCust = MOCK_CUSTOMERS;
-        if (savedCustomers) {
-          try { parsedCust = JSON.parse(savedCustomers); } catch {}
-        }
-        setActiveStaff(MOCK_STAFF);
-        setCustomers(parsedCust);
-        setInvoices(generateMockInvoices(MOCK_STAFF, parsedCust));
+        console.error("Failed to fetch invoices", err);
+        setActiveStaff([]);
+        setCustomers([]);
+        setInvoices([]);
       } finally {
         setLoading(false);
       }

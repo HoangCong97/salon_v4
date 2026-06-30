@@ -88,21 +88,9 @@ interface AuthState {
   hasPermission: (permission: string) => boolean;
 }
 
-// Initial mock data to make testing easier immediately
-const MOCK_BRANCHES: BranchInfo[] = [
-  { id: "b1", name: "Chi nhánh Quận 1 - Hồ Chí Minh", address: "123 Nguyễn Huệ, Bến Nghé, Quận 1" },
-  { id: "b2", name: "Chi nhánh Quận 3 - Hồ Chí Minh", address: "456 Nguyễn Đình Chiểu, Phường 5, Quận 3" },
-  { id: "b3", name: "Chi nhánh Cầu Giấy - Hà Nội", address: "789 Cầu Giấy, Quan Hoa, Cầu Giấy" },
-];
-
-const MOCK_TENANTS: TenantInfo[] = [
-  { id: "t1", name: "HairStar Beauty Salon", status: "ACTIVE" },
-  { id: "t2", name: "BarberShop House", status: "ACTIVE" }
-];
-
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null, // Null on startup to show login screen
-  tenants: MOCK_TENANTS,
+  tenants: [],
   currentTenantId: null,
   branches: [],
   currentBranchId: null,
@@ -220,13 +208,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
       
       set({
-        branches: MOCK_BRANCHES,
-        currentBranchId: MOCK_BRANCHES[0].id,
+        branches: [],
+        currentBranchId: null,
         isLoading: false
       });
-      await get().fetchBrandInfo();
-      await get().fetchSubscription();
-      return true;
+      return false;
     } catch (e: any) {
       set({ isLoading: false });
       throw e;
@@ -272,50 +258,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       }
     } catch (e) {
-      console.warn("Failed to fetch role permissions dynamically, falling back to static mocks", e);
+      console.error("Failed to fetch role permissions dynamically", e);
+      set((state) => ({
+        user: state.user ? {
+          ...state.user,
+          role,
+          permissions: []
+        } : null
+      }));
     }
-
-    // Fallback to static mock role permissions if API call fails
-    const mockRolePermissions: Record<string, string[]> = {
-      ADMIN: [
-        "booking.view", "booking.create", "booking.edit", "booking.delete",
-        "pos.view", "invoice.view", "invoice.create",
-        "customer.view", "customer.manage",
-        "service.view", "service.manage",
-        "inventory.view", "inventory.manage",
-        "staff.view", "staff.manage",
-        "shift.view", "shift.manage",
-        "report.view",
-        "branch.view", "branch.manage"
-      ],
-      MANAGER: [
-        "booking.view", "booking.create", "booking.edit", "booking.delete",
-        "pos.view", "invoice.view", "invoice.create",
-        "customer.view", "customer.manage",
-        "service.view", "service.manage",
-        "inventory.view", "inventory.manage",
-        "staff.view", "shift.view", "shift.manage",
-        "report.view",
-        "branch.view"
-      ],
-      CASHIER: [
-        "booking.view", "booking.create", "booking.edit",
-        "pos.view", "invoice.view", "invoice.create",
-        "customer.view", "customer.manage"
-      ],
-      EMPLOYEE: [
-        "booking.view",
-        "shift.view"
-      ]
-    };
-
-    set((state) => ({
-      user: state.user ? {
-        ...state.user,
-        role,
-        permissions: mockRolePermissions[role] || []
-      } : null
-    }));
   },
   setBranch: (currentBranchId) => set({ currentBranchId }),
   
@@ -342,16 +293,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       }
     } catch (e) {
-      console.warn("Failed to fetch branches for tenant, using mock", e);
+      console.error("Failed to fetch branches for tenant", e);
+      set({
+        branches: [],
+        currentBranchId: null,
+        isLoading: false
+      });
     }
-    // Fallback if no backend or empty branches
-    set({
-      branches: MOCK_BRANCHES,
-      currentBranchId: MOCK_BRANCHES[0].id,
-      isLoading: false
-    });
-    await get().fetchBrandInfo();
-    await get().fetchSubscription();
   },
 
   initializeSession: async () => {
@@ -398,19 +346,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       }
     } catch (e) {
-      console.warn("Failed to initialize session from backend, using default mock data", e);
+      console.error("Failed to initialize session from backend", e);
+      set({
+        tenants: [],
+        currentTenantId: null,
+        branches: [],
+        currentBranchId: null,
+        isLoading: false
+      });
     }
-    
-    // Default fallback
-    set({
-      tenants: MOCK_TENANTS,
-      currentTenantId: "t1",
-      branches: MOCK_BRANCHES,
-      currentBranchId: "b1",
-      isLoading: false
-    });
-    await get().fetchBrandInfo();
-    await get().fetchSubscription();
   },
 
   setBrandInfo: (brandName, logoUrl) => set({ brandName, logoUrl }),
@@ -428,14 +372,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         });
       }
     } catch (e) {
-      console.warn("Failed to fetch brand info, using mock", e);
-      if (currentTenantId === "t1") {
-        set({ brandName: "HairStar Beauty Salon", logoUrl: null });
-      } else if (currentTenantId === "t2") {
-        set({ brandName: "BarberShop House", logoUrl: null });
-      } else {
-        set({ brandName: "SALON Portal", logoUrl: null });
-      }
+      console.error("Failed to fetch brand info", e);
+      set({ brandName: "SALON Portal", logoUrl: null });
     }
   },
 

@@ -1,6 +1,7 @@
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 generator client {
@@ -22,7 +23,7 @@ model SaasPlan {
   tenants     Tenant[]
   invoices    SaasInvoice[]
 
-  @@map("sal_saas_plans")
+  @@map("saas_plans")
 }
 
 model SaasInvoice {
@@ -40,7 +41,7 @@ model SaasInvoice {
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   plan          SaasPlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
 
-  @@map("sal_saas_invoices")
+  @@map("saas_invoices")
 }
 
 model Tenant {
@@ -96,7 +97,7 @@ model Tenant {
   expenditures        RevenueExpenditure[]
   saasInvoices        SaasInvoice[]
 
-  @@map("sal_tenants")
+  @@map("tenants")
 }
 
 model Branch {
@@ -142,7 +143,7 @@ model Branch {
   dailyBranchRev      DailyBranchRevenue[]
   expenditures        RevenueExpenditure[]
 
-  @@map("sal_branches")
+  @@map("branches")
 }
 
 model Role {
@@ -158,7 +159,7 @@ model Role {
   users       User[]
   permissions RolePermission[]
 
-  @@map("sal_roles")
+  @@map("roles")
 }
 
 model Permission {
@@ -173,7 +174,7 @@ model Permission {
 
   rolePermissions RolePermission[]
 
-  @@map("sal_permissions")
+  @@map("permissions")
 }
 
 model RolePermission {
@@ -185,8 +186,8 @@ model RolePermission {
   role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
-  @@unique([roleId, permissionId], map: "uq_sal_role_permissions_link")
-  @@map("sal_role_permissions")
+  @@unique([roleId, permissionId], map: "uq_role_permissions_link")
+  @@map("role_permissions")
 }
 
 model User {
@@ -221,7 +222,7 @@ model User {
   monthlyPayrolls EmployeeMonthlyPayroll[]
   dailyEmployeeRev DailyEmployeeRevenue[]
 
-  @@map("sal_users")
+  @@map("users")
 }
 
 model UserBranch {
@@ -235,7 +236,7 @@ model UserBranch {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
-  @@map("sal_user_branches")
+  @@map("user_branches")
 }
 
 model UserSetting {
@@ -253,7 +254,7 @@ model UserSetting {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("sal_user_settings")
+  @@map("user_settings")
 }
 
 model Customer {
@@ -278,7 +279,7 @@ model Customer {
   reviews           CustomerReview[]
   invoices          Invoice[]
 
-  @@map("sal_customers")
+  @@map("customers")
 }
 
 model CustomerPoint {
@@ -295,7 +296,7 @@ model CustomerPoint {
   branch   Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
-  @@map("sal_customer_points")
+  @@map("customer_points")
 }
 
 model Service {
@@ -321,7 +322,7 @@ model Service {
   purchasedPackageUsage PackageUsageHistory[]
   bookingDetails        BookingDetail[]
 
-  @@map("sal_services")
+  @@map("services")
 }
 
 model Inventory {
@@ -341,7 +342,7 @@ model Inventory {
   tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
 
-  @@map("sal_inventories")
+  @@map("inventories")
 }
 
 model ServicePackage {
@@ -363,7 +364,7 @@ model ServicePackage {
   details           ServicePackageDetail[]
   purchasedPackages CustomerPurchasedPackage[]
 
-  @@map("sal_service_packages")
+  @@map("service_packages")
 }
 
 model ServicePackageDetail {
@@ -378,7 +379,7 @@ model ServicePackageDetail {
   package ServicePackage @relation(fields: [servicePackageId], references: [id], onDelete: Cascade)
   service Service        @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
-  @@map("sal_service_package_details")
+  @@map("service_package_details")
 }
 
 model CustomerPurchasedPackage {
@@ -400,7 +401,7 @@ model CustomerPurchasedPackage {
   package      ServicePackage @relation(fields: [servicePackageId], references: [id], onDelete: Cascade)
   usages       PackageUsageHistory[]
 
-  @@map("sal_customer_purchased_packages")
+  @@map("customer_purchased_packages")
 }
 
 model PackageUsageHistory {
@@ -421,7 +422,7 @@ model PackageUsageHistory {
   purchase CustomerPurchasedPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
   service  Service                  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
-  @@map("sal_package_usage_history")
+  @@map("package_usage_history")
 }
 
 model Booking {
@@ -447,7 +448,7 @@ model Booking {
   reviews        CustomerReview[]
   invoices       Invoice[]
 
-  @@map("sal_bookings")
+  @@map("bookings")
 }
 
 model BookingDetail {
@@ -466,7 +467,7 @@ model BookingDetail {
   service Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   staff   User?    @relation(fields: [staffId], references: [id], onDelete: SetNull)
 
-  @@map("sal_booking_details")
+  @@map("booking_details")
 }
 
 model CustomerReview {
@@ -486,7 +487,7 @@ model CustomerReview {
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   booking  Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
 
-  @@map("sal_customer_reviews")
+  @@map("customer_reviews")
 }
 
 model Invoice {
@@ -517,7 +518,7 @@ model Invoice {
   cashier      User?         @relation(fields: [staffId], references: [id], onDelete: SetNull)
   items        InvoiceItem[]
 
-  @@map("sal_invoices")
+  @@map("invoices")
 }
 
 model InvoiceItem {
@@ -539,7 +540,7 @@ model InvoiceItem {
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   stylist User?   @relation(fields: [staffId], references: [id], onDelete: SetNull)
 
-  @@map("sal_invoice_items")
+  @@map("invoice_items")
 }
 
 model CommissionTemplate {
@@ -555,7 +556,7 @@ model CommissionTemplate {
   details CommissionTemplateDetail[]
   salaryConfigs EmployeeSalaryConfig[]
 
-  @@map("sal_commission_templates")
+  @@map("commission_templates")
 }
 
 model CommissionTemplateDetail {
@@ -571,7 +572,7 @@ model CommissionTemplateDetail {
 
   template CommissionTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
-  @@map("sal_commission_template_details")
+  @@map("commission_template_details")
 }
 
 model EmployeeShift {
@@ -592,7 +593,7 @@ model EmployeeShift {
   branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
   staff  User   @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
-  @@map("sal_employee_shifts")
+  @@map("employee_shifts")
 }
 
 model EmployeeDailyTurn {
@@ -613,7 +614,7 @@ model EmployeeDailyTurn {
   branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
   staff  User   @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
-  @@map("sal_employee_daily_turns")
+  @@map("employee_daily_turns")
 }
 
 model EmployeeAttendance {
@@ -636,7 +637,7 @@ model EmployeeAttendance {
   branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
   staff  User   @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
-  @@map("sal_employee_attendances")
+  @@map("employee_attendances")
 }
 
 model EmployeeSalaryConfig {
@@ -655,7 +656,7 @@ model EmployeeSalaryConfig {
   staff              User                @relation(fields: [staffId], references: [id], onDelete: Cascade)
   commissionTemplate CommissionTemplate? @relation(fields: [commissionTemplateId], references: [id], onDelete: SetNull)
 
-  @@map("sal_employee_salary_configs")
+  @@map("employee_salary_configs")
 }
 
 model SalaryAdvance {
@@ -675,7 +676,7 @@ model SalaryAdvance {
   branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
   staff  User   @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
-  @@map("sal_salary_advances")
+  @@map("salary_advances")
 }
 
 model EmployeeMonthlyPayroll {
@@ -700,7 +701,7 @@ model EmployeeMonthlyPayroll {
   branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
   staff  User   @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
-  @@map("sal_employee_monthly_payrolls")
+  @@map("employee_monthly_payrolls")
 }
 
 model DailyRevenueReport {
@@ -720,7 +721,7 @@ model DailyRevenueReport {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
-  @@map("sal_daily_revenue_reports")
+  @@map("daily_revenue_reports")
 }
 
 model DailyEmployeeRevenue {
@@ -740,7 +741,7 @@ model DailyEmployeeRevenue {
   branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
   staff  User   @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
-  @@map("sal_daily_employee_revenue")
+  @@map("daily_employee_revenue")
 }
 
 model DailyBranchRevenue {
@@ -759,7 +760,7 @@ model DailyBranchRevenue {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
 
-  @@map("sal_daily_branch_revenue")
+  @@map("daily_branch_revenue")
 }
 
 model RevenueExpenditure {
@@ -779,7 +780,7 @@ model RevenueExpenditure {
   tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   branch Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
 
-  @@map("sal_revenue_expenditures")
+  @@map("revenue_expenditures")
 }
 
 model ServiceCategory {
@@ -795,6 +796,6 @@ model ServiceCategory {
   tenant            Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   services          Service[]
 
-  @@map("sal_service_categories")
+  @@map("service_categories")
 }
 

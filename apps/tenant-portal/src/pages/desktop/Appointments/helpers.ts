@@ -1,5 +1,4 @@
-import { ServiceItem } from "./types";
-import { START_HOUR, MOCK_SERVICES } from "./constants";
+import { START_HOUR } from "./constants";
 
 /** Format a Date to "YYYY-MM-DD" using LOCAL timezone */
 export const toLocalDateStr = (d: Date) => {
@@ -78,27 +77,4 @@ export function getClosestTimeOption(startHour: number, endHour: number): string
   return closestOpt;
 }
 
-export function genMockItems(date: string): ServiceItem[] {
-  const mk = (id: string, groupId: string, cust: string, phone: string | undefined,
-    sv: any, staffId: string, startTime: string,
-    status: any, source: any): ServiceItem =>
-    ({ id, groupId, customerName: cust, customerPhone: phone, service: sv, staffId, startTime, date, status, source });
 
-  return [
-    mk("i01", "g1", "Minh Tuấn", "0912345678", MOCK_SERVICES[0], "s1", "08:00", "CONFIRMED", "ONLINE"),
-    mk("i02", "g1", "Minh Tuấn", "0912345678", MOCK_SERVICES[1], "s1", "08:45", "CONFIRMED", "ONLINE"),
-    mk("i03", "g2", "Hải Đăng", "0987654321", MOCK_SERVICES[2], "s1", "10:00", "IN_PROGRESS", "WALK_IN"),
-    mk("i04", "g3", "Lan Hương", "0909090909", MOCK_SERVICES[4], "s2", "09:00", "PENDING", "ONLINE"),
-    mk("i05", "g3", "Lan Hương", "0909090909", MOCK_SERVICES[7], "s2", "09:40", "PENDING", "ONLINE"),
-    mk("i06", "g4", "Quỳnh Anh", undefined, MOCK_SERVICES[3], "s2", "12:00", "CONFIRMED", "ONLINE"),
-    mk("i07", "g5", "Bá Dũng", undefined, MOCK_SERVICES[0], "", "08:30", "DONE", "WALK_IN"),
-    mk("i08", "g6", "Thu Nga", "0932109876", MOCK_SERVICES[5], "s3", "11:00", "CONFIRMED", "ONLINE"),
-    mk("i09", "g7", "Văn Long", undefined, MOCK_SERVICES[6], "", "10:30", "PENDING", "WALK_IN"),
-    mk("i10", "g7", "Văn Long", undefined, MOCK_SERVICES[7], "", "10:50", "PENDING", "WALK_IN"),
-    mk("i11", "g8", "Minh Châu", undefined, MOCK_SERVICES[1], "", "14:00", "CANCELLED", "ONLINE"),
-    mk("i12", "g9", "Gia Huy", undefined, MOCK_SERVICES[0], "s5", "09:30", "CONFIRMED", "WALK_IN"),
-    mk("i13", "g9", "Gia Huy", undefined, MOCK_SERVICES[4], "s5", "10:15", "CONFIRMED", "WALK_IN"),
-    mk("i14", "g10", "Thảo Vy", undefined, MOCK_SERVICES[2], "s5", "13:00", "IN_PROGRESS", "ONLINE"),
-    mk("i15", "g1", "Minh Tuấn", "0912345678", MOCK_SERVICES[5], "s2", "14:30", "CONFIRMED", "ONLINE"),
-  ];
-}

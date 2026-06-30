@@ -40,39 +40,7 @@ interface PackageItem {
   discountAmount?: number | null;
 }
 
-// Fallback Mock Data for Demo/Empty States
-const MOCK_STAFF: StaffMember[] = [
-  { id: "s_m1", name: "Thợ A (Stylist)", role: { name: "Employee" } },
-  { id: "s_m2", name: "Thợ B (Nail Tech)", role: { name: "Employee" } },
-  { id: "s_m3", name: "Thợ C (Thợ phụ)", role: { name: "Employee" } },
-  { id: "s_m4", name: "Thợ D (Lễ tân)", role: { name: "Employee" } }
-];
-
-const MOCK_SERVICES: ServiceItem[] = [
-  { id: "s1", name: "Cắt tóc nam Classic", price: 120000, duration: 30, category: { name: "Tóc" }, discountPrice: 100000, discountAmount: 20000, additionalPrices: [150000, 180000] },
-  { id: "s2", name: "Uốn tóc xoăn Hàn Quốc", price: 450000, duration: 90, category: { name: "Tóc" }, additionalPrices: [500000, 550000] },
-  { id: "s3", name: "Nhuộm màu thời trang", price: 650000, duration: 120, category: { name: "Tóc" } },
-  { id: "s4", name: "Gội đầu dưỡng sinh thảo dược", price: 150000, duration: 45, category: { name: "Spa" }, additionalPrices: [120000, 180000] },
-  { id: "s5", name: "Massage cổ vai gáy", price: 200000, duration: 45, category: { name: "Spa" } },
-  { id: "s6", name: "Sơn móng gel cao cấp", price: 180000, duration: 60, category: { name: "Móng" } },
-];
-
-const MOCK_PRODUCTS: ProductItem[] = [
-  { id: "p1", name: "Dầu gội bưởi phục hồi tóc", sellPrice: 180000, quantity: 15 },
-  { id: "p2", name: "Sáp vuốt tóc Clay Pomade", sellPrice: 220000, quantity: 24 },
-  { id: "p3", name: "Gôm xịt tóc Silhouette", sellPrice: 150000, quantity: 30 }
-];
-
-const MOCK_PACKAGES: PackageItem[] = [
-  { id: "pkg1", name: "Combo Cắt Gội Massage Thư Giãn", price: 220000, description: "Cắt tóc nam + Gội dưỡng sinh + Massage vai gáy", duration: 75 },
-  { id: "pkg2", name: "Combo Làm Móng & Chăm Sóc Da", price: 350000, description: "Sơn gel + Tẩy da chết + Massage tay chân", duration: 90 }
-];
-
-const MOCK_CUSTOMERS = [
-  { id: "c1", name: "Khách vãng lai", phone: "", rank: "Khách mới" },
-  { id: "c2", name: "Nguyễn Văn A", phone: "0901234567", rank: "Vàng (Tích lũy 5%)" },
-  { id: "c3", name: "Trần Thị B", phone: "0918765432", rank: "Bạc (Tích lũy 3%)" }
-];
+// Fallback Mock Data for Demo/Empty States removed
 
 const getInitialInvoices = () => {
   try {
@@ -111,7 +79,9 @@ const getInitialCustomers = () => {
   } catch (e) {
     console.error("Failed to parse saved customers", e);
   }
-  return MOCK_CUSTOMERS;
+  return [
+    { id: "c1", name: "Khách vãng lai", phone: "", rank: "Khách mới" }
+  ];
 };
 
 const getInitialSelectedStylistId = () => {
@@ -168,11 +138,11 @@ export default function POS() {
   const [productsOrder, setProductsOrder] = useState<string[]>(() => getInitialOrder("pos_order_products"));
   const [packagesOrder, setPackagesOrder] = useState<string[]>(() => getInitialOrder("pos_order_packages"));
 
-  // Fallbacks
-  const activeStaff = staff.length > 0 ? staff : MOCK_STAFF;
-  const activeServices = services.length > 0 ? services : MOCK_SERVICES;
-  const activeProducts = inventories.length > 0 ? inventories : MOCK_PRODUCTS;
-  const activePackages = packages.length > 0 ? packages : MOCK_PACKAGES;
+  // State mappings
+  const activeStaff = staff;
+  const activeServices = services;
+  const activeProducts = inventories;
+  const activePackages = packages;
 
   // Customers dynamic state
   const [customers, setCustomers] = useState(getInitialCustomers);
