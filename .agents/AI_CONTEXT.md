@@ -46,6 +46,11 @@ Dự án sử dụng mô hình Monorepo quản lý bởi `pnpm` và `turbo`. Cá
 *   *Frontend:* `apps/tenant-portal/src/pages/desktop/StaffManagement/RolePermissionPanel.tsx`
 *   *Backend:* `apps/backend-api/src/staff.controller.ts` (các endpoint liên quan tới `/roles` và `/permissions`).
 
+### C. Đồng bộ dữ liệu thời gian thực theo Tenant (Real-time Tenant Sync)
+*   Hệ thống tự động đồng bộ dữ liệu (nhân sự, phân ca, lượt xoay tua thợ, lịch hẹn, hóa đơn POS, kho hàng) giữa toàn bộ người dùng trong cùng một Tenant.
+*   *Frontend:* `apps/tenant-portal/src/hooks/useWebSocketSync.ts` (lắng nghe sự kiện để tự động tải lại dữ liệu nền qua React Query và hiển thị Toast nếu có cập nhật từ người khác).
+*   *Backend:* `apps/backend-api/src/notification.gateway.ts` (quản lý kết nối chia theo Tenant và định tuyến sự kiện chính xác).
+
 ---
 
 ## 3. Bản Đồ Kết Nối API & Dữ Liệu

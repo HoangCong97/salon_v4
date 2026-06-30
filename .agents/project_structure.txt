@@ -16,6 +16,7 @@ C:.
 |   |   |   +---branch.controller.ts
 |   |   |   +---customer-portal.controller.ts
 |   |   |   +---customer.controller.ts
+|   |   |   +---file-utils.ts
 |   |   |   +---import-engine  <-- Module import dữ liệu từ Excel/CSV
 |   |   |   |   +---import-engine.controller.ts
 |   |   |   |   +---import-engine.module.ts
@@ -79,7 +80,9 @@ C:.
 |   +---customer-booking  <-- Cổng đặt lịch hẹn online cho khách hàng (React/Next.js)
 |   |   +---.next
 |   |   |   +---app-build-manifest.json
+|   |   |   +---app-path-routes-manifest.json
 |   |   |   +---build-manifest.json
+|   |   |   +---BUILD_ID
 |   |   |   +---cache
 |   |   |   |   +---.tsbuildinfo
 |   |   |   |   +---swc
@@ -118,27 +121,121 @@ C:.
 |   |   |   |           +---2.pack
 |   |   |   |           +---index.pack
 |   |   |   |           \---index.pack.old
+|   |   |   +---export-marker.json
+|   |   |   +---images-manifest.json
+|   |   |   +---next-minimal-server.js.nft.json
+|   |   |   +---next-server.js.nft.json
 |   |   |   +---package.json
+|   |   |   +---prerender-manifest.json
 |   |   |   +---react-loadable-manifest.json
+|   |   |   +---required-server-files.json
+|   |   |   +---routes-manifest.json
 |   |   |   +---server
+|   |   |   |   +---app
+|   |   |   |   |   +---booking
+|   |   |   |   |   |   +---page.js
+|   |   |   |   |   |   +---page.js.nft.json
+|   |   |   |   |   |   \---page_client-reference-manifest.js
+|   |   |   |   |   +---booking.html
+|   |   |   |   |   +---booking.meta
+|   |   |   |   |   +---booking.rsc
+|   |   |   |   |   +---index.html
+|   |   |   |   |   +---index.meta
+|   |   |   |   |   +---index.rsc
+|   |   |   |   |   +---page.js
+|   |   |   |   |   +---page.js.nft.json
+|   |   |   |   |   +---page_client-reference-manifest.js
+|   |   |   |   |   +---profile
+|   |   |   |   |   |   +---page.js
+|   |   |   |   |   |   +---page.js.nft.json
+|   |   |   |   |   |   \---page_client-reference-manifest.js
+|   |   |   |   |   +---profile.html
+|   |   |   |   |   +---profile.meta
+|   |   |   |   |   +---profile.rsc
+|   |   |   |   |   +---reviews
+|   |   |   |   |   |   \---[bookingId]
+|   |   |   |   |   |       +---page.js
+|   |   |   |   |   |       +---page.js.nft.json
+|   |   |   |   |   |       \---page_client-reference-manifest.js
+|   |   |   |   |   +---_not-found
+|   |   |   |   |   |   +---page.js
+|   |   |   |   |   |   +---page.js.nft.json
+|   |   |   |   |   |   \---page_client-reference-manifest.js
+|   |   |   |   |   +---_not-found.html
+|   |   |   |   |   +---_not-found.meta
+|   |   |   |   |   \---_not-found.rsc
 |   |   |   |   +---app-paths-manifest.json
+|   |   |   |   +---chunks
+|   |   |   |   |   +---192.js
+|   |   |   |   |   +---817.js
+|   |   |   |   |   \---font-manifest.json
+|   |   |   |   +---font-manifest.json
+|   |   |   |   +---functions-config-manifest.json
 |   |   |   |   +---interception-route-rewrite-manifest.js
 |   |   |   |   +---middleware-build-manifest.js
 |   |   |   |   +---middleware-manifest.json
 |   |   |   |   +---middleware-react-loadable-manifest.js
 |   |   |   |   +---next-font-manifest.js
 |   |   |   |   +---next-font-manifest.json
+|   |   |   |   +---pages
+|   |   |   |   |   +---404.html
+|   |   |   |   |   +---500.html
+|   |   |   |   |   +---_app.js
+|   |   |   |   |   +---_app.js.nft.json
+|   |   |   |   |   +---_document.js
+|   |   |   |   |   +---_document.js.nft.json
+|   |   |   |   |   +---_error.js
+|   |   |   |   |   \---_error.js.nft.json
 |   |   |   |   +---pages-manifest.json
 |   |   |   |   +---server-reference-manifest.js
-|   |   |   |   \---server-reference-manifest.json
+|   |   |   |   +---server-reference-manifest.json
+|   |   |   |   \---webpack-runtime.js
 |   |   |   +---static
 |   |   |   |   +---chunks
-|   |   |   |   |   \---polyfills.js
+|   |   |   |   |   +---5b8f0dd8-ad9fed7343be880c.js
+|   |   |   |   |   +---650-22fec19037a4a49c.js
+|   |   |   |   |   +---749-a20ba88926d9cd60.js
+|   |   |   |   |   +---app
+|   |   |   |   |   |   +---booking
+|   |   |   |   |   |   |   \---page-87bce4090d40db56.js
+|   |   |   |   |   |   +---layout-6418c0031f70a84c.js
+|   |   |   |   |   |   +---page-69efb36c8e402285.js
+|   |   |   |   |   |   +---profile
+|   |   |   |   |   |   |   \---page-34765a908607253c.js
+|   |   |   |   |   |   +---reviews
+|   |   |   |   |   |   |   \---[bookingId]
+|   |   |   |   |   |   |       \---page-abfdd472ebf02f17.js
+|   |   |   |   |   |   \---_not-found
+|   |   |   |   |   |       \---page-68e911df6dea8e73.js
+|   |   |   |   |   +---framework-bef83a85c94ff7de.js
+|   |   |   |   |   +---main-430350b09e6c3664.js
+|   |   |   |   |   +---main-app-6271999a8dce74f8.js
+|   |   |   |   |   +---pages
+|   |   |   |   |   |   +---_app-32ee63fa91347547.js
+|   |   |   |   |   |   \---_error-79ee453ce9bad74d.js
+|   |   |   |   |   +---polyfills-42372ed130431b0a.js
+|   |   |   |   |   +---polyfills.js
+|   |   |   |   |   \---webpack-ea02740f160b546a.js
+|   |   |   |   +---CJMd94EjVjFUk3S69_oX4
+|   |   |   |   |   +---_buildManifest.js
+|   |   |   |   |   \---_ssgManifest.js
+|   |   |   |   +---css
+|   |   |   |   |   \---528a41e3cf0a0946.css
 |   |   |   |   \---development
 |   |   |   |       +---_buildManifest.js
 |   |   |   |       \---_ssgManifest.js
 |   |   |   +---trace
 |   |   |   \---types
+|   |   |       +---app
+|   |   |       |   +---booking
+|   |   |       |   |   \---page.ts
+|   |   |       |   +---layout.ts
+|   |   |       |   +---page.ts
+|   |   |       |   +---profile
+|   |   |       |   |   \---page.ts
+|   |   |       |   \---reviews
+|   |   |       |       \---[bookingId]
+|   |   |       |           \---page.ts
 |   |   |       \---package.json
 |   |   +---next-env.d.ts
 |   |   +---next.config.js
@@ -205,6 +302,7 @@ C:.
 |       |   |   |   |   \---ImportWizardModal.tsx
 |       |   |   |   +---Sidebar.tsx
 |       |   |   |   +---TableComponents.tsx
+|       |   |   |   +---ToastProvider.tsx
 |       |   |   |   +---Tooltip.tsx
 |       |   |   |   \---Topbar.tsx
 |       |   |   \---mobile
@@ -213,7 +311,8 @@ C:.
 |       |   +---hooks
 |       |   |   +---useFileDragAndDrop.ts
 |       |   |   +---useImportWizard.ts
-|       |   |   \---useWebSocket.ts
+|       |   |   +---useWebSocket.ts
+|       |   |   \---useWebSocketSync.ts
 |       |   +---index.css
 |       |   +---layouts
 |       |   |   +---DesktopLayout.tsx
@@ -309,7 +408,9 @@ C:.
 |       |   +---store
 |       |   |   \---useAuthStore.ts
 |       |   \---utils
-|       |       \---exportData.ts
+|       |       +---apiClient.ts
+|       |       +---exportData.ts
+|       |       \---queryKeys.ts
 |       +---tsconfig.json
 |       \---vite.config.ts
 +---package.json
