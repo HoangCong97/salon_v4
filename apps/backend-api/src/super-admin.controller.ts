@@ -74,6 +74,91 @@ export class SuperAdminController {
     }
   }
 
+  // 1b. GET DASHBOARD HEALTH
+  @Get("dashboard/health")
+  async getDashboardHealth() {
+    try {
+      const dbStart = Date.now();
+      await prisma.$queryRaw`SELECT 1`;
+      const dbLatency = Date.now() - dbStart;
+
+      const aiUrl = process.env.AI_BASE_URL || "https://api.deepseek.com";
+
+      const [twilio, sendgrid, vnpay, ai] = await Promise.all([
+        this.pingServiceHelper("https://api.twilio.com"),
+        this.pingServiceHelper("https://api.sendgrid.com"),
+        this.pingServiceHelper("https://sandbox.vnpayment.vn"),
+        this.pingServiceHelper(aiUrl)
+      ]);
+
+      return {
+        database: { status: "UP", latency: dbLatency },
+        twilio,
+        sendgrid,
+        vnpay,
+        ai
+      };
+    } catch (error) {
+      throw new HttpException(`Failed to fetch health metrics: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // 1c. INDIVIDUAL DYNAMIC HEALTH CHECKS
+  @Get("dashboard/health/database")
+  async getDatabaseHealth() {
+    const start = Date.now();
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      return { status: "UP", latency: Date.now() - start };
+    } catch (error) {
+      return { status: "DOWN", latency: Date.now() - start };
+    }
+  }
+
+  @Get("dashboard/health/twilio")
+  async getTwilioHealth() {
+    return this.pingServiceHelper("https://api.twilio.com");
+  }
+
+  @Get("dashboard/health/sendgrid")
+  async getSendgridHealth() {
+    return this.pingServiceHelper("https://api.sendgrid.com");
+  }
+
+  @Get("dashboard/health/vnpay")
+  async getVnpayHealth() {
+    return this.pingServiceHelper("https://sandbox.vnpayment.vn");
+  }
+
+  @Get("dashboard/health/ai")
+  async getAiHealth() {
+    const aiUrl = process.env.AI_BASE_URL || "https://api.deepseek.com";
+    return this.pingServiceHelper(aiUrl);
+  }
+
+  private async pingServiceHelper(url: string): Promise<{ status: string; latency: number }> {
+    const start = Date.now();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+    try {
+      const res = await fetch(url, {
+        method: "HEAD",
+        signal: controller.signal,
+        headers: { "User-Agent": "Node-Fetch" }
+      });
+      clearTimeout(timeoutId);
+      const latency = Date.now() - start;
+      if (res.status >= 500) {
+        return { status: "DOWN", latency };
+      }
+      return { status: "UP", latency };
+    } catch (error) {
+      clearTimeout(timeoutId);
+      return { status: "DOWN", latency: Date.now() - start };
+    }
+  }
+
   // 2. GET ALL SAAS PLANS
   @Get("plans")
   async getPlans() {

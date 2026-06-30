@@ -136,46 +136,67 @@ export class ShiftsController {
         throw new HttpException("shifts must be an array", HttpStatus.BAD_REQUEST);
       }
 
-      const results = [];
+      if (shifts.length === 0) {
+        return { success: true, count: 0 };
+      }
 
-      for (const s of shifts) {
-        const utcDate = new Date(s.workDate + "T00:00:00.000Z");
+      const staffIds = Array.from(new Set(shifts.map((s) => s.staffId)));
+      const dates = shifts.map((s) => new Date(s.workDate + "T00:00:00.000Z"));
+      const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
+      const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
+      maxDate.setUTCHours(23, 59, 59, 999);
 
-        // Check if we should clear/delete this shift
-        const isCleared = s.clear || (!s.isOff && !s.shiftName && !s.startTime && !s.endTime);
+      const shiftIds = shifts.map((s) => s.id).filter(Boolean) as string[];
 
-        // Find existing shift
-        let existing = null;
-        if (s.id) {
-          existing = await prisma.employeeShift.findFirst({
-            where: { id: s.id, tenantId, branchId, deletedAt: null }
-          });
-        } else {
-          existing = await prisma.employeeShift.findFirst({
-            where: {
-              tenantId,
-              branchId,
-              staffId: s.staffId,
-              workDate: utcDate,
-              deletedAt: null
+      // 1. Bulk query existing shifts for the given IDs or staff/date combinations
+      const existingShifts = await prisma.employeeShift.findMany({
+        where: {
+          tenantId,
+          branchId,
+          OR: [
+            { id: { in: shiftIds } },
+            {
+              staffId: { in: staffIds },
+              workDate: {
+                gte: minDate,
+                lte: maxDate
+              }
             }
-          });
+          ],
+          deletedAt: null
         }
+      });
+
+      const findExisting = (s: typeof shifts[0]) => {
+        if (s.id) {
+          return existingShifts.find((es) => es.id === s.id);
+        }
+        const utcDate = new Date(s.workDate + "T00:00:00.000Z");
+        return existingShifts.find(
+          (es) =>
+            es.staffId === s.staffId &&
+            es.workDate.getTime() === utcDate.getTime()
+        );
+      };
+
+      // 2. Perform updates, creates, and soft deletes in parallel
+      const operations = shifts.map(async (s) => {
+        const utcDate = new Date(s.workDate + "T00:00:00.000Z");
+        const isCleared = s.clear || (!s.isOff && !s.shiftName && !s.startTime && !s.endTime);
+        const existing = findExisting(s);
 
         if (isCleared) {
-          // If exists, soft delete it
           if (existing) {
-            await prisma.employeeShift.update({
+            return prisma.employeeShift.update({
               where: { id: existing.id },
               data: { deletedAt: new Date() }
             });
           }
-          continue;
+          return null;
         }
 
         if (existing) {
-          // Update
-          const updated = await prisma.employeeShift.update({
+          return prisma.employeeShift.update({
             where: { id: existing.id },
             data: {
               shiftName: s.shiftName || null,
@@ -185,10 +206,8 @@ export class ShiftsController {
               updatedAt: new Date()
             }
           });
-          results.push(updated);
         } else {
-          // Create
-          const created = await prisma.employeeShift.create({
+          return prisma.employeeShift.create({
             data: {
               tenantId,
               branchId,
@@ -200,9 +219,11 @@ export class ShiftsController {
               isOff: s.isOff
             }
           });
-          results.push(created);
         }
-      }
+      });
+
+      const rawResults = await Promise.all(operations);
+      const results = rawResults.filter((r) => r !== null);
 
       return { success: true, count: results.length };
     } catch (error) {

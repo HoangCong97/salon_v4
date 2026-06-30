@@ -102,79 +102,103 @@ export class PayrollController {
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 0, 23, 59, 59);
 
-      for (const staff of staffMembers) {
-        // Check if payroll already exists for this branch/staff/period
-        const existing = await prisma.employeeMonthlyPayroll.findFirst({
-          where: {
-            tenantId,
-            branchId,
-            staffId: staff.id,
-            salaryPeriod: period,
+      const staffIds = staffMembers.map((s) => s.id);
+
+      // 1. Bulk query existing payrolls for these staff members
+      const existingPayrolls = await prisma.employeeMonthlyPayroll.findMany({
+        where: {
+          tenantId,
+          branchId,
+          staffId: { in: staffIds },
+          salaryPeriod: period,
+          deletedAt: null
+        }
+      });
+
+      // 2. Bulk query all approved advances in this period
+      const allAdvances = await prisma.salaryAdvance.findMany({
+        where: {
+          tenantId,
+          branchId,
+          staffId: { in: staffIds },
+          advanceDate: {
+            gte: startDate,
+            lte: endDate
+          },
+          status: "APPROVED",
+          deletedAt: null
+        }
+      });
+
+      // 3. Bulk query all invoice items for commission in this period
+      const allInvoiceItems = await prisma.invoiceItem.findMany({
+        where: {
+          staffId: { in: staffIds },
+          createdAt: {
+            gte: startDate,
+            lte: endDate
+          },
+          invoice: {
+            paymentStatus: "PAID",
             deletedAt: null
           }
-        });
+        }
+      });
 
+      const dataToCreate = [];
+      const alreadyCreatedPayrolls = [...existingPayrolls];
+
+      for (const staff of staffMembers) {
+        const existing = existingPayrolls.find((ep) => ep.staffId === staff.id);
         if (existing) {
-          generated.push(existing);
           continue;
         }
 
-        // Sum approved salary advances in this period
-        const advances = await prisma.salaryAdvance.findMany({
-          where: {
-            tenantId,
-            branchId,
-            staffId: staff.id,
-            advanceDate: {
-              gte: startDate,
-              lte: endDate
-            },
-            status: "APPROVED",
-            deletedAt: null
-          }
-        });
+        // Sum advances for this staff member in-memory
+        const staffAdvances = allAdvances.filter((a) => a.staffId === staff.id);
+        const totalAdvances = staffAdvances.reduce((sum, adv) => sum + Number(adv.amount), 0);
 
-        const totalAdvances = advances.reduce((sum, adv) => sum + Number(adv.amount), 0);
-
-        // Fetch commissions (calculated from invoice items where this stylist is assigned, paid/completed in this period)
-        const invoiceItems = await prisma.invoiceItem.findMany({
-          where: {
-            staffId: staff.id,
-            createdAt: {
-              gte: startDate,
-              lte: endDate
-            },
-            invoice: {
-              paymentStatus: "PAID",
-              deletedAt: null
-            }
-          }
-        });
-        const totalCommissions = invoiceItems.reduce((sum, item) => sum + Number(item.employeeCommission || 0), 0);
+        // Sum commissions for this staff member in-memory
+        const staffInvoiceItems = allInvoiceItems.filter((item) => item.staffId === staff.id);
+        const totalCommissions = staffInvoiceItems.reduce((sum, item) => sum + Number(item.employeeCommission || 0), 0);
 
         const baseSalary = Number(staff.baseSalary || 0);
         const finalSalary = baseSalary + totalCommissions - totalAdvances;
 
-        const newPayroll = await prisma.employeeMonthlyPayroll.create({
-          data: {
-            tenantId,
-            branchId,
-            staffId: staff.id,
-            salaryPeriod: period,
-            baseSalary,
-            allowance: 0,
-            commissionAmount: totalCommissions,
-            tipAmount: 0,
-            deductionAmount: totalAdvances,
-            finalSalary: finalSalary > 0 ? finalSalary : 0,
-            status: "DRAFT"
-          }
+        dataToCreate.push({
+          tenantId,
+          branchId,
+          staffId: staff.id,
+          salaryPeriod: period,
+          baseSalary,
+          allowance: 0,
+          commissionAmount: totalCommissions,
+          tipAmount: 0,
+          deductionAmount: totalAdvances,
+          finalSalary: finalSalary > 0 ? finalSalary : 0,
+          status: "DRAFT"
         });
-
-        generated.push(newPayroll);
       }
 
-      return generated;
+      if (dataToCreate.length > 0) {
+        await prisma.employeeMonthlyPayroll.createMany({
+          data: dataToCreate
+        });
+
+        // Query the newly created payroll records to return them
+        const newlyCreated = await prisma.employeeMonthlyPayroll.findMany({
+          where: {
+            tenantId,
+            branchId,
+            staffId: { in: dataToCreate.map((d) => d.staffId) },
+            salaryPeriod: period,
+            deletedAt: null
+          }
+        });
+        alreadyCreatedPayrolls.push(...newlyCreated);
+      }
+
+      return alreadyCreatedPayrolls;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
@@ -206,11 +230,15 @@ export class PayrollController {
         throw new HttpException("payrolls must be an array", HttpStatus.BAD_REQUEST);
       }
 
-      const updated = [];
-      for (const p of payrolls) {
-        const finalSalary = Number(p.baseSalary) + Number(p.allowance) + Number(p.commissionAmount) + Number(p.tipAmount) - Number(p.deductionAmount);
-        
-        const up = await prisma.employeeMonthlyPayroll.update({
+      const updatePromises = payrolls.map((p) => {
+        const finalSalary =
+          Number(p.baseSalary) +
+          Number(p.allowance) +
+          Number(p.commissionAmount) +
+          Number(p.tipAmount) -
+          Number(p.deductionAmount);
+
+        return prisma.employeeMonthlyPayroll.update({
           where: { id: p.id },
           data: {
             baseSalary: p.baseSalary,
@@ -224,9 +252,9 @@ export class PayrollController {
             updatedAt: new Date()
           }
         });
-        updated.push(up);
-      }
+      });
 
+      const updated = await Promise.all(updatePromises);
       return { success: true, updatedCount: updated.length };
     } catch (error) {
       throw new HttpException(

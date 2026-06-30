@@ -65,3 +65,15 @@ export const getStatusColorStyle = (status: string) => {
   }
   return { backgroundColor: "var(--color-danger-light)", color: "var(--color-danger)", border: "none" };
 };
+
+export const getAdminUser = (staffList: StaffMember[]): StaffMember | null => {
+  return staffList.reduce<StaffMember | null>((oldest, current) => {
+    if (current.isAdmin) return current;
+    if (oldest?.isAdmin) return oldest;
+    if (!oldest) return current;
+    if (!current.createdAt) return oldest;
+    if (!oldest.createdAt) return current;
+    return new Date(current.createdAt) < new Date(oldest.createdAt) ? current : oldest;
+  }, null);
+};
+

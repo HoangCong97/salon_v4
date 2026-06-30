@@ -34,8 +34,22 @@ const defaultRolePermissions: Record<string, string[]> = {
   ]
 };
 
+// Memory caches to optimize performance and prevent database connection pool bottlenecks
+let cachedPermissions: any[] | null = null;
+const initializedTenants = new Set<string>();
+const tenantAdminCache = new Map<string, string | null>();
+
 // Helper function to ensure standard roles exist for a tenant and link them to default permissions
 export async function ensureStandardRolesAndPermissions(tenantId: string) {
+  if (initializedTenants.has(tenantId)) {
+    return prisma.role.findMany({
+      where: {
+        tenantId,
+        deletedAt: null
+      }
+    });
+  }
+
   // Ensure permissions exist in DB first
   const dbPermissions = await ensureStandardPermissions();
 
@@ -54,11 +68,12 @@ export async function ensureStandardRolesAndPermissions(tenantId: string) {
   });
 
   const roles = [];
+  const newlyCreatedRoleIds = new Set<string>();
+
   for (const r of standardRoles) {
     let found = existingRoles.find(
       (er) => er.name.toLowerCase() === r.name.toLowerCase()
     );
-    let created = false;
     if (!found) {
       found = await prisma.role.create({
         data: {
@@ -67,24 +82,35 @@ export async function ensureStandardRolesAndPermissions(tenantId: string) {
           description: r.description
         }
       });
-      created = true;
+      newlyCreatedRoleIds.add(found.id);
     }
     roles.push(found);
+  }
 
-    // If role was just created, or if it doesn't have any permissions linked, populate with defaults
-    const currentPermCount = await prisma.rolePermission.count({
-      where: { roleId: found.id }
-    });
+  // Bulk query all rolePermissions for standard roles to avoid count in loop
+  const roleIds = roles.map((role) => role.id);
+  const existingRolePermissions = await prisma.rolePermission.findMany({
+    where: {
+      roleId: { in: roleIds }
+    }
+  });
 
-    if (created || currentPermCount === 0) {
-      const defaultSlugs = defaultRolePermissions[r.name.toLowerCase()] || [];
+  // Check and populate default permissions for roles in-memory
+  for (const found of roles) {
+    const isNew = newlyCreatedRoleIds.has(found.id);
+    const currentPermCount = existingRolePermissions.filter(
+      (rp) => rp.roleId === found.id
+    ).length;
+
+    if (isNew || currentPermCount === 0) {
+      const defaultSlugs = defaultRolePermissions[found.name.toLowerCase()] || [];
       const permIdsToLink = dbPermissions
-        .filter(p => defaultSlugs.includes(p.slug))
-        .map(p => p.id);
+        .filter((p) => defaultSlugs.includes(p.slug))
+        .map((p) => p.id);
 
       if (permIdsToLink.length > 0) {
         await prisma.rolePermission.createMany({
-          data: permIdsToLink.map(permissionId => ({
+          data: permIdsToLink.map((permissionId) => ({
             roleId: found.id,
             permissionId
           })),
@@ -93,11 +119,17 @@ export async function ensureStandardRolesAndPermissions(tenantId: string) {
       }
     }
   }
+
+  initializedTenants.add(tenantId);
   return roles;
 }
 
 // Helper function to ensure system-wide standard permissions exist
 export async function ensureStandardPermissions() {
+  if (cachedPermissions) {
+    return cachedPermissions;
+  }
+
   const standardPermissions = [
     { slug: "booking.view", groupName: "Lịch hẹn", name: "Xem lịch hẹn", description: "Xem danh sách lịch hẹn" },
     { slug: "booking.create", groupName: "Lịch hẹn", name: "Tạo lịch hẹn", description: "Cho phép đặt lịch hẹn mới" },
@@ -143,10 +175,15 @@ export async function ensureStandardPermissions() {
     }
     permissions.push(found);
   }
+  cachedPermissions = permissions;
   return permissions;
 }
 
 async function getAdminUserId(tenantId: string): Promise<string | null> {
+  if (tenantAdminCache.has(tenantId)) {
+    return tenantAdminCache.get(tenantId)!;
+  }
+
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId }
   });
@@ -177,7 +214,9 @@ async function getAdminUserId(tenantId: string): Promise<string | null> {
     });
   }
 
-  return adminUser?.id || null;
+  const adminId = adminUser?.id || null;
+  tenantAdminCache.set(tenantId, adminId);
+  return adminId;
 }
 
 @Controller("api/tenants/:tenantId")
@@ -309,6 +348,8 @@ export class StaffController {
           avatar: body.avatar || null
         }
       });
+
+      tenantAdminCache.delete(tenantId);
 
       // Create settings for user
       await prisma.userSetting.create({
@@ -450,6 +491,8 @@ export class StaffController {
         data: updateData
       });
 
+      tenantAdminCache.delete(tenantId);
+
       // Update user branches: Delete all existing user-branch links, and create new ones
       if (body.branchIds) {
         await prisma.userBranch.deleteMany({
@@ -533,6 +576,8 @@ export class StaffController {
           deletedAt: new Date()
         }
       });
+
+      tenantAdminCache.delete(tenantId);
 
       // Soft delete branch relationships as well to keep cleanliness
       await prisma.userBranch.updateMany({

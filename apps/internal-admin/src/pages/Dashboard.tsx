@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Users, DollarSign, Activity, Calendar, ShieldCheck, TrendingUp } from "lucide-react";
+import { Users, DollarSign, Activity, Calendar, ShieldCheck, TrendingUp, RefreshCw } from "lucide-react";
 import { formatCurrencyVND } from "@salon/shared-utils";
 import { useWebSocket } from "../hooks/useWebSocket";
 
@@ -7,6 +7,111 @@ const Dashboard: React.FC = () => {
   // State for database analytics data
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  // State for individual system health connection metrics
+  const [health, setHealth] = useState<Record<string, { loading: boolean; status: string | null; latency: number | null }>>({
+    database: { loading: true, status: null, latency: null },
+    twilio: { loading: true, status: null, latency: null },
+    sendgrid: { loading: true, status: null, latency: null },
+    vnpay: { loading: true, status: null, latency: null },
+    ai: { loading: true, status: null, latency: null }
+  });
+
+  const getMetricDetails = (status: string | null, latency: number | null, isDb = false) => {
+    if (status !== "UP") {
+      return {
+        text: "Mất kết nối",
+        color: "var(--color-danger)",
+        pct: 0
+      };
+    }
+    
+    const lat = latency || 0;
+    
+    // Calculate speed score: 0ms is 100%, 3000ms is 0%
+    const pct = Math.max(5, Math.min(100, Math.round(100 - (lat / 30))));
+    
+    if (isDb) {
+      if (lat < 80) {
+        return {
+          text: `Tốt (Ping: ${lat}ms)`,
+          color: "var(--color-success)",
+          pct
+        };
+      } else if (lat < 250) {
+        return {
+          text: `Ổn định (Ping: ${lat}ms)`,
+          color: "var(--color-warning)",
+          pct
+        };
+      } else {
+        return {
+          text: `Phản hồi chậm (Ping: ${lat}ms)`,
+          color: "var(--color-warning)",
+          pct
+        };
+      }
+    }
+
+    // External APIs (SendGrid, VNPAY, Twilio, DeepSeek)
+    if (lat < 300) {
+      return {
+        text: `Tốt (Ping: ${lat}ms)`,
+        color: "var(--color-success)",
+        pct
+      };
+    } else if (lat < 800) {
+      return {
+        text: `Ổn định (Ping: ${lat}ms)`,
+        color: "var(--color-warning)",
+        pct
+      };
+    } else {
+      return {
+        text: `Phản hồi chậm (Ping: ${lat}ms)`,
+        color: "var(--color-warning)",
+        pct
+      };
+    }
+  };
+
+  const fetchHealthForItem = async (key: string, endpoint: string) => {
+    setHealth(prev => ({
+      ...prev,
+      [key]: { ...prev[key], loading: true }
+    }));
+    try {
+      const res = await fetch(endpoint);
+      if (res.ok) {
+        const data = await res.json();
+        setHealth(prev => ({
+          ...prev,
+          [key]: { loading: false, status: data.status, latency: data.latency }
+        }));
+      } else {
+        setHealth(prev => ({
+          ...prev,
+          [key]: { loading: false, status: "DOWN", latency: 0 }
+        }));
+      }
+    } catch (error) {
+      setHealth(prev => ({
+        ...prev,
+        [key]: { loading: false, status: "DOWN", latency: 0 }
+      }));
+    }
+  };
+
+  const fetchAllHealth = () => {
+    fetchHealthForItem("database", "http://localhost:3000/api/super-admin/dashboard/health/database");
+    fetchHealthForItem("twilio", "http://localhost:3000/api/super-admin/dashboard/health/twilio");
+    fetchHealthForItem("sendgrid", "http://localhost:3000/api/super-admin/dashboard/health/sendgrid");
+    fetchHealthForItem("vnpay", "http://localhost:3000/api/super-admin/dashboard/health/vnpay");
+    fetchHealthForItem("ai", "http://localhost:3000/api/super-admin/dashboard/health/ai");
+  };
+
+  const isAnyHealthLoading = Object.values(health).some(item => item.loading);
+
   const [actions, setActions] = useState([
     { id: 1, type: "Tenant", message: "Salon 'HairSalon Việt' đăng ký dùng thử gói Basic", time: "10 phút trước", user: "Hệ thống" },
     { id: 2, type: "Billing", message: "Duyệt hóa đơn gia hạn 6 tháng cho 'BarberShop Q1'", time: "42 phút trước", user: "Hoàng Admin" },
@@ -32,6 +137,7 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     fetchDashboardData(true);
+    fetchAllHealth();
   }, []);
 
   // Lắng nghe sự kiện WebSocket để cập nhật dashboard real-time
@@ -365,44 +471,75 @@ const Dashboard: React.FC = () => {
 
         {/* System Health / API connection metrics */}
         <div className="card" style={{ display: "flex", flexDirection: "column" }}>
-          <h3 className="card-title" style={{ marginBottom: "16px" }}>Trạng Thái Kết Nối API & Đối Tác</h3>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <h3 className="card-title" style={{ margin: 0 }}>Trạng Thái Kết Nối API & Đối Tác</h3>
+            <button 
+              onClick={fetchAllHealth} 
+              disabled={isAnyHealthLoading}
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--color-primary)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                fontSize: "12px",
+                fontWeight: 600,
+                padding: "4px 8px",
+                borderRadius: "var(--radius-sm)",
+                transition: "background-color 0.2s"
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "var(--color-primary-light)"}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+            >
+              <RefreshCw size={12} className={isAnyHealthLoading ? "animate-spin" : ""} /> Làm mới
+            </button>
+          </div>
+          
           <div style={{ display: "flex", flexDirection: "column", gap: "16px", flexGrow: 1 }}>
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px", fontSize: "13px" }}>
-                <span>Database PostgreSQL (Supabase Connection)</span>
-                <span style={{ color: "var(--color-success)", fontWeight: 600 }}>Hoạt động tốt (Uptime 100%)</span>
-              </div>
-              <div style={{ height: "6px", backgroundColor: "var(--border-color)", borderRadius: "var(--radius-full)" }}>
-                <div style={{ height: "6px", backgroundColor: "var(--color-success)", borderRadius: "var(--radius-full)", width: "100%" }} />
-              </div>
-            </div>
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px", fontSize: "13px" }}>
-                <span>Twilio SMS Gateway API</span>
-                <span style={{ color: "var(--color-success)", fontWeight: 600 }}>Tốt (Ping: 42ms)</span>
-              </div>
-              <div style={{ height: "6px", backgroundColor: "var(--border-color)", borderRadius: "var(--radius-full)" }}>
-                <div style={{ height: "6px", backgroundColor: "var(--color-success)", borderRadius: "var(--radius-full)", width: "98%" }} />
-              </div>
-            </div>
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px", fontSize: "13px" }}>
-                <span>SendGrid Email API Service</span>
-                <span style={{ color: "var(--color-success)", fontWeight: 600 }}>Tốt (Ping: 35ms)</span>
-              </div>
-              <div style={{ height: "6px", backgroundColor: "var(--border-color)", borderRadius: "var(--radius-full)" }}>
-                <div style={{ height: "6px", backgroundColor: "var(--color-success)", borderRadius: "var(--radius-full)", width: "99%" }} />
-              </div>
-            </div>
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px", fontSize: "13px" }}>
-                <span>VNPAY Payment IPN Gateway</span>
-                <span style={{ color: "var(--color-warning)", fontWeight: 600 }}>Phản hồi chậm (Ping: 450ms)</span>
-              </div>
-              <div style={{ height: "6px", backgroundColor: "var(--border-color)", borderRadius: "var(--radius-full)" }}>
-                <div style={{ height: "6px", backgroundColor: "var(--color-warning)", borderRadius: "var(--radius-full)", width: "65%" }} />
-              </div>
-            </div>
+            {(() => {
+              const services = [
+                { key: "database", name: "Database PostgreSQL (Supabase Connection)", isDb: true },
+                { key: "twilio", name: "Twilio SMS Gateway API", isDb: false },
+                { key: "sendgrid", name: "SendGrid Email API Service", isDb: false },
+                { key: "vnpay", name: "VNPAY Payment IPN Gateway", isDb: false },
+                { key: "ai", name: "DeepSeek AI Mapping API (Core Engine)", isDb: false }
+              ];
+
+              return services.map(srv => {
+                const item = health[srv.key];
+                const metric = item.loading 
+                  ? { text: "Đang kết nối...", color: "var(--border-color)", pct: 0, isLoading: true }
+                  : { ...getMetricDetails(item.status, item.latency, srv.isDb), isLoading: false };
+
+                return (
+                  <div key={srv.key}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "13px", alignItems: "center" }}>
+                      <span style={{ fontWeight: 500, color: "var(--text-primary)" }}>{srv.name}</span>
+                      {metric.isLoading ? (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--text-muted)", fontSize: "12px" }}>
+                          <RefreshCw size={11} className="animate-spin" style={{ color: "var(--color-primary)" }} /> Đang kết nối...
+                        </span>
+                      ) : (
+                        <span style={{ color: metric.color, fontWeight: 600, fontSize: "12px" }}>{metric.text}</span>
+                      )}
+                    </div>
+                    <div style={{ height: "6px", backgroundColor: "var(--border-color)", borderRadius: "var(--radius-full)", overflow: "hidden" }}>
+                      <div 
+                        style={{ 
+                          height: "6px", 
+                          backgroundColor: metric.isLoading ? "var(--color-primary-light)" : metric.color, 
+                          borderRadius: "var(--radius-full)", 
+                          width: `${metric.pct}%`,
+                          transition: "width 0.8s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s ease"
+                        }} 
+                      />
+                    </div>
+                  </div>
+                );
+              });
+            })()}
           </div>
         </div>
 

@@ -62,31 +62,36 @@ export class TurnsController {
         staffIds = branchStaff.map(s => s.id);
       }
 
-      // 3. For each staff, ensure EmployeeDailyTurn record exists for targetDate
-      for (const staffId of staffIds) {
-        const exists = await prisma.employeeDailyTurn.findFirst({
-          where: {
+      // 3. For each staff, ensure EmployeeDailyTurn record exists for targetDate (Optimized)
+      const existingTurns = await prisma.employeeDailyTurn.findMany({
+        where: {
+          tenantId,
+          branchId,
+          staffId: { in: staffIds },
+          workDate: targetDate,
+          deletedAt: null
+        },
+        select: {
+          staffId: true
+        }
+      });
+
+      const existingStaffIds = new Set(existingTurns.map((t) => t.staffId));
+      const missingStaffIds = staffIds.filter((id) => !existingStaffIds.has(id));
+
+      if (missingStaffIds.length > 0) {
+        await prisma.employeeDailyTurn.createMany({
+          data: missingStaffIds.map((staffId) => ({
             tenantId,
             branchId,
             staffId,
             workDate: targetDate,
-            deletedAt: null
-          }
+            totalWalkinCount: 0,
+            totalBookedCount: 0,
+            totalCustomersToday: 0
+          })),
+          skipDuplicates: true
         });
-
-        if (!exists) {
-          await prisma.employeeDailyTurn.create({
-            data: {
-              tenantId,
-              branchId,
-              staffId,
-              workDate: targetDate,
-              totalWalkinCount: 0,
-              totalBookedCount: 0,
-              totalCustomersToday: 0
-            }
-          });
-        }
       }
 
       // 4. Fetch all turns records

@@ -147,46 +147,61 @@ export class InvoiceController {
           }
         });
 
-        // Create invoice items
-        for (const itData of invoiceItemsData) {
-          await tx.invoiceItem.create({
-            data: {
+        // 1. Bulk create invoice items
+        if (invoiceItemsData.length > 0) {
+          await tx.invoiceItem.createMany({
+            data: invoiceItemsData.map((itData) => ({
               invoiceId: inv.id,
               ...itData
-            }
+            }))
           });
         }
 
-        // Increment staff daily turn served customer count for walk-ins/booked turns
-        // If a stylist is assigned, increment their daily turns served count
-        for (const itData of invoiceItemsData) {
-          if (itData.staffId) {
-            // Check if there is an active turn today for this staff
-            const localTime = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
-            const todayStr = localTime.toISOString().split("T")[0];
-            const targetDate = new Date(todayStr + "T00:00:00.000Z");
+        // 2. Increment staff daily turn served customer count in bulk
+        const staffIdsForTurns = Array.from(
+          new Set(invoiceItemsData.map((it) => it.staffId).filter(Boolean))
+        ) as string[];
 
-            const turn = await tx.employeeDailyTurn.findFirst({
-              where: {
-                tenantId,
-                branchId,
-                staffId: itData.staffId,
-                workDate: targetDate,
-                deletedAt: null
-              }
-            });
+        if (staffIdsForTurns.length > 0) {
+          const localTime = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
+          const todayStr = localTime.toISOString().split("T")[0];
+          const targetDate = new Date(todayStr + "T00:00:00.000Z");
 
-            if (turn) {
-              await tx.employeeDailyTurn.update({
-                where: { id: turn.id },
-                data: {
-                  // Standard increment: increment served count
-                  totalCustomersToday: turn.totalCustomersToday + itData.quantity,
-                  updatedAt: new Date()
-                }
-              });
+          // Bulk find turns for all assigned staff today
+          const turns = await tx.employeeDailyTurn.findMany({
+            where: {
+              tenantId,
+              branchId,
+              staffId: { in: staffIdsForTurns },
+              workDate: targetDate,
+              deletedAt: null
+            }
+          });
+
+          // Calculate total quantity per staffId in-memory
+          const qtyPerStaff = new Map<string, number>();
+          for (const itData of invoiceItemsData) {
+            if (itData.staffId) {
+              qtyPerStaff.set(
+                itData.staffId,
+                (qtyPerStaff.get(itData.staffId) || 0) + itData.quantity
+              );
             }
           }
+
+          // Update turns in parallel
+          const updatePromises = turns.map((turn) => {
+            const qty = qtyPerStaff.get(turn.staffId) || 0;
+            return tx.employeeDailyTurn.update({
+              where: { id: turn.id },
+              data: {
+                totalCustomersToday: turn.totalCustomersToday + qty,
+                updatedAt: new Date()
+              }
+            });
+          });
+
+          await Promise.all(updatePromises);
         }
 
         return inv;

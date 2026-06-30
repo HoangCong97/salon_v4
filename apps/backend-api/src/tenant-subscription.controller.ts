@@ -248,7 +248,7 @@ export class TenantSubscriptionController {
     }
   }
 
-  // 6. QUICK UPLOAD FILE (BASE64 TO DISK SEPARATED BY CATEGORY)
+  // 6. QUICK UPLOAD FILE (BASE64 TO DISK SEPARATED BY CATEGORY OR SUPABASE)
   @Post(":tenantId/upload")
   async uploadFile(
     @Param("tenantId") tenantId: string,
@@ -265,9 +265,11 @@ export class TenantSubscriptionController {
       // 1. Convert base64 data to Buffer
       let buffer: Buffer;
       let extension = "png";
+      let contentType = "image/png";
       const matches = body.file.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
       
       if (matches && matches.length === 3) {
+        contentType = matches[1];
         extension = matches[1].split("/")[1] || "png";
         if (extension === "jpeg") extension = "jpg";
         buffer = Buffer.from(matches[2], "base64");
@@ -282,11 +284,6 @@ export class TenantSubscriptionController {
         categoryFolder = path.join("transactions", todayStr);
       }
 
-      const uploadDir = path.join(process.cwd(), "uploads", tenantId, categoryFolder);
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-
       // 3. Build unique filename
       const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
       let baseName = "file";
@@ -296,12 +293,56 @@ export class TenantSubscriptionController {
           .replace(/[^a-z0-9]/g, "-");
       }
       const finalFilename = `${baseName}-${uniqueSuffix}.${extension}`;
-      const destFilePath = path.join(uploadDir, finalFilename);
 
-      // 4. Save file to disk
+      // Check if Supabase Storage is configured
+      const supabaseUrl = process.env.SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const bucketName = process.env.DATABASE_BUCKET_NAME || "saas-salon-images";
+      
+      const useSupabase = 
+        supabaseUrl && 
+        supabaseKey && 
+        supabaseKey !== "PLACEHOLDER_CHANGE_ME" && 
+        supabaseKey !== "";
+
+      if (useSupabase) {
+        console.log(`[Upload] Uploading to Supabase Storage bucket: ${bucketName}...`);
+        const { createClient } = await import("@supabase/supabase-js");
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        // Build forward-slash path in the bucket (e.g. tenantId/category/filename)
+        const uploadPath = `${tenantId}/${categoryFolder.replace(/\\/g, "/")}/${finalFilename}`;
+
+        const { data, error } = await supabase.storage
+          .from(bucketName)
+          .upload(uploadPath, buffer, {
+            contentType: contentType,
+            upsert: true
+          });
+
+        if (error) {
+          console.error("[Upload] Supabase upload failed, falling back to disk:", error.message);
+          // Fallback to disk on upload error
+        } else {
+          const { data: { publicUrl } } = supabase.storage
+            .from(bucketName)
+            .getPublicUrl(uploadPath);
+
+          console.log("[Upload] Supabase upload successful. Public URL:", publicUrl);
+          return { url: publicUrl };
+        }
+      }
+
+      // FALLBACK: Save file to local disk
+      console.log("[Upload] Falling back to local disk storage.");
+      const uploadDir = path.join(process.cwd(), "uploads", tenantId, categoryFolder);
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      const destFilePath = path.join(uploadDir, finalFilename);
       fs.writeFileSync(destFilePath, buffer);
 
-      // 5. Construct static URL
       const relativeUrl = `/uploads/${tenantId}/${categoryFolder.replace(/\\/g, "/")}/${finalFilename}`;
       const fileUrl = `http://localhost:3000${relativeUrl}`;
 

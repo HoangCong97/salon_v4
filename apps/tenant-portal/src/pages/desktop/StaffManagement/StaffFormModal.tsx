@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Users, Edit2, Camera, User } from "lucide-react";
 import { PriceInputWithSuggestion } from "../../../components/desktop/TableComponents";
-import { StaffMember, Role, Branch } from "./types";
+import { StaffMember, Role, Branch, getAdminUser } from "./types";
 import { useAuthStore } from "../../../store/useAuthStore";
 
 const compressAndGetBase64 = (file: File): Promise<string> => {
@@ -82,14 +82,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
 
   const currentUser = useAuthStore((state) => state.user);
 
-  const adminUser = staff.reduce<StaffMember | null>((oldest, current) => {
-    if (current.isAdmin) return current;
-    if (oldest?.isAdmin) return oldest;
-    if (!oldest) return current;
-    if (!current.createdAt) return oldest;
-    if (!oldest.createdAt) return current;
-    return new Date(current.createdAt) < new Date(oldest.createdAt) ? current : oldest;
-  }, null);
+  const adminUser = getAdminUser(staff);
 
   const isAdminRow = mode === "edit" && selectedStaffId === adminUser?.id;
   const isSelf = mode === "edit" && selectedStaffId === currentUser?.id;
