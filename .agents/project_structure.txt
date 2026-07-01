@@ -44,39 +44,6 @@ C:.
 |   |   |   \---turns.controller.ts  <-- API quản lý hàng đợi và lượt xoay tua thợ
 |   |   +---tsconfig.json
 |   |   \---uploads
-|   |       +---0571c73d-3daa-47b1-a183-c94c6c3c1492
-|   |       |   \---staff
-|   |       |       +---image-2-1782410661628-430407504.jpg
-|   |       |       +---image-2-1782410669151-576729518.jpg
-|   |       |       +---image-2-1782410684652-77442042.jpg
-|   |       |       +---image-2-1782410694074-901863980.jpg
-|   |       |       +---image-2-1782410759698-137217264.jpg
-|   |       |       +---image-2-1782410782468-776583315.jpg
-|   |       |       \---zalo-last-screenshot-1782410785046-644506604.png
-|   |       +---68780359-826c-4d2b-b267-2df8909920d3
-|   |       |   +---brand
-|   |       |   |   +---screenshot-2026-05-29-135614-edited--1--1782386368255-652515297.jpg
-|   |       |   |   \---screenshot-2026-05-29-135614-edited--1--1782386418325-729824449.jpg
-|   |       |   \---staff
-|   |       |       +---screenshot-2026-05-29-135614-edited--1--1782385976621-159969775.jpg
-|   |       |       \---screenshot-2026-05-29-135614-edited-1782385973083-517884074.jpg
-|   |       +---8f82b4c8-5077-4161-ad40-6a7f24c27fee
-|   |       |   \---staff
-|   |       |       \---image-2-1782546420029-920108008.jpg
-|   |       +---d7e56bf5-6e1c-44d6-a94a-81a9436f7120
-|   |       |   +---brand
-|   |       |   |   \---60f4471b059d7a855e2e34ca0f705292-65a11ad2dafe9880-17061562930471102159734-1782471263899-493924978.webp
-|   |       |   \---staff
-|   |       |       +---60f4471b059d7a855e2e34ca0f705292-65a11ad2dafe9880-17061562930471102159734-1782456128992-27998359.webp
-|   |       |       +---e093e9cfc9027d6a142358d24d2ee350-65a11ac2af785880-17061562929701875684912-1782458489537-655017862.webp
-|   |       |       +---giai-nhi-1--nang-tre-1782470201537-194423775.jpg
-|   |       |       \---screenshot-2026-05-29-135618-1782470204709-446958552.png
-|   |       \---e72fa643-c7d8-49c9-8c51-bb46ced1459d
-|   |           \---staff
-|   |               +---60f4471b059d7a855e2e34ca0f705292-65a11ad2dafe9880-17061562930471102159734-1782442726718-369507589.webp
-|   |               +---e093e9cfc9027d6a142358d24d2ee350-65a11ac2af785880-17061562929701875684912-1782442724092-124811914.webp
-|   |               +---e093e9cfc9027d6a142358d24d2ee350-65a11ac2af785880-17061562929701875684912-1782442728853-122414037.webp
-|   |               \---giai-nhi-1--nang-tre-1782442731440-303855186.jpg
 |   +---customer-booking  <-- Cổng đặt lịch hẹn online cho khách hàng (React/Next.js)
 |   |   +---.next
 |   |   |   +---app-build-manifest.json
@@ -303,8 +270,16 @@ C:.
 |       |   |   |   +---Sidebar.tsx
 |       |   |   |   +---TableComponents.tsx
 |       |   |   |   +---ToastProvider.tsx
-|       |   |   |   +---Tooltip.tsx
-|       |   |   |   \---Topbar.tsx
+|       |   |   |   +---Topbar.tsx
+|       |   |   |   \---ui  <-- Thư mục chứa các component nguyên tử dùng chung cho Desktop (Button, Input, Modal, Tooltip)
+|       |   |   |       +---Button.module.css
+|       |   |   |       +---Button.tsx  <-- Component Button tái sử dụng dùng CSS Modules
+|       |   |   |       +---Input.module.css
+|       |   |   |       +---Input.tsx  <-- Component Input tái sử dụng dùng CSS Modules
+|       |   |   |       +---Modal.module.css
+|       |   |   |       +---Modal.tsx  <-- Component Modal tái sử dụng dùng CSS Modules
+|       |   |   |       +---Tooltip.module.css
+|       |   |   |       \---Tooltip.tsx  <-- Component Tooltip tái sử dụng dùng CSS Modules
 |       |   |   \---mobile
 |       |   |       +---BottomNav.tsx
 |       |   |       \---Header.tsx
@@ -407,10 +382,11 @@ C:.
 |       |   |   \---AdaptiveRouter.tsx
 |       |   +---store
 |       |   |   \---useAuthStore.ts
-|       |   \---utils
-|       |       +---apiClient.ts
-|       |       +---exportData.ts
-|       |       \---queryKeys.ts
+|       |   +---utils
+|       |   |   +---apiClient.ts
+|       |   |   +---exportData.ts
+|       |   |   \---queryKeys.ts
+|       |   \---vite-env.d.ts
 |       +---tsconfig.json
 |       \---vite.config.ts
 +---package.json

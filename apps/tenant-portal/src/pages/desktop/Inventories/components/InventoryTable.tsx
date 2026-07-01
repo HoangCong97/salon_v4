@@ -1,7 +1,7 @@
 import React from "react";
 import { AlertTriangle, Edit2, Trash2 } from "lucide-react";
 import { ExcelInput } from "../../../../components/desktop/TableComponents";
-import { Tooltip } from "../../../../components/desktop/Tooltip";
+import { Tooltip } from "../../../../components/desktop/ui/Tooltip";
 import { InventoryItem } from "../types";
 
 interface InventoryTableProps {

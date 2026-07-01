@@ -1,4 +1,5 @@
 import React from "react";
+import { Input } from "../../../components/desktop/ui/Input";
 
 interface InvoiceFilterProps {
   startDate: string;
@@ -37,29 +38,23 @@ export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
     <div className="card" style={{ padding: "16px", display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "12px", alignItems: "center" }}>
       {/* Date Start */}
       <div>
-        <label style={{ display: "block", fontSize: "11.5px", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "4px" }}>
-          TỪ NGÀY
-        </label>
-        <input
+        <Input
+          label="TỪ NGÀY"
           type="date"
-          className="form-input"
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
-          style={{ width: "100%", height: "36px", fontSize: "12.5px" }}
+          style={{ width: "100%" }}
         />
       </div>
 
       {/* Date End */}
       <div>
-        <label style={{ display: "block", fontSize: "11.5px", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "4px" }}>
-          ĐẾN NGÀY
-        </label>
-        <input
+        <Input
+          label="ĐẾN NGÀY"
           type="date"
-          className="form-input"
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}
-          style={{ width: "100%", height: "36px", fontSize: "12.5px" }}
+          style={{ width: "100%" }}
         />
       </div>
 

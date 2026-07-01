@@ -16,6 +16,11 @@ const PATH_DESCRIPTIONS = {
   'apps/tenant-portal/src/pages/desktop/StaffManagement/index.tsx': 'Giao diện chính hiển thị StaffManagement (đã refactor tinh gọn)',
   'apps/customer-booking': 'Cổng đặt lịch hẹn online cho khách hàng (React/Next.js)',
   'apps/internal-admin': 'Trang quản trị SaaS dành cho Super Admin quản lý gói đăng ký',
+  'apps/tenant-portal/src/components/desktop/ui': 'Thư mục chứa các component nguyên tử dùng chung cho Desktop (Button, Input, Modal, Tooltip)',
+  'apps/tenant-portal/src/components/desktop/ui/Button.tsx': 'Component Button tái sử dụng dùng CSS Modules',
+  'apps/tenant-portal/src/components/desktop/ui/Input.tsx': 'Component Input tái sử dụng dùng CSS Modules',
+  'apps/tenant-portal/src/components/desktop/ui/Modal.tsx': 'Component Modal tái sử dụng dùng CSS Modules',
+  'apps/tenant-portal/src/components/desktop/ui/Tooltip.tsx': 'Component Tooltip tái sử dụng dùng CSS Modules',
   'packages': 'Thư mục chứa các package dùng chung toàn dự án',
   'packages/database': 'Package quản lý kết nối cơ sở dữ liệu và Schema Prisma',
   'packages/database/prisma/schema.prisma': 'File schema cơ sở dữ liệu chính của dự án',
@@ -24,6 +29,7 @@ const PATH_DESCRIPTIONS = {
   '.agents': 'Thư mục cấu hình và tài liệu hướng dẫn AI Agent',
   '.agents/AGENTS.md': 'Quy tắc lập trình và tiêu chuẩn code bắt buộc cho AI',
   '.agents/AI_CONTEXT.md': 'Bản đồ tổng quan dự án và các luồng nghiệp vụ chính',
+  '.agents/Atomic_UI_Components.md': 'Danh sách và quy chuẩn thiết kế các thành phần UI nguyên tử (Atoms)',
   '.agents/README.md': 'Hướng dẫn dành cho lập trình viên để tương tác với AI',
   '.agents/project_structure.txt': 'Sơ đồ cây cấu trúc thư mục kèm mô tả chi tiết'
 };

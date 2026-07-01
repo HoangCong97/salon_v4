@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X, Loader2, Building2, Users, Check, CreditCard, Copy, CheckCircle2 } from "lucide-react";
-import { Tooltip } from "../../../../components/desktop/Tooltip";
+import { Tooltip } from "../../../../components/desktop/ui/Tooltip";
 
 const getPlanUiConfig = (code: string) => {
   const norm = code.toUpperCase();

@@ -8,6 +8,7 @@ Thư mục `.agents/` này chứa các file cấu hình và tài liệu hướng
  
 *   **`AGENTS.md`**: Chứa các quy tắc code (Coding Standards) và nguyên tắc hoạt động (như tối ưu hóa database, cấu trúc component) mà AI Agent bắt buộc phải tuân theo khi tạo hoặc chỉnh sửa code.
 *   **`AI_CONTEXT.md`**: "Bản đồ dự án" giúp AI Agent nhanh chóng nắm bắt cấu trúc Monorepo, vai trò của từng thư mục con (`apps/`, `packages/`) và các luồng nghiệp vụ quan trọng.
+*   **`Atomic_UI_Components_desktop.md`**: Tài liệu định nghĩa cấu trúc và danh sách toàn bộ các thành phần UI nguyên tử (Atoms) chuẩn Responsive dành cho giao diện Desktop.
 *   **`DIRECTORY_DESCRIPTIONS.md`**: Chứa mô tả chi tiết về chức năng và nhiệm vụ của từng thư mục trong dự án, giúp AI định hướng chính xác nơi cần thực hiện thay đổi.
 *   **`generate_tree.js`**: Script Node.js tự động quét dự án để cập nhật sơ đồ cấu trúc cây thư mục.
 *   **`project_structure.txt`**: Chứa sơ đồ cấu trúc thư mục toàn dự án dưới dạng cây phân cấp được tạo ra từ script `generate_tree.js` (đã lọc bỏ `node_modules` và file build rác).

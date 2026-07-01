@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
+import styles from "./Tooltip.module.css";
 
 interface TooltipProps {
   content: React.ReactNode;
@@ -115,65 +116,8 @@ export const Tooltip: React.FC<TooltipProps> = ({
     },
   });
 
-  let transform = "";
-  let animationName = "";
-  let arrowStyle: React.CSSProperties = {
-    position: "absolute",
-    width: "0",
-    height: "0",
-    borderStyle: "solid",
-  };
-
-  switch (position) {
-    case "top":
-      transform = "translate(-50%, -100%)";
-      animationName = "tooltip-fade-top";
-      arrowStyle = {
-        ...arrowStyle,
-        bottom: "-4px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        borderWidth: "5px 5px 0 5px",
-        borderColor: "rgba(255, 255, 255, 0.98) transparent transparent transparent",
-      };
-      break;
-    case "bottom":
-      transform = "translateX(-50%)";
-      animationName = "tooltip-fade-bottom";
-      arrowStyle = {
-        ...arrowStyle,
-        top: "-4px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        borderWidth: "0 5px 5px 5px",
-        borderColor: "transparent transparent rgba(255, 255, 255, 0.98) transparent",
-      };
-      break;
-    case "left":
-      transform = "translate(-100%, -50%)";
-      animationName = "tooltip-fade-left";
-      arrowStyle = {
-        ...arrowStyle,
-        right: "-4px",
-        top: "50%",
-        transform: "translateY(-50%)",
-        borderWidth: "5px 0 5px 5px",
-        borderColor: "transparent transparent transparent rgba(255, 255, 255, 0.98)",
-      };
-      break;
-    case "right":
-      transform = "translateY(-50%)";
-      animationName = "tooltip-fade-right";
-      arrowStyle = {
-        ...arrowStyle,
-        left: "-4px",
-        top: "50%",
-        transform: "translateY(-50%)",
-        borderWidth: "5px 5px 5px 0",
-        borderColor: "transparent rgba(255, 255, 255, 0.98) transparent transparent",
-      };
-      break;
-  }
+  const containerClass = `${styles.tooltipContainer} ${styles[position]}`;
+  const arrowClass = `${styles.arrow} ${styles[`${position}Arrow`]}`;
 
   return (
     <>
@@ -189,42 +133,9 @@ export const Tooltip: React.FC<TooltipProps> = ({
               pointerEvents: "none",
             }}
           >
-            <style>{`
-              @keyframes tooltip-fade-top {
-                from { opacity: 0; transform: translate(-50%, -96%) scale(0.96); }
-                to { opacity: 1; transform: translate(-50%, -100%) scale(1); }
-              }
-              @keyframes tooltip-fade-bottom {
-                from { opacity: 0; transform: translateX(-50%) translateY(-4px) scale(0.96); }
-                to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-              }
-              @keyframes tooltip-fade-left {
-                from { opacity: 0; transform: translate(-96%, -50%) scale(0.96); }
-                to { opacity: 1; transform: translate(-100%, -50%) scale(1); }
-              }
-              @keyframes tooltip-fade-right {
-                from { opacity: 0; transform: translateY(-50%) translateX(-4px) scale(0.96); }
-                to { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
-              }
-            `}</style>
-            <div
-              style={{
-                position: "relative",
-                backgroundColor: "rgba(255, 255, 255, 0.98)",
-                color: "rgba(15, 23, 42, 0.75)",
-                padding: "6px 12px",
-                borderRadius: "6px",
-                fontSize: "12.5px",
-                fontWeight: "500",
-                whiteSpace: "nowrap",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04)",
-                border: "1px solid rgba(15, 23, 42, 0.5)",
-                transform,
-                animation: `${animationName} 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards`,
-              }}
-            >
+            <div className={containerClass}>
               {content}
-              <div style={arrowStyle} />
+              <div className={arrowClass} />
             </div>
           </div>,
           document.body

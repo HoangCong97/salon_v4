@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuthStore, SubscriptionData } from "../../store/useAuthStore";
 import { LayoutDashboard, Store, Users, BarChart3, MapPin, Layers, Package, CalendarDays, Receipt, Contact, CalendarClock, Crown, Sparkles, Award, Coins } from "lucide-react";
-import { Tooltip } from "./Tooltip";
+import { Tooltip } from "./ui/Tooltip";
 import { useWebSocket } from "../../hooks/useWebSocket";
 
 interface SidebarProps {

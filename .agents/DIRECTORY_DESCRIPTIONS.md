@@ -23,6 +23,11 @@ Trang Web quản trị chính của chủ cửa hàng salon và các quản lý 
     *   `StaffTable.tsx`: Bảng hiển thị thông tin nhân sự với chế độ chỉnh sửa trực tiếp (inline Excel-like editing).
     *   `RolePermissionPanel.tsx`: Giao diện cấu hình phân quyền động (ma trận checkboxes) cho từng chức vụ.
     *   `DailyTurnsTable.tsx`: Bảng điều hành xoay tua thợ nhận khách trong ngày.
+*   **`src/components/desktop/ui/`**: Thư mục chứa các Component nguyên tử dùng chung (Atomic UI) chỉ cho Desktop được viết bằng CSS Modules và CSS Variables chuẩn thiết kế:
+    *   `Button.tsx`: Nút bấm đa năng hỗ trợ variant, size, loading và icons.
+    *   `Input.tsx`: Input field có label, validation error feedback.
+    *   `Modal.tsx`: Modal bọc createPortal tự động xử lý z-index, overlay blur và phím Escape.
+    *   `Tooltip.tsx`: Tooltip hover tính toán tọa độ động và dùng hiệu ứng fade CSS mượt mà.
 
 ### C. `apps/customer-booking/` (Next.js Portal đặt lịch cho khách hàng)
 *   Cho phép khách hàng chọn chi nhánh, chọn dịch vụ làm đẹp, chọn stylist yêu thích và đặt giờ hẹn làm dịch vụ.

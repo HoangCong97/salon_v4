@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { formatCurrencyVND } from "@salon/shared-utils";
 import { Eye } from "lucide-react";
-import { Tooltip } from "../../../components/desktop/Tooltip";
+import { Tooltip } from "../../../components/desktop/ui/Tooltip";
+import { Button } from "../../../components/desktop/ui/Button";
 import { getEmployeeColor } from "../POS/POSLeftPanel";
 
 interface InvoiceTableProps {
@@ -294,33 +295,15 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                       </td>
                       <td style={{ textAlign: "center", padding: "10px 6px", width: "60px", minWidth: "60px", maxWidth: "60px" }}>
                         <Tooltip content="Xem chi tiết hóa đơn">
-                          <button
+                          <Button
                             type="button"
+                            variant="outline"
+                            size="sm"
                             onClick={() => onViewDetail(inv)}
-                            style={{
-                              padding: "6px",
-                              fontSize: "12px",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              background: "var(--color-primary-light)",
-                              border: "none",
-                              color: "var(--color-primary)",
-                              borderRadius: "var(--radius-sm)",
-                              cursor: "pointer",
-                              transition: "all 0.15s"
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = "var(--color-primary)";
-                              e.currentTarget.style.color = "white";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = "var(--color-primary-light)";
-                              e.currentTarget.style.color = "var(--color-primary)";
-                            }}
+                            style={{ padding: "6px", border: "none", background: "var(--color-primary-light)", color: "var(--color-primary)" }}
                           >
                             <Eye size={14} />
-                          </button>
+                          </Button>
                         </Tooltip>
                       </td>
                     </tr>
@@ -339,26 +322,26 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             Trang <strong>{currentPage}</strong> / {totalPages} (Tổng số {invoices.length} hoá đơn)
           </span>
           <div style={{ display: "flex", gap: "8px" }}>
-            <button
-              className="btn btn-secondary"
+            <Button
+              variant="secondary"
+              size="sm"
               disabled={currentPage === 1}
               onClick={() => {
                 setCurrentPage((p) => Math.max(p - 1, 1));
               }}
-              style={{ padding: "6px 12px", fontSize: "12px" }}
             >
               Trước
-            </button>
-            <button
-              className="btn btn-secondary"
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
               disabled={currentPage === totalPages}
               onClick={() => {
                 setCurrentPage((p) => Math.min(p + 1, totalPages));
               }}
-              style={{ padding: "6px 12px", fontSize: "12px" }}
             >
               Sau
-            </button>
+            </Button>
           </div>
         </div>
       )}

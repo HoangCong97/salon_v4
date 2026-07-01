@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../store/useAuthStore";
-import { Tooltip } from "../../components/desktop/Tooltip";
+import { Tooltip } from "../../components/desktop/ui/Tooltip";
 import { 
   CalendarRange, ChevronLeft, ChevronRight, Save, 
   Copy, Loader2, Info, Check, CalendarDays, RefreshCw 

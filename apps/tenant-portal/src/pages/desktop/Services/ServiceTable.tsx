@@ -1,7 +1,7 @@
 import React from "react";
 import { Edit2, Trash2 } from "lucide-react";
 import { ExcelInput, ExcelSelect, ExcelChipsInput } from "../../../components/desktop/TableComponents";
-import { Tooltip } from "../../../components/desktop/Tooltip";
+import { Tooltip } from "../../../components/desktop/ui/Tooltip";
 import { Service, ServiceCategory } from "./types";
 import { useAuthStore } from "../../../store/useAuthStore";
 
