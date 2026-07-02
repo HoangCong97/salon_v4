@@ -1,0 +1,624 @@
+/* Dashboard.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-top: 12px;
+}
+
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* DashboardStats styling */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.statsCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.statsLabel {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.statsValue {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.valueSuccess {
+  color: var(--color-success);
+}
+
+.valueDanger {
+  color: var(--color-danger);
+}
+
+.statsSub {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+/* RecentBookings styling */
+.bookingsCard {
+  min-height: 300px;
+}
+
+/* DailyTurns styling */
+.turnsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.turnItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  background: hsl(210, 40%, 96%);
+}
+
+.turnRank {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+}
+
+.turnRankActive {
+  background: var(--color-primary);
+}
+
+.turnRankInactive {
+  background: hsl(215, 10%, 65%);
+}
+
+.turnInfo {
+  flex-grow: 1;
+}
+
+.turnName {
+  font-weight: 600;
+}
+
+.turnServed {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* SubscriptionCard styling */
+.subLoadingWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+.subLoadingInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.subLoadingText {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.subCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: transform 0.2s ease;
+}
+
+.subCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.subTitle {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.8;
+  margin-bottom: 4px;
+}
+
+.subName {
+  font-size: 20px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.badgePremium {
+  background: hsl(35, 92%, 50%) !important;
+  color: white !important;
+  font-weight: bold !important;
+}
+
+.subExpiryInfo {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.04);
+  font-size: 13px;
+}
+
+.expiryTimer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.expirySub {
+  font-size: 12px;
+  opacity: 0.7;
+  padding-left: 24px;
+}
+
+.subQuotas {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 14px;
+}
+
+.quotaRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.quotaLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.8;
+}
+
+.quotaProgressTrack {
+  height: 6px;
+  width: 100%;
+  border-radius: 3px;
+  background: rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.quotaProgressBar {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.upgradeButton {
+  width: 100%;
+  margin-top: 8px;
+  border: none;
+  font-weight: 700;
+  color: white;
+}
+
+/* PricingModal styling */
+.modalBackdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modalCard {
+  width: 100%;
+  max-width: 960px;
+  position: relative;
+  padding: 32px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.pricingHeader {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.pricingSubtitle {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.pricingTitle {
+  font-size: 24px;
+  font-weight: 800;
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+.pricingDesc {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
+.loadingWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  gap: 10px;
+}
+
+.plansGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  align-items: stretch;
+}
+
+.planCard {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  border-radius: 16px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.planRibbon {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: white;
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 100px;
+}
+
+.planRibbonCurrent {
+  font-weight: 700;
+}
+
+.planRibbonRecommended {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.planHeader {
+  margin-bottom: 20px;
+}
+
+.planName {
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.planPriceContainer {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 12px;
+}
+
+.planPrice {
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.planPricePeriod {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.planQuotas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 16px;
+}
+
+.planQuotaItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.planFeatures {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-grow: 1;
+  margin-bottom: 24px;
+}
+
+.planFeatureRow {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 13px;
+}
+
+.planFeatureIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.planFeatureText {
+  opacity: 0.9;
+}
+
+.planBtnCurrent {
+  width: 100%;
+  background: hsl(210, 40%, 94%) !important;
+  border: none !important;
+  cursor: default !important;
+  color: var(--text-muted) !important;
+  font-weight: 600 !important;
+}
+
+.planBtnTrial {
+  width: 100%;
+  background: hsl(210, 40%, 94%) !important;
+  border: none !important;
+  cursor: default !important;
+  color: var(--text-muted) !important;
+}
+
+.planBtnAction {
+  width: 100%;
+  color: white;
+  border: none;
+  font-weight: 700;
+}
+
+.checkoutWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  animation: animate-fade-in 0.3s ease;
+}
+
+.checkoutHeader {
+  text-align: center;
+}
+
+.checkoutIconBg {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--color-success-light);
+  color: var(--color-success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px auto;
+}
+
+.checkoutTitle {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.checkoutDesc {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+
+.checkoutGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  width: 100%;
+  background: hsl(210, 40%, 96%);
+  padding: 24px;
+  border-radius: 16px;
+  align-items: center;
+}
+
+.checkoutBankInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.checkoutBankTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.checkoutBankSpecs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.checkoutSpecsLabel {
+  color: var(--text-secondary);
+}
+
+.checkoutSpecsValue {
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.checkoutAccountNumber {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--color-primary);
+  margin-top: 2px;
+}
+
+.checkoutCopyBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.checkoutAmount {
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--color-success);
+  margin-top: 2px;
+}
+
+.checkoutContentField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 15px;
+  color: hsl(35, 92%, 45%);
+  margin-top: 2px;
+  background: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px dashed hsl(35, 92%, 50%);
+}
+
+.checkoutQRCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.checkoutQRLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.checkoutQRImage {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+}
+
+.checkoutQRSub {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.checkoutFooter {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.checkoutDoneBtn {
+  background: var(--color-success) !important;
+  color: white;
+}
+
+.subCardPremium {
+  background: #ffffff;
+  border: 2px solid hsl(35, 92%, 50%);
+  box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.15);
+}
+
+.subCardBasic {
+  background: linear-gradient(135deg, hsl(210, 40%, 98%) 0%, hsl(215, 30%, 94%) 100%);
+  border: 1px solid var(--color-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.subCardTrial {
+  background: linear-gradient(135deg, hsl(210, 20%, 99%) 0%, hsl(210, 15%, 96%) 100%);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+}
+

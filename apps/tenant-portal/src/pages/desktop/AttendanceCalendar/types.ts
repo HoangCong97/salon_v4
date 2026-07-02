@@ -28,6 +28,9 @@ export interface CashAdvance {
   staff: Staff;
 }
 
+export type ModalMode = "create" | "edit";
+export type DialogTab = "attendance" | "advance";
+
 export const TYPE_OPTIONS = [
   { value: "ABSENT", label: "Vắng mặt (Không phép)", color: "var(--color-danger)" },
   { value: "LATE", label: "Đi muộn", color: "var(--color-warning)" },

@@ -1,0 +1,485 @@
+/* Services.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 100%;
+}
+
+.filterCard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.categoriesList {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  align-items: center;
+}
+
+.categoryBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  height: 36px;
+}
+
+.tabButton {
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.15s ease;
+}
+
+.actionsWrapper {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.searchContainer {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  flex-shrink: 1;
+  min-width: 160px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.searchInput {
+  padding-left: 36px !important;
+}
+
+.importBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border-color: hsl(142, 76%, 36%) !important;
+  color: hsl(142, 76%, 36%) !important;
+  background-color: hsl(142, 76%, 97%) !important;
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.importBtn:hover {
+  background-color: hsl(142, 76%, 92%) !important;
+}
+
+.addServiceBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.loadingWrapper {
+  display: flex;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+.errorCard {
+  border-left: 4px solid var(--color-danger) !important;
+  background: var(--color-danger-light) !important;
+}
+
+.errorText {
+  color: var(--color-danger);
+  font-weight: 500;
+}
+
+.emptyCard {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.emptyIcon {
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  margin-inline: auto;
+}
+
+.emptyTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.emptyDesc {
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   Service Table
+   ========================================================================== */
+
+.tableContainer {
+  overflow: visible !important;
+}
+
+.th {
+  padding: 6px 10px !important;
+  font-size: 13px !important;
+}
+
+.td {
+  padding: 0 !important;
+  vertical-align: middle !important;
+  height: 38px;
+}
+
+.selectTd {
+  padding: 3px 6px !important;
+  vertical-align: middle !important;
+  height: 38px;
+  box-sizing: border-box;
+}
+
+.centerTdText {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.actionTd {
+  padding: 0 8px !important;
+  vertical-align: middle !important;
+  text-align: center !important;
+  height: 38px;
+}
+
+.actionButtons {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.actionBtn {
+  padding: 4px 8px !important;
+  border-radius: var(--radius-sm) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   Modals & Forms
+   ========================================================================== */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalCard {
+  width: 100%;
+  position: relative;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.closeBtn:hover {
+  color: var(--text-primary);
+}
+
+.modalHeader {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modalForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modalFormRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.formGroup {
+  margin-bottom: 0 !important;
+}
+
+.formGroupFull {
+  grid-column: span 2;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.avatarUploadContainer {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px;
+  background-color: hsl(210, 40%, 98%);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.avatarLarge {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: hsl(210, 40%, 90%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 2px solid white;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.avatarLargeActive {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.avatarOverlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.avatarLarge:hover .avatarOverlay {
+  opacity: 1;
+}
+
+.avatarUploadInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.avatarUploadTitle {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.avatarUploadDesc {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.branchSelectGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.branchCheckboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.textareaField {
+  resize: vertical;
+}
+
+/* ==========================================================================
+   Category Modal
+   ========================================================================== */
+
+.categoryGrid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+}
+
+.categoryListCard {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  background-color: white;
+}
+
+.categoryListHeader {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.categoryListBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.categoryItem {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+}
+
+.categoryItemActive {
+  background-color: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.categoryItemDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.categoryItemActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.categoryActionBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 2px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.categoryActionBtn:hover {
+  background-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.categoryActionBtnDanger:hover {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.categoryFormCard {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  background-color: white;
+}
+
+.categoryFormHeader {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.colorPickerRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.colorPickerDot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 2px solid transparent;
+}
+
+.colorPickerDotActive {
+  border-color: #0f172a;
+  transform: scale(1.15);
+}

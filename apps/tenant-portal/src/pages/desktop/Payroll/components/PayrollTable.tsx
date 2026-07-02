@@ -1,6 +1,10 @@
 import React from "react";
+
 import { ExcelInput, ExcelRow } from "../../../../components/desktop/TableComponents";
+
 import { PayrollMember } from "../types";
+
+import styles from "../Payroll.module.css";
 
 interface PayrollTableProps {
   filteredPayrolls: PayrollMember[];
@@ -24,8 +28,8 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
   handleMarkPaid,
 }) => {
   return (
-    <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-      <div className="data-table-container" style={{ border: "none", boxShadow: "none", borderRadius: 0 }}>
+    <div className={`card ${styles.tableCard}`}>
+      <div className={`data-table-container ${styles.tableContainer}`}>
         <table className="data-table">
           <thead>
             <tr>
@@ -57,37 +61,26 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
               return (
                 <ExcelRow key={item.id}>
                   {/* Name Card */}
-                  <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingLeft: "10px", width: "100%", height: "100%" }}>
+                  <td className={styles.td}>
+                    <div className={styles.staffCell}>
                       {item.staff.avatar ? (
                         <img
                           src={item.staff.avatar}
                           alt={item.staff.name}
-                          style={{ width: "24px", height: "24px", borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                          className={styles.avatar}
                         />
                       ) : (
-                        <div
-                          style={{
-                            width: "24px",
-                            height: "24px",
-                            borderRadius: "50%",
-                            backgroundColor: "hsl(210, 40%, 90%)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            flexShrink: 0
-                          }}
-                        >
-                          <span style={{ fontSize: "10px", fontWeight: "700", color: "var(--text-secondary)" }}>
+                        <div className={styles.avatarFallback}>
+                          <span className={styles.avatarFallbackText}>
                             {getInitials(item.staff.name)}
                           </span>
                         </div>
                       )}
-                      <div style={{ flexGrow: 1, minWidth: 0, paddingRight: "6px" }}>
-                        <span style={{ fontSize: "13px", fontWeight: "600", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div className={styles.detailsWrapper}>
+                        <span className={styles.staffName}>
                           {item.staff.name}
                         </span>
-                        <span style={{ fontSize: "11px", color: "var(--text-secondary)", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <span className={styles.staffRole}>
                           {item.staff.phone || item.staff.email}
                         </span>
                       </div>
@@ -95,14 +88,14 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
                   </td>
 
                   {/* Base Salary */}
-                  <td style={{ padding: 0, verticalAlign: "middle", height: "38px", textAlign: "right" }}>
-                    <div style={{ paddingRight: "10px", fontWeight: "500" }}>
+                  <td className={styles.tdRight}>
+                    <div className={styles.moneyText}>
                       {formatMoney(getInlineValue(item, "baseSalary") as number)}đ
                     </div>
                   </td>
 
                   {/* Allowance */}
-                  <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                  <td className={styles.td}>
                     <ExcelInput
                       value={formatMoney(inlineAllowance)}
                       onChange={(val: string) => handleNumericChange(item.id, "allowance", val)}
@@ -115,14 +108,14 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
                   </td>
 
                   {/* Commissions */}
-                  <td style={{ padding: 0, verticalAlign: "middle", height: "38px", textAlign: "right" }}>
-                    <div style={{ paddingRight: "10px", fontWeight: "500", color: "var(--color-primary)" }}>
+                  <td className={styles.tdRight}>
+                    <div className={`${styles.moneyText} ${styles.moneyPrimary}`}>
                       +{formatMoney(getInlineValue(item, "commissionAmount") as number)}đ
                     </div>
                   </td>
 
                   {/* Tips */}
-                  <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                  <td className={styles.td}>
                     <ExcelInput
                       value={formatMoney(inlineTip)}
                       onChange={(val: string) => handleNumericChange(item.id, "tipAmount", val)}
@@ -135,7 +128,7 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
                   </td>
 
                   {/* Deductions */}
-                  <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                  <td className={styles.td}>
                     <ExcelInput
                       value={formatMoney(inlineDeduction)}
                       onChange={(val: string) => handleNumericChange(item.id, "deductionAmount", val)}
@@ -149,34 +142,32 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
                   </td>
 
                   {/* Final Salary */}
-                  <td style={{ padding: 0, verticalAlign: "middle", height: "38px", textAlign: "right" }}>
-                    <div style={{ paddingRight: "10px", fontWeight: "700", color: displayFinal > 0 ? "var(--color-success)" : "var(--text-primary)", fontSize: "13.5px" }}>
+                  <td className={styles.tdRight}>
+                    <div className={`${styles.moneyText} ${styles.moneyTextBold}`} style={{ color: displayFinal > 0 ? "var(--color-success)" : "var(--text-primary)" }}>
                       {formatMoney(displayFinal)}đ
                     </div>
                   </td>
 
                   {/* Status */}
-                  <td style={{ padding: "3px 6px", verticalAlign: "middle", height: "38px", textAlign: "center" }}>
+                  <td className={styles.statusTd}>
                     <span
-                      className={`badge ${isPaid ? "badge-success" : "badge-warning"}`}
-                      style={{ minWidth: "110px", justifyContent: "center" }}
+                      className={`badge ${isPaid ? "badge-success" : "badge-warning"} ${styles.statusBadge}`}
                     >
                       {isPaid ? "Đã thanh toán" : "Bản nháp"}
                     </span>
                   </td>
 
                   {/* Paid date */}
-                  <td style={{ padding: "0 10px", verticalAlign: "middle", height: "38px", color: "var(--text-secondary)", fontSize: "12px" }}>
+                  <td className={styles.payDateTd}>
                     {item.paidAt ? new Date(item.paidAt).toLocaleDateString("vi-VN") : "---"}
                   </td>
 
                   {/* Actions */}
                   {canManage && (
-                    <td style={{ padding: "0 8px", verticalAlign: "middle", height: "38px", textAlign: "center" }}>
+                    <td className={styles.actionTd}>
                       {!isPaid ? (
                         <button
-                          className="btn btn-secondary"
-                          style={{ padding: "4px 10px", fontSize: "11px", borderRadius: "var(--radius-sm)", borderColor: "var(--color-success)", color: "var(--color-success)", backgroundColor: "var(--color-success-light)" }}
+                          className={`btn btn-secondary ${styles.paidBtn}`}
                           onClick={() => handleMarkPaid(item.id)}
                         >
                           Trả lương

@@ -1,0 +1,365 @@
+/* Inventories.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.loadingWrapper {
+  display: flex;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+.errorCard {
+  border-left: 4px solid var(--color-danger);
+  background: var(--color-danger-light);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+}
+
+.errorText {
+  color: var(--color-danger);
+  font-weight: 500;
+  margin: 0;
+}
+
+.emptyCard {
+  text-align: center;
+  padding: 60px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyIcon {
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  margin-inline: auto;
+}
+
+.emptyTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.emptyText {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Header styling */
+.headerCard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.toggleWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.toggleCheckbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.toggleText {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toggleDanger {
+  color: var(--color-danger);
+}
+
+.actionsWrapper {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  max-width: 520px;
+  margin-left: auto;
+}
+
+.searchWrapper {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  flex-shrink: 1;
+  min-width: 160px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.searchInput {
+  padding-left: 36px;
+}
+
+.addButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Table styling */
+.tableContainer {
+  overflow: visible;
+}
+
+.thDefault {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.thCostPrice {
+  width: 160px;
+  text-align: center;
+}
+
+.thSellPrice {
+  width: 160px;
+  text-align: center;
+}
+
+.thQty {
+  width: 120px;
+  text-align: center;
+}
+
+.thStatus {
+  width: 140px;
+}
+
+.thAction {
+  width: 160px;
+  text-align: center;
+}
+
+.tdDefault {
+  padding: 0;
+  vertical-align: middle;
+  height: 38px;
+}
+
+.tdStatus {
+  padding: 0 10px;
+  vertical-align: middle;
+  height: 38px;
+}
+
+.tdAction {
+  padding: 0 8px;
+  vertical-align: middle;
+  text-align: center;
+  height: 38px;
+}
+
+.badgeLowStock {
+  gap: 4px;
+}
+
+.btnWrapper {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btnAdjust {
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.btnIcon {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Modal styling */
+.modalBackdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalCard {
+  width: 100%;
+  max-width: 520px;
+  position: relative;
+}
+
+.closeButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.dropzone {
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+}
+
+.dropzoneActive {
+  border: 2px dashed var(--color-primary);
+  background-color: hsl(210, 100%, 98%);
+}
+
+.dropzoneInactive {
+  border: 2px dashed hsl(210, 40%, 85%);
+  background-color: hsl(210, 40%, 98%);
+}
+
+.imagePreviewContainer {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.previewImage {
+  max-width: 100px;
+  max-height: 100px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.deleteImageButton {
+  padding: 2px 8px;
+  font-size: 10.5px;
+  cursor: pointer;
+}
+
+.dropzoneIcon {
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.dropzoneTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dropzoneSub {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.adjustInfoCard {
+  padding: 12px;
+  background: hsl(210, 40%, 96%);
+  border-radius: var(--radius-sm);
+}
+
+.adjustInfoName {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.adjustInfoStock {
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.adjustTypeGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.adjustTypeButton {
+  display: flex;
+  gap: 8px;
+}
+
+.buttonFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.btnAdjustActiveSuccess {
+  background-color: var(--color-success-light) !important;
+  border-color: var(--color-success) !important;
+  color: var(--color-success) !important;
+}
+
+.btnAdjustActiveDanger {
+  background-color: var(--color-danger-light) !important;
+  border-color: var(--color-danger) !important;
+  color: var(--color-danger) !important;
+}
+
+.btnAdjustInactive {
+  background-color: white !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-secondary) !important;
+}
+

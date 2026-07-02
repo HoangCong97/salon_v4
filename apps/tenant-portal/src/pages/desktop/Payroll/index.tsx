@@ -1,19 +1,24 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuthStore } from "../../../store/useAuthStore";
 import { Coins, Upload, Loader2, AlertCircle } from "lucide-react";
-import { ImportWizardModal } from "../../../components/desktop/ImportWizard/ImportWizardModal";
-import { TargetField } from "../../../hooks/useImportWizard";
-import { useFileDragAndDrop } from "../../../hooks/useFileDragAndDrop";
-import { useConfirm } from "../../../components/desktop/ConfirmDialog";
-import { ExportColumnMapping } from "../../../utils/exportData";
-import { useToast } from "../../../components/desktop/ToastProvider";
-import { api } from "../../../utils/apiClient";
-import { queryKeys } from "../../../utils/queryKeys";
 
-import { PayrollMember } from "./types";
 import { PayrollHeader } from "./components/PayrollHeader";
 import { PayrollTable } from "./components/PayrollTable";
+import { ImportWizardModal } from "../../../components/desktop/ImportWizard/ImportWizardModal";
+
+import { useAuthStore } from "../../../store/useAuthStore";
+import { useFileDragAndDrop } from "../../../hooks/useFileDragAndDrop";
+import { useConfirm } from "../../../components/desktop/ConfirmDialog";
+import { useToast } from "../../../components/desktop/ToastProvider";
+
+import { api } from "../../../utils/apiClient";
+import { queryKeys } from "../../../utils/queryKeys";
+import { ExportColumnMapping } from "../../../utils/exportData";
+
+import { PayrollMember } from "./types";
+import { TargetField } from "../../../hooks/useImportWizard";
+
+import styles from "./Payroll.module.css";
 
 export default function Payroll() {
   const { currentTenantId, currentBranchId, hasPermission } = useAuthStore();
@@ -268,8 +273,7 @@ export default function Payroll() {
 
   return (
     <div
-      style={{ display: "flex", flexDirection: "column", gap: "24px" }}
-      className={isDragActive ? "flash-active" : "animate-fade-in"}
+      className={`${isDragActive ? "flash-active" : "animate-fade-in"} ${styles.container}`}
     >
       {/* Header filters and controls */}
       <PayrollHeader
@@ -293,22 +297,22 @@ export default function Payroll() {
 
       {/* Main content table */}
       {loading ? (
-        <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
-          <Loader2 className="animate-spin" size={36} style={{ color: "var(--color-primary)" }} />
+        <div className={styles.loadingWrapper}>
+          <Loader2 className={`animate-spin ${styles.loader}`} size={36} />
         </div>
       ) : error ? (
-        <div className="card" style={{ display: "flex", alignItems: "center", gap: "12px", borderLeft: "4px solid var(--color-danger)", background: "var(--color-danger-light)" }}>
-          <AlertCircle size={20} style={{ color: "var(--color-danger)", flexShrink: 0 }} />
+        <div className={`card ${styles.errorCard}`}>
+          <AlertCircle size={20} className={styles.errorIcon} />
           <div>
-            <h3 style={{ fontWeight: "600", fontSize: "14px", color: "var(--color-danger)" }}>Không thể tải bảng lương</h3>
-            <p style={{ fontSize: "12px", color: "var(--color-danger)" }}>{error}</p>
+            <h3 className={styles.errorTitle}>Không thể tải bảng lương</h3>
+            <p className={styles.errorDesc}>{error}</p>
           </div>
         </div>
       ) : filteredPayrolls.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", padding: "60px 20px" }}>
-          <Coins size={48} style={{ color: "var(--text-muted)", marginBottom: "16px", marginInline: "auto" }} />
-          <h3 style={{ fontSize: "16px", fontWeight: "600", marginBottom: "8px" }}>Không tìm thấy dữ liệu lương</h3>
-          <p style={{ color: "var(--text-secondary)", marginBottom: "20px" }}>
+        <div className={`card ${styles.emptyCard}`}>
+          <Coins size={48} className={styles.emptyIcon} />
+          <h3 className={styles.emptyTitle}>Không tìm thấy dữ liệu lương</h3>
+          <p className={styles.emptyDesc}>
             {searchTerm ? "Không có kết quả phù hợp." : "Chưa lập bảng lương cho chu kỳ này. Vui lòng bấm 'Lập bảng lương' để bắt đầu."}
           </p>
         </div>
@@ -327,22 +331,11 @@ export default function Payroll() {
 
       {/* Drag and Drop dropzone background cue */}
       {isDragActive && canManage && (
-        <div style={{
-          position: "fixed",
-          inset: 0,
-          backgroundColor: "rgba(37, 99, 235, 0.15)",
-          backdropFilter: "blur(4px)",
-          border: "3px dashed var(--color-primary)",
-          zIndex: 9999,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          pointerEvents: "none"
-        }}>
-          <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", padding: "30px", animation: "pulse 1.5s infinite" }}>
-            <Upload size={48} style={{ color: "var(--color-primary)" }} />
-            <h3 style={{ fontWeight: "700", fontSize: "18px" }}>Thả file Excel/CSV vào đây</h3>
-            <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>Để bắt đầu quá trình nhập bảng lương tự động</p>
+        <div className={styles.dragOverlay}>
+          <div className={`card ${styles.dragCard}`}>
+            <Upload size={48} className={styles.dragIcon} />
+            <h3 className={styles.dragTitle}>Thả file Excel/CSV vào đây</h3>
+            <p className={styles.dragDesc}>Để bắt đầu quá trình nhập bảng lương tự động</p>
           </div>
         </div>
       )}

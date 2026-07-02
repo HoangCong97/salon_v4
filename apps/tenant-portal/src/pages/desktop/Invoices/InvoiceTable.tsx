@@ -1,15 +1,20 @@
 import React, { useState } from "react";
-import { formatCurrencyVND } from "@salon/shared-utils";
 import { Eye } from "lucide-react";
+import { formatCurrencyVND } from "@salon/shared-utils";
+
 import { Tooltip } from "../../../components/desktop/ui/Tooltip";
 import { Button } from "../../../components/desktop/ui/Button";
 import { getEmployeeColor } from "../POS/POSLeftPanel";
 
+import { Invoice, Staff, Customer } from "./types";
+
+import styles from "./Invoices.module.css";
+
 interface InvoiceTableProps {
-  invoices: any[];
-  activeStaff: any[];
-  customers: any[];
-  onViewDetail: (invoice: any) => void;
+  invoices: Invoice[];
+  activeStaff: Staff[];
+  customers: Customer[];
+  onViewDetail: (invoice: Invoice) => void;
 }
 
 export const InvoiceTable: React.FC<InvoiceTableProps> = ({
@@ -42,9 +47,9 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
     return `${day}/${month}/${year}`;
   };
 
-  const renderStaffAvatars = (items: any[]) => {
+  const renderStaffAvatars = (items: Invoice["items"]) => {
     const staffIds = Array.from(
-      new Set(items?.map((item: any) => item.staffId || item.stylist?.id).filter(Boolean))
+      new Set(items?.map((item) => item.staffId || item.stylist?.id).filter(Boolean))
     );
     if (staffIds.length === 0) {
       return <span style={{ color: "var(--text-muted)", fontSize: "11px" }}>-</span>;
@@ -55,8 +60,8 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
     const extraCount = staffIds.length - maxAvatars;
 
     return (
-      <div style={{ display: "flex", alignItems: "center" }}>
-        {displayIds.map((sId: any, idx) => {
+      <div className={styles.avatarList}>
+        {displayIds.map((sId, idx) => {
           const sObj = activeStaff.find((s) => s.id === sId);
           const empColor = getEmployeeColor(String(sId), activeStaff);
           const initials = sObj
@@ -69,35 +74,18 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                 <img
                   src={sObj.avatar}
                   alt={sObj.name}
+                  className={styles.avatarImg}
                   style={{
-                    width: "34px",
-                    height: "34px",
-                    borderRadius: "50%",
-                    border: "1.5px solid white",
                     marginLeft: idx > 0 ? "-12px" : "0",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                    flexShrink: 0,
                     zIndex: 10 - idx,
-                    objectFit: "cover",
                   }}
                 />
               ) : (
                 <div
+                  className={styles.avatarPlaceholder}
                   style={{
-                    width: "34px",
-                    height: "34px",
-                    borderRadius: "50%",
                     background: empColor.color,
-                    border: "1.5px solid white",
-                    color: "white",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "12px",
-                    fontWeight: "800",
                     marginLeft: idx > 0 ? "-12px" : "0",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                    flexShrink: 0,
                     zIndex: 10 - idx,
                   }}
                 >
@@ -109,25 +97,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
         })}
         {extraCount > 0 && (
           <Tooltip content={`Và ${extraCount} nhân viên thực hiện khác`}>
-            <div
-              style={{
-                width: "34px",
-                height: "34px",
-                borderRadius: "50%",
-                background: "#e2e8f0",
-                border: "1.5px solid white",
-                color: "#475569",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "12px",
-                fontWeight: "800",
-                marginLeft: "-12px",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-                flexShrink: 0,
-                zIndex: 5,
-              }}
-            >
+            <div className={styles.avatarExtra}>
               +{extraCount}
             </div>
           </Tooltip>
@@ -139,32 +109,32 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
   let lastDate = "";
 
   return (
-    <div className="card" style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "16px", flexGrow: 1, overflow: "hidden" }}>
-      <h3 style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-secondary)" }}>
+    <div className={`card ${styles.tableCard}`}>
+      <h3 className={styles.tableTitle}>
         DANH SÁCH HOÁ ĐƠN ĐÃ THANH TOÁN ({invoices.length})
       </h3>
 
-      <div className="data-table-container" style={{ flexGrow: 1, overflowY: "auto", minHeight: "250px" }}>
+      <div className={`data-table-container ${styles.tableContainer}`}>
         <table className="data-table">
           <thead>
             <tr>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "90px", minWidth: "90px", maxWidth: "90px", textAlign: "center", padding: "12px 8px" }}>Ảnh nhân viên</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "280px", minWidth: "280px", maxWidth: "280px", padding: "12px 12px" }}>Nhân viên thực hiện</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "70px", minWidth: "70px", maxWidth: "70px", textAlign: "center", padding: "12px 8px" }}>Thời gian</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "auto", minWidth: "220px", padding: "12px 12px" }}>Chi tiết dịch vụ</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "100px", minWidth: "100px", maxWidth: "100px", textAlign: "right", padding: "12px 8px" }}>Tổng dịch vụ</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "80px", minWidth: "80px", maxWidth: "80px", textAlign: "right", padding: "12px 8px" }}>Tổng giảm</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "100px", minWidth: "100px", maxWidth: "100px", textAlign: "right", padding: "12px 8px" }}>Thanh toán</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "115px", minWidth: "115px", maxWidth: "115px", textAlign: "center", padding: "12px 6px" }}>Hình thức</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "120px", minWidth: "120px", maxWidth: "120px", padding: "12px 12px" }}>Khách hàng</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "85px", minWidth: "85px", maxWidth: "85px", textAlign: "center", padding: "12px 8px" }}>Nguồn</th>
-              <th style={{ position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, width: "60px", minWidth: "60px", maxWidth: "60px", textAlign: "center", padding: "12px 6px" }}>Thao tác</th>
+              <th className={styles.thAvatar}>Ảnh nhân viên</th>
+              <th className={styles.thStaff}>Nhân viên thực hiện</th>
+              <th className={styles.thTime}>Thời gian</th>
+              <th className={styles.thDetails}>Chi tiết dịch vụ</th>
+              <th className={styles.thTotal}>Tổng dịch vụ</th>
+              <th className={styles.thDiscount}>Tổng giảm</th>
+              <th className={styles.thFinal}>Thanh toán</th>
+              <th className={styles.thPayment}>Hình thức</th>
+              <th className={styles.thCustomer}>Khách hàng</th>
+              <th className={styles.thSource}>Nguồn</th>
+              <th className={styles.thAction}>Thao tác</th>
             </tr>
           </thead>
           <tbody>
             {paginatedInvoices.length === 0 ? (
               <tr>
-                <td colSpan={11} style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)", fontWeight: "500" }}>
+                <td colSpan={11} className={styles.noDataCell}>
                   Không tìm thấy hóa đơn phù hợp với bộ lọc.
                 </td>
               </tr>
@@ -176,7 +146,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                 const uniqueStaffNames = Array.from(
                   new Set(
                     inv.items
-                      ?.map((item: any) => {
+                      ?.map((item) => {
                         const sId = item.staffId || item.stylist?.id;
                         const sObj = activeStaff.find((s) => s.id === sId);
                         return sObj ? sObj.name.split("(")[0].trim() : null;
@@ -186,10 +156,10 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                 ).join(", ") || "Không gán";
 
                 const serviceDetailsStr = inv.items
-                  ?.map((item: any) => `${item.name}${item.quantity > 1 ? ` x${item.quantity}` : ""}`)
+                  ?.map((item) => `${item.name}${item.quantity > 1 ? ` x${item.quantity}` : ""}`)
                   .join(", ") || "-";
 
-                const totalServicePrice = inv.items?.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0) || inv.totalPrice || inv.finalAmount;
+                const totalServicePrice = inv.items?.reduce((sum, item) => sum + item.price * item.quantity, 0) || inv.totalPrice || inv.finalAmount;
                 const discountAmount = inv.discountAmount || 0;
 
                 const currentDateStr = formatDateDMY(inv.createdAt);
@@ -199,108 +169,63 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                 return (
                   <React.Fragment key={inv.id}>
                     {showDateSeparator && (
-                      <tr style={{ background: "var(--color-primary-light)", borderBottom: "1.5px solid var(--border-color)" }}>
-                        <td colSpan={11} style={{ padding: "10px 16px", fontWeight: "700", color: "var(--color-primary)", fontSize: "12.5px", textAlign: "left" }}>
+                      <tr className={styles.dateRow}>
+                        <td colSpan={11} className={styles.dateCell}>
                           📅 Ngày {currentDateStr}
                         </td>
                       </tr>
                     )}
-                    <tr style={{ transition: "background 0.15s" }}>
-                      <td style={{ textAlign: "center", verticalAlign: "middle", padding: "4px 8px", width: "90px", minWidth: "90px", maxWidth: "90px" }}>
-                        <div style={{ display: "flex", justifyContent: "center" }}>
+                    <tr className={styles.tableRow}>
+                      <td className={styles.tdCentered}>
+                        <div className={styles.avatarContainer}>
                           {renderStaffAvatars(inv.items)}
                         </div>
                       </td>
-                      <td style={{ fontWeight: "500", padding: "10px 12px", width: "280px", minWidth: "280px", maxWidth: "280px" }}>
+                      <td className={styles.tdStaff}>
                         <Tooltip content={uniqueStaffNames}>
-                          <div
-                            style={{
-                              maxWidth: "240px",
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              cursor: "default",
-                            }}
-                          >
+                          <div className={`${styles.textEllipsis} ${styles.widthStaff}`}>
                             {uniqueStaffNames}
                           </div>
                         </Tooltip>
                       </td>
-                      <td style={{ textAlign: "center", padding: "10px 8px", width: "70px", minWidth: "70px", maxWidth: "70px" }}>{formatTimeHHMM(inv.createdAt)}</td>
-                      <td style={{ padding: "10px 12px", width: "auto", minWidth: "220px" }}>
+                      <td className={styles.tdTime}>{formatTimeHHMM(inv.createdAt)}</td>
+                      <td className={styles.tdDetails}>
                         <Tooltip content={serviceDetailsStr}>
-                          <div
-                            style={{
-                              maxWidth: "350px",
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              cursor: "default",
-                            }}
-                          >
+                          <div className={`${styles.textEllipsis} ${styles.widthDetails}`}>
                             {serviceDetailsStr}
                           </div>
                         </Tooltip>
                       </td>
-                      <td style={{ textAlign: "right", padding: "10px 8px", width: "100px", minWidth: "100px", maxWidth: "100px" }}>{formatCurrencyVND(totalServicePrice)}</td>
-                      <td style={{ textAlign: "right", padding: "10px 8px", width: "80px", minWidth: "80px", maxWidth: "80px", color: discountAmount > 0 ? "var(--color-danger)" : "var(--text-secondary)", fontWeight: discountAmount > 0 ? "700" : "400" }}>
+                      <td className={styles.tdTotal}>{formatCurrencyVND(totalServicePrice)}</td>
+                      <td className={`${styles.tdDiscount} ${discountAmount > 0 ? "var(--color-danger)" : ""}`} style={{ fontWeight: discountAmount > 0 ? "700" : "400" }}>
                         {discountAmount > 0 ? `-${formatCurrencyVND(discountAmount)}` : "0đ"}
                       </td>
-                      <td style={{ fontWeight: "800", textAlign: "right", padding: "10px 8px", color: "var(--color-primary)", width: "100px", minWidth: "100px", maxWidth: "100px" }}>{formatCurrencyVND(inv.finalAmount)}</td>
-                      <td style={{ textAlign: "center", padding: "10px 6px", width: "115px", minWidth: "115px", maxWidth: "115px" }}>
-                        <span
-                          style={{
-                            display: "inline-block",
-                            padding: "4px 8px",
-                            borderRadius: "4px",
-                            fontSize: "11.5px",
-                            fontWeight: "700",
-                            background: inv.paymentMethod === "CASH" ? "#ecfdf5" : "#eff6ff",
-                            color: inv.paymentMethod === "CASH" ? "#10b981" : "#3b82f6",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
+                      <td className={styles.tdFinal}>{formatCurrencyVND(inv.finalAmount)}</td>
+                      <td className={styles.tdPayment}>
+                        <span className={inv.paymentMethod === "CASH" ? styles.badgeCash : styles.badgeTransfer}>
                           {inv.paymentMethod === "CASH" ? "Tiền mặt" : "Chuyển khoản"}
                         </span>
                       </td>
-                      <td style={{ fontWeight: "600", padding: "10px 12px", width: "120px", minWidth: "120px", maxWidth: "120px" }}>
+                      <td className={styles.tdCustomer}>
                         <Tooltip content={customerName}>
-                          <div
-                            style={{
-                              maxWidth: "96px",
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              cursor: "default",
-                            }}
-                          >
+                          <div className={`${styles.textEllipsis} ${styles.widthCustomer}`}>
                             {customerName}
                           </div>
                         </Tooltip>
                       </td>
-                      <td style={{ textAlign: "center", padding: "10px 8px", width: "85px", minWidth: "85px", maxWidth: "85px" }}>
-                        <span
-                          style={{
-                            display: "inline-block",
-                            padding: "4px 8px",
-                            borderRadius: "4px",
-                            fontSize: "11px",
-                            fontWeight: "700",
-                            background: inv.orderSource === "BOOKING" ? "#faf5ff" : "#f1f5f9",
-                            color: inv.orderSource === "BOOKING" ? "#8b5cf6" : "#475569",
-                          }}
-                        >
+                      <td className={styles.tdSource}>
+                        <span className={inv.orderSource === "BOOKING" ? styles.badgeBooking : styles.badgeWalkin}>
                           {inv.orderSource === "BOOKING" ? "Lịch hẹn" : "Tại quầy"}
                         </span>
                       </td>
-                      <td style={{ textAlign: "center", padding: "10px 6px", width: "60px", minWidth: "60px", maxWidth: "60px" }}>
+                      <td className={styles.tdAction}>
                         <Tooltip content="Xem chi tiết hóa đơn">
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
                             onClick={() => onViewDetail(inv)}
-                            style={{ padding: "6px", border: "none", background: "var(--color-primary-light)", color: "var(--color-primary)" }}
+                            className={styles.actionButton}
                           >
                             <Eye size={14} />
                           </Button>
@@ -317,11 +242,11 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
 
       {/* Pagination component */}
       {totalPages > 1 && (
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid var(--border-color)" }}>
-          <span style={{ fontSize: "12.5px", color: "var(--text-secondary)" }}>
+        <div className={styles.paginationRow}>
+          <span className={styles.paginationInfo}>
             Trang <strong>{currentPage}</strong> / {totalPages} (Tổng số {invoices.length} hoá đơn)
           </span>
-          <div style={{ display: "flex", gap: "8px" }}>
+          <div className={styles.paginationButtons}>
             <Button
               variant="secondary"
               size="sm"
@@ -348,3 +273,4 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
     </div>
   );
 };
+

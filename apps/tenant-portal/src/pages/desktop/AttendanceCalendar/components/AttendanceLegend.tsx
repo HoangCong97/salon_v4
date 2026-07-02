@@ -1,29 +1,32 @@
 import React from "react";
 
+import styles from "../AttendanceCalendar.module.css";
+
 export const AttendanceLegend: React.FC = () => {
   return (
-    <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center", justifyContent: "flex-start" }}>
-      <span style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Chú giải:</span>
-      <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: "500" }}>
-        <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-danger)" }}></span>
+    <div className={styles.legendContainer}>
+      <span className={styles.legendTitle}>Chú giải:</span>
+      <div className={styles.legendItem}>
+        <span className={styles.legendDot} style={{ backgroundColor: "var(--color-danger)" }} />
         <span>Vắng mặt</span>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: "500" }}>
-        <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-warning)" }}></span>
+      <div className={styles.legendItem}>
+        <span className={styles.legendDot} style={{ backgroundColor: "var(--color-warning)" }} />
         <span>Đi muộn</span>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: "500" }}>
-        <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "hsl(24, 95%, 50%)" }}></span>
+      <div className={styles.legendItem}>
+        <span className={styles.legendDot} style={{ backgroundColor: "hsl(24, 95%, 50%)" }} />
         <span>Về sớm</span>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: "500" }}>
-        <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "var(--color-info)" }}></span>
+      <div className={styles.legendItem}>
+        <span className={styles.legendDot} style={{ backgroundColor: "var(--color-info)" }} />
         <span>Ứng tiền (Chờ duyệt)</span>
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", fontWeight: "500" }}>
-        <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "hsl(271, 81%, 56%)" }}></span>
+      <div className={styles.legendItem}>
+        <span className={styles.legendDot} style={{ backgroundColor: "hsl(271, 81%, 56%)" }} />
         <span>Ứng tiền (Đã duyệt)</span>
       </div>
     </div>
   );
 };
+

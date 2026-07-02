@@ -10,3 +10,5 @@ export interface Customer {
   createdAt: string;
   updatedAt: string;
 }
+
+export type ModalMode = "create" | "edit";

@@ -1,0 +1,235 @@
+/* Payroll.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.loadingWrapper {
+  display: flex;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+.loader {
+  color: var(--color-primary);
+}
+
+.errorCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-left: 4px solid var(--color-danger) !important;
+  background: var(--color-danger-light) !important;
+}
+
+.errorIcon {
+  color: var(--color-danger);
+  flex-shrink: 0;
+}
+
+.errorTitle {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-danger);
+}
+
+.errorDesc {
+  font-size: 12px;
+  color: var(--color-danger);
+}
+
+.emptyCard {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.emptyIcon {
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  margin-inline: auto;
+}
+
+.emptyTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.emptyDesc {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.dragOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(37, 99, 235, 0.15);
+  backdrop-filter: blur(4px);
+  border: 3px dashed var(--color-primary);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.dragCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 30px;
+  animation: pulse 1.5s infinite;
+}
+
+.dragIcon {
+  color: var(--color-primary);
+}
+
+.dragTitle {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.dragDesc {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+/* ==========================================================================
+   Payroll Table Component
+   ========================================================================== */
+
+.tableCard {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.tableContainer {
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.td {
+  padding: 0 !important;
+  vertical-align: middle !important;
+  height: 38px;
+}
+
+.tdRight {
+  padding: 0 !important;
+  vertical-align: middle !important;
+  height: 38px;
+  text-align: right !important;
+}
+
+.staffCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 10px;
+  width: 100%;
+  height: 100%;
+}
+
+.avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.avatarFallback {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: hsl(210, 40%, 90%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatarFallbackText {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.detailsWrapper {
+  flex-grow: 1;
+  min-width: 0;
+  padding-right: 6px;
+}
+
+.staffName {
+  font-size: 13px;
+  font-weight: 600;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.staffRole {
+  font-size: 11px;
+  color: var(--text-secondary);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.moneyText {
+  padding-right: 10px;
+  font-weight: 500;
+}
+
+.moneyPrimary {
+  color: var(--color-primary);
+}
+
+.moneyTextBold {
+  font-weight: 700;
+  font-size: 13.5px;
+}
+
+.statusTd {
+  padding: 3px 6px !important;
+  vertical-align: middle !important;
+  height: 38px;
+  text-align: center !important;
+}
+
+.statusBadge {
+  min-width: 110px;
+  justify-content: center;
+}
+
+.payDateTd {
+  padding: 0 10px !important;
+  vertical-align: middle !important;
+  height: 38px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.actionTd {
+  padding: 0 8px !important;
+  vertical-align: middle !important;
+  height: 38px;
+  text-align: center !important;
+}
+
+.paidBtn {
+  padding: 4px 10px !important;
+  font-size: 11px !important;
+  border-radius: var(--radius-sm) !important;
+  border-color: var(--color-success) !important;
+  color: var(--color-success) !important;
+  background-color: var(--color-success-light) !important;
+}

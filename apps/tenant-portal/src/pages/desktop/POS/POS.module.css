@@ -1,0 +1,715 @@
+/* POS.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px;
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tabsScroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid var(--border-color);
+  height: 40px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.tabItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: 28px;
+  box-sizing: border-box;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  position: relative;
+}
+
+.tabActive {
+  border: 2px solid var(--color-primary);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.tabInactive {
+  border: 2px solid var(--border-color);
+  background: white;
+  color: var(--text-secondary);
+}
+
+.tabDeleteBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.tabDeleteBtnActive {
+  color: var(--color-primary);
+}
+
+.tabDeleteBtnInactive {
+  color: var(--text-muted);
+}
+
+.addTabBtn {
+  padding: 4px 8px;
+  height: 28px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.customerSection {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.customerHeader {
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.customerIcon {
+  color: var(--color-primary);
+}
+
+.customerGrid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 10px;
+  position: relative;
+  z-index: 95;
+}
+
+.customerInputWrapper {
+  position: relative;
+}
+
+.customerInput {
+  width: 100%;
+  height: 36px;
+}
+
+.suggestionsBox {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+
+.suggestionItem {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 12.5px;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.15s;
+}
+
+.suggestionRank {
+  color: var(--color-primary);
+}
+
+.newCustomerBtn {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 12.5px;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.customerRankBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-light);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  border: 1px solid var(--border-focus);
+  text-align: center;
+}
+
+.cartSection {
+  flex: 1 1 0px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 4px;
+  min-height: 150px;
+  overflow: hidden;
+}
+
+.emptyCart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  opacity: 0.7;
+  padding: 40px 0;
+}
+
+.emptyCartText {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.tableCard {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: white;
+  overflow-y: auto;
+  flex: 1 1 0px;
+}
+
+.table {
+  width: 100%;
+  font-size: 12.5px;
+  border-collapse: collapse;
+}
+
+.th {
+  padding: 8px 10px;
+  font-size: 12px;
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 10;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.thDiscount {
+  color: var(--color-danger);
+}
+
+.tr {
+  cursor: context-menu;
+}
+
+.td {
+  padding: 8px 10px;
+  vertical-align: middle;
+}
+
+.tdName {
+  width: 140px;
+}
+
+.tdStaff {
+  padding: 4px 6px;
+  vertical-align: middle;
+  width: 130px;
+}
+
+.tdPrice {
+  padding: 4px 6px;
+  vertical-align: middle;
+  text-align: center;
+  width: 125px;
+}
+
+.tdDiscount {
+  padding: 4px 6px;
+  vertical-align: middle;
+  text-align: center;
+  width: 110px;
+}
+
+.tdTotal {
+  padding: 8px 10px;
+  vertical-align: middle;
+  text-align: right;
+  width: 110px;
+}
+
+.nameWrapper {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 130px;
+}
+
+.priceWrapper {
+  width: 100px;
+  height: 26px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: white;
+  position: relative;
+  margin: 0 auto;
+}
+
+.discountWrapper {
+  width: 90px;
+  height: 26px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: white;
+  position: relative;
+  margin: 0 auto;
+}
+
+.totalContainer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.totalPriceText {
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--color-primary);
+}
+
+.deleteItemBtn {
+  background: none;
+  border: none;
+  color: var(--color-danger);
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.checkoutSection {
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+  margin-top: 16px;
+  flex-shrink: 0;
+}
+
+.voucherWrapper {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.voucherInputWrapper {
+  position: relative;
+  flex-grow: 1;
+}
+
+.voucherIcon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.voucherInput {
+  padding-left: 30px !important;
+  height: 34px !important;
+  font-size: 12.5px !important;
+}
+
+.voucherApplyBtn {
+  padding: 0 12px;
+  height: 34px;
+  font-size: 12.5px;
+}
+
+.paymentWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.paymentTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.paymentGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.paymentBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.paymentBtnActive {
+  border: 2px solid var(--color-primary) !important;
+  background: var(--color-primary-light) !important;
+  color: var(--color-primary) !important;
+}
+
+.paymentBtnInactive {
+  border: 1px solid var(--border-color) !important;
+  background: white !important;
+  color: var(--text-primary) !important;
+}
+
+.calcSection {
+  border-top: 1px dashed var(--border-color);
+  padding-top: 12px;
+}
+
+.calcRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.calcLabel {
+  color: var(--text-secondary);
+}
+
+.calcValue {
+  font-weight: 600;
+}
+
+.discountLabel {
+  color: var(--color-danger);
+}
+
+.discountValue {
+  font-weight: 600;
+  color: var(--color-danger);
+}
+
+.finalRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.finalLabel {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.finalValue {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.checkoutBtn {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.qrCardPopover {
+  position: absolute;
+  bottom: 235px;
+  right: 20px;
+  width: calc(50% - 24px);
+  background: white;
+  border: 1px solid #ebd5fc;
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-md);
+  padding: 12px 10px;
+  z-index: 200;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  animation: fade-in 0.15s ease-out;
+}
+
+.qrCloseBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+}
+
+.qrHeader {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b21a8;
+  margin: 0;
+}
+
+.qrCodeBorder {
+  display: inline-flex;
+  padding: 8px;
+  background: #faf5ff;
+  border: 1px dashed #ebd5fc;
+  border-radius: var(--radius-sm);
+}
+
+.qrFooterDesc {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.qrFooterAmount {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.qrArrow {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-right: 1px solid #ebd5fc;
+  border-bottom: 1px solid #ebd5fc;
+  z-index: 201;
+}
+
+/* ==========================================================================
+   Receipt Modal & Create Customer Modal
+   ========================================================================== */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.receiptCard {
+  width: 100%;
+  max-width: 400px;
+  padding: 24px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: white;
+  color: black;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  font-family: Courier New, monospace;
+}
+
+.receiptHeader {
+  text-align: center;
+  border-bottom: 2px dashed #000;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+
+.receiptTitle {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.receiptSub {
+  font-size: 11px;
+  color: #555;
+  margin-top: 2px;
+}
+
+.receiptMeta {
+  font-size: 10px;
+  color: #777;
+}
+
+.receiptInfo {
+  font-size: 11px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.receiptTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  margin-bottom: 16px;
+}
+
+.receiptThRow {
+  border-bottom: 1px dashed #000;
+}
+
+.receiptTh {
+  padding-bottom: 4px;
+}
+
+.receiptTr {
+  border-bottom: 1px dotted #ccc;
+}
+
+.receiptTd {
+  padding: 6px 0;
+}
+
+.receiptTdName {
+  max-width: 160px;
+}
+
+.receiptStylist {
+  display: block;
+  font-size: 9px;
+  color: #555;
+}
+
+.receiptCalc {
+  border-top: 1px dashed #000;
+  padding-top: 12px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.receiptRow {
+  display: flex;
+  justify-content: space-between;
+}
+
+.receiptFinalRow {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 800;
+  font-size: 14px;
+  border-top: 2px dashed #000;
+  padding-top: 8px;
+}
+
+.receiptStatus {
+  margin: 24px 0 12px 0;
+  text-align: center;
+  font-size: 11px;
+  border-top: 1px dashed #000;
+  padding-top: 12px;
+}
+
+.receiptStatusTitle {
+  font-weight: 700;
+}
+
+.receiptStatusItalic {
+  font-style: italic;
+  margin-top: 12px;
+}
+
+.receiptFooterBtnRow {
+  display: flex;
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 12px;
+  justify-content: center;
+}
+
+.receiptCloseBtn {
+  font-family: Courier New !important;
+  width: 100%;
+  padding: 10px;
+  font-weight: 700;
+}
+
+.custModalCard {
+  width: 100%;
+  max-width: 400px;
+  padding: 24px;
+  background: white;
+  color: var(--text-primary);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.custModalHeader {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.custModalForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.custModalLabel {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+}
+
+.requiredStar {
+  color: var(--color-danger);
+}
+
+.custModalInput {
+  width: 100%;
+  height: 36px;
+}
+
+.custModalFooter {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.btnPadding {
+  padding: 8px 16px;
+}

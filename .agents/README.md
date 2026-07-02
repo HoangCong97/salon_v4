@@ -6,7 +6,9 @@ Thư mục `.agents/` này chứa các file cấu hình và tài liệu hướng
 
 ## 1. Các File Trong Thư Mục
  
-*   **`AGENTS.md`**: Chứa các quy tắc code (Coding Standards) và nguyên tắc hoạt động (như tối ưu hóa database, cấu trúc component) mà AI Agent bắt buộc phải tuân theo khi tạo hoặc chỉnh sửa code.
+*   **`database_rule.md`**: Quy tắc thiết kế Cơ sở dữ liệu (Database Design Standards) như Naming convention, Index, Soft Delete, Relationships, v.v.
+*   **`backend_rule.md`**: Tiêu chuẩn lập trình Backend (NestJS + Prisma) như kiến trúc 4 tầng, Validate DTO, Error Handling, v.v.
+*   **`frontend_rule.md`**: Tiêu chuẩn lập trình Frontend (React + TypeScript + CSS) như Coding Style, State Management, API, CSS Modules, v.v.
 *   **`AI_CONTEXT.md`**: "Bản đồ dự án" giúp AI Agent nhanh chóng nắm bắt cấu trúc Monorepo, vai trò của từng thư mục con (`apps/`, `packages/`) và các luồng nghiệp vụ quan trọng.
 *   **`Atomic_UI_Components_desktop.md`**: Tài liệu định nghĩa cấu trúc và danh sách toàn bộ các thành phần UI nguyên tử (Atoms) chuẩn Responsive dành cho giao diện Desktop.
 *   **`DIRECTORY_DESCRIPTIONS.md`**: Chứa mô tả chi tiết về chức năng và nhiệm vụ của từng thư mục trong dự án, giúp AI định hướng chính xác nơi cần thực hiện thay đổi.

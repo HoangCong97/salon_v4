@@ -1,11 +1,16 @@
 import React, { useState } from "react";
 import { X, ArrowUpRight, ArrowDownLeft, Image as ImageIcon } from "lucide-react";
+
 import { PriceInputWithSuggestion } from "../../../../components/desktop/TableComponents";
+
+import { AdjustType, ModalMode } from "../types";
+
+import styles from "../Inventories.module.css";
 
 interface InventoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  modalMode: "create" | "edit" | "adjust";
+  modalMode: ModalMode;
   name: string;
   setName: (val: string) => void;
   costPrice: string;
@@ -18,8 +23,8 @@ interface InventoryModalProps {
   setQuantity: (val: number) => void;
   imageUrl: string;
   setImageUrl: (val: string) => void;
-  adjustType: "import" | "export";
-  setAdjustType: (val: "import" | "export") => void;
+  adjustType: AdjustType;
+  setAdjustType: (val: AdjustType) => void;
   adjustQuantity: number;
   setAdjustQuantity: (val: number) => void;
   compressAndGetBase64: (file: File) => Promise<string>;
@@ -56,30 +61,18 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100%",
-      height: "100%",
-      backgroundColor: "rgba(15, 23, 42, 0.4)",
-      backdropFilter: "blur(4px)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 1000
-    }}>
-      <div className="card animate-fade-in" style={{ width: "100%", maxWidth: "520px", position: "relative" }}>
-        <button
-          style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }}
-          onClick={onClose}
-        >
+    <div className={styles.modalBackdrop}>
+      <div className={`card animate-fade-in ${styles.modalCard}`}>
+        <button className={styles.closeButton} onClick={onClose}>
           <X size={20} />
         </button>
-        
-        <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "20px" }}>
-          {modalMode === "create" ? "Thêm sản phẩm kho mới" : 
-           modalMode === "edit" ? "Chỉnh sửa sản phẩm" : "Điều chỉnh kho hàng"}
+
+        <h2 className={styles.modalTitle}>
+          {modalMode === "create"
+            ? "Thêm sản phẩm kho mới"
+            : modalMode === "edit"
+              ? "Chỉnh sửa sản phẩm"
+              : "Điều chỉnh kho hàng"}
         </h2>
 
         <form onSubmit={handleSave}>
@@ -97,7 +90,7 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+              <div className={styles.grid2}>
                 <div className="form-group">
                   <label className="form-label">Giá nhập kho (giá vốn)</label>
                   <PriceInputWithSuggestion
@@ -120,7 +113,7 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
                 </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+              <div className={styles.grid2}>
                 <div className="form-group">
                   <label className="form-label">Giá bán lẻ (VND) *</label>
                   <PriceInputWithSuggestion
@@ -158,28 +151,16 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
                         const base64 = await compressAndGetBase64(file);
                         const uploadedUrl = await uploadFile(base64, "items", file.name);
                         setImageUrl(uploadedUrl);
-                      } catch (err: any) {
-                        alert("Lỗi nạp ảnh: " + err.message);
+                      } catch (err: unknown) {
+                        const msg = err instanceof Error ? err.message : String(err);
+                        alert("Lỗi nạp ảnh: " + msg);
                       }
                     }
                   }}
                   onClick={() => {
                     document.getElementById("product-file-upload")?.click();
                   }}
-                  style={{
-                    border: dragging ? "2px dashed var(--color-primary)" : "2px dashed hsl(210, 40%, 85%)",
-                    borderRadius: "var(--radius-sm)",
-                    padding: "16px",
-                    textAlign: "center",
-                    cursor: "pointer",
-                    backgroundColor: dragging ? "hsl(210, 100%, 98%)" : "hsl(210, 40%, 98%)",
-                    transition: "all 0.15s ease",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    minHeight: "100px",
-                  }}
+                  className={`${styles.dropzone} ${dragging ? styles.dropzoneActive : styles.dropzoneInactive}`}
                 >
                   <input
                     id="product-file-upload"
@@ -194,32 +175,19 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
                           const base64 = await compressAndGetBase64(file);
                           const uploadedUrl = await uploadFile(base64, "items", file.name);
                           setImageUrl(uploadedUrl);
-                        } catch (err: any) {
-                          alert("Lỗi nạp ảnh: " + err.message);
+                        } catch (err: unknown) {
+                          const msg = err instanceof Error ? err.message : String(err);
+                          alert("Lỗi nạp ảnh: " + msg);
                         }
                       }
                     }}
                   />
                   {imageUrl ? (
-                    <div
-                      style={{
-                        position: "relative",
-                        width: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    >
-                      <img
-                        src={imageUrl}
-                        alt="Preview"
-                        style={{ maxWidth: "100px", maxHeight: "100px", objectFit: "cover", borderRadius: "var(--radius-sm)" }}
-                      />
+                    <div className={styles.imagePreviewContainer}>
+                      <img src={imageUrl} alt="Preview" className={styles.previewImage} />
                       <button
                         type="button"
-                        className="btn btn-danger"
-                        style={{ padding: "2px 8px", fontSize: "10.5px", cursor: "pointer" }}
+                        className={`btn btn-danger ${styles.deleteImageButton}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           setImageUrl("");
@@ -230,53 +198,44 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
                     </div>
                   ) : (
                     <>
-                      <ImageIcon size={24} style={{ color: "var(--text-muted)", marginBottom: "6px" }} />
-                      <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-primary)" }}>
+                      <ImageIcon size={24} className={styles.dropzoneIcon} />
+                      <span className={styles.dropzoneTitle}>
                         Kéo thả ảnh sản phẩm hoặc click để chọn
                       </span>
-                      <span style={{ fontSize: "10px", color: "var(--text-secondary)", marginTop: "2px" }}>
-                        Tự động lưu trữ và tối ưu hóa
-                      </span>
+                      <span className={styles.dropzoneSub}>Tự động lưu trữ và tối ưu hóa</span>
                     </>
                   )}
                 </div>
               </div>
             </>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div style={{ padding: "12px", background: "hsl(210, 40%, 96%)", borderRadius: "var(--radius-sm)" }}>
-                <div style={{ fontWeight: "600", fontSize: "15px" }}>{name}</div>
-                <div style={{ color: "var(--text-secondary)", marginTop: "4px" }}>
-                  Số lượng tồn kho hiện tại: <strong style={{ color: "var(--text-primary)" }}>{quantity}</strong> sản phẩm
+            <div className={styles.container}>
+              <div className={styles.adjustInfoCard}>
+                <div className={styles.adjustInfoName}>{name}</div>
+                <div className={styles.adjustInfoStock}>
+                  Số lượng tồn kho hiện tại:{" "}
+                  <strong style={{ color: "var(--text-primary)" }}>{quantity}</strong> sản phẩm
                 </div>
               </div>
 
               <div className="form-group">
                 <label className="form-label">Hình thức điều chỉnh</label>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div className={styles.adjustTypeGrid}>
                   <button
                     type="button"
-                    className="btn"
+                    className={`btn ${styles.adjustTypeButton} ${
+                      adjustType === "import" ? styles.btnAdjustActiveSuccess : styles.btnAdjustInactive
+                    }`}
                     onClick={() => setAdjustType("import")}
-                    style={{
-                      backgroundColor: adjustType === "import" ? "var(--color-success-light)" : "white",
-                      borderColor: adjustType === "import" ? "var(--color-success)" : "var(--border-color)",
-                      color: adjustType === "import" ? "var(--color-success)" : "var(--text-secondary)",
-                      display: "flex", gap: "8px"
-                    }}
                   >
                     <ArrowUpRight size={16} /> Nhập kho
                   </button>
                   <button
                     type="button"
-                    className="btn"
+                    className={`btn ${styles.adjustTypeButton} ${
+                      adjustType === "export" ? styles.btnAdjustActiveDanger : styles.btnAdjustInactive
+                    }`}
                     onClick={() => setAdjustType("export")}
-                    style={{
-                      backgroundColor: adjustType === "export" ? "var(--color-danger-light)" : "white",
-                      borderColor: adjustType === "export" ? "var(--color-danger)" : "var(--border-color)",
-                      color: adjustType === "export" ? "var(--color-danger)" : "var(--text-secondary)",
-                      display: "flex", gap: "8px"
-                    }}
                   >
                     <ArrowDownLeft size={16} /> Xuất kho
                   </button>
@@ -297,7 +256,7 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
             </div>
           )}
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "24px" }}>
+          <div className={styles.buttonFooter}>
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Hủy
             </button>
@@ -310,3 +269,4 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
     </div>
   );
 };
+

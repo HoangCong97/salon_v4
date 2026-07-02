@@ -1,8 +1,16 @@
 import React, { useState } from "react";
 import { X, Loader2, Layers } from "lucide-react";
+
 import { CustomNumberInput } from "./CustomNumberInput";
-import { ServiceCategory, COLOR_PRESETS, getColorStyle } from "./types";
+
 import { useConfirm } from "../../../components/desktop/ConfirmDialog";
+import { useToast } from "../../../components/desktop/ToastProvider";
+
+import { api } from "../../../utils/apiClient";
+
+import { ServiceCategory, COLOR_PRESETS, getColorStyle } from "./types";
+
+import styles from "./Services.module.css";
 
 interface CategoryModalProps {
   isOpen: boolean;
@@ -24,6 +32,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
   currentTenantId,
 }) => {
   const confirm = useConfirm();
+  const toast = useToast();
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [categoryName, setCategoryName] = useState("");
   const [categoryColor, setCategoryColor] = useState("blue");
@@ -41,36 +50,26 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
     };
 
     try {
-      let res;
+      let savedCat;
       const isNew = editingCategoryId === "new";
       if (editingCategoryId && !isNew) {
-        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/service-categories/${editingCategoryId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        savedCat = await api.put<{ id: string; name: string; color: string; defaultCommission: number }>(`/tenants/${currentTenantId}/service-categories/${editingCategoryId}`, payload);
       } else {
-        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/service-categories`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        savedCat = await api.post<{ id: string; name: string; color: string; defaultCommission: number }>(`/tenants/${currentTenantId}/service-categories`, payload);
       }
 
-      if (!res.ok) throw new Error("Lỗi khi lưu phân loại");
-
+      toast.success("Lưu phân loại thành công!");
       await fetchCategories();
       await fetchServices();
 
-      if (isNew) {
-        const savedCat = await res.json();
+      if (isNew && savedCat) {
         setEditingCategoryId(savedCat.id);
         setCategoryName(savedCat.name);
         setCategoryColor(savedCat.color);
         setCategoryCommission(Number(savedCat.defaultCommission));
       }
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message || "Lỗi khi lưu phân loại");
     }
   };
 
@@ -87,16 +86,12 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
       return;
 
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/service-categories/${catId}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) throw new Error("Lỗi khi xóa phân loại");
-
+      await api.delete(`/tenants/${currentTenantId}/service-categories/${catId}`);
+      toast.success("Đã xóa phân loại thành công!");
       await fetchCategories();
       await fetchServices();
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message || "Lỗi khi xóa phân loại");
     }
   };
 
@@ -111,23 +106,17 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
     if (!editingCategoryId || editingCategoryId === "new" || !currentTenantId) return;
 
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/service-categories/${editingCategoryId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: categoryName,
-          color: categoryColor,
-          defaultCommission: categoryCommission,
-        }),
+      await api.put(`/tenants/${currentTenantId}/service-categories/${editingCategoryId}`, {
+        name: categoryName,
+        color: categoryColor,
+        defaultCommission: categoryCommission,
       });
-
-      if (!res.ok) throw new Error("Lỗi khi áp dụng hoa hồng");
 
       await fetchCategories();
       await fetchServices();
-      alert(`Đã áp dụng hoa hồng mặc định ${categoryCommission}% cho tất cả dịch vụ thuộc phân loại này.`);
+      toast.success(`Đã áp dụng hoa hồng mặc định ${categoryCommission}% cho tất cả dịch vụ thuộc phân loại này.`);
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message || "Lỗi khi áp dụng hoa hồng");
     }
   };
 
@@ -145,81 +134,27 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
   })();
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        backgroundColor: "rgba(15, 23, 42, 0.4)",
-        backdropFilter: "blur(4px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-      }}
-    >
-      <style>{`
-        .category-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 10px 12px;
-          height: 64px;
-          box-sizing: border-box;
-          background-color: hsl(210, 40%, 98%);
-          border-radius: var(--radius-sm);
-          border: 1px solid hsl(210, 40%, 92%);
-          cursor: pointer;
-          transition: all 0.15s ease;
-        }
-        .category-item:hover {
-          background-color: hsl(210, 40%, 95%) !important;
-          border-color: hsl(210, 40%, 86%) !important;
-        }
-        .category-item.active {
-          background-color: hsl(210, 100%, 98%) !important;
-          border-color: var(--color-primary) !important;
-        }
-      `}</style>
-      <div
-        className="card animate-fade-in"
-        style={{
-          width: "100%",
-          maxWidth: "760px",
-          position: "relative",
-          maxHeight: "90vh",
-          display: "flex",
-          flexDirection: "column",
-          padding: "24px",
-        }}
-      >
+    <div className={styles.modalOverlay}>
+      <div className={`card animate-fade-in ${styles.modalCard}`} style={{ maxWidth: "760px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: "24px" }}>
         <button
-          style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }}
+          className={styles.closeBtn}
           onClick={onClose}
         >
           <X size={20} />
         </button>
         <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "20px" }}>Quản lý phân loại</h2>
 
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "24px",
-          overflowY: "hidden",
-          flex: 1,
-        }}>
+        <div className={styles.categoryGrid}>
           {/* Left Side: Category List */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px", borderRight: "1px solid hsl(210, 40%, 90%)", paddingRight: "24px", height: "100%", minHeight: 0 }}>
+          <div className={styles.viewContainer} style={{ gap: "12px", borderRight: "1px solid hsl(210, 40%, 90%)", paddingRight: "24px", height: "100%", minHeight: 0 }}>
             <h3 style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-secondary)" }}>Danh sách phân loại</h3>
 
             {categoriesLoading ? (
-              <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
+              <div className={styles.loadingWrapper} style={{ padding: "40px 0" }}>
                 <Loader2 className="animate-spin" size={24} style={{ color: "var(--color-primary)" }} />
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", overflowY: "auto", paddingRight: "4px", flex: 1 }}>
+              <div className={styles.categoryListBody}>
                 {categories.length === 0 && (
                   <p style={{ color: "var(--text-muted)", fontSize: "13px", fontStyle: "italic", marginBottom: "8px" }}>
                     Chưa có phân loại nào.
@@ -240,7 +175,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                           setCategoryCommission(Number(cat.defaultCommission));
                         }
                       }}
-                      className={isEditing ? "category-item active" : "category-item"}
+                      className={`${styles.categoryItem} ${isEditing ? styles.categoryItemActive : ""}`}
                     >
                       <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                         <span className="badge" style={{ ...getColorStyle(cat.color), width: "fit-content", textTransform: "none" }}>
@@ -250,7 +185,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                           Hoa hồng mặc định: <strong>{cat.defaultCommission}%</strong>
                         </span>
                       </div>
-                      <div style={{ display: "flex", gap: "6px" }}>
+                      <div className={styles.categoryItemActions}>
                         <button
                           className="btn btn-danger"
                           style={{ padding: "4px 8px", fontSize: "11px" }}
@@ -294,18 +229,6 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                     transition: "all 0.15s ease",
                     marginTop: "4px",
                     flexShrink: 0,
-                  }}
-                  onMouseEnter={(e) => {
-                    if (editingCategoryId !== "new") {
-                      e.currentTarget.style.backgroundColor = "hsl(210, 40%, 96%)";
-                      e.currentTarget.style.borderColor = "var(--color-primary)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (editingCategoryId !== "new") {
-                      e.currentTarget.style.backgroundColor = "transparent";
-                      e.currentTarget.style.borderColor = "hsl(210, 40%, 80%)";
-                    }
                   }}
                 >
                   ➕ Tạo phân loại mới
@@ -380,16 +303,6 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                       cursor: (!editingCategoryId || editingCategoryId === "new") ? "not-allowed" : "pointer",
                       border: "none",
                       transition: "background-color 0.15s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      if (editingCategoryId && editingCategoryId !== "new") {
-                        e.currentTarget.style.backgroundColor = "var(--color-primary-hover)";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (editingCategoryId && editingCategoryId !== "new") {
-                        e.currentTarget.style.backgroundColor = "var(--color-primary)";
-                      }
                     }}
                     title={editingCategoryId && editingCategoryId !== "new" ? "Áp dụng mức hoa hồng này cho tất cả dịch vụ thuộc phân loại này" : "Hãy chọn một phân loại để áp dụng hàng loạt"}
                   >

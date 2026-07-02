@@ -1,0 +1,898 @@
+/* StaffManagement.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 0;
+}
+
+.containerPermissions {
+  height: calc(100vh - 120px);
+  overflow: hidden;
+}
+
+.containerNormal {
+  height: auto;
+  overflow: visible;
+}
+
+.tabHeader {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 2px;
+  gap: 8px;
+}
+
+.tabButton {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  border-bottom: 3px solid transparent;
+}
+
+.tabButtonActive {
+  border-bottom: 3px solid var(--color-primary);
+  color: var(--color-primary);
+}
+
+.viewContainer {
+  flex-grow: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.viewContainerPermissions {
+  overflow: hidden;
+}
+
+.viewContainerNormal {
+  overflow: visible;
+}
+
+.loadingWrapper {
+  display: flex;
+  justify-content: center;
+  padding: 100px 0;
+}
+
+.errorCard {
+  border-left: 4px solid var(--color-danger);
+  background: var(--color-danger-light);
+}
+
+.errorTitle {
+  color: var(--color-danger);
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.errorDesc {
+  color: var(--color-danger);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.dragOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(59, 130, 246, 0.15);
+  backdrop-filter: blur(4px);
+  border: 4px dashed var(--color-primary);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  pointer-events: none;
+}
+
+.dragCard {
+  background-color: white;
+  padding: 32px 48px;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.dragTitle {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.dragDesc {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* ==========================================================================
+   Table Components
+   ========================================================================== */
+
+.tableWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.filterRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filtersLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex-grow: 1;
+}
+
+.searchContainer {
+  position: relative;
+  width: 100%;
+  max-width: 240px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+
+.searchInput {
+  padding-left: 36px !important;
+  height: 34px !important;
+  font-size: 13px !important;
+}
+
+.filterSelect {
+  width: auto !important;
+  min-width: 150px !important;
+  height: 34px !important;
+  padding: 0 10px !important;
+  font-size: 13px !important;
+}
+
+.resetFilterBtn {
+  height: 34px !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  color: var(--text-secondary) !important;
+}
+
+.actionsRight {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.importBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  border-color: hsl(142, 76%, 36%) !important;
+  color: hsl(142, 76%, 36%) !important;
+  background-color: hsl(142, 76%, 97%) !important;
+  transition: background-color 0.15s ease;
+  height: 34px !important;
+  font-size: 13px !important;
+  padding: 0 12px !important;
+  cursor: pointer;
+}
+
+.importBtn:hover {
+  background-color: hsl(142, 76%, 92%) !important;
+}
+
+.addStaffBtn {
+  height: 34px !important;
+  font-size: 13px !important;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px !important;
+}
+
+.emptyCard {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.emptyIcon {
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  margin-inline: auto;
+}
+
+.emptyTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.emptyDesc {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.tableCard {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.tableContainer {
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.th {
+  padding: 12px 16px !important;
+  font-size: 13px !important;
+}
+
+.td {
+  padding: 0 !important;
+  vertical-align: middle !important;
+  height: 38px;
+}
+
+.nameWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 10px;
+  width: 100%;
+  height: 100%;
+}
+
+.avatarImg {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.avatarFallback {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: hsl(210, 40%, 90%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatarFallbackText {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.inputWrapper {
+  flex-grow: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+.selectTd {
+  padding: 3px 6px !important;
+  vertical-align: middle !important;
+  height: 38px;
+}
+
+.actionTd {
+  padding: 0 8px !important;
+  vertical-align: middle !important;
+  height: 38px;
+}
+
+.actionButtons {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.actionBtn {
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+/* ==========================================================================
+   Modals & Overlays
+   ========================================================================== */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
+
+.modalCard {
+  width: 100%;
+  position: relative;
+}
+
+.closeButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.closeButton:hover {
+  background-color: var(--border-color);
+}
+
+.modalHeader {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modalForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modalFormRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.formGroupFull {
+  grid-column: span 2;
+}
+
+.formGroup {
+  margin-bottom: 0 !important;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.avatarUploadContainer {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px;
+  background-color: hsl(210, 40%, 98%);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.avatarLarge {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: hsl(210, 40%, 90%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 2px solid white;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.avatarLargeActive {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.avatarLargeHover .avatarOverlay {
+  opacity: 1;
+}
+
+.avatarOverlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.avatarUploadInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.avatarUploadTitle {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.avatarUploadDesc {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.checkboxGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px;
+  max-height: 120px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: white;
+}
+
+.checkboxItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.textareaField {
+  resize: vertical;
+}
+
+/* ==========================================================================
+   Roles & Permissions
+   ========================================================================== */
+
+.permissionGrid {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 24px;
+  height: 100%;
+  min-height: 0;
+}
+
+.roleListCard {
+  padding: 16px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
+}
+
+.roleListHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.roleListTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.addRoleBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.roleItemsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.roleItem {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+}
+
+.roleItemActive {
+  background-color: var(--color-primary-light);
+  border: 1px solid var(--color-primary);
+}
+
+.roleItemTextWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.roleItemName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.roleItemNameActive {
+  color: var(--color-primary);
+}
+
+.roleItemDesc {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.roleItemActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.roleItemBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.roleItemBtn:hover {
+  background-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.roleItemBtnDanger:hover {
+  background-color: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.permissionsPanelCard {
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.permissionsHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.permissionsTitleWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.permissionsTitle {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.permissionsBadge {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.savePermissionsBtn {
+  font-size: 13px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px !important;
+}
+
+.permissionsScrollBody {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.permissionGroup {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: white;
+}
+
+.permissionGroupHeader {
+  padding: 10px 16px;
+  background-color: hsl(210, 40%, 98%);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.permissionGroupBody {
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.permissionCard {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.permissionCard:hover {
+  background-color: hsl(210, 40%, 99%);
+  border-color: var(--color-primary-light);
+}
+
+.permissionCardActive {
+  background-color: var(--color-primary-light);
+  border-color: var(--color-primary);
+}
+
+.permissionCheckbox {
+  margin-top: 2px;
+}
+
+.permissionTextWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.permissionName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.permissionDesc {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   Daily Turns Table
+   ========================================================================== */
+
+.turnsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.turnsHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.turnsHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.turnsTitleDesc {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.turnsHeaderActions {
+  display: flex;
+  gap: 10px;
+}
+
+.turnsLoaderWrapper {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.turnsEmptyCard {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.turnsEmptyIcon {
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  margin-inline: auto;
+}
+
+.turnsEmptyTitle {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.turnsEmptyDesc {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.turnsTableCard {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.turnsTableContainer {
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.turnsTh {
+  padding: 12px 16px !important;
+  font-size: 13px !important;
+}
+
+.turnsTr {
+  background-color: inherit;
+}
+
+.turnsTrNext {
+  background-color: var(--color-primary-light) !important;
+}
+
+.turnsTd {
+  padding: 12px 16px !important;
+  font-size: 13px !important;
+}
+
+.turnsTdCenter {
+  padding: 12px 16px !important;
+  font-size: 13px !important;
+  text-align: center !important;
+}
+
+.turnsTdNoPadding {
+  padding: 0 !important;
+  vertical-align: middle !important;
+  height: 38px;
+}
+
+.turnsNextBadge {
+  background-color: var(--color-primary);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
+.turnsActionsWrapper {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.turnsActionBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px !important;
+  font-size: 12px !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+.helpTooltipContainer {
+  position: relative;
+  display: inline-block;
+  cursor: help;
+  color: var(--text-muted);
+}
+
+.helpTooltipContainer:hover .helpTooltipText {
+  visibility: visible;
+  opacity: 1;
+}
+
+.helpTooltipText {
+  visibility: hidden;
+  width: 280px;
+  background-color: hsl(215, 28%, 17%);
+  color: #fff;
+  text-align: left;
+  border-radius: var(--radius-md);
+  padding: 12px;
+  position: absolute;
+  z-index: 100;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -140px;
+  opacity: 0;
+  transition: opacity 0.25s;
+  box-shadow: var(--shadow-lg);
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: normal;
+}

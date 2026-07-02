@@ -1,5 +1,7 @@
 import React from "react";
 import { Input } from "../../../components/desktop/ui/Input";
+import { PaymentMethod, OrderSource, Staff, Customer } from "./types";
+import styles from "./Invoices.module.css";
 
 interface InvoiceFilterProps {
   startDate: string;
@@ -10,12 +12,12 @@ interface InvoiceFilterProps {
   setSelectedStaffId: (s: string) => void;
   selectedCustomerId: string;
   setSelectedCustomerId: (s: string) => void;
-  paymentMethod: string;
-  setPaymentMethod: (s: string) => void;
-  orderSource: string;
-  setOrderSource: (s: string) => void;
-  activeStaff: any[];
-  customers: any[];
+  paymentMethod: PaymentMethod;
+  setPaymentMethod: (s: PaymentMethod) => void;
+  orderSource: OrderSource;
+  setOrderSource: (s: OrderSource) => void;
+  activeStaff: Staff[];
+  customers: Customer[];
 }
 
 export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
@@ -35,7 +37,7 @@ export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
   customers,
 }) => {
   return (
-    <div className="card" style={{ padding: "16px", display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "12px", alignItems: "center" }}>
+    <div className={`card ${styles.filterCard}`}>
       {/* Date Start */}
       <div>
         <Input
@@ -60,14 +62,11 @@ export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
 
       {/* Staff Filter */}
       <div>
-        <label style={{ display: "block", fontSize: "11.5px", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "4px" }}>
-          NHÂN VIÊN thực hiện
-        </label>
+        <label className={styles.selectLabel}>NHÂN VIÊN thực hiện</label>
         <select
-          className="form-input"
+          className={`form-input ${styles.selectElement}`}
           value={selectedStaffId}
           onChange={(e) => setSelectedStaffId(e.target.value)}
-          style={{ width: "100%", height: "36px", fontSize: "12.5px", fontWeight: "500", padding: "0 8px" }}
         >
           <option value="ALL">Tất cả nhân sự</option>
           {activeStaff.map((s) => (
@@ -80,14 +79,11 @@ export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
 
       {/* Customer Filter */}
       <div>
-        <label style={{ display: "block", fontSize: "11.5px", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "4px" }}>
-          KHÁCH HÀNG
-        </label>
+        <label className={styles.selectLabel}>KHÁCH HÀNG</label>
         <select
-          className="form-input"
+          className={`form-input ${styles.selectElement}`}
           value={selectedCustomerId}
           onChange={(e) => setSelectedCustomerId(e.target.value)}
-          style={{ width: "100%", height: "36px", fontSize: "12.5px", fontWeight: "500", padding: "0 8px" }}
         >
           <option value="ALL">Tất cả khách hàng</option>
           {customers.map((c) => (
@@ -100,14 +96,11 @@ export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
 
       {/* Payment Method Filter */}
       <div>
-        <label style={{ display: "block", fontSize: "11.5px", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "4px" }}>
-          HÌNH THỨC TT
-        </label>
+        <label className={styles.selectLabel}>HÌNH THỨC TT</label>
         <select
-          className="form-input"
+          className={`form-input ${styles.selectElement}`}
           value={paymentMethod}
-          onChange={(e) => setPaymentMethod(e.target.value)}
-          style={{ width: "100%", height: "36px", fontSize: "12.5px", fontWeight: "500", padding: "0 8px" }}
+          onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
         >
           <option value="ALL">Tất cả hình thức</option>
           <option value="CASH">Tiền mặt</option>
@@ -117,14 +110,11 @@ export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
 
       {/* Order Source Filter */}
       <div>
-        <label style={{ display: "block", fontSize: "11.5px", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "4px" }}>
-          NGUỒN ĐƠN
-        </label>
+        <label className={styles.selectLabel}>NGUỒN ĐƠN</label>
         <select
-          className="form-input"
+          className={`form-input ${styles.selectElement}`}
           value={orderSource}
-          onChange={(e) => setOrderSource(e.target.value)}
-          style={{ width: "100%", height: "36px", fontSize: "12.5px", fontWeight: "500", padding: "0 8px" }}
+          onChange={(e) => setOrderSource(e.target.value as OrderSource)}
         >
           <option value="ALL">Tất cả nguồn đơn</option>
           <option value="WALK_IN">Tại quầy (POS)</option>
@@ -134,3 +124,4 @@ export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
     </div>
   );
 };
+

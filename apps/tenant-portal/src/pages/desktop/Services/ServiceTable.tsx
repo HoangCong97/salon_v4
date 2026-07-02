@@ -1,9 +1,14 @@
 import React from "react";
 import { Edit2, Trash2 } from "lucide-react";
+
 import { ExcelInput, ExcelSelect, ExcelChipsInput } from "../../../components/desktop/TableComponents";
 import { Tooltip } from "../../../components/desktop/ui/Tooltip";
-import { Service, ServiceCategory } from "./types";
+
 import { useAuthStore } from "../../../store/useAuthStore";
+
+import { Service, ServiceCategory } from "./types";
+
+import styles from "./Services.module.css";
 
 interface ServiceTableProps {
   filteredServices: Service[];
@@ -107,19 +112,19 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
   };
 
   return (
-    <div className="data-table-container" style={{ overflow: "visible" }}>
+    <div className={`data-table-container ${styles.tableContainer}`}>
       <table className="data-table">
         <thead>
           <tr>
-            <th style={{ padding: "6px 10px", fontSize: "13px" }}>Tên dịch vụ</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "180px" }}>Phân loại</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "100px", textAlign: "center" }}>Thời lượng</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "140px", textAlign: "center" }}>Giá bán</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "140px", textAlign: "center" }}>Giá bán khác</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "140px", textAlign: "center" }}>Giảm giá</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "140px", textAlign: "center" }}>Giá KM</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "100px", textAlign: "center" }}>Hoa hồng (%)</th>
-            {canManage && <th style={{ padding: "6px 10px", fontSize: "13px", width: "100px", textAlign: "center" }}>Thao tác</th>}
+            <th className={styles.th}>Tên dịch vụ</th>
+            <th className={styles.th} style={{ width: "180px" }}>Phân loại</th>
+            <th className={styles.th} style={{ width: "100px", textAlign: "center" }}>Thời lượng</th>
+            <th className={styles.th} style={{ width: "140px", textAlign: "center" }}>Giá bán</th>
+            <th className={styles.th} style={{ width: "140px", textAlign: "center" }}>Giá bán khác</th>
+            <th className={styles.th} style={{ width: "140px", textAlign: "center" }}>Giảm giá</th>
+            <th className={styles.th} style={{ width: "140px", textAlign: "center" }}>Giá KM</th>
+            <th className={styles.th} style={{ width: "100px", textAlign: "center" }}>Hoa hồng (%)</th>
+            {canManage && <th className={styles.th} style={{ width: "100px", textAlign: "center" }}>Thao tác</th>}
           </tr>
         </thead>
         <tbody>
@@ -138,7 +143,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
 
             return (
               <tr key={service.id}>
-                <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                <td className={styles.td}>
                   <ExcelInput
                     value={getInlineValue(service, "name") as string}
                     onChange={(val) => handleInlineChange(service.id, "name", val)}
@@ -147,7 +152,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                     disabled={!canManage}
                   />
                 </td>
-                <td style={{ padding: "3px 6px", verticalAlign: "middle", height: "38px", boxSizing: "border-box" }}>
+                <td className={styles.selectTd}>
                   <ExcelSelect
                     value={currentCategoryId}
                     onChange={(newCatId) => {
@@ -160,7 +165,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                     disabled={!canManage}
                   />
                 </td>
-                <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                <td className={styles.td}>
                   <ExcelInput
                     type="number"
                     value={getInlineValue(service, "duration") as number || 0}
@@ -171,7 +176,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                     disabled={!canManage}
                   />
                 </td>
-                <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                <td className={styles.td}>
                   <ExcelInput
                     value={formatNumber(getInlineValue(service, "price") as number | string)}
                     onChange={(val) => handlePriceChange(service.id, "price", val)}
@@ -182,7 +187,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                     disabled={!canManage}
                   />
                 </td>
-                <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                <td className={styles.td}>
                   <ExcelChipsInput
                     values={getInlineValue(service, "additionalPrices") as number[] || []}
                     onChange={(vals) => handleInlineChange(service.id, "additionalPrices", vals)}
@@ -193,7 +198,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                     disabled={!canManage}
                   />
                 </td>
-                <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                <td className={styles.td}>
                   <ExcelInput
                     value={
                       getInlineValue(service, "discountInput" as keyof Service) !== undefined
@@ -221,7 +226,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                     disabled={!canManage}
                   />
                 </td>
-                <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                <td className={styles.td}>
                   <ExcelInput
                     value={
                       getInlineValue(service, "promoInput" as keyof Service) !== undefined
@@ -247,7 +252,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                     disabled={!canManage}
                   />
                 </td>
-                <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                <td className={styles.td}>
                   {currentCategoryObj ? (
                     <ExcelInput
                       type="number"
@@ -272,18 +277,17 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                       disabled={!canManage}
                     />
                   ) : (
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-muted)", fontSize: "13px" }}>
+                    <div className={styles.centerTdText}>
                       --
                     </div>
                   )}
                 </td>
                 {canManage && (
-                  <td style={{ padding: "0 8px", verticalAlign: "middle", textAlign: "center", height: "38px" }}>
-                    <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>
+                  <td className={styles.actionTd}>
+                    <div className={styles.actionButtons}>
                       <Tooltip content="Chỉnh sửa chi tiết">
                         <button
-                          className="btn btn-secondary"
-                          style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                          className={`btn btn-secondary ${styles.actionBtn}`}
                           onClick={() => handleOpenEditModal(service)}
                         >
                           <Edit2 size={13} />
@@ -291,8 +295,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                       </Tooltip>
                       <Tooltip content="Xóa dịch vụ">
                         <button
-                          className="btn btn-danger"
-                          style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                          className={`btn btn-danger ${styles.actionBtn}`}
                           onClick={() => handleDelete(service.id)}
                         >
                           <Trash2 size={13} />

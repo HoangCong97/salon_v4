@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuthStore } from "../../../store/useAuthStore";
-import { formatCurrencyVND } from "@salon/shared-utils";
+
 import { POSLeftPanel } from "./POSLeftPanel";
 import { POSRightPanel } from "./POSRightPanel";
 import { POSReceiptModal } from "./POSReceiptModal";
+
+import { useAuthStore } from "../../../store/useAuthStore";
 import { useConfirm } from "../../../components/desktop/ConfirmDialog";
 import { useToast } from "../../../components/desktop/ToastProvider";
+
 import { api } from "../../../utils/apiClient";
 import { queryKeys } from "../../../utils/queryKeys";
+
+import { formatCurrencyVND } from "@salon/shared-utils";
 
 interface StaffMember {
   id: string;

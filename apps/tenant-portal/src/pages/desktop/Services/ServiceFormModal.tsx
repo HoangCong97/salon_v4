@@ -1,9 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X, Image as ImageIcon } from "lucide-react";
 import { formatCurrencyVND } from "@salon/shared-utils";
+
 import { PriceInputWithSuggestion, ExcelChipsInput } from "../../../components/desktop/TableComponents";
 import { CustomNumberInput } from "./CustomNumberInput";
+
+import { useToast } from "../../../components/desktop/ToastProvider";
+
+import { api } from "../../../utils/apiClient";
+
 import { Service, ServiceCategory, getColorStyle, COLOR_PRESETS, compressAndGetBase64 } from "./types";
+
+import styles from "./Services.module.css";
 
 interface ServiceFormModalProps {
   isOpen: boolean;
@@ -30,6 +38,8 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
   currentTenantId,
   currentBranchId,
 }) => {
+  const toast = useToast();
+
   // Service Form Fields
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -44,19 +54,11 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
   const [dragging, setDragging] = useState(false);
 
   const uploadFile = async (base64Data: string, category: string, originalFilename?: string): Promise<string> => {
-    const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/upload`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        file: base64Data,
-        category,
-        filename: originalFilename
-      })
+    const data = await api.post<{ url: string }>(`/tenants/${currentTenantId}/upload`, {
+      file: base64Data,
+      category,
+      filename: originalFilename
     });
-    if (!res.ok) {
-      throw new Error("Lỗi khi tải ảnh lên máy chủ");
-    }
-    const data = await res.json();
     return data.url;
   };
 
@@ -134,14 +136,10 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
       const selectedCat = categories.find((c) => c.id === categoryId);
       if (selectedCat && Number(selectedCat.defaultCommission) !== commissionInput) {
         try {
-          await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/service-categories/${categoryId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: selectedCat.name,
-              color: selectedCat.color,
-              defaultCommission: commissionInput,
-            }),
+          await api.put(`/tenants/${currentTenantId}/service-categories/${categoryId}`, {
+            name: selectedCat.name,
+            color: selectedCat.color,
+            defaultCommission: commissionInput,
           });
           await fetchCategories(true);
         } catch (err) {
@@ -175,7 +173,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
 
     const basePrice = parseFloat(priceInput.replace(/\D/g, ""));
     if (isNaN(basePrice)) {
-      alert("Vui lòng nhập giá gốc hợp lệ");
+      toast.warning("Vui lòng nhập giá gốc hợp lệ");
       return;
     }
 
@@ -196,82 +194,35 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
     };
 
     try {
-      let res;
       if (mode === "create") {
-        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        await api.post(`/tenants/${currentTenantId}/services`, payload);
       } else {
-        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/services/${selectedServiceId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        await api.put(`/tenants/${currentTenantId}/services/${selectedServiceId}`, payload);
       }
 
-      if (!res.ok) throw new Error("Lỗi khi lưu thông tin dịch vụ");
-
+      toast.success("Lưu dịch vụ thành công!");
       onClose();
       await fetchServices();
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message || "Lỗi khi lưu thông tin dịch vụ");
     }
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        backgroundColor: "rgba(15, 23, 42, 0.4)",
-        backdropFilter: "blur(4px)",
-        display: "flex",
-        justifyContent: "center",
-        zIndex: 1000,
-        overflowY: "auto",
-        padding: "20px",
-      }}
-    >
-      <div
-        className="card animate-fade-in"
-        style={{
-          width: "100%",
-          maxWidth: "680px",
-          position: "relative",
-          display: "flex",
-          flexDirection: "column",
-          gap: "16px",
-          margin: "auto 0",
-        }}
-      >
+    <div className={styles.modalOverlay}>
+      <div className={`card animate-fade-in ${styles.modalCard}`} style={{ maxWidth: "680px", display: "flex", flexDirection: "column", gap: "16px", margin: "auto 0" }}>
         <button
-          style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }}
+          className={styles.closeBtn}
           onClick={onClose}
         >
           <X size={20} />
         </button>
-        <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "8px" }}>
+        <h2 className={styles.modalHeader}>
           {mode === "create" ? "Thêm dịch vụ mới" : "Chỉnh sửa dịch vụ"}
         </h2>
-        <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        <form onSubmit={handleSave} className={styles.modalForm}>
           <div style={{ display: "grid", gridTemplateColumns: "2.5fr 2fr 1.2fr", gap: "16px", alignItems: "flex-end" }}>
-            <style>{`
-              /* Hide browser default number input spin buttons */
-              input.custom-number-input::-webkit-outer-spin-button,
-              input.custom-number-input::-webkit-inner-spin-button {
-                -webkit-appearance: none !important;
-                margin: 0 !important;
-              }
-              input.custom-number-input {
-                -moz-appearance: textfield !important;
-              }
-            `}</style>
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Tên dịch vụ *</label>
               <input
                 className="form-input"
@@ -284,7 +235,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
             </div>
 
             {/* Custom Category Dropdown */}
-            <div ref={catDropdownRef} className="form-group" style={{ margin: 0, position: "relative" }}>
+            <div ref={catDropdownRef} className={`form-group ${styles.formGroup}`} style={{ position: "relative" }}>
               <label className="form-label">Phân loại *</label>
               <button
                 type="button"
@@ -412,7 +363,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
             </div>
 
             {/* Editable Default Commission */}
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Hoa hồng (%)</label>
               <CustomNumberInput min={0} max={100} step={1} value={commissionInput} onChange={setCommissionInput} />
             </div>
@@ -435,7 +386,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
               <h4 style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-primary)" }}>
                 {subFormMode === "create" ? "➕ Thêm phân loại mới" : "✏️ Chỉnh sửa phân loại"}
               </h4>
-              <div className="form-group" style={{ margin: 0 }}>
+              <div className={`form-group ${styles.formGroup}`}>
                 <label className="form-label" style={{ fontSize: "11px" }}>
                   Tên phân loại *
                 </label>
@@ -448,7 +399,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                   style={{ padding: "6px 10px", fontSize: "13px" }}
                 />
               </div>
-              <div className="form-group" style={{ margin: 0 }}>
+              <div className={`form-group ${styles.formGroup}`}>
                 <label className="form-label" style={{ fontSize: "11px" }}>
                   Hoa hồng mặc định (%)
                 </label>
@@ -461,7 +412,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                   style={{ padding: "6px 10px", fontSize: "13px" }}
                 />
               </div>
-              <div className="form-group" style={{ margin: 0 }}>
+              <div className={`form-group ${styles.formGroup}`}>
                 <label className="form-label" style={{ fontSize: "11px" }}>
                   Màu sắc đại diện *
                 </label>
@@ -515,22 +466,13 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                       defaultCommission: categoryCommission,
                     };
                     try {
-                      let res;
+                      let savedCat;
                       if (subFormMode === "edit" && categoryId) {
-                        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/service-categories/${categoryId}`, {
-                          method: "PUT",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify(payload),
-                        });
+                        savedCat = await api.put<{ id: string; defaultCommission: number }>(`/tenants/${currentTenantId}/service-categories/${categoryId}`, payload);
                       } else {
-                        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/service-categories`, {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify(payload),
-                        });
+                        savedCat = await api.post<{ id: string; defaultCommission: number }>(`/tenants/${currentTenantId}/service-categories`, payload);
                       }
-                      if (!res.ok) throw new Error("Lỗi khi lưu phân loại");
-                      const savedCat = await res.json();
+                      
                       await fetchCategories(true);
                       if (subFormMode === "create") {
                         setCategoryId(savedCat.id);
@@ -540,7 +482,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                       }
                       setShowCategorySubForm(false);
                     } catch (err: any) {
-                      alert(err.message);
+                      toast.error(err.message || "Lỗi khi lưu phân loại");
                     }
                   }}
                 >
@@ -551,8 +493,8 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
           )}
 
           {/* Row 2: Thời lượng chọn nhanh + Số phút thực tế */}
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "16px", alignItems: "flex-end" }}>
-            <div className="form-group" style={{ margin: 0 }}>
+          <div className={styles.modalFormRow}>
+            <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Thời lượng (chọn nhanh)</label>
               <div style={{ display: "flex", gap: "8px" }}>
                 {[15, 30, 45, 60].map((t) => (
@@ -575,7 +517,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                 ))}
               </div>
             </div>
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Số phút thực tế</label>
               <CustomNumberInput min={5} step={5} value={duration} onChange={setDuration} />
             </div>
@@ -584,7 +526,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
           {/* Row 3: Giá bán + Áp dụng khuyến mãi + Số tiền giảm trừ */}
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 2fr", gap: "16px", alignItems: "flex-end" }}>
             {/* Price input with custom autocompletion */}
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Giá bán mặc định (VND) *</label>
               <PriceInputWithSuggestion
                 required
@@ -596,7 +538,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
             </div>
 
             {/* Smaller Discount toggle */}
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Khuyến mãi?</label>
               <div style={{ display: "flex", gap: "4px", height: "38px" }}>
                 <button
@@ -650,7 +592,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
             </div>
 
             {/* Discount Deduction Input (step 5000) */}
-            <div className="form-group" style={{ margin: 0 }}>
+            <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Tiền giảm (VND)</label>
               <CustomNumberInput
                 min={0}
@@ -673,21 +615,9 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
             </div>
           )}
 
-          <div className="form-group">
+          <div className={`form-group ${styles.formGroup}`}>
             <label className="form-label">Các giá bán khác (VND)</label>
-            <div
-              style={{
-                border: isAltPriceFocused ? "1px solid var(--color-primary)" : "1px solid hsl(210, 40%, 85%)",
-                boxShadow: isAltPriceFocused ? "0 0 0 2px var(--color-primary-light)" : "none",
-                borderRadius: "var(--radius-sm)",
-                minHeight: "38px",
-                backgroundColor: "white",
-                display: "flex",
-                alignItems: "center",
-                boxSizing: "border-box",
-                transition: "all 0.15s ease",
-              }}
-            >
+            <div className={`${styles.chipsInputWrapper} ${isAltPriceFocused ? styles.chipsInputWrapperFocused : ""}`}>
               <ExcelChipsInput
                 values={additionalPrices}
                 onChange={setAdditionalPrices}
@@ -700,7 +630,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
           </div>
 
           {/* Drag & Drop Image Uploader Zone */}
-          <div className="form-group">
+          <div className={`form-group ${styles.formGroup}`}>
             <label className="form-label">Hình ảnh minh họa</label>
 
             <div
@@ -719,28 +649,15 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                     const base64 = await compressAndGetBase64(file);
                     const uploadedUrl = await uploadFile(base64, "items", file.name);
                     setImageUrl(uploadedUrl);
-                  } catch (err) {
-                    alert("Lỗi nạp ảnh: " + (err as any).message);
+                  } catch (err: any) {
+                    toast.error("Lỗi nạp ảnh: " + err.message);
                   }
                 }
               }}
               onClick={() => {
                 document.getElementById("file-upload-input")?.click();
               }}
-              style={{
-                border: dragging ? "2px dashed var(--color-primary)" : "2px dashed hsl(210, 40%, 85%)",
-                borderRadius: "var(--radius-sm)",
-                padding: "20px",
-                textAlign: "center",
-                cursor: "pointer",
-                backgroundColor: dragging ? "hsl(210, 100%, 98%)" : "hsl(210, 40%, 98%)",
-                transition: "all 0.15s ease",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: "120px",
-              }}
+              className={`${styles.dragDropZone} ${dragging ? styles.dragDropZoneDragging : ""}`}
             >
               <input
                 id="file-upload-input"
@@ -755,27 +672,18 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                       const base64 = await compressAndGetBase64(file);
                       const uploadedUrl = await uploadFile(base64, "items", file.name);
                       setImageUrl(uploadedUrl);
-                    } catch (err) {
-                      alert("Lỗi nạp ảnh: " + (err as any).message);
+                    } catch (err: any) {
+                      toast.error("Lỗi nạp ảnh: " + err.message);
                     }
                   }
                 }}
               />
               {imageUrl ? (
-                <div
-                  style={{
-                    position: "relative",
-                    width: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: "8px",
-                  }}
-                >
+                <div className={styles.uploadPreview}>
                   <img
                     src={imageUrl}
                     alt="Preview"
-                    style={{ maxWidth: "120px", maxHeight: "120px", objectFit: "cover", borderRadius: "var(--radius-sm)" }}
+                    className={styles.previewImg}
                   />
                   <button
                     type="button"
@@ -803,7 +711,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
             </div>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "12px" }}>
+          <div className={styles.modalFooter}>
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Hủy
             </button>

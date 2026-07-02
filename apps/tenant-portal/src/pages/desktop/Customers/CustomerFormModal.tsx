@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { X, Award, Phone, Mail, User, ShieldAlert } from "lucide-react";
-import { Customer } from "./types";
+
+import { useToast } from "../../../components/desktop/ToastProvider";
+import { api } from "../../../utils/apiClient";
+
+import { Customer, ModalMode } from "./types";
+
+import styles from "./Customers.module.css";
 
 interface CustomerFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  mode: "create" | "edit";
+  mode: ModalMode;
   selectedCustomerId: string | null;
   customers: Customer[];
   fetchCustomers: (silent?: boolean) => Promise<void>;
@@ -23,6 +29,7 @@ export const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
   currentTenantId,
   currentBranchId,
 }) => {
+  const toast = useToast();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -69,194 +76,91 @@ export const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
     };
 
     try {
-      let res;
       if (mode === "create") {
-        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/customers`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        await api.post(`/tenants/${currentTenantId}/customers`, payload);
+        toast.success("Thêm khách hàng mới thành công!");
       } else {
-        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/customers/${selectedCustomerId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      }
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || "Lỗi khi lưu khách hàng");
+        await api.put(`/tenants/${currentTenantId}/customers/${selectedCustomerId}`, payload);
+        toast.success("Cập nhật thông tin khách hàng thành công!");
       }
 
       await fetchCustomers();
       onClose();
-    } catch (err: any) {
-      alert(err.message || "Lỗi khi lưu thông tin");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(msg || "Lỗi khi lưu thông tin");
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div
-      className="modal-overlay"
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "rgba(15, 23, 42, 0.4)",
-        backdropFilter: "blur(4px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-        fontFamily: "var(--font-family, system-ui, sans-serif)",
-      }}
-    >
-      <div
-        className="modal-container"
-        style={{
-          backgroundColor: "white",
-          borderRadius: "16px",
-          width: "100%",
-          maxWidth: "460px",
-          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-          overflow: "hidden",
-          animation: "confirm-modal-scale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards",
-        }}
-      >
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContainer}>
         {/* Header */}
-        <div
-          className="modal-header"
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "16px 20px",
-            borderBottom: "1px solid var(--border-color, #e2e8f0)",
-          }}
-        >
-          <h3 style={{ margin: 0, fontSize: "16px", fontWeight: "700", color: "#0f172a" }}>
+        <div className={styles.modalHeader}>
+          <h3 className={styles.modalTitleText}>
             {mode === "create" ? "THÊM KHÁCH HÀNG MỚI" : "CHỈNH SỬA CHI TIẾT KHÁCH HÀNG"}
           </h3>
-          <button
-            onClick={onClose}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: "rgba(15, 23, 42, 0.4)",
-              padding: "4px",
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 0.15s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(15, 23, 42, 0.05)";
-              e.currentTarget.style.color = "rgba(15, 23, 42, 0.8)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = "rgba(15, 23, 42, 0.4)";
-            }}
-          >
+          <button onClick={onClose} className={styles.closeBtn}>
             <X size={18} />
           </button>
         </div>
 
         {/* Body Form */}
         <form onSubmit={handleSave}>
-          <div className="modal-body" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div className={styles.modalBody}>
             {/* Name */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)" }}>
-                Họ và tên <span style={{ color: "red" }}>*</span>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>
+                Họ và tên <span className={styles.requiredStar}>*</span>
               </label>
-              <div style={{ position: "relative" }}>
-                <User size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "rgba(15, 23, 42, 0.4)" }} />
+              <div className={styles.inputWrapper}>
+                <User size={16} className={styles.inputIcon} />
                 <input
                   type="text"
                   required
                   placeholder="Nhập tên khách hàng"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px 10px 36px",
-                    border: "1.5px solid var(--border-color, #e2e8f0)",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    outline: "none",
-                    boxSizing: "border-box",
-                  }}
-                  onFocus={(e) => (e.target.style.borderColor = "var(--color-primary)")}
-                  onBlur={(e) => (e.target.style.borderColor = "var(--border-color, #e2e8f0)")}
+                  className={styles.formInputWithIcon}
                 />
               </div>
             </div>
 
             {/* Phone */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)" }}>
-                Số điện thoại
-              </label>
-              <div style={{ position: "relative" }}>
-                <Phone size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "rgba(15, 23, 42, 0.4)" }} />
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Số điện thoại</label>
+              <div className={styles.inputWrapper}>
+                <Phone size={16} className={styles.inputIcon} />
                 <input
                   type="text"
                   placeholder="Ví dụ: 0987654321"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px 10px 36px",
-                    border: "1.5px solid var(--border-color, #e2e8f0)",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    outline: "none",
-                    boxSizing: "border-box",
-                  }}
-                  onFocus={(e) => (e.target.style.borderColor = "var(--color-primary)")}
-                  onBlur={(e) => (e.target.style.borderColor = "var(--border-color, #e2e8f0)")}
+                  className={styles.formInputWithIcon}
                 />
               </div>
             </div>
 
             {/* Email */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)" }}>
-                Thư điện tử (Email)
-              </label>
-              <div style={{ position: "relative" }}>
-                <Mail size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "rgba(15, 23, 42, 0.4)" }} />
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Thư điện tử (Email)</label>
+              <div className={styles.inputWrapper}>
+                <Mail size={16} className={styles.inputIcon} />
                 <input
                   type="email"
                   placeholder="tenkhachhang@gmail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px 10px 36px",
-                    border: "1.5px solid var(--border-color, #e2e8f0)",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    outline: "none",
-                    boxSizing: "border-box",
-                  }}
-                  onFocus={(e) => (e.target.style.borderColor = "var(--color-primary)")}
-                  onBlur={(e) => (e.target.style.borderColor = "var(--border-color, #e2e8f0)")}
+                  className={styles.formInputWithIcon}
                 />
               </div>
             </div>
 
             {/* Password */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)" }}>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>
                 Mật khẩu đăng nhập (Dành cho App Đặt Lịch)
               </label>
               <input
@@ -264,82 +168,57 @@ export const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
                 placeholder="Nhập mật khẩu (nếu có)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  border: "1.5px solid var(--border-color, #e2e8f0)",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  outline: "none",
-                  boxSizing: "border-box",
-                }}
-                onFocus={(e) => (e.target.style.borderColor = "var(--color-primary)")}
-                onBlur={(e) => (e.target.style.borderColor = "var(--border-color, #e2e8f0)")}
+                className={styles.formInput}
               />
             </div>
 
             {/* Credibility Score */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)", display: "flex", alignItems: "center", gap: "4px" }}>
+            <div className={styles.formGroup}>
+              <div className={styles.scoreHeader}>
+                <label className={styles.scoreLabel}>
                   <Award size={15} color="#f59e0b" /> Điểm uy tín
                 </label>
                 <span
+                  className={styles.scoreBadge}
                   style={{
-                    fontSize: "13.5px",
-                    fontWeight: "800",
-                    color: credibilityScore >= 80 ? "var(--color-success)" : credibilityScore >= 50 ? "var(--color-warning)" : "var(--color-danger)",
+                    color:
+                      credibilityScore >= 80
+                        ? "var(--color-success)"
+                        : credibilityScore >= 50
+                          ? "var(--color-warning)"
+                          : "var(--color-danger)",
                   }}
                 >
                   {credibilityScore}/100
                 </span>
               </div>
-              <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+              <div className={styles.scoreSliderRow}>
                 <input
                   type="range"
                   min="0"
                   max="100"
                   value={credibilityScore}
                   onChange={(e) => setCredibilityScore(Number(e.target.value))}
-                  style={{
-                    flexGrow: 1,
-                    accentColor: "var(--color-primary)",
-                    cursor: "pointer",
-                  }}
+                  className={styles.sliderInput}
                 />
                 <input
                   type="number"
                   min="0"
                   max="100"
                   value={credibilityScore}
-                  onChange={(e) => setCredibilityScore(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
-                  style={{
-                    width: "60px",
-                    padding: "6px",
-                    textAlign: "center",
-                    border: "1.5px solid var(--border-color, #e2e8f0)",
-                    borderRadius: "8px",
-                    fontSize: "13.5px",
-                    fontWeight: "700",
-                    outline: "none",
-                  }}
+                  onChange={(e) =>
+                    setCredibilityScore(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))
+                  }
+                  className={styles.numberInput}
                 />
               </div>
               {credibilityScore < 80 && (
                 <div
-                  style={{
-                    display: "flex",
-                    gap: "8px",
-                    background: credibilityScore >= 50 ? "#fef3c7" : "#fee2e2",
-                    padding: "8px 12px",
-                    borderRadius: "8px",
-                    marginTop: "4px",
-                    fontSize: "12px",
-                    color: credibilityScore >= 50 ? "#b45309" : "#b91c1c",
-                    fontWeight: "500",
-                  }}
+                  className={`${styles.warningAlert} ${
+                    credibilityScore >= 50 ? styles.warningAlertWarning : styles.warningAlertDanger
+                  }`}
                 >
-                  <ShieldAlert size={14} style={{ flexShrink: 0, marginTop: "2px" }} />
+                  <ShieldAlert size={14} className={styles.warningIcon} />
                   <span>
                     {credibilityScore >= 50
                       ? "Khách hàng này từng có lịch sử hủy hẹn muộn hoặc không đến."
@@ -351,39 +230,19 @@ export const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
           </div>
 
           {/* Footer */}
-          <div
-            className="modal-footer"
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              gap: "12px",
-              padding: "16px 20px",
-              borderTop: "1px solid var(--border-color, #e2e8f0)",
-            }}
-          >
+          <div className={styles.modalFooter}>
             <button
               type="button"
-              className="btn btn-secondary"
+              className={`btn btn-secondary ${styles.btnFooterCancel}`}
               onClick={onClose}
               disabled={saving}
-              style={{ padding: "10px 20px", fontSize: "14px", fontWeight: "600" }}
             >
               Hủy bỏ
             </button>
             <button
               type="submit"
-              className="btn btn-primary"
+              className={`btn btn-primary ${styles.btnFooterSave}`}
               disabled={saving}
-              style={{
-                padding: "10px 20px",
-                fontSize: "14px",
-                fontWeight: "600",
-                background: "var(--color-primary)",
-                border: "none",
-                color: "white",
-                borderRadius: "8px",
-                cursor: "pointer",
-              }}
             >
               {saving ? "Đang lưu..." : "Lưu thông tin"}
             </button>

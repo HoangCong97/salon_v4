@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { ChevronLeft, ChevronRight, Filter, ChevronDown, Plus } from "lucide-react";
 import { Staff, TYPE_OPTIONS } from "../types";
 
+import styles from "../AttendanceCalendar.module.css";
+
 interface AttendanceHeaderProps {
   month: number;
   year: number;
@@ -76,47 +78,47 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
   }, [staffList, staffSearchQuery]);
 
   return (
-    <div className="card" style={{ display: "flex", flexDirection: "column", gap: "12px", padding: "12px 20px", flexShrink: 0 }}>
+    <div className={`card ${styles.headerCard}`}>
       {/* Top Row: Navigation, Filters and Action */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-          <button className="btn btn-secondary" style={{ padding: "8px 12px" }} onClick={onToday}>
+      <div className={styles.headerTopRow}>
+        <div className={styles.navFiltersGroup}>
+          <button
+            className="btn btn-secondary"
+            style={{ padding: "8px 12px" }}
+            onClick={onToday}
+          >
             Hôm nay
           </button>
-          <div style={{ display: "flex", border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", overflow: "hidden" }}>
+          <div className={styles.btnGroupBorder}>
             <button
               onClick={onPrevMonth}
-              style={{ padding: "8px 12px", border: "none", background: "white", cursor: "pointer", color: "var(--text-secondary)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-app)")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
+              className={styles.navArrowBtn}
             >
               <ChevronLeft size={16} />
             </button>
             <button
               onClick={onNextMonth}
-              style={{ padding: "8px 12px", border: "none", background: "white", cursor: "pointer", color: "var(--text-secondary)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-app)")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
+              className={styles.navArrowBtn}
             >
               <ChevronRight size={16} />
             </button>
           </div>
-          <span style={{ fontSize: "15px", fontWeight: "700", color: "var(--text-primary)", marginRight: "4px" }}>
+          <span className={styles.monthTitle}>
             Tháng {month + 1} năm {year}
           </span>
 
           {/* Vertical Separator */}
-          <div style={{ width: "1px", height: "20px", backgroundColor: "var(--border-color)" }} />
+          <div className={styles.vSeparator} />
 
           {/* Inline Filters */}
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <div className={styles.filterLabelGroup}>
             <Filter size={14} style={{ color: "var(--text-secondary)" }} />
-            <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)" }}>Lọc:</span>
+            <span className={styles.filterLabelText}>Lọc:</span>
           </div>
 
           {/* Branch Dropdown */}
           {branches && branches.length > 0 && (
-            <div ref={branchDropdownRef} style={{ position: "relative" }}>
+            <div ref={branchDropdownRef} className={styles.relativePosition}>
               <button
                 type="button"
                 onClick={() => {
@@ -124,25 +126,7 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
                   setIsStaffDropdownOpen(false);
                   setIsTypeDropdownOpen(false);
                 }}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "6px 10px",
-                  borderRadius: "var(--radius-md)",
-                  border: "1px solid var(--border-color)",
-                  background: "white",
-                  fontSize: "12.5px",
-                  fontWeight: "500",
-                  color: "var(--text-primary)",
-                  cursor: "pointer",
-                  boxShadow: "var(--shadow-sm)",
-                  transition: "all 0.15s ease",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--color-primary)")}
-                onMouseLeave={(e) => {
-                  if (!isBranchDropdownOpen) e.currentTarget.style.borderColor = "var(--border-color)";
-                }}
+                className={styles.dropdownTriggerBtn}
               >
                 <span>
                   🏢 Chi nhánh: {branches.find(b => b.id === currentBranchId)?.name || "Chưa chọn"}
@@ -151,23 +135,7 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
               </button>
 
               {isBranchDropdownOpen && (
-                <div style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  marginTop: "4px",
-                  width: "220px",
-                  background: "white",
-                  border: "1px solid var(--border-color)",
-                  borderRadius: "var(--radius-md)",
-                  boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-                  zIndex: 100,
-                  display: "flex",
-                  flexDirection: "column",
-                  maxHeight: "260px",
-                  overflowY: "auto",
-                  padding: "4px 0"
-                }}>
+                <div className={`${styles.dropdownMenu} ${styles.branchDropdown}`}>
                   {branches.map((b) => {
                     const isSelected = b.id === currentBranchId;
                     return (
@@ -178,24 +146,7 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
                           setBranch(b.id);
                           setIsBranchDropdownOpen(false);
                         }}
-                        style={{
-                          width: "100%",
-                          textAlign: "left",
-                          padding: "8px 12px",
-                          fontSize: "12px",
-                          border: "none",
-                          background: isSelected ? "var(--color-primary-light)" : "transparent",
-                          color: isSelected ? "var(--color-primary)" : "var(--text-primary)",
-                          fontWeight: isSelected ? "600" : "400",
-                          cursor: "pointer",
-                          transition: "background 0.15s",
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isSelected) e.currentTarget.style.backgroundColor = "var(--bg-app)";
-                        }}
-                        onMouseLeave={(e) => {
-                          if (!isSelected) e.currentTarget.style.backgroundColor = "transparent";
-                        }}
+                        className={`${styles.dropdownOption} ${isSelected ? styles.dropdownOptionSelected : ""}`}
                       >
                         {b.name}
                       </button>
@@ -207,32 +158,14 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
           )}
 
           {/* Staff Multi-Select Dropdown */}
-          <div ref={staffDropdownRef} style={{ position: "relative" }}>
+          <div ref={staffDropdownRef} className={styles.relativePosition}>
             <button
               type="button"
               onClick={() => {
                 setIsStaffDropdownOpen(!isStaffDropdownOpen);
                 setIsTypeDropdownOpen(false);
               }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "6px 10px",
-                borderRadius: "var(--radius-md)",
-                border: "1px solid var(--border-color)",
-                background: "white",
-                fontSize: "12.5px",
-                fontWeight: "500",
-                color: "var(--text-primary)",
-                cursor: "pointer",
-                boxShadow: "var(--shadow-sm)",
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--color-primary)")}
-              onMouseLeave={(e) => {
-                if (!isStaffDropdownOpen) e.currentTarget.style.borderColor = "var(--border-color)";
-              }}
+              className={styles.dropdownTriggerBtn}
             >
               <span>
                 {selectedStaffIds.length === staffList.length
@@ -245,68 +178,40 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
             </button>
 
             {isStaffDropdownOpen && (
-              <div style={{
-                position: "absolute",
-                top: "100%",
-                left: 0,
-                marginTop: "4px",
-                width: "260px",
-                background: "white",
-                border: "1px solid var(--border-color)",
-                borderRadius: "var(--radius-md)",
-                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-                zIndex: 100,
-                display: "flex",
-                flexDirection: "column",
-                maxHeight: "320px",
-              }}>
+              <div className={`${styles.dropdownMenu} ${styles.staffDropdown}`}>
                 {/* Search Bar */}
-                <div style={{ padding: "8px 12px", borderBottom: "1px solid var(--border-color)" }}>
+                <div className={styles.dropdownSearchWrapper}>
                   <input
                     type="text"
                     placeholder="Tìm nhân viên..."
                     value={staffSearchQuery}
                     onChange={(e) => setStaffSearchQuery(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "6px 10px",
-                      fontSize: "12px",
-                      border: "1px solid var(--border-color)",
-                      borderRadius: "var(--radius-sm)",
-                      outline: "none",
-                    }}
+                    className={styles.dropdownSearchInput}
                   />
                 </div>
 
                 {/* Quick Actions */}
-                <div style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  padding: "6px 12px",
-                  borderBottom: "1px solid var(--border-color)",
-                  fontSize: "11px",
-                  background: "var(--bg-app)"
-                }}>
+                <div className={styles.dropdownQuickActions}>
                   <button
                     type="button"
                     onClick={() => setSelectedStaffIds(staffList.map(s => s.id))}
-                    style={{ border: "none", background: "none", color: "var(--color-primary)", fontWeight: "600", cursor: "pointer" }}
+                    className={styles.dropdownQuickBtnSelect}
                   >
                     Chọn tất cả
                   </button>
                   <button
                     type="button"
                     onClick={() => setSelectedStaffIds([])}
-                    style={{ border: "none", background: "none", color: "var(--color-danger)", fontWeight: "600", cursor: "pointer" }}
+                    className={styles.dropdownQuickBtnDeselect}
                   >
                     Bỏ chọn tất cả
                   </button>
                 </div>
 
                 {/* Scrollable list */}
-                <div style={{ overflowY: "auto", flexGrow: 1, padding: "4px 0" }}>
+                <div className={styles.dropdownScrollableList}>
                   {filteredStaffForDropdown.length === 0 ? (
-                    <div style={{ padding: "12px", fontSize: "12px", color: "var(--text-muted)", textAlign: "center" }}>
+                    <div className={styles.dropdownNoResult}>
                       Không tìm thấy nhân viên
                     </div>
                   ) : (
@@ -315,17 +220,7 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
                       return (
                         <label
                           key={staff.id}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            padding: "8px 12px",
-                            fontSize: "12px",
-                            cursor: "pointer",
-                            transition: "background 0.15s",
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-app)")}
-                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                          className={styles.dropdownLabelOption}
                         >
                           <input
                             type="checkbox"
@@ -350,32 +245,14 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
           </div>
 
           {/* Record Type Multi-Select Dropdown */}
-          <div ref={typeDropdownRef} style={{ position: "relative" }}>
+          <div ref={typeDropdownRef} className={styles.relativePosition}>
             <button
               type="button"
               onClick={() => {
                 setIsTypeDropdownOpen(!isTypeDropdownOpen);
                 setIsStaffDropdownOpen(false);
               }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "6px 10px",
-                borderRadius: "var(--radius-md)",
-                border: "1px solid var(--border-color)",
-                background: "white",
-                fontSize: "12.5px",
-                fontWeight: "500",
-                color: "var(--text-primary)",
-                cursor: "pointer",
-                boxShadow: "var(--shadow-sm)",
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--color-primary)")}
-              onMouseLeave={(e) => {
-                if (!isTypeDropdownOpen) e.currentTarget.style.borderColor = "var(--border-color)";
-              }}
+              className={styles.dropdownTriggerBtn}
             >
               <span>
                 {selectedTypes.length === TYPE_OPTIONS.length
@@ -388,64 +265,33 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
             </button>
 
             {isTypeDropdownOpen && (
-              <div style={{
-                position: "absolute",
-                top: "100%",
-                left: 0,
-                marginTop: "4px",
-                width: "250px",
-                background: "white",
-                border: "1px solid var(--border-color)",
-                borderRadius: "var(--radius-md)",
-                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-                zIndex: 100,
-                display: "flex",
-                flexDirection: "column",
-                maxHeight: "320px",
-              }}>
+              <div className={`${styles.dropdownMenu} ${styles.typeDropdown}`}>
                 {/* Quick Actions */}
-                <div style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  padding: "6px 12px",
-                  borderBottom: "1px solid var(--border-color)",
-                  fontSize: "11px",
-                  background: "var(--bg-app)"
-                }}>
+                <div className={styles.dropdownQuickActions}>
                   <button
                     type="button"
                     onClick={() => setSelectedTypes(TYPE_OPTIONS.map(o => o.value))}
-                    style={{ border: "none", background: "none", color: "var(--color-primary)", fontWeight: "600", cursor: "pointer" }}
+                    className={styles.dropdownQuickBtnSelect}
                   >
                     Chọn tất cả
                   </button>
                   <button
                     type="button"
                     onClick={() => setSelectedTypes([])}
-                    style={{ border: "none", background: "none", color: "var(--color-danger)", fontWeight: "600", cursor: "pointer" }}
+                    className={styles.dropdownQuickBtnDeselect}
                   >
                     Bỏ chọn tất cả
                   </button>
                 </div>
 
                 {/* Scrollable list */}
-                <div style={{ overflowY: "auto", flexGrow: 1, padding: "4px 0" }}>
+                <div className={styles.dropdownScrollableList}>
                   {TYPE_OPTIONS.map((opt) => {
                     const isChecked = selectedTypes.includes(opt.value);
                     return (
                       <label
                         key={opt.value}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          padding: "8px 12px",
-                          fontSize: "12px",
-                          cursor: "pointer",
-                          transition: "background 0.15s",
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-app)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                        className={styles.dropdownLabelOption}
                       >
                         <input
                           type="checkbox"
@@ -478,20 +324,7 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
                 setSelectedStaffIds(staffList.map(s => s.id));
                 setSelectedTypes(TYPE_OPTIONS.map(o => o.value));
               }}
-              style={{
-                border: "none",
-                background: "none",
-                color: "var(--color-primary)",
-                fontSize: "12px",
-                fontWeight: "600",
-                cursor: "pointer",
-                padding: "4px 8px",
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                borderRadius: "var(--radius-sm)",
-                backgroundColor: "var(--color-primary-light)"
-              }}
+              className={styles.resetFiltersBtn}
             >
               Xóa lọc
             </button>
@@ -499,7 +332,11 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
         </div>
 
         {canManage && (
-          <button className="btn btn-primary" onClick={onNewRecordClick} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <button
+            className="btn btn-primary"
+            onClick={onNewRecordClick}
+            style={{ display: "flex", alignItems: "center", gap: "6px" }}
+          >
             <Plus size={16} /> Ghi chép mới
           </button>
         )}
@@ -507,3 +344,4 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
     </div>
   );
 };
+

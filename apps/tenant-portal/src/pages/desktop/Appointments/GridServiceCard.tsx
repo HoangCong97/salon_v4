@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { Scissors, Clock } from "lucide-react";
 import { ServiceItem } from "./types";
 import { STATUS_CFG, SLOT_HEIGHT } from "./constants";
-import { hashColor, hashBg, hashBorder } from "./helpers";
+
+import styles from "./Appointments.module.css";
 
 interface GridServiceCardProps {
   item: ServiceItem;
@@ -99,73 +100,58 @@ export function GridServiceCard({
       onDragStart={handleDragStart}
       onDragEnd={onDragEnd}
       onDoubleClick={e => { e.stopPropagation(); onDoubleClick(); }}
+      className={`${styles.gridCard} ${
+        height < 40 ? styles.gridCardMiniPadding : styles.gridCardFullPadding
+      }`}
       style={{
-        position: "absolute",
-        left: 3, right: 3,
         top: topPx,
         height,
-        borderRadius: 8,
         background: bgColor,
-        border: `1.5px solid ${bdColor}`,
-        borderLeft: `4px solid ${accentColor}`,
-        boxShadow: `0 2px 8px ${accentColor}22`,
-        padding: height < 40 ? "2px 6px" : "5px 8px",
+        borderColor: bdColor,
+        borderLeftColor: accentColor,
         cursor: isBeingDragged ? "grabbing" : "grab",
-        overflow: "visible", // Allowed to let handle bleed out
         opacity: isBeingDragged ? 0.3 : 1,
         pointerEvents: dragActive && !isBeingDragged ? "none" : "auto",
-        userSelect: "none",
-        zIndex: 2,
-        boxSizing: "border-box",
-        transition: "box-shadow 0.15s",
-      }}
-      onMouseEnter={e => {
-        if (!dragActive) {
-          const el = e.currentTarget as HTMLDivElement;
-          el.style.boxShadow = `0 4px 14px ${accentColor}44`;
-          el.style.zIndex = "10";
-        }
-      }}
-      onMouseLeave={e => {
-        const el = e.currentTarget as HTMLDivElement;
-        el.style.boxShadow = `0 2px 8px ${accentColor}22`;
-        el.style.zIndex = "2";
+        ["--accent-shadow-color" as any]: `${accentColor}22`,
+        ["--accent-shadow-hover-color" as any]: `${accentColor}44`,
       }}
     >
       {/* Content wrapper with overflow hidden to keep design clean */}
-      <div style={{ width: "100%", height: "100%", overflow: "hidden", position: "relative" }}>
+      <div className={styles.gridCardInner}>
         {height < 40 ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 4, height: "100%", overflow: "hidden" }}>
-            <div style={{ width: 5, height: 5, borderRadius: "50%", background: cfg.dot, flexShrink: 0 }} />
-            <span style={{ fontSize: 10, fontWeight: 700, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 0 }}>
+          <div className={styles.gridCardInnerMini}>
+            <div className={styles.gridCardDot} style={{ background: cfg.dot }} />
+            <span className={styles.gridCardCustNameMini}>
               {item.customerName}
             </span>
-            <span style={{ fontSize: 9, color: "#475569", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span className={styles.gridCardSvcNameMini}>
               · {item.service.name}
             </span>
           </div>
         ) : (
           <>
-            <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: cfg.dot, flexShrink: 0 }} />
-              <span style={{ fontSize: 9, fontWeight: 700, color: cfg.text, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div className={styles.gridCardHeader}>
+              <div className={styles.gridCardDot} style={{ background: cfg.dot }} />
+              <span className={styles.gridCardStatusText} style={{ color: cfg.text }}>
                 {cfg.label}
               </span>
-              <span style={{ fontSize: 8, fontWeight: 600, padding: "1px 4px", borderRadius: 10, whiteSpace: "nowrap", background: item.source === "ONLINE" ? "#ede9fe" : "#fff7ed", color: item.source === "ONLINE" ? "#6d28d9" : "#c2410c" }}>
+              <span className={`${styles.sourceBadge} ${
+                item.source === "ONLINE" ? styles.sourceOnline : styles.sourceWalkIn
+              }`}>
                 {item.source === "ONLINE" ? "🌐" : "🏠"}
               </span>
             </div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {item.customerName}{height < 70 && <span style={{ fontWeight: 500, color: "#475569" }}> · {item.service.name}</span>}
+            <div className={styles.gridCardCustName}>
+              {item.customerName}{height < 70 && <span className={styles.gridCardSvcNameInline}> · {item.service.name}</span>}
             </div>
             {height >= 70 && (
-              <div style={{ fontSize: 10, color: "#475569", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <div className={styles.gridCardSvcName}>
                 <Scissors size={9} style={{ marginRight: 3, verticalAlign: "middle" }} />
                 {item.service.name}
               </div>
             )}
             {height >= 88 && (
-              <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 2, display: "flex", alignItems: "center", gap: 3 }}>
+              <div className={styles.gridCardTime}>
                 <Clock size={8} />{item.startTime} · {item.service.duration}p
               </div>
             )}
@@ -176,16 +162,7 @@ export function GridServiceCard({
       {onResize && !dragActive && (
         <div
           onMouseDown={handleResizeMouseDown}
-          style={{
-            position: "absolute",
-            bottom: -8,
-            left: 0,
-            right: 0,
-            height: 10,
-            cursor: "ns-resize",
-            background: "transparent",
-            zIndex: 100,
-          }}
+          className={styles.resizeHandle}
         />
       )}
     </div>

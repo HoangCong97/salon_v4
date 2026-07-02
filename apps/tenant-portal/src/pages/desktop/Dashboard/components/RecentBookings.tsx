@@ -1,8 +1,10 @@
 import React from "react";
 
+import styles from "../Dashboard.module.css";
+
 export function RecentBookings() {
   return (
-    <div className="card" style={{ minHeight: "300px" }}>
+    <div className={`card ${styles.bookingsCard}`}>
       <h3 className="card-title">Hoạt động đặt lịch gần đây</h3>
       <div className="data-table-container">
         <table className="data-table">
@@ -43,3 +45,4 @@ export function RecentBookings() {
     </div>
   );
 }
+

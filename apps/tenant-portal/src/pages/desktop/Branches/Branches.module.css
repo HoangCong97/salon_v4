@@ -1,0 +1,562 @@
+/* Branches.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.brandDividerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+  margin-top: 10px;
+}
+
+.brandDividerTitle {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.loadingWrapper {
+  display: flex;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+.errorCard {
+  border-left: 4px solid var(--color-danger);
+  background: var(--color-danger-light);
+}
+
+.errorText {
+  color: var(--color-danger);
+  font-weight: 500;
+  margin: 0;
+}
+
+.emptyCard {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.emptyIcon {
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  margin-inline: auto;
+}
+
+.emptyTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.emptyDesc {
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.gridArea {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+/* Card classes from <style> */
+.branch-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+}
+
+.branch-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary);
+}
+
+.branch-banner {
+  height: 120px;
+  width: 100%;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.logo-container {
+  position: relative;
+  cursor: pointer;
+}
+
+.branch-logo-container {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  border: 3px solid var(--bg-card);
+  box-shadow: var(--shadow-md);
+  position: absolute;
+  left: 20px;
+  bottom: -32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.branch-logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.logo-upload-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: rgba(15, 23, 42, 0.6);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 12;
+}
+
+.logo-container:hover .logo-upload-overlay {
+  opacity: 1;
+}
+
+.banner-upload-btn {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  z-index: 12;
+}
+
+.banner-upload-btn:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  transform: scale(1.02);
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: hsl(210, 40%, 96%);
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+}
+
+.social-link:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  transform: translateY(-2px);
+}
+
+/* BrandCard classes */
+.brandCardContainer {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.brandBanner {
+  height: 180px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.brandLogoContainer {
+  position: absolute;
+  left: 24px;
+  bottom: -40px;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  border: 4px solid var(--bg-card);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 11;
+}
+
+.brandLogoUploadOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: rgba(15, 23, 42, 0.6);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 12;
+}
+
+.brandLogoContainer:hover .brandLogoUploadOverlay {
+  opacity: 1;
+}
+
+.brandLogoUploadText {
+  font-size: 8px;
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.brandLogoResetBtn {
+  position: absolute;
+  left: 82px;
+  bottom: -45px;
+  background: var(--color-danger);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 12;
+  box-shadow: var(--shadow-sm);
+}
+
+.brandCardContent {
+  padding: 52px 24px 24px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.brandBadge {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-primary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--color-primary-light);
+}
+
+.brandName {
+  font-size: 22px;
+  font-weight: 800;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+
+.brandSlogan {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.brandContactRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.hotlineLabel {
+  font-size: 10px;
+  font-weight: 800;
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.hotlineVal {
+  color: var(--color-danger);
+}
+
+/* BranchCard classes */
+.branchCardContent {
+  padding: 44px 20px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: space-between;
+}
+
+.branchName {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.branchBrandRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.branchBrandName {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.inheritanceTag {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  font-style: italic;
+  border: 1px dashed var(--border-color);
+  padding: 0px 4px;
+  border-radius: 3px;
+}
+
+.branchSloganRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.branchSlogan {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.branchSloganInherit {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.branchContactList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--text-secondary);
+  margin-top: 12px;
+}
+
+.branchContactItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.branchContactText {
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.branchHotlineBadge {
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.branchHotlineText {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--color-danger);
+}
+
+.branchSocialRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-color);
+}
+
+.branchActionsRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.branchLogoResetBtn {
+  position: absolute;
+  left: 64px;
+  bottom: -38px;
+  background: var(--color-danger);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 11;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Modals classes */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalCard {
+  width: 100%;
+  max-width: 580px;
+  position: relative;
+}
+
+.modalCloseBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.modalScrollBody {
+  max-height: 65vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-left: 8px;
+  padding-right: 8px;
+  padding-bottom: 12px;
+}
+
+.sectionHeader {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  margin-top: 16px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 4px;
+}
+
+.sectionHeaderFirst {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 4px;
+}
+
+.formGrid1Col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.formGrid2Col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.formGroup0Margin {
+  margin-bottom: 0;
+}
+
+.formInputHeight {
+  height: 36px;
+  font-size: 13px;
+}
+
+.textareaNoResize {
+  resize: none;
+  font-size: 13px;
+}
+
+.modalActionsRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.modalBtn {
+  height: 36px;
+  padding: 0 16px;
+  font-size: 13px;
+}
+
+.gridColSpan2 {
+  grid-column: span 2;
+}
+

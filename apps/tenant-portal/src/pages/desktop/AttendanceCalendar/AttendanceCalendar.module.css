@@ -1,0 +1,542 @@
+/* AttendanceCalendar.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: calc(100vh - 70px - 48px - 10px);
+}
+
+.legendCard {
+  padding: 12px 20px;
+  flex-shrink: 0;
+}
+
+.loadingWrapper {
+  display: flex;
+  justify-content: center;
+  padding: 100px 0;
+  flex-grow: 1;
+  align-items: center;
+}
+
+.errorCard {
+  border-left: 4px solid var(--color-danger);
+  background: var(--color-danger-light);
+  flex-grow: 1;
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+}
+
+.errorHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--color-danger);
+}
+
+.errorText {
+  font-size: 13px;
+  margin-top: 4px;
+  color: var(--color-danger);
+  margin-bottom: 0;
+}
+
+/* Grid styles */
+.gridContainer {
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.gridMinWidthWrapper {
+  min-width: 850px;
+  width: 100%;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.weekdayHeaderRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: hsl(210, 40%, 96%);
+  border-bottom: 1px solid var(--border-color);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.weekdayHeaderCell {
+  padding: 12px 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.scrollableGridWrapper {
+  flex-grow: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.monthlyGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, minmax(1fr, auto));
+  background: var(--border-color);
+  gap: 1px;
+  flex-grow: 1;
+}
+
+.gridCell {
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  transition: all 0.15s ease;
+  min-height: 90px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.gridCellCurrentMonth {
+  background-color: white;
+}
+
+.gridCellNotCurrentMonth {
+  background-color: hsl(210, 40%, 98%);
+}
+
+.gridCellInteractive {
+  cursor: pointer;
+}
+
+.gridCellInteractive:hover {
+  background-color: hsl(210, 40%, 96%);
+}
+
+.dateNumRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.dateNum {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.dateNumNotCurrent {
+  color: var(--text-muted);
+}
+
+.dateNumToday {
+  font-weight: 700;
+  color: white !important;
+  background-color: var(--color-primary);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.cellItemsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.cellBadge {
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.badgeTextLabel {
+  opacity: 0.85;
+  font-weight: 500;
+}
+
+/* Header styles */
+.headerCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 20px;
+  flex-shrink: 0;
+}
+
+.headerTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.navFiltersGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btnGroupBorder {
+  display: flex;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.navArrowBtn {
+  padding: 8px 12px;
+  border: none;
+  background: white;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: background-color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navArrowBtn:hover {
+  background-color: var(--bg-app);
+}
+
+.monthTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-right: 4px;
+}
+
+.vSeparator {
+  width: 1px;
+  height: 20px;
+  background-color: var(--border-color);
+}
+
+.filterLabelGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filterLabelText {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.dropdownTriggerBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: white;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.dropdownTriggerBtn:hover {
+  border-color: var(--color-primary);
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 4px 0;
+  box-sizing: border-box;
+}
+
+.branchDropdown {
+  width: 220px;
+  max-height: 260px;
+}
+
+.staffDropdown {
+  width: 260px;
+  max-height: 320px;
+}
+
+.typeDropdown {
+  width: 240px;
+  max-height: 320px;
+}
+
+.dropdownOption {
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s;
+  box-sizing: border-box;
+}
+
+.dropdownOption:hover {
+  background-color: var(--bg-app);
+}
+
+.dropdownOptionSelected {
+  background: var(--color-primary-light) !important;
+  color: var(--color-primary) !important;
+  font-weight: 600;
+}
+
+/* Modal styles */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalCard {
+  width: 100%;
+  max-width: 450px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modalTitle {
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.modalCloseBtn {
+  border: none;
+  background: none;
+  font-size: 18px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.modalTabsContainer {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+  gap: 0;
+  width: 100%;
+}
+
+.modalTabBtn {
+  flex: 1;
+  text-align: center;
+  padding: 10px 16px;
+  font-weight: 600;
+  font-size: 13px;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.modalTabBtnActive {
+  border-bottom: 2px solid var(--color-primary) !important;
+  color: var(--color-primary) !important;
+}
+
+.formWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modalFooter {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.modalFooterEdit {
+  justify-content: space-between;
+}
+
+.modalFooterCreate {
+  justify-content: flex-end;
+}
+
+/* Legend styles */
+.legendContainer {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.legendTitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.resetFiltersBtn {
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-primary-light);
+}
+
+.dropdownSearchWrapper {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dropdownSearchInput {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+
+.dropdownQuickActions {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 11px;
+  background: var(--bg-app);
+}
+
+.dropdownQuickBtnSelect {
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dropdownQuickBtnDeselect {
+  border: none;
+  background: none;
+  color: var(--color-danger);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dropdownScrollableList {
+  overflow-y: auto;
+  flex-grow: 1;
+  padding: 4px 0;
+}
+
+.dropdownLabelOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  box-sizing: border-box;
+}
+
+.dropdownLabelOption:hover {
+  background-color: var(--bg-app);
+}
+
+.dropdownNoResult {
+  padding: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.relativePosition {
+  position: relative;
+}
+
+

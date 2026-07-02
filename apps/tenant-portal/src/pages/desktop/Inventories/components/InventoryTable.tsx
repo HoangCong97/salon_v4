@@ -3,11 +3,12 @@ import { AlertTriangle, Edit2, Trash2 } from "lucide-react";
 import { ExcelInput } from "../../../../components/desktop/TableComponents";
 import { Tooltip } from "../../../../components/desktop/ui/Tooltip";
 import { InventoryItem } from "../types";
+import styles from "../Inventories.module.css";
 
 interface InventoryTableProps {
   filteredItems: InventoryItem[];
-  getInlineValue: (item: InventoryItem, field: keyof InventoryItem) => any;
-  handleInlineChange: (itemId: string, field: keyof InventoryItem, value: any) => void;
+  getInlineValue: (item: InventoryItem, field: keyof InventoryItem) => string | number | undefined | null;
+  handleInlineChange: (itemId: string, field: keyof InventoryItem, value: string | number | undefined | null) => void;
   handlePriceChange: (itemId: string, field: "costPrice" | "sellPrice" | "quantity", valStr: string) => void;
   handleAutoSave: (itemId: string, updatedFields: Partial<InventoryItem>) => Promise<void>;
   formatNumber: (val: number | string | undefined | null) => string;
@@ -28,16 +29,16 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
   onDelete,
 }) => {
   return (
-    <div className="data-table-container" style={{ overflow: "visible" }}>
+    <div className={`data-table-container ${styles.tableContainer}`}>
       <table className="data-table">
         <thead>
           <tr>
-            <th style={{ padding: "6px 10px", fontSize: "13px" }}>Tên sản phẩm</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "160px", textAlign: "center" }}>Giá vốn (giá nhập)</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "160px", textAlign: "center" }}>Giá bán lẻ</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "120px", textAlign: "center" }}>Tồn kho</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "140px" }}>Trạng thái</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "160px", textAlign: "center" }}>Thao tác</th>
+            <th className={styles.thDefault}>Tên sản phẩm</th>
+            <th className={`${styles.thDefault} ${styles.thCostPrice}`}>Giá vốn (giá nhập)</th>
+            <th className={`${styles.thDefault} ${styles.thSellPrice}`}>Giá bán lẻ</th>
+            <th className={`${styles.thDefault} ${styles.thQty}`}>Tồn kho</th>
+            <th className={`${styles.thDefault} ${styles.thStatus}`}>Trạng thái</th>
+            <th className={`${styles.thDefault} ${styles.thAction}`}>Thao tác</th>
           </tr>
         </thead>
         <tbody>
@@ -47,7 +48,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
 
             return (
               <tr key={item.id}>
-                <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                <td className={styles.tdDefault}>
                   <ExcelInput
                     value={getInlineValue(item, "name") as string}
                     onChange={(val: string) => handleInlineChange(item.id, "name", val)}
@@ -55,7 +56,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     fontWeight="600"
                   />
                 </td>
-                <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                <td className={styles.tdDefault}>
                   <ExcelInput
                     value={formatNumber(getInlineValue(item, "costPrice") as number | string)}
                     onChange={(val: string) => handlePriceChange(item.id, "costPrice", val)}
@@ -65,7 +66,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     unit="đ"
                   />
                 </td>
-                <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                <td className={styles.tdDefault}>
                   <ExcelInput
                     value={formatNumber(getInlineValue(item, "sellPrice") as number | string)}
                     onChange={(val: string) => handlePriceChange(item.id, "sellPrice", val)}
@@ -75,7 +76,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     unit="đ"
                   />
                 </td>
-                <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                <td className={styles.tdDefault}>
                   <ExcelInput
                     type="number"
                     value={getInlineValue(item, "quantity") as number || 0}
@@ -86,23 +87,22 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     textColor={isOutOfStock ? "var(--color-danger)" : isLowStock ? "var(--color-warning)" : "inherit"}
                   />
                 </td>
-                <td style={{ padding: "0 10px", verticalAlign: "middle", height: "38px" }}>
+                <td className={styles.tdStatus}>
                   {isOutOfStock ? (
                     <span className="badge badge-danger">Hết hàng</span>
                   ) : isLowStock ? (
-                    <span className="badge badge-warning" style={{ gap: "4px" }}>
+                    <span className={`badge badge-warning ${styles.badgeLowStock}`}>
                       <AlertTriangle size={12} /> Sắp hết hàng
                     </span>
                   ) : (
                     <span className="badge badge-success">Còn hàng</span>
                   )}
                 </td>
-                <td style={{ padding: "0 8px", verticalAlign: "middle", textAlign: "center", height: "38px" }}>
-                  <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>
+                <td className={styles.tdAction}>
+                  <div className={styles.btnWrapper}>
                     <Tooltip content="Nhập / Xuất kho">
                       <button
-                        className="btn btn-secondary"
-                        style={{ padding: "4px 8px", fontSize: "12px", borderRadius: "var(--radius-sm)" }}
+                        className={`btn btn-secondary ${styles.btnAdjust}`}
                         onClick={() => onOpenAdjustModal(item)}
                       >
                         Nhập/Xuất
@@ -110,8 +110,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     </Tooltip>
                     <Tooltip content="Chỉnh sửa chi tiết">
                       <button
-                        className="btn btn-secondary"
-                        style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                        className={`btn btn-secondary ${styles.btnIcon}`}
                         onClick={() => onOpenEditModal(item)}
                       >
                         <Edit2 size={13} />
@@ -119,8 +118,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     </Tooltip>
                     <Tooltip content="Xóa sản phẩm">
                       <button
-                        className="btn btn-danger"
-                        style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                        className={`btn btn-danger ${styles.btnIcon}`}
                         onClick={() => onDelete(item.id)}
                       >
                         <Trash2 size={13} />
@@ -136,3 +134,4 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
     </div>
   );
 };
+

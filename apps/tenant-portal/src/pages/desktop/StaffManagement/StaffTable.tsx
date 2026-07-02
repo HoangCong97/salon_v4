@@ -1,11 +1,18 @@
 import React from "react";
 import { Search, Plus, Users, Edit2, Trash2, Upload, Download } from "lucide-react";
+
 import { ExcelInput, ExcelSelect, ExcelMultipleSelect, ExcelRow } from "../../../components/desktop/TableComponents";
-import { StaffMember, Role, Branch, getRoleColorStyle, getStatusColorStyle } from "./types";
-import { useAuthStore } from "../../../store/useAuthStore";
 import { ExportButton } from "../../../components/desktop/ExportButton";
-import { ExportColumnMapping } from "../../../utils/exportData";
+
+import { useAuthStore } from "../../../store/useAuthStore";
 import { useToast } from "../../../components/desktop/ToastProvider";
+
+import { api } from "../../../utils/apiClient";
+import { ExportColumnMapping } from "../../../utils/exportData";
+
+import { StaffMember, Role, Branch, getRoleColorStyle, getStatusColorStyle } from "./types";
+
+import styles from "./StaffManagement.module.css";
 
 interface StaffTableProps {
   filteredStaff: StaffMember[];
@@ -86,21 +93,11 @@ export const StaffTable: React.FC<StaffTableProps> = ({
       reader.onload = async () => {
         const base64Data = reader.result as string;
         try {
-          const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/upload`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              file: base64Data,
-              category: "staff",
-              filename: file.name
-            })
+          const data = await api.post<{ url: string }>(`/tenants/${currentTenantId}/upload`, {
+            file: base64Data,
+            category: "staff",
+            filename: file.name
           });
-
-          if (!res.ok) {
-            throw new Error("Lỗi khi tải ảnh lên máy chủ");
-          }
-
-          const data = await res.json();
           const imageUrl = data.url;
 
           // Revoke preview URL to free memory
@@ -129,29 +126,27 @@ export const StaffTable: React.FC<StaffTableProps> = ({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+    <div className={styles.tableWrapper}>
       {/* Search Bar, Filters & Action Buttons Row */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+      <div className={styles.filterRow}>
         {/* Left: Search Bar & Filters */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", flexGrow: 1 }}>
-          <div style={{ position: "relative", width: "100%", maxWidth: "240px" }}>
-            <Search size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+        <div className={styles.filtersLeft}>
+          <div className={styles.searchContainer}>
+            <Search size={18} className={styles.searchIcon} />
             <input
-              className="form-input"
+              className={`form-input ${styles.searchInput}`}
               type="text"
               placeholder="Tìm kiếm nhân viên..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ paddingLeft: "36px", height: "34px", fontSize: "13px" }}
             />
           </div>
 
           {/* Filter by Branch */}
           <select
-            className="form-input"
+            className={`form-input ${styles.filterSelect}`}
             value={selectedBranchFilter}
             onChange={(e) => setSelectedBranchFilter(e.target.value)}
-            style={{ width: "auto", minWidth: "150px", height: "34px", padding: "0 10px", fontSize: "13px" }}
           >
             <option value="">Chi nhánh (Tất cả)</option>
             {branches.map((b) => (
@@ -161,10 +156,9 @@ export const StaffTable: React.FC<StaffTableProps> = ({
 
           {/* Filter by Role */}
           <select
-            className="form-input"
+            className={`form-input ${styles.filterSelect}`}
             value={selectedRoleFilter}
             onChange={(e) => setSelectedRoleFilter(e.target.value)}
-            style={{ width: "auto", minWidth: "150px", height: "34px", padding: "0 10px", fontSize: "13px" }}
           >
             <option value="">Chức vụ (Tất cả)</option>
             {roles.map((r) => (
@@ -174,10 +168,9 @@ export const StaffTable: React.FC<StaffTableProps> = ({
 
           {/* Filter by Status */}
           <select
-            className="form-input"
+            className={`form-input ${styles.filterSelect}`}
             value={selectedStatusFilter}
             onChange={(e) => setSelectedStatusFilter(e.target.value)}
-            style={{ width: "auto", minWidth: "150px", height: "34px", padding: "0 10px", fontSize: "13px" }}
           >
             <option value="">Trạng thái (Tất cả)</option>
             <option value="ACTIVE">Hoạt động</option>
@@ -188,14 +181,13 @@ export const StaffTable: React.FC<StaffTableProps> = ({
           {/* Reset Filter Button if any filters are active */}
           {(selectedBranchFilter || selectedRoleFilter || selectedStatusFilter || searchTerm) && (
             <button
-              className="btn btn-secondary"
+              className={`btn btn-secondary ${styles.resetFilterBtn}`}
               onClick={() => {
                 setSelectedBranchFilter("");
                 setSelectedRoleFilter("");
                 setSelectedStatusFilter("");
                 setSearchTerm("");
               }}
-              style={{ height: "34px", padding: "0 12px", fontSize: "12px", color: "var(--text-secondary)" }}
             >
               Xóa bộ lọc
             </button>
@@ -203,30 +195,11 @@ export const StaffTable: React.FC<StaffTableProps> = ({
         </div>
 
         {/* Right: Action Buttons */}
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+        <div className={styles.actionsRight}>
           {canManage && (
             <button
-              className="btn btn-secondary"
+              className={`btn btn-secondary ${styles.importBtn}`}
               onClick={handleOpenImportModal}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                whiteSpace: "nowrap",
-                borderColor: "hsl(142, 76%, 36%)",
-                color: "hsl(142, 76%, 36%)",
-                backgroundColor: "hsl(142, 76%, 97%)",
-                transition: "background-color 0.15s ease",
-                height: "34px",
-                fontSize: "13px",
-                padding: "0 12px",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "hsl(142, 76%, 92%)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "hsl(142, 76%, 97%)";
-              }}
             >
               <Download size={16} /> Nhập dữ liệu
             </button>
@@ -240,9 +213,8 @@ export const StaffTable: React.FC<StaffTableProps> = ({
 
           {canManage && (
             <button 
-              className="btn btn-primary" 
+              className={`btn btn-primary ${styles.addStaffBtn}`} 
               onClick={handleOpenCreateModal}
-              style={{ height: "34px", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px", padding: "0 16px" }}
             >
               <Plus size={18} /> Thêm nhân viên mới
             </button>
@@ -251,30 +223,30 @@ export const StaffTable: React.FC<StaffTableProps> = ({
       </div>
 
       {filteredStaff.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", padding: "60px 20px" }}>
-          <Users size={48} style={{ color: "var(--text-muted)", marginBottom: "16px", marginInline: "auto" }} />
-          <h3 style={{ fontSize: "16px", fontWeight: "600", marginBottom: "8px" }}>Không tìm thấy nhân viên</h3>
-          <p style={{ color: "var(--text-secondary)", marginBottom: "20px" }}>
+        <div className={`card ${styles.emptyCard}`}>
+          <Users size={48} className={styles.emptyIcon} />
+          <h3 className={styles.emptyTitle}>Không tìm thấy nhân viên</h3>
+          <p className={styles.emptyDesc}>
             {searchTerm || selectedBranchFilter || selectedRoleFilter || selectedStatusFilter
               ? "Không tìm thấy kết quả phù hợp với các bộ lọc hiện tại."
               : "Salon của bạn hiện chưa có nhân viên nào."}
           </p>
         </div>
       ) : (
-        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-          <div className="data-table-container" style={{ border: "none", boxShadow: "none", borderRadius: 0 }}>
+        <div className={`card ${styles.tableCard}`}>
+          <div className={`data-table-container ${styles.tableContainer}`}>
             <table className="data-table">
               <thead>
                 <tr>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "220px" }}>Họ tên nhân viên</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "200px" }}>ID đăng nhập</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "150px" }}>Mật khẩu</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "150px" }}>Số điện thoại</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", minWidth: "220px" }}>Chi nhánh hoạt động</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "150px" }}>Chức vụ</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "150px", textAlign: "center" }}>Lương cơ bản</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "140px" }}>Trạng thái</th>
-                  {canManage && <th style={{ padding: "12px 16px", fontSize: "13px", width: "120px", textAlign: "center" }}>Hành động</th>}
+                  <th className={styles.th} style={{ width: "220px" }}>Họ tên nhân viên</th>
+                  <th className={styles.th} style={{ width: "200px" }}>ID đăng nhập</th>
+                  <th className={styles.th} style={{ width: "150px" }}>Mật khẩu</th>
+                  <th className={styles.th} style={{ width: "150px" }}>Số điện thoại</th>
+                  <th className={styles.th} style={{ minWidth: "220px" }}>Chi nhánh hoạt động</th>
+                  <th className={styles.th} style={{ width: "150px" }}>Chức vụ</th>
+                  <th className={styles.th} style={{ width: "150px", textAlign: "center" }}>Lương cơ bản</th>
+                  <th className={styles.th} style={{ width: "140px" }}>Trạng thái</th>
+                  {canManage && <th className={styles.th} style={{ width: "120px", textAlign: "center" }}>Hành động</th>}
                 </tr>
               </thead>
               <tbody>
@@ -312,33 +284,22 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                       onImageDrop={(file) => handleImageDrop(item.id, file)}
                     >
                       {/* 1. Họ tên nhân viên */}
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingLeft: "10px", width: "100%", height: "100%" }}>
+                      <td className={styles.td}>
+                        <div className={styles.nameWrapper}>
                           {inlineAvatarVal ? (
                             <img
                               src={inlineAvatarVal}
                               alt={item.name}
-                              style={{ width: "24px", height: "24px", borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
+                              className={styles.avatarImg}
                             />
                           ) : (
-                            <div
-                              style={{
-                                width: "24px",
-                                height: "24px",
-                                borderRadius: "50%",
-                                backgroundColor: "hsl(210, 40%, 90%)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                flexShrink: 0
-                              }}
-                            >
-                              <span style={{ fontSize: "10px", fontWeight: "700", color: "var(--text-secondary)" }}>
+                            <div className={styles.avatarFallback}>
+                              <span className={styles.avatarFallbackText}>
                                 {getInitialsOfLastWord(item.name)}
                               </span>
                             </div>
                           )}
-                          <div style={{ flexGrow: 1, minWidth: 0, height: "100%" }}>
+                          <div className={styles.inputWrapper}>
                             <ExcelInput
                               value={getInlineValue(item, "name") as string}
                               onChange={(val) => handleInlineChange(item.id, "name", val)}
@@ -351,7 +312,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                       </td>
 
                       {/* 2. ID đăng nhập */}
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                      <td className={styles.td}>
                         <ExcelInput
                           value={getInlineValue(item, "loginId") as string}
                           onChange={(val) => handleInlineChange(item.id, "loginId", val)}
@@ -361,7 +322,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                       </td>
 
                       {/* 3. Mật khẩu */}
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                      <td className={styles.td}>
                         <ExcelInput
                           type="password"
                           value={getInlineValue(item, "password") as string || ""}
@@ -372,7 +333,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                       </td>
 
                       {/* 4. Số điện thoại */}
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                      <td className={styles.td}>
                         <ExcelInput
                           value={getInlineValue(item, "phone") as string}
                           onChange={(val) => handleInlineChange(item.id, "phone", val)}
@@ -382,7 +343,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                       </td>
 
                       {/* 5. Chi nhánh hoạt động */}
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                      <td className={styles.td}>
                         <ExcelMultipleSelect
                           values={selectedBranchIds}
                           options={branches.map((b) => ({ value: b.id, label: b.name }))}
@@ -393,7 +354,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                       </td>
 
                       {/* 6. Chức vụ */}
-                      <td style={{ padding: "3px 6px", verticalAlign: "middle", height: "38px" }}>
+                      <td className={styles.selectTd}>
                         <ExcelSelect
                           value={inlineRoleVal ? inlineRoleVal.id : ""}
                           onChange={(newRoleId) => {
@@ -410,7 +371,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                       </td>
 
                       {/* 7. Lương cơ bản */}
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                      <td className={styles.td}>
                         <ExcelInput
                           value={formatNumber(getInlineValue(item, "baseSalary") as number | string)}
                           onChange={(val) => handleSalaryChange(item.id, val)}
@@ -423,7 +384,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                       </td>
 
                       {/* 8. Trạng thái */}
-                      <td style={{ padding: "3px 6px", verticalAlign: "middle", height: "38px" }}>
+                      <td className={styles.selectTd}>
                         <ExcelSelect
                           value={inlineStatusVal}
                           onChange={(newStatus) => {
@@ -442,14 +403,11 @@ export const StaffTable: React.FC<StaffTableProps> = ({
 
                       {/* 9. Hành động */}
                       {canManage && (
-                        <td style={{ padding: "0 8px", verticalAlign: "middle", height: "38px" }}>
-                          <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>
+                        <td className={styles.actionTd}>
+                          <div className={styles.actionButtons}>
                             <button
-                              className="btn btn-secondary"
+                              className={`btn btn-secondary ${styles.actionBtn}`}
                               style={{
-                                padding: "4px 8px",
-                                fontSize: "12px",
-                                borderRadius: "var(--radius-sm)",
                                 opacity: isSuspended ? 0.5 : 1,
                                 cursor: isSuspended ? "not-allowed" : "pointer"
                               }}
@@ -460,11 +418,8 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                               <Edit2 size={12} />
                             </button>
                             <button
-                              className="btn btn-danger"
+                              className={`btn btn-danger ${styles.actionBtn}`}
                               style={{
-                                padding: "4px 8px",
-                                fontSize: "12px",
-                                borderRadius: "var(--radius-sm)",
                                 opacity: (isAdminRow || isSuspended) ? 0.5 : 1,
                                 cursor: (isAdminRow || isSuspended) ? "not-allowed" : "pointer"
                               }}

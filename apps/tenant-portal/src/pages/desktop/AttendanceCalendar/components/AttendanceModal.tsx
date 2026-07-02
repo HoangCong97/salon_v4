@@ -3,6 +3,8 @@ import { CalendarDays, Trash2, Edit2 } from "lucide-react";
 import { PriceInputWithSuggestion } from "../../../../components/desktop/TableComponents";
 import { Staff } from "../types";
 
+import styles from "../AttendanceCalendar.module.css";
+
 interface AttendanceModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -55,72 +57,35 @@ export const AttendanceModal: React.FC<AttendanceModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div style={{
-      position: "fixed",
-      inset: 0,
-      backgroundColor: "rgba(15, 23, 42, 0.4)",
-      backdropFilter: "blur(4px)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 1000
-    }}>
-      <div className="card animate-fade-in" style={{ width: "100%", maxWidth: "450px", display: "flex", flexDirection: "column", gap: "16px", padding: "24px" }}>
-        
+    <div className={styles.modalOverlay}>
+      <div className={`card animate-fade-in ${styles.modalCard}`}>
         {/* Modal Title */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2 style={{ fontSize: "16px", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>
             <CalendarDays size={18} style={{ color: "var(--color-primary)" }} />
             <span>
               {modalMode === "create" ? "Ghi chép phát sinh ngày" : "Chỉnh sửa ghi chép ngày"} {selectedDateStr}
             </span>
           </h2>
-          <button
-            onClick={onClose}
-            style={{ border: "none", background: "none", fontSize: "18px", color: "var(--text-muted)", cursor: "pointer", fontWeight: "bold" }}
-          >
+          <button onClick={onClose} className={styles.modalCloseBtn}>
             &times;
           </button>
         </div>
 
         {/* Create mode: Tabs selector */}
         {modalMode === "create" && (
-          <div style={{ display: "flex", borderBottom: "1px solid var(--border-color)", gap: "0", width: "100%" }}>
+          <div className={styles.modalTabsContainer}>
             <button
               type="button"
               onClick={() => setActiveDialogTab("attendance")}
-              style={{
-                flex: 1,
-                textAlign: "center",
-                padding: "10px 16px",
-                fontWeight: "600",
-                fontSize: "13px",
-                border: "none",
-                background: "none",
-                borderBottom: activeDialogTab === "attendance" ? "2px solid var(--color-primary)" : "2px solid transparent",
-                color: activeDialogTab === "attendance" ? "var(--color-primary)" : "var(--text-secondary)",
-                cursor: "pointer",
-                transition: "all 0.15s ease"
-              }}
+              className={`${styles.modalTabBtn} ${activeDialogTab === "attendance" ? styles.modalTabBtnActive : ""}`}
             >
               Điểm danh bất thường
             </button>
             <button
               type="button"
               onClick={() => setActiveDialogTab("advance")}
-              style={{
-                flex: 1,
-                textAlign: "center",
-                padding: "10px 16px",
-                fontWeight: "600",
-                fontSize: "13px",
-                border: "none",
-                background: "none",
-                borderBottom: activeDialogTab === "advance" ? "2px solid var(--color-primary)" : "2px solid transparent",
-                color: activeDialogTab === "advance" ? "var(--color-primary)" : "var(--text-secondary)",
-                cursor: "pointer",
-                transition: "all 0.15s ease"
-              }}
+              className={`${styles.modalTabBtn} ${activeDialogTab === "advance" ? styles.modalTabBtnActive : ""}`}
             >
               Tạm ứng tiền
             </button>
@@ -128,8 +93,7 @@ export const AttendanceModal: React.FC<AttendanceModalProps> = ({
         )}
 
         {/* Form Fields */}
-        <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          
+        <form onSubmit={handleSave} className={styles.formWrapper}>
           {/* Common: Staff Select */}
           <div className="form-group">
             <label className="form-label">Nhân viên liên quan</label>
@@ -229,7 +193,7 @@ export const AttendanceModal: React.FC<AttendanceModalProps> = ({
           </div>
 
           {/* Actions Footer */}
-          <div style={{ display: "flex", justifyContent: modalMode === "edit" ? "space-between" : "flex-end", gap: "8px", marginTop: "8px" }}>
+          <div className={`${styles.modalFooter} ${modalMode === "edit" ? styles.modalFooterEdit : styles.modalFooterCreate}`}>
             {modalMode === "edit" && (
               <button
                 type="button"
@@ -257,9 +221,9 @@ export const AttendanceModal: React.FC<AttendanceModalProps> = ({
               </button>
             </div>
           </div>
-
         </form>
       </div>
     </div>
   );
 };
+

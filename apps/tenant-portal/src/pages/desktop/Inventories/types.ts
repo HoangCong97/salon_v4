@@ -8,3 +8,6 @@ export interface InventoryItem {
   imageUrl?: string;
   branchId?: string;
 }
+
+export type AdjustType = "import" | "export";
+export type ModalMode = "create" | "edit" | "adjust";

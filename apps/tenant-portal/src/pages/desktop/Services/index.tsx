@@ -1,20 +1,26 @@
-import React, { useState, useRef, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuthStore } from "../../../store/useAuthStore";
 import { Layers, Plus, Loader2, Search, Upload, Download } from "lucide-react";
-import { Service, ServiceCategory, getColorStyle } from "./types";
+
 import { ServiceTable } from "./ServiceTable";
 import { CategoryModal } from "./CategoryModal";
 import { ServiceFormModal } from "./ServiceFormModal";
 import { ImportWizardModal } from "../../../components/desktop/ImportWizard/ImportWizardModal";
-import { TargetField } from "../../../hooks/useImportWizard";
-import { useFileDragAndDrop } from "../../../hooks/useFileDragAndDrop";
 import { ExportButton } from "../../../components/desktop/ExportButton";
-import { ExportColumnMapping } from "../../../utils/exportData";
+
+import { useAuthStore } from "../../../store/useAuthStore";
+import { useFileDragAndDrop } from "../../../hooks/useFileDragAndDrop";
 import { useConfirm } from "../../../components/desktop/ConfirmDialog";
 import { useToast } from "../../../components/desktop/ToastProvider";
+
 import { api } from "../../../utils/apiClient";
 import { queryKeys } from "../../../utils/queryKeys";
+import { ExportColumnMapping } from "../../../utils/exportData";
+
+import { Service, ServiceCategory, getColorStyle } from "./types";
+import { TargetField } from "../../../hooks/useImportWizard";
+
+import styles from "./Services.module.css";
 
 export default function Services() {
   const { currentTenantId, currentBranchId, hasPermission } = useAuthStore();
@@ -306,56 +312,25 @@ export default function Services() {
 
   return (
     <>
-      <div
-        className="animate-fade-in"
-        style={{ display: "flex", flexDirection: "column", gap: "24px", minHeight: "100%" }}
-      >
+      <div className={`animate-fade-in ${styles.container}`}>
         {/* Filter, Actions and Search Bar */}
-        <div
-          className="card"
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "16px",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "16px",
-          }}
-        >
+        <div className={`card ${styles.filterCard}`}>
           {/* Category Tabs */}
-          <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px", alignItems: "center" }}>
+          <div className={styles.categoriesList}>
             {canManage && (
               <button
-                className="btn btn-secondary"
+                className={`btn btn-secondary ${styles.categoryBtn}`}
                 onClick={handleOpenCategoriesModal}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 16px",
-                  borderRadius: "var(--radius-full)",
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  whiteSpace: "nowrap",
-                  flexShrink: 0,
-                  height: "36px",
-                }}
               >
                 <Layers size={16} /> Phân loại
               </button>
             )}
             <button
               onClick={() => setSelectedCategory("Tất cả")}
+              className={styles.tabButton}
               style={{
-                padding: "8px 16px",
-                borderRadius: "var(--radius-full)",
-                border: "none",
-                cursor: "pointer",
-                fontWeight: "600",
-                fontSize: "13px",
                 backgroundColor: selectedCategory === "Tất cả" ? "var(--color-primary)" : "hsl(210, 40%, 94%)",
                 color: selectedCategory === "Tất cả" ? "white" : "var(--text-secondary)",
-                transition: "all 0.15s ease",
               }}
             >
               Tất cả
@@ -364,16 +339,10 @@ export default function Services() {
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
+                className={styles.tabButton}
                 style={{
-                  padding: "8px 16px",
-                  borderRadius: "var(--radius-full)",
-                  border: "none",
-                  cursor: "pointer",
-                  fontWeight: "600",
-                  fontSize: "13px",
                   backgroundColor: selectedCategory === cat.id ? "var(--color-primary)" : "hsl(210, 40%, 94%)",
                   color: selectedCategory === cat.id ? "white" : "var(--text-secondary)",
-                  transition: "all 0.15s ease",
                 }}
               >
                 {cat.name}
@@ -382,60 +351,24 @@ export default function Services() {
           </div>
 
           {/* Actions & Search */}
-          <div
-            style={{
-              display: "flex",
-              gap: "12px",
-              alignItems: "center",
-              flexWrap: "nowrap",
-              justifyContent: "flex-end",
-              marginLeft: "auto",
-            }}
-          >
-            <div style={{ position: "relative", width: "100%", maxWidth: "320px", flexShrink: 1, minWidth: "160px" }}>
-              <Search
-                size={16}
-                style={{
-                  position: "absolute",
-                  left: "12px",
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  color: "var(--text-muted)",
-                }}
-              />
+          <div className={styles.actionsWrapper}>
+            <div className={styles.searchContainer}>
+              <Search size={16} className={styles.searchIcon} />
               <input
                 type="text"
-                className="form-input"
+                className={`form-input ${styles.searchInput}`}
                 placeholder="Tìm kiếm dịch vụ..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ paddingLeft: "36px" }}
               />
             </div>
 
             {canManage && (
               <button
-                className="btn btn-secondary"
+                className={`btn btn-secondary ${styles.importBtn}`}
                 onClick={() => {
                   setDroppedFile(null);
                   setIsImportModalOpen(true);
-                }}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  whiteSpace: "nowrap",
-                  flexShrink: 0,
-                  borderColor: "hsl(142, 76%, 36%)",
-                  color: "hsl(142, 76%, 36%)",
-                  backgroundColor: "hsl(142, 76%, 97%)",
-                  transition: "background-color 0.15s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "hsl(142, 76%, 92%)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "hsl(142, 76%, 97%)";
                 }}
               >
                 <Download size={16} /> Nhập dữ liệu
@@ -450,9 +383,8 @@ export default function Services() {
 
             {canManage && (
               <button
-                className="btn btn-primary"
+                className={`btn btn-primary ${styles.addServiceBtn}`}
                 onClick={handleOpenCreateModal}
-                style={{ display: "flex", alignItems: "center", gap: "6px", whiteSpace: "nowrap", flexShrink: 0 }}
               >
                 <Plus size={18} /> Thêm dịch vụ
               </button>
@@ -462,18 +394,18 @@ export default function Services() {
 
         {/* Main Content */}
         {loading ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
+          <div className={styles.loadingWrapper}>
             <Loader2 className="animate-spin" size={32} style={{ color: "var(--color-primary)" }} />
           </div>
         ) : error ? (
-          <div className="card" style={{ borderLeft: "4px solid var(--color-danger)", background: "var(--color-danger-light)" }}>
-            <p style={{ color: "var(--color-danger)", fontWeight: "500" }}>{error}</p>
+          <div className={`card ${styles.errorCard}`}>
+            <p className={styles.errorText}>{error}</p>
           </div>
         ) : filteredServices.length === 0 ? (
-          <div className="card" style={{ textAlign: "center", padding: "60px 20px" }}>
-            <Layers size={48} style={{ color: "var(--text-muted)", marginBottom: "16px", marginInline: "auto" }} />
-            <h3 style={{ fontSize: "16px", fontWeight: "600", marginBottom: "8px" }}>Không tìm thấy dịch vụ nào</h3>
-            <p style={{ color: "var(--text-secondary)" }}>Hãy thử điều chỉnh bộ lọc hoặc thêm dịch vụ mới.</p>
+          <div className={`card ${styles.emptyCard}`}>
+            <Layers size={48} className={styles.emptyIcon} />
+            <h3 className={styles.emptyTitle}>Không tìm thấy dịch vụ nào</h3>
+            <p className={styles.emptyDesc}>Hãy thử điều chỉnh bộ lọc hoặc thêm dịch vụ mới.</p>
           </div>
         ) : (
           <ServiceTable
@@ -537,40 +469,11 @@ export default function Services() {
 
       {/* Global Drag-and-Drop Overlay */}
       {isDragActive && canManage && (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(59, 130, 246, 0.15)",
-            backdropFilter: "blur(4px)",
-            border: "4px dashed var(--color-primary)",
-            zIndex: 9999,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "var(--color-primary)",
-            pointerEvents: "none",
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "white",
-              padding: "32px 48px",
-              borderRadius: "var(--radius-lg)",
-              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "16px",
-            }}
-          >
+        <div className={styles.dragOverlay}>
+          <div className={styles.dragCard}>
             <Upload size={48} className="animate-bounce" />
-            <h3 style={{ fontSize: "18px", fontWeight: "700" }}>Thả file Excel/CSV vào đây để nhập dịch vụ</h3>
-            <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
+            <h3 className={styles.dragTitle}>Thả file Excel/CSV vào đây để nhập dịch vụ</h3>
+            <p className={styles.dragDesc}>
               Hệ thống sẽ tự động phân tích và đối chiếu cột dữ liệu bằng AI.
             </p>
           </div>

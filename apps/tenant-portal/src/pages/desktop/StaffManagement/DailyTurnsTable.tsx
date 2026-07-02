@@ -1,7 +1,11 @@
 import React from "react";
 import { UserPlus, RefreshCw, Info, Award, Play, HelpCircle, Loader2 } from "lucide-react";
+
 import { ExcelInput } from "../../../components/desktop/TableComponents";
+
 import { Branch, DailyTurn } from "./types";
+
+import styles from "./StaffManagement.module.css";
 
 interface DailyTurnsTableProps {
   dailyTurns: DailyTurn[];
@@ -37,16 +41,16 @@ export const DailyTurnsTable: React.FC<DailyTurnsTableProps> = ({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+    <div className={styles.turnsContainer}>
       {/* Control Action buttons */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <span style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
+      <div className={styles.turnsHeaderRow}>
+        <div className={styles.turnsHeaderLeft}>
+          <span className={styles.turnsTitleDesc}>
             Lịch xếp khách xoay tua hôm nay tại: <strong>{currentBranchName}</strong>
           </span>
         </div>
 
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div className={styles.turnsHeaderActions}>
           <button className="btn btn-secondary" onClick={handleOpenAddStaffToQueue}>
             <UserPlus size={16} /> Thêm thợ ngoài ca
           </button>
@@ -57,14 +61,14 @@ export const DailyTurnsTable: React.FC<DailyTurnsTableProps> = ({
       </div>
 
       {loading ? (
-        <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
+        <div className={styles.turnsLoaderWrapper}>
           <Loader2 className="animate-spin" size={32} style={{ color: "var(--color-primary)" }} />
         </div>
       ) : dailyTurns.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", padding: "40px 20px" }}>
-          <Info size={40} style={{ color: "var(--text-muted)", marginBottom: "12px", marginInline: "auto" }} />
-          <h3 style={{ fontSize: "15px", fontWeight: "600", marginBottom: "4px" }}>Hàng đợi xoay tua trống</h3>
-          <p style={{ color: "var(--text-secondary)", fontSize: "13px", marginBottom: "16px" }}>
+        <div className={`card ${styles.turnsEmptyCard}`}>
+          <Info size={40} className={styles.turnsEmptyIcon} />
+          <h3 className={styles.turnsEmptyTitle}>Hàng đợi xoay tua trống</h3>
+          <p className={styles.turnsEmptyDesc}>
             Hôm nay không có nhân viên nào có lịch trực ca hoạt động tại chi nhánh này.
           </p>
           <button className="btn btn-primary" onClick={handleOpenAddStaffToQueue}>
@@ -72,19 +76,19 @@ export const DailyTurnsTable: React.FC<DailyTurnsTableProps> = ({
           </button>
         </div>
       ) : (
-        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-          <div className="data-table-container" style={{ border: "none", boxShadow: "none", borderRadius: 0 }}>
+        <div className={`card ${styles.turnsTableCard}`}>
+          <div className={`data-table-container ${styles.turnsTableContainer}`}>
             <table className="data-table">
               <thead>
                 <tr>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "100px", textAlign: "center" }}>Số TT</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "240px" }}>Tên thợ</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "140px" }}>Chức danh</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "150px", textAlign: "center" }}>Lượt Walk-in</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "150px", textAlign: "center" }}>Lượt Chỉ định (Booked)</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "150px", textAlign: "center" }}>Tổng số khách</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "200px" }}>Lần gán khách cuối</th>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "240px", textAlign: "center" }}>Gán khách nhanh</th>
+                  <th className={styles.turnsTh} style={{ width: "100px", textAlign: "center" }}>Số TT</th>
+                  <th className={styles.turnsTh} style={{ width: "240px" }}>Tên thợ</th>
+                  <th className={styles.turnsTh} style={{ width: "140px" }}>Chức danh</th>
+                  <th className={styles.turnsTh} style={{ width: "150px", textAlign: "center" }}>Lượt Walk-in</th>
+                  <th className={styles.turnsTh} style={{ width: "150px", textAlign: "center" }}>Lượt Chỉ định (Booked)</th>
+                  <th className={styles.turnsTh} style={{ width: "150px", textAlign: "center" }}>Tổng số khách</th>
+                  <th className={styles.turnsTh} style={{ width: "200px" }}>Lần gán khách cuối</th>
+                  <th className={styles.turnsTh} style={{ width: "240px", textAlign: "center" }}>Gán khách nhanh</th>
                 </tr>
               </thead>
               <tbody>
@@ -94,12 +98,10 @@ export const DailyTurnsTable: React.FC<DailyTurnsTableProps> = ({
                   return (
                     <tr
                       key={turn.id}
-                      style={{
-                        backgroundColor: isNext ? "var(--color-primary-light)" : "inherit",
-                      }}
+                      className={isNext ? styles.turnsTrNext : styles.turnsTr}
                     >
                       {/* 1. Queue Number / Order */}
-                      <td style={{ padding: "12px 16px", verticalAlign: "middle", textAlign: "center", fontWeight: "700" }}>
+                      <td className={styles.turnsTdCenter} style={{ fontWeight: "700" }}>
                         {isNext ? (
                           <span
                             className="badge badge-primary"
@@ -119,24 +121,24 @@ export const DailyTurnsTable: React.FC<DailyTurnsTableProps> = ({
                       </td>
 
                       {/* 2. Staff Name */}
-                      <td style={{ padding: "12px 16px", verticalAlign: "middle", fontWeight: "600" }}>
+                      <td className={styles.turnsTd} style={{ fontWeight: "600" }}>
                         {turn.staffName}
                         {isNext && (
-                          <span style={{ display: "block", fontSize: "10px", color: "var(--color-primary)", fontWeight: "600", marginTop: "2px" }}>
+                          <span className={styles.turnsNextBadge}>
                             ★ Lượt tiếp theo nhận khách
                           </span>
                         )}
                       </td>
 
                       {/* 3. Role */}
-                      <td style={{ padding: "12px 16px", verticalAlign: "middle" }}>
+                      <td className={styles.turnsTd}>
                         <span className="badge badge-secondary" style={{ backgroundColor: "#f1f5f9", color: "#475569" }}>
                           {turn.role}
                         </span>
                       </td>
 
                       {/* 4. Walk-in turns (inline excel inputs) */}
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                      <td className={styles.turnsTdNoPadding}>
                         <ExcelInput
                           type="number"
                           value={getInlineTurnValue(turn, "walkin")}
@@ -148,7 +150,7 @@ export const DailyTurnsTable: React.FC<DailyTurnsTableProps> = ({
                       </td>
 
                       {/* 5. Booked turns (inline excel inputs) */}
-                      <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                      <td className={styles.turnsTdNoPadding}>
                         <ExcelInput
                           type="number"
                           value={getInlineTurnValue(turn, "booked")}
@@ -160,24 +162,21 @@ export const DailyTurnsTable: React.FC<DailyTurnsTableProps> = ({
                       </td>
 
                       {/* 6. Total served */}
-                      <td style={{ padding: "12px 16px", verticalAlign: "middle", textAlign: "center", fontWeight: "700", fontSize: "14px" }}>
+                      <td className={styles.turnsTdCenter} style={{ fontWeight: "700", fontSize: "14px" }}>
                         {turn.totalCustomersToday}
                       </td>
 
                       {/* 7. Last assigned at time */}
-                      <td style={{ padding: "12px 16px", verticalAlign: "middle", color: "var(--text-secondary)", fontSize: "13px" }}>
+                      <td className={styles.turnsTd} style={{ color: "var(--text-secondary)", fontSize: "13px" }}>
                         {formatTime(turn.lastAssignedAt)}
                       </td>
 
                       {/* 8. Quick Assign Buttons */}
                       <td style={{ padding: "4px 8px", verticalAlign: "middle" }}>
-                        <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                        <div className={styles.turnsActionsWrapper}>
                           <button
-                            className="btn btn-primary"
+                            className={`btn btn-primary ${styles.turnsActionBtn}`}
                             style={{
-                              padding: "4px 10px",
-                              fontSize: "11px",
-                              borderRadius: "var(--radius-sm)",
                               backgroundColor: isNext ? "var(--color-primary)" : "#64748b",
                             }}
                             onClick={() => handleAssignTurn(turn.staffId, "walkin")}
@@ -186,8 +185,7 @@ export const DailyTurnsTable: React.FC<DailyTurnsTableProps> = ({
                             <Play size={10} /> Khách Walk-in
                           </button>
                           <button
-                            className="btn btn-secondary"
-                            style={{ padding: "4px 10px", fontSize: "11px", borderRadius: "var(--radius-sm)" }}
+                            className={`btn btn-secondary ${styles.turnsActionBtn}`}
                             onClick={() => handleAssignTurn(turn.staffId, "booked")}
                             title="Nhận khách đặt trước chỉ định (Tăng lượt chỉ định)"
                           >

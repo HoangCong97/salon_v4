@@ -2,10 +2,15 @@ import React from "react";
 import {
   Users, Trash2, Plus, Tag, CreditCard, QrCode, FileText, X, Printer, Loader2
 } from "lucide-react";
-import { formatCurrencyVND } from "@salon/shared-utils";
+
 import { ExcelInput, ExcelSelect } from "../../../components/desktop/TableComponents";
+
+import { formatCurrencyVND } from "@salon/shared-utils";
+
 import { getEmployeeColor } from "./POSLeftPanel";
 import { POSCreateCustomerModal } from "./POSReceiptModal";
+
+import styles from "./POS.module.css";
 
 interface CartItem {
   id: string;
@@ -117,7 +122,6 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [prefillName, setPrefillName] = React.useState("");
   const [prefillPhone, setPrefillPhone] = React.useState("");
-  const [showQRModal, setShowQRModal] = React.useState(false); // keep it for compatibility if needed elsewhere, though we can also just use showQRPopover
   const [showQRPopover, setShowQRPopover] = React.useState(false);
 
   React.useEffect(() => {
@@ -148,7 +152,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
   const showCreateSuggestion = customerQuery.trim().length > 0 && !exactMatch;
 
   return (
-    <div className="card" style={{ display: "flex", flexDirection: "column", height: "100%", padding: "20px", position: "relative", minHeight: 0, overflow: "hidden" }}>
+    <div className={`card ${styles.container}`}>
       <style>{`
         .no-scrollbar::-webkit-scrollbar {
           display: none;
@@ -160,60 +164,21 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
       `}</style>
 
       {/* Invoice Tabs */}
-      <div
-        className="no-scrollbar"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          borderBottom: "1px solid var(--border-color)",
-          height: "40px",
-          marginBottom: "12px",
-          overflowX: "auto",
-          flexShrink: 0,
-          boxSizing: "border-box"
-        }}
-      >
+      <div className={`no-scrollbar ${styles.tabsScroll}`}>
         {invoices.map((inv) => {
           const isActive = inv.id === activeInvoiceId;
           return (
             <div
               key={inv.id}
               onClick={() => setActiveInvoiceId(inv.id)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "0 12px",
-                height: "28px",
-                boxSizing: "border-box",
-                borderRadius: "var(--radius-sm)",
-                border: isActive ? "2px solid var(--color-primary)" : "2px solid var(--border-color)",
-                background: isActive ? "var(--color-primary-light)" : "white",
-                color: isActive ? "var(--color-primary)" : "var(--text-secondary)",
-                fontWeight: "600",
-                fontSize: "12.5px",
-                cursor: "pointer",
-                transition: "all 0.15s",
-                whiteSpace: "nowrap",
-                position: "relative"
-              }}
+              className={`${styles.tabItem} ${isActive ? styles.tabActive : styles.tabInactive}`}
             >
               <span>{inv.name} {inv.cart.length > 0 && `(${inv.cart.length})`}</span>
               {invoices.length > 1 && (
                 <button
                   type="button"
                   onClick={(e) => deleteInvoice(inv.id, e)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: isActive ? "var(--color-primary)" : "var(--text-muted)",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: 0
-                  }}
+                  className={`${styles.tabDeleteBtn} ${isActive ? styles.tabDeleteBtnActive : styles.tabDeleteBtnInactive}`}
                 >
                   <X size={12} />
                 </button>
@@ -223,28 +188,17 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
         })}
         <button
           type="button"
-          className="btn btn-secondary"
+          className={`btn btn-secondary ${styles.addTabBtn}`}
           onClick={addNewInvoice}
-          style={{
-            padding: "4px 8px",
-            height: "28px",
-            fontSize: "12px",
-            fontWeight: "600",
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            borderRadius: "var(--radius-sm)",
-            flexShrink: 0
-          }}
         >
           <Plus size={12} /> HĐ mới
         </button>
       </div>
 
       {/* Customer Selection */}
-      <div style={{ borderBottom: "1px solid var(--border-color)", paddingBottom: "16px", marginBottom: "16px", flexShrink: 0 }}>
-        <h3 style={{ fontSize: "15px", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-          <Users size={18} style={{ color: "var(--color-primary)" }} /> KHÁCH HÀNG
+      <div className={styles.customerSection}>
+        <h3 className={styles.customerHeader}>
+          <Users size={18} className={styles.customerIcon} /> KHÁCH HÀNG
         </h3>
 
         {showSuggestions && (
@@ -253,34 +207,18 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
             style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 90 }}
           />
         )}
-        <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: "10px", position: "relative", zIndex: 95 }}>
-          <div style={{ position: "relative" }}>
+        <div className={styles.customerGrid}>
+          <div className={styles.customerInputWrapper}>
             <input
               type="text"
-              className="form-input"
+              className={`form-input ${styles.customerInput}`}
               value={customerQuery}
               onChange={(e) => handleInputChange(e.target.value)}
               onFocus={() => setShowSuggestions(true)}
               placeholder="Nhập khách hàng..."
-              style={{ width: "100%", height: "36px" }}
             />
             {showSuggestions && (customerQuery.trim().length > 0) && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  width: "100%",
-                  background: "white",
-                  border: "1px solid var(--border-color)",
-                  borderRadius: "var(--radius-sm)",
-                  boxShadow: "var(--shadow-md)",
-                  zIndex: 100,
-                  maxHeight: "200px",
-                  overflowY: "auto",
-                  marginTop: "4px"
-                }}
-              >
+              <div className={styles.suggestionsBox}>
                 {filteredCustomers.map(c => (
                   <div
                     key={c.id}
@@ -289,17 +227,11 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                       setCustomerQuery(c.name);
                       setShowSuggestions(false);
                     }}
-                    style={{
-                      padding: "8px 12px",
-                      cursor: "pointer",
-                      fontSize: "12.5px",
-                      borderBottom: "1px solid #f1f5f9",
-                      transition: "background 0.15s"
-                    }}
+                    className={styles.suggestionItem}
                     onMouseEnter={(e) => e.currentTarget.style.background = "#f1f5f9"}
                     onMouseLeave={(e) => e.currentTarget.style.background = "none"}
                   >
-                    <strong>{c.name}</strong> {c.phone ? `(${c.phone})` : ""} - <span style={{ color: "var(--color-primary)" }}>{c.rank}</span>
+                    <strong>{c.name}</strong> {c.phone ? `(${c.phone})` : ""} - <span className={styles.suggestionRank}>{c.rank}</span>
                   </div>
                 ))}
 
@@ -318,15 +250,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                       setShowCreateModal(true);
                       setShowSuggestions(false);
                     }}
-                    style={{
-                      padding: "8px 12px",
-                      cursor: "pointer",
-                      fontSize: "12.5px",
-                      background: "var(--color-primary-light)",
-                      color: "var(--color-primary)",
-                      fontWeight: "600",
-                      transition: "background 0.15s"
-                    }}
+                    className={styles.newCustomerBtn}
                     onMouseEnter={(e) => e.currentTarget.style.background = "#e0f2fe"}
                     onMouseLeave={(e) => e.currentTarget.style.background = "var(--color-primary-light)"}
                   >
@@ -336,18 +260,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
               </div>
             )}
           </div>
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "var(--color-primary-light)",
-            borderRadius: "var(--radius-sm)",
-            fontSize: "12px",
-            fontWeight: "700",
-            color: "var(--color-primary)",
-            border: "1px solid var(--border-focus)",
-            textAlign: "center"
-          }}>
+          <div className={styles.customerRankBadge}>
             Hạng: {selectedCustomer?.rank || "Khách mới"}
           </div>
         </div>
@@ -358,22 +271,22 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
         MẶT HÀNG THANH TOÁN ({cart.length})
       </h3>
 
-      <div style={{ flex: "1 1 0px", display: "flex", flexDirection: "column", gap: "10px", paddingRight: "4px", minHeight: "150px", overflow: "hidden" }}>
+      <div className={styles.cartSection}>
         {cart.length === 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--text-muted)", opacity: 0.7, padding: "40px 0" }}>
+          <div className={styles.emptyCart}>
             <FileText size={36} />
-            <p style={{ marginTop: "8px", fontSize: "13px" }}>Giỏ hàng đang trống.</p>
+            <p className={styles.emptyCartText}>Giỏ hàng đang trống.</p>
           </div>
         ) : (
-          <div className="data-table-container" style={{ border: "1px solid var(--border-color)", borderRadius: "var(--radius-sm)", background: "white", overflowY: "auto", flex: "1 1 0px" }}>
-            <table className="data-table" style={{ width: "100%", fontSize: "12.5px", borderCollapse: "collapse" }}>
+          <div className={styles.tableCard}>
+            <table className={styles.table}>
               <thead>
                 <tr>
-                  <th style={{ padding: "8px 10px", fontSize: "12px", width: "140px", position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, borderBottom: "1px solid var(--border-color)" }}>Mặt hàng</th>
-                  <th style={{ padding: "8px 10px", fontSize: "12px", width: "130px", position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, borderBottom: "1px solid var(--border-color)" }}>Thợ</th>
-                  <th style={{ padding: "8px 10px", fontSize: "12px", textAlign: "center", width: "125px", position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, borderBottom: "1px solid var(--border-color)" }}>Đơn giá</th>
-                  <th style={{ padding: "8px 10px", fontSize: "12px", textAlign: "center", width: "110px", position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, borderBottom: "1px solid var(--border-color)", color: "var(--color-danger)" }}>Giảm giá</th>
-                  <th style={{ padding: "8px 10px", fontSize: "12px", textAlign: "right", width: "110px", position: "sticky", top: 0, background: "#f8fafc", zIndex: 10, borderBottom: "1px solid var(--border-color)" }}>T.Tiền</th>
+                  <th className={styles.th} style={{ width: "140px" }}>Mặt hàng</th>
+                  <th className={styles.th} style={{ width: "130px" }}>Thợ</th>
+                  <th className={styles.th} style={{ textAlign: "center", width: "125px" }}>Đơn giá</th>
+                  <th className={`${styles.th} ${styles.thDiscount}`} style={{ textAlign: "center", width: "110px" }}>Giảm giá</th>
+                  <th className={styles.th} style={{ textAlign: "right", width: "110px" }}>T.Tiền</th>
                 </tr>
               </thead>
               <tbody>
@@ -406,26 +319,17 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                         e.preventDefault();
                         adjustQuantity(cItem.id, -cItem.quantity);
                       }}
-                      style={{ cursor: "context-menu" }}
+                      className={styles.tr}
                     >
                       {/* Item name - exactly 1 line */}
-                      <td style={{ padding: "8px 10px", verticalAlign: "middle", width: "140px" }}>
-                        <div
-                          title={cItem.name}
-                          style={{
-                            fontWeight: "500",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            width: "130px"
-                          }}
-                        >
+                      <td className={`${styles.td} ${styles.tdName}`}>
+                        <div title={cItem.name} className={styles.nameWrapper}>
                           {cItem.name}
                         </div>
                       </td>
 
                       {/* Stylist Selector */}
-                      <td style={{ padding: "4px 6px", verticalAlign: "middle", width: "130px" }}>
+                      <td className={styles.tdStaff}>
                         <ExcelSelect
                           value={cItem.staffId}
                           onChange={(val) => updateCartItemStylist(cItem.id, val)}
@@ -443,7 +347,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                       </td>
 
                       {/* Editable unit price & preset price dropdown merged */}
-                      <td style={{ padding: "4px 6px", verticalAlign: "middle", textAlign: "center", width: "125px" }}>
+                      <td className={styles.tdPrice}>
                         {hasMultiplePrices ? (
                           <ExcelSelect
                             value={formatNumber(cItem.price)}
@@ -468,17 +372,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                             }}
                           />
                         ) : (
-                          <div
-                            style={{
-                              width: "100px",
-                              height: "26px",
-                              border: "1px solid var(--border-color)",
-                              borderRadius: "var(--radius-sm)",
-                              background: "white",
-                              position: "relative",
-                              margin: "0 auto"
-                            }}
-                          >
+                          <div className={styles.priceWrapper}>
                             <ExcelInput
                               value={formatNumber(cItem.price)}
                               onChange={(val) => updateCartItemPrice(cItem.id, val)}
@@ -493,18 +387,8 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                       </td>
 
                       {/* Item Discount Input */}
-                      <td style={{ padding: "4px 6px", verticalAlign: "middle", textAlign: "center", width: "110px" }}>
-                        <div
-                          style={{
-                            width: "90px",
-                            height: "26px",
-                            border: "1px solid var(--border-color)",
-                            borderRadius: "var(--radius-sm)",
-                            background: "white",
-                            position: "relative",
-                            margin: "0 auto"
-                          }}
-                        >
+                      <td className={styles.tdDiscount}>
+                        <div className={styles.discountWrapper}>
                           <ExcelInput
                             value={formatNumber(cItem.discount)}
                             onChange={(val) => updateCartItemDiscount(cItem.id, val)}
@@ -519,23 +403,15 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                       </td>
 
                       {/* Price & Trash Delete on same row */}
-                      <td style={{ padding: "8px 10px", verticalAlign: "middle", textAlign: "right", width: "110px" }}>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "8px" }}>
-                          <span style={{ fontWeight: "700", whiteSpace: "nowrap", color: "var(--color-primary)" }}>
+                      <td className={styles.tdTotal}>
+                        <div className={styles.totalContainer}>
+                          <span className={styles.totalPriceText}>
                             {formatCurrencyVND((cItem.price - (cItem.discount || 0)) * cItem.quantity)}
                           </span>
                           <button
                             type="button"
                             onClick={() => adjustQuantity(cItem.id, -cItem.quantity)}
-                            style={{
-                              background: "none",
-                              border: "none",
-                              color: "var(--color-danger)",
-                              cursor: "pointer",
-                              padding: 0,
-                              display: "inline-flex",
-                              alignItems: "center"
-                            }}
+                            className={styles.deleteItemBtn}
                           >
                             <Trash2 size={14} />
                           </button>
@@ -551,55 +427,40 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
       </div>
 
       {/* Payment Method & QR Code Display */}
-      <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "12px", marginTop: "16px", flexShrink: 0 }}>
+      <div className={styles.checkoutSection}>
 
         {/* Voucher input */}
-        <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
-          <div style={{ position: "relative", flexGrow: 1 }}>
-            <Tag size={14} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+        <div className={styles.voucherWrapper}>
+          <div className={styles.voucherInputWrapper}>
+            <Tag size={14} className={styles.voucherIcon} />
             <input
               type="text"
-              className="form-input"
+              className={`form-input ${styles.voucherInput}`}
               placeholder="Mã giảm giá (ví dụ VOUCHER10%)..."
               value={voucherCode}
               onChange={(e) => setVoucherCode(e.target.value)}
-              style={{ paddingLeft: "30px", height: "34px", fontSize: "12.5px" }}
             />
           </div>
           <button
             type="button"
-            className="btn btn-secondary"
+            className={`btn btn-secondary ${styles.voucherApplyBtn}`}
             onClick={applyVoucher}
-            style={{ padding: "0 12px", height: "34px", fontSize: "12.5px" }}
           >
             Áp dụng
           </button>
         </div>
 
         {/* Payment Selector */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "12px" }}>
-          <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)" }}>Phương thức thanh toán:</span>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+        <div className={styles.paymentWrapper}>
+          <span className={styles.paymentTitle}>Phương thức thanh toán:</span>
+          <div className={styles.paymentGrid}>
             <button
               type="button"
               onClick={() => {
                 setPaymentMethod("CASH");
                 setShowQRPopover(false);
               }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
-                padding: "8px",
-                borderRadius: "var(--radius-sm)",
-                fontSize: "12.5px",
-                fontWeight: "600",
-                border: paymentMethod === "CASH" ? "2px solid var(--color-primary)" : "1px solid var(--border-color)",
-                background: paymentMethod === "CASH" ? "var(--color-primary-light)" : "white",
-                color: paymentMethod === "CASH" ? "var(--color-primary)" : "var(--text-primary)",
-                cursor: "pointer"
-              }}
+              className={`btn ${styles.paymentBtn} ${paymentMethod === "CASH" ? styles.paymentBtnActive : styles.paymentBtnInactive}`}
             >
               <CreditCard size={14} /> Tiền mặt
             </button>
@@ -609,20 +470,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                 setPaymentMethod("BANK_TRANSFER");
                 setShowQRPopover(true);
               }}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "6px",
-                padding: "8px",
-                borderRadius: "var(--radius-sm)",
-                fontSize: "12.5px",
-                fontWeight: "600",
-                border: paymentMethod === "BANK_TRANSFER" ? "2px solid var(--color-primary)" : "1px solid var(--border-color)",
-                background: paymentMethod === "BANK_TRANSFER" ? "var(--color-primary-light)" : "white",
-                color: paymentMethod === "BANK_TRANSFER" ? "var(--color-primary)" : "var(--text-primary)",
-                cursor: "pointer"
-              }}
+              className={`btn ${styles.paymentBtn} ${paymentMethod === "BANK_TRANSFER" ? styles.paymentBtnActive : styles.paymentBtnInactive}`}
             >
               <QrCode size={14} /> Chuyển khoản (QR)
             </button>
@@ -630,27 +478,26 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
         </div>
 
         {/* Final calculations section */}
-        <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "12px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "13px" }}>
-            <span style={{ color: "var(--text-secondary)" }}>Tạm tính:</span>
-            <span style={{ fontWeight: "600" }}>{formatCurrencyVND(subtotal)}</span>
+        <div className={styles.calcSection}>
+          <div className={styles.calcRow}>
+            <span className={styles.calcLabel}>Tạm tính:</span>
+            <span className={styles.calcValue}>{formatCurrencyVND(subtotal)}</span>
           </div>
           {discountPercent > 0 && (
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "13px" }}>
-              <span style={{ color: "var(--color-danger)" }}>Giảm giá ({discountPercent}%):</span>
-              <span style={{ fontWeight: "600", color: "var(--color-danger)" }}>-{formatCurrencyVND(discountAmount)}</span>
+            <div className={styles.calcRow}>
+              <span className={styles.discountLabel}>Giảm giá ({discountPercent}%):</span>
+              <span className={styles.discountValue}>-{formatCurrencyVND(discountAmount)}</span>
             </div>
           )}
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px" }}>
-            <span style={{ fontWeight: "700", fontSize: "14px" }}>Thành tiền:</span>
-            <span style={{ fontSize: "18px", fontWeight: "800", color: "var(--color-primary)" }}>{formatCurrencyVND(finalAmount)}</span>
+          <div className={styles.finalRow}>
+            <span className={styles.finalLabel}>Thành tiền:</span>
+            <span className={styles.finalValue}>{formatCurrencyVND(finalAmount)}</span>
           </div>
         </div>
 
         {/* Print & checkout button */}
         <button
-          className="btn btn-primary"
-          style={{ width: "100%", padding: "12px", fontSize: "14px", fontWeight: "700" }}
+          className={`btn btn-primary ${styles.checkoutBtn}`}
           disabled={cart.length === 0 || checkingOut}
           onClick={handleCheckout}
         >
@@ -677,74 +524,31 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
 
       {/* Floating QR Card Popover */}
       {paymentMethod === "BANK_TRANSFER" && showQRPopover && finalAmount > 0 && (
-        <div style={{
-          position: "absolute",
-          bottom: "235px", // sits right above the payment options
-          right: "20px",   // aligns with the right edge of the button
-          width: "calc(50% - 24px)",  // matches the width of the button exactly
-          background: "white",
-          border: "1px solid #ebd5fc",
-          boxShadow: "var(--shadow-lg)",
-          borderRadius: "var(--radius-md)",
-          padding: "12px 10px",
-          zIndex: 200,
-          textAlign: "center",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "8px",
-          animation: "fade-in 0.15s ease-out"
-        }}>
+        <div className={styles.qrCardPopover}>
           {/* Close button */}
           <button
             onClick={() => setShowQRPopover(false)}
-            style={{
-              position: "absolute",
-              top: "8px",
-              right: "8px",
-              background: "none",
-              border: "none",
-              color: "var(--text-muted)",
-              cursor: "pointer",
-              padding: "2px"
-            }}
+            className={styles.qrCloseBtn}
           >
             <X size={16} />
           </button>
 
-          <h4 style={{ fontSize: "12px", fontWeight: "700", color: "#6b21a8", margin: 0 }}>MÃ QR THANH TOÁN</h4>
+          <h4 className={styles.qrHeader}>MÃ QR THANH TOÁN</h4>
 
-          <div style={{
-            display: "inline-flex",
-            padding: "8px",
-            background: "#faf5ff",
-            border: "1px dashed #ebd5fc",
-            borderRadius: "var(--radius-sm)",
-          }}>
+          <div className={styles.qrCodeBorder}>
             <QrCode size={250} style={{ color: "#7e22ce" }} />
           </div>
 
-          <div style={{ fontSize: "10.5px", color: "var(--text-secondary)", lineHeight: "1.3" }}>
+          <div className={styles.qrFooterDesc}>
             Quét mã QR chuyển khoản đối soát VNPAY/PayOS
           </div>
 
-          <div style={{ fontSize: "11.5px", color: "var(--text-secondary)" }}>
+          <div className={styles.qrFooterAmount}>
             Số tiền: <strong style={{ color: "var(--color-primary)" }}>{formatCurrencyVND(finalAmount)}</strong>
           </div>
 
           {/* Popover Arrow pointing to Chuyển khoản button */}
-          <div style={{
-            position: "absolute",
-            bottom: "-6px",
-            left: "50%",
-            transform: "translateX(-50%) rotate(45deg)",
-            width: "12px",
-            height: "12px",
-            background: "white",
-            borderRight: "1px solid #ebd5fc",
-            borderBottom: "1px solid #ebd5fc",
-            zIndex: 201
-          }} />
+          <div className={styles.qrArrow} />
         </div>
       )}
 

@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { X, Users, Edit2, Camera, User, Loader2 } from "lucide-react";
+
 import { PriceInputWithSuggestion } from "../../../components/desktop/TableComponents";
-import { StaffMember, Role, Branch, getAdminUser } from "./types";
+
 import { useAuthStore } from "../../../store/useAuthStore";
 import { useToast } from "../../../components/desktop/ToastProvider";
+
+import { api } from "../../../utils/apiClient";
+
+import { StaffMember, Role, Branch, getAdminUser } from "./types";
+
+import styles from "./StaffManagement.module.css";
 
 const compressAndGetBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -161,19 +168,11 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
   };
 
   const uploadFile = async (base64Data: string, category: string, originalFilename?: string): Promise<string> => {
-    const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/upload`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        file: base64Data,
-        category,
-        filename: originalFilename
-      })
+    const data = await api.post<{ url: string }>(`/tenants/${currentTenantId}/upload`, {
+      file: base64Data,
+      category,
+      filename: originalFilename
     });
-    if (!res.ok) {
-      throw new Error("Lỗi khi tải ảnh lên máy chủ");
-    }
-    const data = await res.json();
     return data.url;
   };
 
@@ -241,39 +240,15 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        backgroundColor: "rgba(15, 23, 42, 0.4)",
-        backdropFilter: "blur(4px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-      }}
-    >
-      <div
-        className="card animate-fade-in"
-        style={{
-          width: "100%",
-          maxWidth: "600px",
-          position: "relative",
-          maxHeight: "90vh",
-          overflowY: "auto",
-          padding: "28px",
-        }}
-      >
+    <div className={styles.modalOverlay}>
+      <div className={`card animate-fade-in ${styles.modalCard}`} style={{ maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", padding: "28px" }}>
         <button
-          style={{ position: "absolute", top: "20px", right: "20px", background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }}
+          className={styles.closeButton}
           onClick={onClose}
         >
           <X size={20} />
         </button>
-        <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
+        <h2 className={styles.modalHeader}>
           {mode === "create" ? (
             <>
               <Users size={20} style={{ color: "var(--color-primary)" }} /> Thêm nhân viên mới
@@ -409,13 +384,13 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
           )}
         </div>
 
-        <form onSubmit={handleModalSave} style={{ display: "flex", flexDirection: "column", gap: "16px" }} autoComplete="off">
+        <form onSubmit={handleModalSave} className={styles.modalForm} autoComplete="off">
           {/* Dummy inputs to fool browser autofill */}
           <input type="text" name="prevent_autofill_username" style={{ display: "none" }} tabIndex={-1} readOnly />
           <input type="password" name="prevent_autofill_password" style={{ display: "none" }} tabIndex={-1} readOnly />
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-            <div className="form-group" style={{ marginBottom: 0 }}>
+          <div className={styles.modalFormRow}>
+            <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Họ và tên nhân viên *</label>
               <input
                 className="form-input"
@@ -426,7 +401,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 placeholder="Họ tên nhân viên..."
               />
             </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">ID đăng nhập *</label>
               <input
                 className="form-input"
@@ -443,8 +418,8 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-            <div className="form-group" style={{ marginBottom: 0 }}>
+          <div className={styles.modalFormRow}>
+            <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Mật khẩu {mode === "create" ? "*" : "(để trống nếu giữ nguyên)"}</label>
               <input
                 className="form-input"
@@ -461,7 +436,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 } as any}
               />
             </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Số điện thoại</label>
               <input
                 className="form-input"
@@ -474,8 +449,8 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-            <div className="form-group" style={{ marginBottom: 0 }}>
+          <div className={styles.modalFormRow}>
+            <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Giới tính</label>
               <select className="form-input" value={sex} onChange={(e) => setSex(e.target.value)}>
                 <option value="Nam">Nam</option>
@@ -483,7 +458,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 <option value="Khác">Khác</option>
               </select>
             </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Chức vụ (Phân quyền)</label>
               <select
                 className="form-input"
@@ -501,8 +476,8 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-            <div className="form-group" style={{ marginBottom: 0 }}>
+          <div className={styles.modalFormRow}>
+            <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Mức lương cơ bản (VND)</label>
               <PriceInputWithSuggestion
                 value={formatNumber(baseSalary)}
@@ -510,7 +485,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 placeholder="Ví dụ: 8,000,000"
               />
             </div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Trạng thái hoạt động</label>
               <select
                 className="form-input"
@@ -526,7 +501,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
           </div>
 
           {/* Chi nhánh hoạt động checkboxes */}
-          <div className="form-group" style={{ marginBottom: 0 }}>
+          <div className={`form-group ${styles.formGroup}`}>
             <label className="form-label">Chi nhánh hoạt động (Được chọn nhiều)</label>
             <div
               style={{
@@ -580,19 +555,18 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
             </div>
           </div>
 
-          <div className="form-group" style={{ marginBottom: 0 }}>
+          <div className={`form-group ${styles.formGroup}`}>
             <label className="form-label">Ghi chú thêm</label>
             <textarea
-              className="form-input"
+              className={`form-input ${styles.textareaField}`}
               rows={2}
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Nhập ghi chú hoặc thông tin bổ sung về nhân sự..."
-              style={{ resize: "vertical" }}
             />
           </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "16px" }}>
+          <div className={styles.modalFooter}>
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Hủy bỏ
             </button>

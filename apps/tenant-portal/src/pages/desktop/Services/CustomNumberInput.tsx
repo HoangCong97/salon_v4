@@ -1,5 +1,6 @@
 import React from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
+
 import { CustomNumberInputProps } from "./types";
 
 export const CustomNumberInput: React.FC<CustomNumberInputProps> = ({

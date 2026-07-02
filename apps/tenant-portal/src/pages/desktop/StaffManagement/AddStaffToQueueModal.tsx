@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { X, UserPlus } from "lucide-react";
-import { StaffMember } from "./types";
+
 import { useToast } from "../../../components/desktop/ToastProvider";
+
+import { api } from "../../../utils/apiClient";
+
+import { StaffMember } from "./types";
+
+import styles from "./StaffManagement.module.css";
 
 interface AddStaffToQueueModalProps {
   isOpen: boolean;
@@ -38,63 +44,33 @@ export const AddStaffToQueueModal: React.FC<AddStaffToQueueModalProps> = ({
     if (!staffToAddId) return;
 
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns/add-staff`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ staffId: staffToAddId }),
+      await api.post(`/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns/add-staff`, {
+        staffId: staffToAddId
       });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || "Lỗi khi thêm thợ");
-      }
 
       onClose();
       await fetchDailyTurns();
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(err.message || "Lỗi khi thêm thợ");
     }
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        backgroundColor: "rgba(15, 23, 42, 0.4)",
-        backdropFilter: "blur(4px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1002,
-      }}
-    >
-      <div className="card animate-fade-in" style={{ width: "100%", maxWidth: "420px", position: "relative", padding: "24px" }}>
+    <div className={styles.modalOverlay}>
+      <div className={`card animate-fade-in ${styles.modalCard}`} style={{ maxWidth: "420px", padding: "24px" }}>
         <button
-          style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }}
+          className={styles.closeButton}
           onClick={onClose}
         >
           <X size={20} />
         </button>
-        <h2
-          style={{
-            fontSize: "16px",
-            fontWeight: "700",
-            marginBottom: "20px",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-          }}
-        >
+        <h2 className={styles.modalHeader}>
           <UserPlus size={18} style={{ color: "var(--color-primary)" }} />
           Thêm thợ vào hàng đợi hôm nay
         </h2>
 
-        <form onSubmit={handleAddStaffToQueueSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <div className="form-group" style={{ marginBottom: 0 }}>
+        <form onSubmit={handleAddStaffToQueueSubmit} className={styles.modalForm}>
+          <div className={`form-group ${styles.formGroup}`}>
             <label className="form-label">Chọn nhân viên gán chi nhánh này</label>
             <select className="form-input" value={staffToAddId} onChange={(e) => setStaffToAddId(e.target.value)}>
               {queueAddableStaff.map((s) => (
@@ -108,7 +84,7 @@ export const AddStaffToQueueModal: React.FC<AddStaffToQueueModalProps> = ({
             </p>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "8px" }}>
+          <div className={styles.modalFooter}>
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Hủy
             </button>

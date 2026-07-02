@@ -1,5 +1,6 @@
 import React from "react";
 import { Users, Shield, RefreshCw, Info, Loader2, Upload } from "lucide-react";
+
 import { StaffTable } from "./StaffTable";
 import { RolePermissionPanel } from "./RolePermissionPanel";
 import { DailyTurnsTable } from "./DailyTurnsTable";
@@ -7,7 +8,10 @@ import { StaffFormModal } from "./StaffFormModal";
 import { RoleModal } from "./RoleModal";
 import { AddStaffToQueueModal } from "./AddStaffToQueueModal";
 import { ImportWizardModal } from "../../../components/desktop/ImportWizard/ImportWizardModal";
+
 import { useStaffManagement } from "./useStaffManagement";
+
+import styles from "./StaffManagement.module.css";
 
 export default function StaffManagement() {
   const {
@@ -81,72 +85,27 @@ export default function StaffManagement() {
   return (
     <>
       <div
-        className="animate-fade-in"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "24px",
-          height: activeTab === "permissions" ? "calc(100vh - 120px)" : "auto",
-          overflow: activeTab === "permissions" ? "hidden" : "visible",
-          minHeight: 0,
-        }}
+        className={`animate-fade-in ${styles.container} ${
+          activeTab === "permissions" ? styles.containerPermissions : styles.containerNormal
+        }`}
       >
         {/* Navigation Tabs Header */}
-        <div style={{ display: "flex", borderBottom: "1px solid var(--border-color)", paddingBottom: "2px", gap: "8px" }}>
+        <div className={styles.tabHeader}>
           <button
             onClick={() => setActiveTab("staff")}
-            style={{
-              padding: "10px 20px",
-              fontSize: "14px",
-              fontWeight: "600",
-              background: "none",
-              border: "none",
-              borderBottom: activeTab === "staff" ? "3px solid var(--color-primary)" : "3px solid transparent",
-              color: activeTab === "staff" ? "var(--color-primary)" : "var(--text-secondary)",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              transition: "all 0.2s",
-            }}
+            className={`${styles.tabButton} ${activeTab === "staff" ? styles.tabButtonActive : ""}`}
           >
             <Users size={16} /> Danh sách nhân viên
           </button>
           <button
             onClick={() => setActiveTab("permissions")}
-            style={{
-              padding: "10px 20px",
-              fontSize: "14px",
-              fontWeight: "600",
-              background: "none",
-              border: "none",
-              borderBottom: activeTab === "permissions" ? "3px solid var(--color-primary)" : "3px solid transparent",
-              color: activeTab === "permissions" ? "var(--color-primary)" : "var(--text-secondary)",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              transition: "all 0.2s",
-            }}
+            className={`${styles.tabButton} ${activeTab === "permissions" ? styles.tabButtonActive : ""}`}
           >
             <Shield size={16} /> Chức vụ & Phân quyền động
           </button>
           <button
             onClick={() => setActiveTab("turns")}
-            style={{
-              padding: "10px 20px",
-              fontSize: "14px",
-              fontWeight: "600",
-              background: "none",
-              border: "none",
-              borderBottom: activeTab === "turns" ? "3px solid var(--color-primary)" : "3px solid transparent",
-              color: activeTab === "turns" ? "var(--color-primary)" : "var(--text-secondary)",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              transition: "all 0.2s",
-            }}
+            className={`${styles.tabButton} ${activeTab === "turns" ? styles.tabButtonActive : ""}`}
           >
             <RefreshCw size={16} /> Xoay tua thợ hôm nay
           </button>
@@ -154,34 +113,21 @@ export default function StaffManagement() {
 
         {/* LOADING & GENERAL ERROR STATE */}
         {loading && activeTab !== "turns" ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: "100px 0" }}>
+          <div className={styles.loadingWrapper}>
             <Loader2 className="animate-spin" size={36} style={{ color: "var(--color-primary)" }} />
           </div>
         ) : error ? (
-          <div className="card" style={{ borderLeft: "4px solid var(--color-danger)", background: "var(--color-danger-light)" }}>
-            <h3
-              style={{
-                color: "var(--color-danger)",
-                fontSize: "14px",
-                fontWeight: "600",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-              }}
-            >
+          <div className={`card ${styles.errorCard}`}>
+            <h3 className={styles.errorTitle}>
               <Info size={16} /> Lỗi nạp dữ liệu
             </h3>
-            <p style={{ color: "var(--color-danger)", fontSize: "13px", marginTop: "4px" }}>{error}</p>
+            <p className={styles.errorDesc}>{error}</p>
           </div>
         ) : (
           <div
-            style={{
-              flexGrow: 1,
-              minHeight: 0,
-              display: "flex",
-              flexDirection: "column",
-              overflow: activeTab === "permissions" ? "hidden" : "visible",
-            }}
+            className={`${styles.viewContainer} ${
+              activeTab === "permissions" ? styles.viewContainerPermissions : styles.viewContainerNormal
+            }`}
           >
             {/* VIEW TAB 1: STAFF LIST */}
             {activeTab === "staff" && (
@@ -303,40 +249,11 @@ export default function StaffManagement() {
 
       {/* Global Drag-and-Drop Overlay */}
       {isDragActive && activeTab === "staff" && (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(59, 130, 246, 0.15)",
-            backdropFilter: "blur(4px)",
-            border: "4px dashed var(--color-primary)",
-            zIndex: 9999,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "var(--color-primary)",
-            pointerEvents: "none",
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "white",
-              padding: "32px 48px",
-              borderRadius: "var(--radius-lg)",
-              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "16px",
-            }}
-          >
+        <div className={styles.dragOverlay}>
+          <div className={styles.dragCard}>
             <Upload size={48} className="animate-bounce" />
-            <h3 style={{ fontSize: "18px", fontWeight: "700" }}>Thả file Excel/CSV vào đây để nhập nhân sự</h3>
-            <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
+            <h3 className={styles.dragTitle}>Thả file Excel/CSV vào đây để nhập nhân sự</h3>
+            <p className={styles.dragDesc}>
               Hệ thống sẽ tự động phân tích và đối chiếu cột dữ liệu bằng AI.
             </p>
           </div>
@@ -345,4 +262,3 @@ export default function StaffManagement() {
     </>
   );
 }
-

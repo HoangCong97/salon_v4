@@ -1,22 +1,24 @@
 import React from "react";
+
 import { DashboardStats } from "./components/DashboardStats";
 import { RecentBookings } from "./components/RecentBookings";
 import { DailyTurns } from "./components/DailyTurns";
 
+import styles from "./Dashboard.module.css";
+
 export default function Dashboard() {
   return (
-    <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+    <div className={`animate-fade-in ${styles.container}`}>
       {/* 4 Stats Cards Grid */}
       <DashboardStats />
 
       {/* Main content grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px", marginTop: "12px" }}>
-        
+      <div className={styles.contentGrid}>
         {/* Left Column: Recent Bookings */}
         <RecentBookings />
 
         {/* Right Column: Daily Turns */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+        <div className={styles.rightColumn}>
           {/* Daily Turns Card */}
           <DailyTurns />
         </div>
@@ -24,3 +26,4 @@ export default function Dashboard() {
     </div>
   );
 }
+

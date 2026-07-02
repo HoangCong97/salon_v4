@@ -1,0 +1,698 @@
+/* Invoices.module.css - Styles for Invoices page and components */
+
+/* index.tsx container */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: calc(100vh - 120px);
+  overflow: hidden;
+}
+
+.flexShrink0 {
+  flex-shrink: 0;
+}
+
+.tableWrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* loading / error cards */
+.loadingWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+  height: 100%;
+}
+
+.errorCard {
+  margin-top: 20px;
+  border-left: 4px solid var(--color-danger);
+}
+
+.errorTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+.errorDesc {
+  margin-top: 8px;
+  color: var(--text-secondary);
+}
+
+/* InvoiceSummary.tsx cards */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+.summaryCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.iconRevenue {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.iconCash {
+  background: #ecfdf5;
+  color: #10b981;
+}
+
+.iconTransfer {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.iconCount {
+  background: #faf5ff;
+  color: #8b5cf6;
+}
+
+.cardLabel {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cardValue {
+  display: block;
+  margin-top: 4px;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.valueRevenue {
+  color: var(--color-primary);
+}
+
+.valueCash {
+  color: #10b981;
+}
+
+.valueTransfer {
+  color: #3b82f6;
+}
+
+.valueCount {
+  color: #8b5cf6;
+}
+
+/* InvoiceFilter.tsx cards */
+.filterCard {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.selectLabel {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.selectElement {
+  width: 100%;
+  height: 36px;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 0 8px;
+}
+
+/* InvoiceTable.tsx layout */
+.tableCard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.tableTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.tableContainer {
+  flex-grow: 1;
+  overflow-y: auto;
+  min-height: 250px;
+}
+
+.thAvatar {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 10;
+  width: 90px;
+  min-width: 90px;
+  max-width: 90px;
+  text-align: center;
+  padding: 12px 8px;
+}
+
+.thStaff {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 10;
+  width: 280px;
+  min-width: 280px;
+  max-width: 280px;
+  padding: 12px 12px;
+}
+
+.thTime {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 10;
+  width: 70px;
+  min-width: 70px;
+  max-width: 70px;
+  text-align: center;
+  padding: 12px 8px;
+}
+
+.thDetails {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 10;
+  width: auto;
+  min-width: 220px;
+  padding: 12px 12px;
+}
+
+.thTotal {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 10;
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
+  text-align: right;
+  padding: 12px 8px;
+}
+
+.thDiscount {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 10;
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+  text-align: right;
+  padding: 12px 8px;
+}
+
+.thFinal {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 10;
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
+  text-align: right;
+  padding: 12px 8px;
+}
+
+.thPayment {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 10;
+  width: 115px;
+  min-width: 115px;
+  max-width: 115px;
+  text-align: center;
+  padding: 12px 6px;
+}
+
+.thCustomer {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 10;
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+  padding: 12px 12px;
+}
+
+.thSource {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 10;
+  width: 85px;
+  min-width: 85px;
+  max-width: 85px;
+  text-align: center;
+  padding: 12px 8px;
+}
+
+.thAction {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 10;
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+  text-align: center;
+  padding: 12px 6px;
+}
+
+.tdCentered {
+  text-align: center;
+  vertical-align: middle;
+  padding: 4px 8px;
+  width: 90px;
+  min-width: 90px;
+  max-width: 90px;
+}
+
+.tdStaff {
+  font-weight: 500;
+  padding: 10px 12px;
+  width: 280px;
+  min-width: 280px;
+  max-width: 280px;
+}
+
+.tdTime {
+  text-align: center;
+  padding: 10px 8px;
+  width: 70px;
+  min-width: 70px;
+  max-width: 70px;
+}
+
+.tdDetails {
+  padding: 10px 12px;
+  width: auto;
+  min-width: 220px;
+}
+
+.tdTotal {
+  text-align: right;
+  padding: 10px 8px;
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
+}
+
+.tdDiscount {
+  text-align: right;
+  padding: 10px 8px;
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+}
+
+.tdFinal {
+  font-weight: 800;
+  text-align: right;
+  padding: 10px 8px;
+  color: var(--color-primary);
+  width: 100px;
+  min-width: 100px;
+  max-width: 100px;
+}
+
+.tdPayment {
+  text-align: center;
+  padding: 10px 6px;
+  width: 115px;
+  min-width: 115px;
+  max-width: 115px;
+}
+
+.tdCustomer {
+  font-weight: 600;
+  padding: 10px 12px;
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+}
+
+.tdSource {
+  text-align: center;
+  padding: 10px 8px;
+  width: 85px;
+  min-width: 85px;
+  max-width: 85px;
+}
+
+.tdAction {
+  text-align: center;
+  padding: 10px 6px;
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+}
+
+.avatarContainer {
+  display: flex;
+  justify-content: center;
+}
+
+.avatarList {
+  display: flex;
+  align-items: center;
+}
+
+.avatarImg {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.avatarPlaceholder {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid white;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.avatarExtra {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  border: 1.5px solid white;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  z-index: 5;
+}
+
+.dateRow {
+  background: var(--color-primary-light);
+  border-bottom: 1.5px solid var(--border-color);
+}
+
+.dateCell {
+  padding: 10px 16px;
+  font-weight: 700;
+  color: var(--color-primary);
+  font-size: 12.5px;
+  text-align: left;
+}
+
+.textEllipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+.badgeCash {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: #ecfdf5;
+  color: #10b981;
+  white-space: nowrap;
+}
+
+.badgeTransfer {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: #eff6ff;
+  color: #3b82f6;
+  white-space: nowrap;
+}
+
+.badgeBooking {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #faf5ff;
+  color: #8b5cf6;
+}
+
+.badgeWalkin {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.actionButton {
+  padding: 6px;
+  border: none;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.paginationRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.paginationInfo {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+
+.paginationButtons {
+  display: flex;
+  gap: 8px;
+}
+
+/* InvoiceDetailModal.tsx elements */
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.metaLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.metaValueBold {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.metaValueMuted {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.metaValueNormal {
+  font-size: 12.5px;
+}
+
+.metaValuePaymentCash {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #10b981;
+}
+
+.metaValuePaymentTransfer {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #3b82f6;
+}
+
+.sectionTitle {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.itemsTableContainer {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.itemsTable {
+  width: 100%;
+  font-size: 12px;
+}
+
+.itemsThCenter {
+  text-align: center;
+}
+
+.itemsThRight {
+  text-align: right;
+}
+
+.itemsTdBold {
+  font-weight: 700;
+}
+
+.itemsTdCenter {
+  text-align: center;
+}
+
+.itemsTdRight {
+  text-align: right;
+}
+
+.itemsTdRightBold {
+  text-align: right;
+  font-weight: 600;
+}
+
+.calcSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 16px;
+  width: 100%;
+  align-items: flex-end;
+}
+
+.calcRow {
+  display: flex;
+  justify-content: space-between;
+  width: 240px;
+  font-size: 12.5px;
+}
+
+.calcLabel {
+  color: var(--text-secondary);
+}
+
+.calcVal {
+  font-weight: 600;
+}
+
+.calcDiscount {
+  display: flex;
+  justify-content: space-between;
+  width: 240px;
+  font-size: 12.5px;
+  color: var(--color-danger);
+}
+
+.calcTotal {
+  display: flex;
+  justify-content: space-between;
+  width: 240px;
+  font-size: 14px;
+  font-weight: 800;
+  border-top: 1px dashed var(--border-color);
+  padding-top: 8px;
+}
+
+.calcTotalLabel {
+  color: var(--color-primary);
+}
+
+.calcTotalVal {
+  color: var(--color-primary);
+}
+
+.widthStaff {
+  max-width: 240px;
+}
+
+.widthDetails {
+  max-width: 350px;
+}
+
+.widthCustomer {
+  max-width: 96px;
+}
+
+.noDataCell {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.tableRow {
+  transition: background 0.15s;
+}
+
+.tableRow:hover {
+  background-color: var(--color-bg-hover, rgba(0, 0, 0, 0.02));
+}
+

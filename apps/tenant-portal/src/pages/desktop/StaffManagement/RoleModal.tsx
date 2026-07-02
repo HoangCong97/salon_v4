@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { X, Key } from "lucide-react";
-import { Role } from "./types";
+
 import { useToast } from "../../../components/desktop/ToastProvider";
+
+import { api } from "../../../utils/apiClient";
+
+import { Role } from "./types";
+
+import styles from "./StaffManagement.module.css";
 
 interface RoleModalProps {
   isOpen: boolean;
@@ -57,69 +63,41 @@ export const RoleModal: React.FC<RoleModalProps> = ({
     };
 
     try {
-      let res;
+      let roleResult;
       if (mode === "create") {
-        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/roles`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        roleResult = await api.post<{ id: string }>(`/tenants/${currentTenantId}/roles`, payload);
       } else {
-        res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/roles/${selectedRoleId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        roleResult = await api.put<{ id: string }>(`/tenants/${currentTenantId}/roles/${selectedRoleId}`, payload);
       }
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Lỗi khi lưu chức vụ");
-      }
-
-      const roleResult = await res.json();
       onClose();
       await fetchStaffAndRoles();
       if (mode === "create" && roleResult && roleResult.id) {
         onRoleCreated(roleResult.id);
       }
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(err.message || "Lỗi khi lưu chức vụ");
     } finally {
       setSavingRole(false);
     }
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        backgroundColor: "rgba(15, 23, 42, 0.4)",
-        backdropFilter: "blur(4px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1001,
-      }}
-    >
-      <div className="card animate-fade-in" style={{ width: "100%", maxWidth: "420px", position: "relative", padding: "24px" }}>
+    <div className={styles.modalOverlay}>
+      <div className={`card animate-fade-in ${styles.modalCard}`} style={{ maxWidth: "420px", padding: "24px" }}>
         <button
-          style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }}
+          className={styles.closeButton}
           onClick={onClose}
         >
           <X size={20} />
         </button>
-        <h2 style={{ fontSize: "16px", fontWeight: "700", marginBottom: "20px", display: "flex", alignItems: "center", gap: "8px" }}>
+        <h2 className={styles.modalHeader}>
           <Key size={18} style={{ color: "var(--color-primary)" }} />
           {mode === "create" ? "Thêm vai trò chức vụ mới" : "Chỉnh sửa vai trò"}
         </h2>
 
-        <form onSubmit={handleRoleModalSave} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <div className="form-group" style={{ marginBottom: 0 }}>
+        <form onSubmit={handleRoleModalSave} className={styles.modalForm}>
+          <div className={`form-group ${styles.formGroup}`}>
             <label className="form-label">Tên vai trò *</label>
             <input
               className="form-input"
@@ -131,19 +109,18 @@ export const RoleModal: React.FC<RoleModalProps> = ({
             />
           </div>
 
-          <div className="form-group" style={{ marginBottom: 0 }}>
+          <div className={`form-group ${styles.formGroup}`}>
             <label className="form-label">Mô tả chức năng</label>
             <textarea
-              className="form-input"
+              className={`form-input ${styles.textareaField}`}
               rows={3}
               value={roleDescription}
               onChange={(e) => setRoleDescription(e.target.value)}
               placeholder="Mô tả tóm tắt quyền hạn/công việc của vai trò..."
-              style={{ resize: "vertical" }}
             />
           </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "8px" }}>
+          <div className={styles.modalFooter}>
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Hủy
             </button>

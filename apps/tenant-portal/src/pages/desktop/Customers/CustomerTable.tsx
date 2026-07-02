@@ -1,18 +1,22 @@
 import React from "react";
 import { Edit2, Trash2 } from "lucide-react";
+
 import { ExcelInput } from "../../../components/desktop/TableComponents";
 import { Tooltip } from "../../../components/desktop/ui/Tooltip";
-import { Customer } from "./types";
 import { useAuthStore } from "../../../store/useAuthStore";
+
+import { Customer } from "./types";
+
+import styles from "./Customers.module.css";
 
 interface CustomerTableProps {
   filteredCustomers: Customer[];
   inlineEdits: Record<string, Partial<Customer>>;
-  handleInlineChange: (customerId: string, field: keyof Customer, value: any) => void;
+  handleInlineChange: (customerId: string, field: keyof Customer, value: string | number | undefined | null) => void;
   handleAutoSave: (customerId: string, updatedFields: Partial<Customer>) => Promise<void>;
   handleOpenEditModal: (customer: Customer) => void;
   handleDelete: (id: string) => Promise<void>;
-  getInlineValue: (customer: Customer, field: keyof Customer) => any;
+  getInlineValue: (customer: Customer, field: keyof Customer) => string | number | undefined | null;
 }
 
 export const CustomerTable: React.FC<CustomerTableProps> = ({
@@ -38,29 +42,29 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   };
 
   return (
-    <div className="data-table-container" style={{ overflow: "visible" }}>
+    <div className={`data-table-container ${styles.tableContainer}`}>
       <table className="data-table">
         <thead>
           <tr>
-            <th style={{ padding: "6px 10px", fontSize: "13px" }}>Họ tên</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "200px", textAlign: "center" }}>Số điện thoại</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "250px", textAlign: "center" }}>Email</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "150px", textAlign: "center" }}>Điểm uy tín</th>
-            <th style={{ padding: "6px 10px", fontSize: "13px", width: "150px", textAlign: "center" }}>Ngày tham gia</th>
-            {canManage && <th style={{ padding: "6px 10px", fontSize: "13px", width: "120px", textAlign: "center" }}>Thao tác</th>}
+            <th className={styles.thDefault}>Họ tên</th>
+            <th className={`${styles.thDefault} ${styles.thPhone}`}>Số điện thoại</th>
+            <th className={`${styles.thDefault} ${styles.thEmail}`}>Email</th>
+            <th className={`${styles.thDefault} ${styles.thScore}`}>Điểm uy tín</th>
+            <th className={`${styles.thDefault} ${styles.thCreated}`}>Ngày tham gia</th>
+            {canManage && <th className={`${styles.thDefault} ${styles.thActions}`}>Thao tác</th>}
           </tr>
         </thead>
         <tbody>
           {filteredCustomers.length === 0 ? (
             <tr>
-              <td colSpan={canManage ? 6 : 5} style={{ textAlign: "center", padding: "30px", color: "var(--text-muted)", fontWeight: "500" }}>
+              <td colSpan={canManage ? 6 : 5} className={styles.tdEmpty}>
                 Không tìm thấy khách hàng nào phù hợp.
               </td>
             </tr>
           ) : (
             filteredCustomers.map((customer) => {
               const currentScore = getInlineValue(customer, "credibilityScore") ?? 100;
-              
+
               // Helper to style credibility score colors based on value
               const getScoreColor = (score: number) => {
                 if (score >= 80) return "var(--color-success)";
@@ -70,34 +74,34 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
 
               return (
                 <tr key={customer.id}>
-                  <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                  <td className={styles.tdDefault}>
                     <ExcelInput
-                      value={getInlineValue(customer, "name") as string || ""}
+                      value={(getInlineValue(customer, "name") as string) || ""}
                       onChange={(val) => handleInlineChange(customer.id, "name", val)}
                       onBlur={() => handleAutoSave(customer.id, { name: getInlineValue(customer, "name") as string })}
                       fontWeight="600"
                       disabled={!canManage}
                     />
                   </td>
-                  <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                  <td className={styles.tdDefault}>
                     <ExcelInput
-                      value={getInlineValue(customer, "phone") as string || ""}
+                      value={(getInlineValue(customer, "phone") as string) || ""}
                       onChange={(val) => handleInlineChange(customer.id, "phone", val)}
                       onBlur={() => handleAutoSave(customer.id, { phone: getInlineValue(customer, "phone") as string })}
                       textAlign="center"
                       disabled={!canManage}
                     />
                   </td>
-                  <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                  <td className={styles.tdDefault}>
                     <ExcelInput
-                      value={getInlineValue(customer, "email") as string || ""}
+                      value={(getInlineValue(customer, "email") as string) || ""}
                       onChange={(val) => handleInlineChange(customer.id, "email", val)}
                       onBlur={() => handleAutoSave(customer.id, { email: getInlineValue(customer, "email") as string })}
                       textAlign="center"
                       disabled={!canManage}
                     />
                   </td>
-                  <td style={{ padding: 0, verticalAlign: "middle", height: "38px" }}>
+                  <td className={styles.tdDefault}>
                     <ExcelInput
                       type="number"
                       value={currentScore}
@@ -110,16 +114,15 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
                       disabled={!canManage}
                     />
                   </td>
-                  <td style={{ textAlign: "center", fontSize: "13px", color: "var(--text-secondary)", fontWeight: "500" }}>
+                  <td className={styles.tdCenteredText}>
                     {formatDateDMY(customer.createdAt)}
                   </td>
                   {canManage && (
-                    <td style={{ padding: "0 8px", verticalAlign: "middle", textAlign: "center", height: "38px" }}>
-                      <div style={{ display: "flex", justifyContent: "center", gap: "6px" }}>
+                    <td className={styles.tdAction}>
+                      <div className={styles.btnWrapper}>
                         <Tooltip content="Chỉnh sửa chi tiết">
                           <button
-                            className="btn btn-secondary"
-                            style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                            className={`btn btn-secondary ${styles.btnIcon}`}
                             onClick={() => handleOpenEditModal(customer)}
                           >
                             <Edit2 size={13} />
@@ -127,8 +130,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
                         </Tooltip>
                         <Tooltip content="Xóa khách hàng">
                           <button
-                            className="btn btn-danger"
-                            style={{ padding: "4px 8px", borderRadius: "var(--radius-sm)", display: "flex", alignItems: "center", justifyContent: "center" }}
+                            className={`btn btn-danger ${styles.btnIcon}`}
                             onClick={() => handleDelete(customer.id)}
                           >
                             <Trash2 size={13} />
@@ -146,3 +148,4 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     </div>
   );
 };
+

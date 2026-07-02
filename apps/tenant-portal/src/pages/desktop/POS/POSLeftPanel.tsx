@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Search, Users, Check, GripVertical, Star } from "lucide-react";
+
 import { formatCurrencyVND } from "@salon/shared-utils";
 
 export const getEmployeeColor = (id: string, activeStaff?: any[]) => {

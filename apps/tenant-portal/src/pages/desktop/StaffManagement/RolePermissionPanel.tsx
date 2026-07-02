@@ -1,7 +1,11 @@
 import React from "react";
 import { Plus, Edit2, Trash2, Loader2, Check } from "lucide-react";
-import { Role, SystemPermission } from "./types";
+
 import { useAuthStore } from "../../../store/useAuthStore";
+
+import { Role, SystemPermission } from "./types";
+
+import styles from "./StaffManagement.module.css";
 
 interface RolePermissionPanelProps {
   roles: Role[];
@@ -45,32 +49,22 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
   const activeRole = roles.find((r) => r.id === selectedRoleId);
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "250px 1fr", gap: "24px", height: "100%", minHeight: 0 }}>
+    <div className={styles.permissionGrid}>
       {/* Left Panel: Role List */}
-      <div className="card" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "10px", height: "100%", minHeight: 0 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexShrink: 0 }}>
-          <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)" }}>Danh sách vai trò</span>
+      <div className={`card ${styles.roleListCard}`}>
+        <div className={styles.roleListHeader}>
+          <span className={styles.roleListTitle}>Danh sách vai trò</span>
           {canManage && (
             <button
               onClick={() => handleOpenRoleModal("create")}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                color: "var(--color-primary)",
-                display: "flex",
-                alignItems: "center",
-                gap: "2px",
-                fontSize: "12px",
-                fontWeight: "600",
-              }}
+              className={styles.addRoleBtn}
             >
               <Plus size={14} /> Thêm
             </button>
           )}
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px", flexGrow: 1, overflowY: "auto", paddingRight: "4px" }}>
+        <div className={styles.roleItemsContainer}>
           {roles.map((role) => {
             const isSelected = selectedRoleId === role.id;
             const isBuiltin = ["ADMIN", "MANAGER", "CASHIER", "EMPLOYEE"].includes(role.name.toUpperCase());
@@ -78,44 +72,30 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
               <div
                 key={role.id}
                 onClick={() => setSelectedRoleId(role.id)}
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: "var(--radius-sm)",
-                  backgroundColor: isSelected ? "var(--color-primary-light)" : "transparent",
-                  border: isSelected ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
+                className={`${styles.roleItem} ${isSelected ? styles.roleItemActive : ""}`}
               >
-                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                  <span
-                    style={{
-                      fontSize: "13px",
-                      fontWeight: "600",
-                      color: isSelected ? "var(--color-primary)" : "var(--text-primary)",
-                    }}
-                  >
+                <div className={styles.roleItemTextWrapper}>
+                  <span className={`${styles.roleItemName} ${isSelected ? styles.roleItemNameActive : ""}`}>
                     {role.name}
                   </span>
                   {role.description && (
-                    <span style={{ fontSize: "11px", color: "var(--text-muted)", lineClamp: 1 }}>{role.description}</span>
+                    <span className={styles.roleItemDesc}>{role.description}</span>
                   )}
                 </div>
 
                 {isSelected && !isBuiltin && canManage && (
-                  <div style={{ display: "flex", gap: "4px" }} onClick={(e) => e.stopPropagation()}>
+                  <div className={styles.roleItemActions} onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => handleOpenRoleModal("edit")}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)", padding: "2px" }}
+                      className={styles.roleItemBtn}
+                      title="Chỉnh sửa"
                     >
                       <Edit2 size={12} />
                     </button>
                     <button
                       onClick={handleDeleteRole}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-danger)", padding: "2px" }}
+                      className={`${styles.roleItemBtn} ${styles.roleItemBtnDanger}`}
+                      title="Xóa vai trò"
                     >
                       <Trash2 size={12} />
                     </button>
@@ -128,29 +108,20 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
       </div>
 
       {/* Right Panel: Permissions Setup Matrix */}
-      <div className="card" style={{ display: "flex", flexDirection: "column", gap: "20px", padding: "24px", height: "100%", minHeight: 0 }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            borderBottom: "1px solid var(--border-color)",
-            paddingBottom: "14px",
-            flexShrink: 0,
-          }}
-        >
+      <div className={`card ${styles.permissionsPanelCard}`}>
+        <div className={styles.permissionsHeaderRow}>
           <div>
-            <h3 style={{ fontSize: "16px", fontWeight: "700" }}>
+            <h3 className={styles.permissionsTitle}>
               Thiết lập phân quyền chức vụ:{" "}
               <span style={{ color: "var(--color-primary)" }}>{activeRole?.name || "Chức vụ"}</span>
             </h3>
-            <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>
+            <p className={styles.roleItemDesc} style={{ marginTop: "2px" }}>
               {activeRole?.description || "Gán và cấu hình các quyền hạn nghiệp vụ cho chức vụ."}
             </p>
           </div>
 
           <button
-            className="btn btn-primary"
+            className={`btn btn-primary ${styles.savePermissionsBtn}`}
             onClick={handleSavePermissions}
             disabled={savingPermissions || permissionsLoading || !canManage}
             style={{ minWidth: "150px" }}
@@ -168,15 +139,15 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
         </div>
 
         {permissionsLoading ? (
-          <div style={{ display: "flex", justifyContent: "center", padding: "60px 0", flexGrow: 1 }}>
+          <div className={styles.loadingWrapper} style={{ flexGrow: 1 }}>
             <Loader2 className="animate-spin" size={28} style={{ color: "var(--color-primary)" }} />
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "24px", flexGrow: 1, overflowY: "auto", paddingRight: "8px" }}>
+          <div className={styles.permissionsScrollBody}>
             {Object.keys(groupedPermissions).map((group) => {
               const isSystemAdminRole = activeRole?.name.toUpperCase() === "ADMIN";
               return (
-                <div key={group} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div key={group} className={styles.viewContainer} style={{ gap: "10px" }}>
                   <h4
                     style={{
                       fontSize: "12px",
@@ -196,17 +167,9 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
                       return (
                         <label
                           key={perm.id}
+                          className={`${styles.permissionCard} ${isChecked ? styles.permissionCardActive : ""}`}
                           style={{
-                            display: "flex",
-                            alignItems: "flex-start",
-                            gap: "10px",
-                            padding: "12px",
-                            border: "1px solid var(--border-color)",
-                            borderRadius: "var(--radius-sm)",
                             cursor: (isSystemAdminRole || !canManage) ? "not-allowed" : "pointer",
-                            backgroundColor: isChecked ? "var(--color-primary-light)" : "transparent",
-                            borderColor: isChecked ? "var(--border-focus)" : "var(--border-color)",
-                            transition: "all 0.15s",
                           }}
                         >
                           <input
@@ -214,11 +177,12 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
                             checked={isChecked}
                             disabled={isSystemAdminRole || !canManage}
                             onChange={() => canManage && handlePermissionCheckboxChange(perm.id)}
-                            style={{ marginTop: "3px", width: "16px", height: "16px" }}
+                            className={styles.permissionCheckbox}
+                            style={{ width: "16px", height: "16px" }}
                           />
-                          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                            <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-primary)" }}>{perm.name}</span>
-                            <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>
+                          <div className={styles.permissionTextWrapper}>
+                            <span className={styles.permissionName}>{perm.name}</span>
+                            <span className={styles.permissionDesc}>
                               {perm.description || "Chưa có mô tả chi tiết."}
                             </span>
                             <code style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "2px", display: "inline-block" }}>

@@ -7,7 +7,7 @@ Tài liệu này định nghĩa tất cả các thành phần UI nhỏ nhất (A
 ## 1. NHÓM ĐIỀU HƯỚNG & THAO TÁC (ACTION & NAVIGATION)
 * **Button**: Nút thao tác chính (Đặt lịch, Hủy, Thanh toán). 
     * *Biến thể (Variants)*: Primary, Secondary, Danger, Ghost.
-* **IconButton**: Nút chỉ chứa icon (Quay lại `<-`, Đóng `X`, Menu `...`). Vùng chạm trên mobile phải đảm bảo tối thiểu 44x44px.
+* **IconButton**: Nút chỉ chứa icon (Quay lại `<-`, Đóng `X`, Menu `...`). 
 * **Link**: Đường dẫn văn bản để chuyển hướng nhanh (Ví dụ: "Xem tất cả dịch vụ", "Chính sách bảo mật").
 * **TabItem**: Một mục duy nhất trong thanh chuyển đổi tab (Ví dụ: Tab "Sắp tới", "Đã hủy" trong danh sách lịch hẹn).
 
