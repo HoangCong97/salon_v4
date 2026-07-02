@@ -1,10 +1,11 @@
 import React from "react";
-import { Loader2, Info } from "lucide-react";
 
 import { InvoiceSummary } from "./InvoiceSummary";
 import { InvoiceFilter } from "./InvoiceFilter";
 import { InvoiceTable } from "./InvoiceTable";
 import { InvoiceDetailModal } from "./InvoiceDetailModal";
+import { LoadingState } from "../../../components/desktop/ui/LoadingState";
+import { ErrorState } from "../../../components/desktop/ui/ErrorState";
 
 import { useInvoices } from "./useInvoices";
 
@@ -37,22 +38,11 @@ export default function Invoices() {
   } = useInvoices();
 
   if (loading) {
-    return (
-      <div className={styles.loadingWrapper}>
-        <Loader2 className="animate-spin" size={36} style={{ color: "var(--color-primary)" }} />
-      </div>
-    );
+    return <LoadingState text="Đang tải lịch sử hóa đơn..." />;
   }
 
   if (error) {
-    return (
-      <div className={`card ${styles.errorCard}`}>
-        <h3 className={styles.errorTitle}>
-          <Info size={16} /> Lỗi nạp dữ liệu
-        </h3>
-        <p className={styles.errorDesc}>{error}</p>
-      </div>
-    );
+    return <ErrorState message={error} />;
   }
 
   return (

@@ -124,20 +124,26 @@
   width: 100%;
   background: white;
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   z-index: 100;
   max-height: 200px;
   overflow-y: auto;
   margin-top: 4px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-sizing: border-box;
 }
 
 .suggestionItem {
   padding: 8px 12px;
   cursor: pointer;
   font-size: 12.5px;
-  border-bottom: 1px solid #f1f5f9;
+  border-radius: var(--radius-sm);
   transition: background 0.15s;
+  box-sizing: border-box;
 }
 
 .suggestionRank {
@@ -151,7 +157,9 @@
   background: var(--color-primary-light);
   color: var(--color-primary);
   font-weight: 600;
+  border-radius: var(--radius-sm);
   transition: background 0.15s;
+  box-sizing: border-box;
 }
 
 .customerRankBadge {

@@ -17,11 +17,11 @@ import { CustomerController } from "./customer.controller";
 import { BookingController } from "./booking.controller";
 import { PayrollController } from "./payroll.controller";
 import { CustomerPortalController } from "./customer-portal.controller";
-import { NotificationGateway } from "./notification.gateway";
+import { NotificationModule } from "./notification.module";
 import { Request, Response, NextFunction } from "express";
 
 @Module({
-  imports: [ImportEngineModule],
+  imports: [ImportEngineModule, NotificationModule],
   controllers: [
     AppController, 
     SuperAdminController,
@@ -40,8 +40,7 @@ import { Request, Response, NextFunction } from "express";
     PayrollController,
     CustomerPortalController
   ],
-  providers: [AppService, NotificationGateway],
-  exports: [NotificationGateway]
+  providers: [AppService]
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

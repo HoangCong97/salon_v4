@@ -110,18 +110,18 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     </Tooltip>
                     <Tooltip content="Chỉnh sửa chi tiết">
                       <button
-                        className={`btn btn-secondary ${styles.btnIcon}`}
+                        className={`btn btn-secondary ${styles.actionBtn}`}
                         onClick={() => onOpenEditModal(item)}
                       >
-                        <Edit2 size={13} />
+                        <Edit2 size={12} />
                       </button>
                     </Tooltip>
                     <Tooltip content="Xóa sản phẩm">
                       <button
-                        className={`btn btn-danger ${styles.btnIcon}`}
+                        className={`btn btn-danger ${styles.actionBtn}`}
                         onClick={() => onDelete(item.id)}
                       >
-                        <Trash2 size={13} />
+                        <Trash2 size={12} />
                       </button>
                     </Tooltip>
                   </div>

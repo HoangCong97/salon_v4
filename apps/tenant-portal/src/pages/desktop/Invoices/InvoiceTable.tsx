@@ -218,18 +218,18 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                           {inv.orderSource === "BOOKING" ? "Lịch hẹn" : "Tại quầy"}
                         </span>
                       </td>
-                      <td className={styles.tdAction}>
-                        <Tooltip content="Xem chi tiết hóa đơn">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onViewDetail(inv)}
-                            className={styles.actionButton}
-                          >
-                            <Eye size={14} />
-                          </Button>
-                        </Tooltip>
+                      <td className={styles.actionTd}>
+                        <div className={styles.actionButtons}>
+                          <Tooltip content="Xem chi tiết hóa đơn">
+                            <button
+                              type="button"
+                              className={`btn btn-secondary ${styles.actionBtn}`}
+                              onClick={() => onViewDetail(inv)}
+                            >
+                              <Eye size={12} />
+                            </button>
+                          </Tooltip>
+                        </div>
                       </td>
                     </tr>
                   </React.Fragment>

@@ -325,6 +325,10 @@
   padding: 4px 8px !important;
   font-size: 12px !important;
   border-radius: var(--radius-sm) !important;
+  height: 26px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ==========================================================================
@@ -692,6 +696,31 @@
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 14px;
 }
+
+.permissionSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.permissionSectionTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-left: 3px solid var(--color-primary);
+  padding-left: 8px;
+  margin: 0;
+}
+
+.permissionSectionGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
 
 .permissionCard {
   border: 1px solid var(--border-color);

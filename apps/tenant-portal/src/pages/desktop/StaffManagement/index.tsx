@@ -1,5 +1,5 @@
 import React from "react";
-import { Users, Shield, RefreshCw, Info, Loader2, Upload } from "lucide-react";
+import { Users, Shield, RefreshCw, Upload } from "lucide-react";
 
 import { StaffTable } from "./StaffTable";
 import { RolePermissionPanel } from "./RolePermissionPanel";
@@ -8,6 +8,9 @@ import { StaffFormModal } from "./StaffFormModal";
 import { RoleModal } from "./RoleModal";
 import { AddStaffToQueueModal } from "./AddStaffToQueueModal";
 import { ImportWizardModal } from "../../../components/desktop/ImportWizard/ImportWizardModal";
+import { DragOverlay } from "../../../components/desktop/ui/DragOverlay";
+import { LoadingState } from "../../../components/desktop/ui/LoadingState";
+import { ErrorState } from "../../../components/desktop/ui/ErrorState";
 
 import { useStaffManagement } from "./useStaffManagement";
 
@@ -113,16 +116,9 @@ export default function StaffManagement() {
 
         {/* LOADING & GENERAL ERROR STATE */}
         {loading && activeTab !== "turns" ? (
-          <div className={styles.loadingWrapper}>
-            <Loader2 className="animate-spin" size={36} style={{ color: "var(--color-primary)" }} />
-          </div>
+          <LoadingState text="Đang tải dữ liệu nhân sự..." />
         ) : error ? (
-          <div className={`card ${styles.errorCard}`}>
-            <h3 className={styles.errorTitle}>
-              <Info size={16} /> Lỗi nạp dữ liệu
-            </h3>
-            <p className={styles.errorDesc}>{error}</p>
-          </div>
+          <ErrorState message={error} />
         ) : (
           <div
             className={`${styles.viewContainer} ${
@@ -248,17 +244,10 @@ export default function StaffManagement() {
       />
 
       {/* Global Drag-and-Drop Overlay */}
-      {isDragActive && activeTab === "staff" && (
-        <div className={styles.dragOverlay}>
-          <div className={styles.dragCard}>
-            <Upload size={48} className="animate-bounce" />
-            <h3 className={styles.dragTitle}>Thả file Excel/CSV vào đây để nhập nhân sự</h3>
-            <p className={styles.dragDesc}>
-              Hệ thống sẽ tự động phân tích và đối chiếu cột dữ liệu bằng AI.
-            </p>
-          </div>
-        </div>
-      )}
+      <DragOverlay
+        isActive={isDragActive && activeTab === "staff"}
+        title="Thả file Excel/CSV vào đây để nhập nhân sự"
+      />
     </>
   );
 }

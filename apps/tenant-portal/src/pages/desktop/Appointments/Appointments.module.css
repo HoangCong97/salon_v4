@@ -410,6 +410,8 @@
 .staffHeaderInfo {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .staffHeaderName {
@@ -417,6 +419,8 @@
   font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .staffHeaderSub {
@@ -485,7 +489,7 @@
 }
 
 .timeGutterCell {
-  height: 20px;
+  height: 28px;
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
@@ -511,7 +515,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  height: 20px;
+  height: 28px;
   pointer-events: none;
   z-index: 0;
   transition: background-color 0.15s;
@@ -583,7 +587,7 @@
 }
 
 .timelineTimeCell {
-  height: 20px;
+  height: 28px;
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
@@ -601,7 +605,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  height: 20px;
+  height: 28px;
 }
 
 .sidebarCard {

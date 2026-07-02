@@ -1,12 +1,17 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Layers, Plus, Loader2, Search, Upload, Download } from "lucide-react";
+import { Layers, Plus, Search, Upload, Download } from "lucide-react";
 
 import { ServiceTable } from "./ServiceTable";
 import { CategoryModal } from "./CategoryModal";
 import { ServiceFormModal } from "./ServiceFormModal";
 import { ImportWizardModal } from "../../../components/desktop/ImportWizard/ImportWizardModal";
 import { ExportButton } from "../../../components/desktop/ExportButton";
+import { ImportButton } from "../../../components/desktop/ImportButton";
+import { DragOverlay } from "../../../components/desktop/ui/DragOverlay";
+import { EmptyState } from "../../../components/desktop/ui/EmptyState";
+import { LoadingState } from "../../../components/desktop/ui/LoadingState";
+import { ErrorState } from "../../../components/desktop/ui/ErrorState";
 
 import { useAuthStore } from "../../../store/useAuthStore";
 import { useFileDragAndDrop } from "../../../hooks/useFileDragAndDrop";
@@ -315,6 +320,18 @@ export default function Services() {
       <div className={`animate-fade-in ${styles.container}`}>
         {/* Filter, Actions and Search Bar */}
         <div className={`card ${styles.filterCard}`}>
+          {/* Search Container (Far Left) */}
+          <div className={styles.searchContainer}>
+            <Search size={16} className={styles.searchIcon} />
+            <input
+              type="text"
+              className={`form-input ${styles.searchInput}`}
+              placeholder="Tìm kiếm dịch vụ..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
           {/* Category Tabs */}
           <div className={styles.categoriesList}>
             {canManage && (
@@ -350,29 +367,15 @@ export default function Services() {
             ))}
           </div>
 
-          {/* Actions & Search */}
+          {/* Actions */}
           <div className={styles.actionsWrapper}>
-            <div className={styles.searchContainer}>
-              <Search size={16} className={styles.searchIcon} />
-              <input
-                type="text"
-                className={`form-input ${styles.searchInput}`}
-                placeholder="Tìm kiếm dịch vụ..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
             {canManage && (
-              <button
-                className={`btn btn-secondary ${styles.importBtn}`}
+              <ImportButton
                 onClick={() => {
                   setDroppedFile(null);
                   setIsImportModalOpen(true);
                 }}
-              >
-                <Download size={16} /> Nhập dữ liệu
-              </button>
+              />
             )}
 
             <ExportButton
@@ -394,19 +397,15 @@ export default function Services() {
 
         {/* Main Content */}
         {loading ? (
-          <div className={styles.loadingWrapper}>
-            <Loader2 className="animate-spin" size={32} style={{ color: "var(--color-primary)" }} />
-          </div>
+          <LoadingState text="Đang tải danh sách dịch vụ..." />
         ) : error ? (
-          <div className={`card ${styles.errorCard}`}>
-            <p className={styles.errorText}>{error}</p>
-          </div>
+          <ErrorState message={error} />
         ) : filteredServices.length === 0 ? (
-          <div className={`card ${styles.emptyCard}`}>
-            <Layers size={48} className={styles.emptyIcon} />
-            <h3 className={styles.emptyTitle}>Không tìm thấy dịch vụ nào</h3>
-            <p className={styles.emptyDesc}>Hãy thử điều chỉnh bộ lọc hoặc thêm dịch vụ mới.</p>
-          </div>
+          <EmptyState
+            title="Không tìm thấy dịch vụ nào"
+            description="Hãy thử điều chỉnh bộ lọc hoặc thêm dịch vụ mới."
+            icon={<Layers size={48} />}
+          />
         ) : (
           <ServiceTable
             filteredServices={filteredServices}
@@ -468,17 +467,10 @@ export default function Services() {
       />
 
       {/* Global Drag-and-Drop Overlay */}
-      {isDragActive && canManage && (
-        <div className={styles.dragOverlay}>
-          <div className={styles.dragCard}>
-            <Upload size={48} className="animate-bounce" />
-            <h3 className={styles.dragTitle}>Thả file Excel/CSV vào đây để nhập dịch vụ</h3>
-            <p className={styles.dragDesc}>
-              Hệ thống sẽ tự động phân tích và đối chiếu cột dữ liệu bằng AI.
-            </p>
-          </div>
-        </div>
-      )}
+      <DragOverlay
+        isActive={isDragActive && canManage}
+        title="Thả file Excel/CSV vào đây để nhập dịch vụ"
+      />
     </>
   );
 }

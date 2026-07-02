@@ -3,6 +3,7 @@ import { ServiceImportStrategy } from "./strategies/service-import.strategy";
 import { StaffImportStrategy } from "./strategies/staff-import.strategy";
 import { CustomerImportStrategy } from "./strategies/customer-import.strategy";
 import { PayrollImportStrategy } from "./strategies/payroll-import.strategy";
+import { InventoryImportStrategy } from "./strategies/inventory-import.strategy";
 import { ImportStrategy } from "./interfaces/import-strategy.interface";
 
 @Injectable()
@@ -14,13 +15,15 @@ export class ImportEngineService {
     private readonly serviceImportStrategy: ServiceImportStrategy,
     private readonly staffImportStrategy: StaffImportStrategy,
     private readonly customerImportStrategy: CustomerImportStrategy,
-    private readonly payrollImportStrategy: PayrollImportStrategy
+    private readonly payrollImportStrategy: PayrollImportStrategy,
+    private readonly inventoryImportStrategy: InventoryImportStrategy
   ) {
     // Register available strategies
     this.strategies.set("service", serviceImportStrategy);
     this.strategies.set("staff", staffImportStrategy);
     this.strategies.set("customer", customerImportStrategy);
     this.strategies.set("payroll", payrollImportStrategy);
+    this.strategies.set("inventory", inventoryImportStrategy);
   }
 
   /**

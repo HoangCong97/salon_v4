@@ -142,6 +142,7 @@ interface ExcelSelectProps {
   disabled?: boolean;
   allowCustom?: boolean;
   unit?: string;
+  className?: string;
 }
 
 export const ExcelSelect: React.FC<ExcelSelectProps> = ({
@@ -153,10 +154,12 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
   disabled = false,
   allowCustom = false,
   unit,
+  className = "excel-select",
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [dropdownCoords, setDropdownCoords] = useState({ top: 0, left: 0, width: 0 });
+  const [hoveredValue, setHoveredValue] = useState<string | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -244,13 +247,14 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
     >
       {allowCustom ? (
         <div
+          className={className}
           style={{
             display: "flex",
             alignItems: "center",
             width: "100%",
             height: "100%",
             position: "relative",
-            borderRadius: "6px",
+            borderRadius: "var(--radius-sm)",
             boxSizing: "border-box",
             outline: isFocused ? "2px solid var(--color-primary)" : "none",
             outlineOffset: "-2px",
@@ -332,6 +336,7 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
           onClick={() => {
             if (canOpen) setIsOpen(!isOpen);
           }}
+          className={className}
           style={{
             display: "flex",
             alignItems: "center",
@@ -343,7 +348,7 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
             fontWeight: "500",
             cursor: disabled ? "not-allowed" : (canOpen ? "pointer" : "default"),
             boxSizing: "border-box",
-            borderRadius: "6px",
+            borderRadius: "var(--radius-sm)",
             position: "relative",
             userSelect: "none",
             ...colorStyle,
@@ -378,7 +383,7 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
             overflowY: "auto",
             backgroundColor: "white",
             border: "1px solid var(--border-color)",
-            borderRadius: "var(--radius-sm)",
+            borderRadius: "var(--radius-md)",
             boxShadow: "var(--shadow-md)",
             zIndex: 9999,
             marginTop: "2px",
@@ -391,9 +396,12 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
         >
           {options.map((opt) => {
             const isSelected = opt.value === value;
+            const isHovered = hoveredValue === opt.value;
             return (
               <div
                 key={opt.value}
+                onMouseEnter={() => setHoveredValue(opt.value)}
+                onMouseLeave={() => setHoveredValue(null)}
                 onClick={(e) => {
                   e.stopPropagation();
                   onChange(opt.value);
@@ -401,30 +409,27 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
                 }}
                 style={{
                   padding: "8px 10px",
-                  borderRadius: "4px",
+                  borderRadius: "16px",
                   cursor: "pointer",
                   fontSize: "12px",
                   fontWeight: "600",
                   textAlign: "center",
-                  background: isSelected ? "var(--color-primary-light)" : "transparent",
-                  color: isSelected ? "var(--color-primary)" : "var(--text-primary)",
                   transition: "all 0.1s ease",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  ...opt.colorStyle
+                  filter: isHovered ? "brightness(0.95)" : "none",
+                  ...((isSelected || !opt.colorStyle) ? {
+                    background: isSelected 
+                      ? "var(--color-primary-light)" 
+                      : (isHovered ? "var(--bg-app)" : "transparent"),
+                    color: isSelected || isHovered
+                      ? "var(--color-primary)" 
+                      : "var(--text-primary)",
+                  } : {}),
+                  ...(opt.colorStyle || {}),
                 }}
                 className="excel-select-option"
-                onMouseEnter={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = "var(--bg-light)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }
-                }}
               >
                 {opt.label}
               </div>
@@ -921,6 +926,7 @@ export const ExcelMultipleSelect: React.FC<ExcelMultipleSelectProps> = ({
           fontSize: "12px",
           cursor: disabled ? "not-allowed" : "pointer",
           boxSizing: "border-box",
+          borderRadius: "var(--radius-sm)",
           background: isOpen ? "white" : "transparent",
           outline: isOpen ? "2px solid var(--color-primary)" : "none",
           outlineOffset: "-2px",
@@ -978,7 +984,7 @@ export const ExcelMultipleSelect: React.FC<ExcelMultipleSelectProps> = ({
             maxHeight: "260px",
             backgroundColor: "white",
             border: "1px solid var(--border-color)",
-            borderRadius: "var(--radius-sm)",
+            borderRadius: "var(--radius-md)",
             boxShadow: "var(--shadow-md)",
             zIndex: 9999,
             marginTop: "2px",
@@ -1050,7 +1056,7 @@ export const ExcelMultipleSelect: React.FC<ExcelMultipleSelectProps> = ({
                       alignItems: "center",
                       gap: "8px",
                       padding: "6px 8px",
-                      borderRadius: "6px",
+                      borderRadius: "calc(var(--radius-sm) - 2px)",
                       cursor: "pointer",
                       fontSize: "12px",
                       background: isChecked ? "var(--color-primary-light)" : "transparent",

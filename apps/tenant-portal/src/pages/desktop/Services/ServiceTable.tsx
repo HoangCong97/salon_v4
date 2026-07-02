@@ -290,7 +290,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                           className={`btn btn-secondary ${styles.actionBtn}`}
                           onClick={() => handleOpenEditModal(service)}
                         >
-                          <Edit2 size={13} />
+                          <Edit2 size={12} />
                         </button>
                       </Tooltip>
                       <Tooltip content="Xóa dịch vụ">
@@ -298,7 +298,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                           className={`btn btn-danger ${styles.actionBtn}`}
                           onClick={() => handleDelete(service.id)}
                         >
-                          <Trash2 size={13} />
+                          <Trash2 size={12} />
                         </button>
                       </Tooltip>
                     </div>

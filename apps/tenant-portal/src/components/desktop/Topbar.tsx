@@ -79,6 +79,11 @@ export default function Topbar() {
           title: "Cơ sở & Chi nhánh",
           description: "Quản lý mạng lưới chi nhánh, cửa hàng trực thuộc chuỗi salon."
         };
+      case "/customers":
+        return {
+          title: "Quản lý khách hàng",
+          description: "Danh sách và hồ sơ khách hàng thành viên của salon."
+        };
       case "/services":
         return {
           title: "Danh mục dịch vụ",

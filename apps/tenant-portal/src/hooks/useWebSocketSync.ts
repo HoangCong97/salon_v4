@@ -25,6 +25,7 @@ export const useWebSocketSync = () => {
     switch (event) {
       case "staff.updated":
         queryClient.invalidateQueries({ queryKey: queryKeys.staff.all(currentTenantId) });
+        queryClient.invalidateQueries({ queryKey: ["shifts", currentTenantId] });
         if (isOtherUser) {
           toast.info("Danh sách nhân sự vừa được cập nhật bởi một người dùng khác.");
         }
@@ -60,9 +61,14 @@ export const useWebSocketSync = () => {
       case "appointments.updated":
         const apptBranchId = data?.branchId || currentBranchId;
         if (apptBranchId) {
-          queryClient.invalidateQueries({ queryKey: queryKeys.appointments.all(currentTenantId) });
-          if (isOtherUser && apptBranchId === currentBranchId) {
-            toast.info("Lịch hẹn khách hàng vừa được cập nhật bởi một người dùng khác.");
+          const isOther = data?.senderId && data.senderId !== currentUser?.id;
+          // Invalidate queries only if the update is from another user.
+          // For the current user, it is already handled locally on API success.
+          if (!data?.senderId || isOther) {
+            queryClient.invalidateQueries({ queryKey: queryKeys.appointments.all(currentTenantId) });
+            if (isOther && apptBranchId === currentBranchId) {
+              toast.info("Lịch hẹn khách hàng vừa được cập nhật bởi một người dùng khác.");
+            }
           }
         }
         break;

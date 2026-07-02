@@ -8,10 +8,25 @@ class WebSocketService {
   private ws: WebSocket | null = null;
   private listeners: Set<MessageCallback> = new Set();
   private reconnectTimeout: any = null;
-  private url: string = "ws://localhost:3000";
+  private url: string;
 
   private constructor() {
+    this.url = this.getDefaultWsUrl();
     this.connect();
+  }
+
+  private getDefaultWsUrl(): string {
+    const isHttps = window.location.protocol === "https:";
+    const protocol = isHttps ? "wss:" : "ws:";
+    const host = window.location.hostname || "localhost";
+    
+    // In development mode (Vite), backend api runs on port 3000.
+    // In production mode, WebSocket server is hosted on the same port as the client webpage.
+    const isDev = import.meta.env.DEV;
+    const port = isDev ? "3000" : window.location.port;
+    const hostWithPort = port ? `${host}:${port}` : host;
+    
+    return `${protocol}//${hostWithPort}`;
   }
 
   public static getInstance(): WebSocketService {
@@ -22,7 +37,8 @@ class WebSocketService {
   }
 
   public updateTenant(tenantId: string | null) {
-    const newUrl = tenantId ? `ws://localhost:3000?tenantId=${tenantId}` : `ws://localhost:3000`;
+    const baseUrl = this.getDefaultWsUrl();
+    const newUrl = tenantId ? `${baseUrl}?tenantId=${tenantId}` : baseUrl;
     if (this.url === newUrl && this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
       return; // No need to reconnect
     }

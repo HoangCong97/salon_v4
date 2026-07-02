@@ -1,10 +1,14 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Coins, Upload, Loader2, AlertCircle } from "lucide-react";
+import { Coins, Upload } from "lucide-react";
 
 import { PayrollHeader } from "./components/PayrollHeader";
 import { PayrollTable } from "./components/PayrollTable";
 import { ImportWizardModal } from "../../../components/desktop/ImportWizard/ImportWizardModal";
+import { DragOverlay } from "../../../components/desktop/ui/DragOverlay";
+import { EmptyState } from "../../../components/desktop/ui/EmptyState";
+import { LoadingState } from "../../../components/desktop/ui/LoadingState";
+import { ErrorState } from "../../../components/desktop/ui/ErrorState";
 
 import { useAuthStore } from "../../../store/useAuthStore";
 import { useFileDragAndDrop } from "../../../hooks/useFileDragAndDrop";
@@ -27,9 +31,17 @@ export default function Payroll() {
   const queryClient = useQueryClient();
   const canManage = hasPermission("staff.manage");
 
-  // Date selection
+  // Date & Branch selection
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
+  const [selectedBranch, setSelectedBranch] = useState<string>(currentBranchId || "");
+
+  // Sync selectedBranch if currentBranchId changes in auth store
+  React.useEffect(() => {
+    if (currentBranchId) {
+      setSelectedBranch(currentBranchId);
+    }
+  }, [currentBranchId]);
 
   // Derived / local state
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,6 +49,13 @@ export default function Payroll() {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [droppedFile, setDroppedFile] = useState<File | null>(null);
   const [generating, setGenerating] = useState(false);
+
+  // Fetch branches
+  const { data: branches = [] } = useQuery<any[]>({
+    queryKey: queryKeys.branches.list(currentTenantId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/branches`),
+    enabled: !!currentTenantId,
+  });
 
   // Drag & drop hook for import
   const { isDragActive } = useFileDragAndDrop((file) => {
@@ -73,11 +92,16 @@ export default function Payroll() {
     }
   ], []);
 
-  // TanStack Query
+  // TanStack Query for payroll list
   const { data: payrolls = [], isLoading: payrollsLoading, error: queryError } = useQuery<PayrollMember[]>({
-    queryKey: queryKeys.payrolls.list(currentTenantId!, currentBranchId!, periodStr),
-    queryFn: () => api.get(`/tenants/${currentTenantId}/payrolls?period=${periodStr}&branchId=${currentBranchId}`),
-    enabled: !!currentTenantId && !!currentBranchId,
+    queryKey: queryKeys.payrolls.list(currentTenantId!, selectedBranch || "all", periodStr),
+    queryFn: () => {
+      const url = selectedBranch
+        ? `/tenants/${currentTenantId}/payrolls?period=${periodStr}&branchId=${selectedBranch}`
+        : `/tenants/${currentTenantId}/payrolls?period=${periodStr}`;
+      return api.get(url);
+    },
+    enabled: !!currentTenantId,
   });
 
   const loading = payrollsLoading || generating;
@@ -85,17 +109,20 @@ export default function Payroll() {
 
   const fetchPayrolls = useCallback(async (silent = false) => {
     await queryClient.invalidateQueries({
-      queryKey: queryKeys.payrolls.list(currentTenantId!, currentBranchId!, periodStr)
+      queryKey: queryKeys.payrolls.list(currentTenantId!, selectedBranch || "all", periodStr)
     });
-  }, [queryClient, currentTenantId, currentBranchId, periodStr]);
+  }, [queryClient, currentTenantId, selectedBranch, periodStr]);
 
   const handleGeneratePayroll = async () => {
-    if (!currentTenantId || !currentBranchId) return;
+    if (!currentTenantId || !selectedBranch) {
+      toast.error("Vui lòng chọn một chi nhánh cụ thể để lập bảng lương.");
+      return;
+    }
     setGenerating(true);
     try {
       await api.post(`/tenants/${currentTenantId}/payrolls/generate`, {
         period: periodStr,
-        branchId: currentBranchId
+        branchId: selectedBranch
       });
       toast.success("Khởi tạo bảng lương thành công!");
       await fetchPayrolls(true);
@@ -283,6 +310,9 @@ export default function Payroll() {
         setSelectedMonth={setSelectedMonth}
         selectedYear={selectedYear}
         setSelectedYear={setSelectedYear}
+        selectedBranch={selectedBranch}
+        setSelectedBranch={setSelectedBranch}
+        branches={branches}
         canManage={canManage}
         onOpenImportModal={() => {
           setDroppedFile(null);
@@ -297,25 +327,15 @@ export default function Payroll() {
 
       {/* Main content table */}
       {loading ? (
-        <div className={styles.loadingWrapper}>
-          <Loader2 className={`animate-spin ${styles.loader}`} size={36} />
-        </div>
+        <LoadingState text="Đang tải dữ liệu bảng lương..." />
       ) : error ? (
-        <div className={`card ${styles.errorCard}`}>
-          <AlertCircle size={20} className={styles.errorIcon} />
-          <div>
-            <h3 className={styles.errorTitle}>Không thể tải bảng lương</h3>
-            <p className={styles.errorDesc}>{error}</p>
-          </div>
-        </div>
+        <ErrorState title="Không thể tải bảng lương" message={error} />
       ) : filteredPayrolls.length === 0 ? (
-        <div className={`card ${styles.emptyCard}`}>
-          <Coins size={48} className={styles.emptyIcon} />
-          <h3 className={styles.emptyTitle}>Không tìm thấy dữ liệu lương</h3>
-          <p className={styles.emptyDesc}>
-            {searchTerm ? "Không có kết quả phù hợp." : "Chưa lập bảng lương cho chu kỳ này. Vui lòng bấm 'Lập bảng lương' để bắt đầu."}
-          </p>
-        </div>
+        <EmptyState
+          title="Không tìm thấy dữ liệu lương"
+          description={searchTerm ? "Không có kết quả phù hợp." : "Chưa lập bảng lương cho chu kỳ này. Vui lòng bấm 'Lập bảng lương' để bắt đầu."}
+          icon={<Coins size={48} />}
+        />
       ) : (
         <PayrollTable
           filteredPayrolls={filteredPayrolls}
@@ -330,15 +350,11 @@ export default function Payroll() {
       )}
 
       {/* Drag and Drop dropzone background cue */}
-      {isDragActive && canManage && (
-        <div className={styles.dragOverlay}>
-          <div className={`card ${styles.dragCard}`}>
-            <Upload size={48} className={styles.dragIcon} />
-            <h3 className={styles.dragTitle}>Thả file Excel/CSV vào đây</h3>
-            <p className={styles.dragDesc}>Để bắt đầu quá trình nhập bảng lương tự động</p>
-          </div>
-        </div>
-      )}
+      <DragOverlay
+        isActive={isDragActive && canManage}
+        title="Thả file Excel/CSV vào đây"
+        description="Để bắt đầu quá trình nhập bảng lương tự động"
+      />
 
       {/* Import Wizard Modal */}
       <ImportWizardModal

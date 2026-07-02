@@ -147,21 +147,11 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
             {Object.keys(groupedPermissions).map((group) => {
               const isSystemAdminRole = activeRole?.name.toUpperCase() === "ADMIN";
               return (
-                <div key={group} className={styles.viewContainer} style={{ gap: "10px" }}>
-                  <h4
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "700",
-                      color: "var(--color-primary)",
-                      letterSpacing: "0.5px",
-                      textTransform: "uppercase",
-                      borderLeft: "3px solid var(--color-primary)",
-                      paddingLeft: "8px",
-                    }}
-                  >
+                <div key={group} className={styles.permissionSection}>
+                  <h4 className={styles.permissionSectionTitle}>
                     Nghiệp vụ {group}
                   </h4>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div className={styles.permissionSectionGrid}>
                     {groupedPermissions[group].map((perm) => {
                       const isChecked = isSystemAdminRole || assignedPermissionIds.includes(perm.id);
                       return (

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { X, Users, Edit2, Camera, User, Loader2 } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { X, Users, Edit2, Camera, User, Loader2, ImagePlus } from "lucide-react";
 
 import { PriceInputWithSuggestion } from "../../../components/desktop/TableComponents";
 
@@ -91,8 +91,10 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
   // Avatar drag-and-drop & immediate upload preview states
   const [hoverAvatar, setHoverAvatar] = useState(false);
   const [isDragOverAvatar, setIsDragOverAvatar] = useState(false);
+  const [isDragOverModal, setIsDragOverModal] = useState(false);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const dragCounter = useRef(0);
 
   const currentUser = useAuthStore((state) => state.user);
 
@@ -127,6 +129,8 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
       setAvatarPreviewUrl(null);
       setIsUploading(false);
       setIsDragOverAvatar(false);
+      setIsDragOverModal(false);
+      dragCounter.current = 0;
       if (mode === "edit" && selectedStaffId) {
         const item = staff.find((s) => s.id === selectedStaffId);
         if (item) {
@@ -241,7 +245,87 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
 
   return (
     <div className={styles.modalOverlay}>
-      <div className={`card animate-fade-in ${styles.modalCard}`} style={{ maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", padding: "28px" }}>
+      <div
+        className={`card animate-fade-in ${styles.modalCard}`}
+        style={{ maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", padding: "28px", position: "relative" }}
+        onDragEnter={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dragCounter.current++;
+          if (dragCounter.current === 1) {
+            setIsDragOverModal(true);
+          }
+        }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dragCounter.current--;
+          if (dragCounter.current <= 0) {
+            dragCounter.current = 0;
+            setIsDragOverModal(false);
+            setIsDragOverAvatar(false);
+          }
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dragCounter.current = 0;
+          setIsDragOverModal(false);
+          setIsDragOverAvatar(false);
+          const files = e.dataTransfer.files;
+          if (files && files.length > 0) {
+            processAndUploadFile(files[0]);
+          }
+        }}
+      >
+        {/* Full-modal drag overlay */}
+        {isDragOverModal && (
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(59, 130, 246, 0.08)",
+              backdropFilter: "blur(2px)",
+              border: "3px dashed var(--color-primary)",
+              borderRadius: "var(--radius-lg)",
+              zIndex: 10,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "12px",
+              pointerEvents: "none",
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "white",
+                padding: "20px 32px",
+                borderRadius: "var(--radius-md)",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <ImagePlus size={32} style={{ color: "var(--color-primary)" }} />
+              <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-primary)" }}>
+                Thả ảnh vào đây
+              </span>
+              <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+                Ảnh sẽ được sử dụng làm avatar nhân viên
+              </span>
+            </div>
+          </div>
+        )}
         <button
           className={styles.closeButton}
           onClick={onClose}

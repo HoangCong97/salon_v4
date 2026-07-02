@@ -114,26 +114,26 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
                       disabled={!canManage}
                     />
                   </td>
-                  <td className={styles.tdCenteredText}>
+                  <td className={`${styles.tdDefault} ${styles.tdCenteredText}`}>
                     {formatDateDMY(customer.createdAt)}
                   </td>
                   {canManage && (
-                    <td className={styles.tdAction}>
-                      <div className={styles.btnWrapper}>
+                    <td className={styles.actionTd}>
+                      <div className={styles.actionButtons}>
                         <Tooltip content="Chỉnh sửa chi tiết">
                           <button
-                            className={`btn btn-secondary ${styles.btnIcon}`}
+                            className={`btn btn-secondary ${styles.actionBtn}`}
                             onClick={() => handleOpenEditModal(customer)}
                           >
-                            <Edit2 size={13} />
+                            <Edit2 size={12} />
                           </button>
                         </Tooltip>
                         <Tooltip content="Xóa khách hàng">
                           <button
-                            className={`btn btn-danger ${styles.btnIcon}`}
+                            className={`btn btn-danger ${styles.actionBtn}`}
                             onClick={() => handleDelete(customer.id)}
                           >
-                            <Trash2 size={13} />
+                            <Trash2 size={12} />
                           </button>
                         </Tooltip>
                       </div>

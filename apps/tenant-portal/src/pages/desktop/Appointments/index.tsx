@@ -10,12 +10,12 @@ import {
 } from "./types";
 
 import {
-  SLOT_HEIGHT, TIME_COL_W, STATUS_CFG, TOTAL_SLOTS,
+  SLOT_HEIGHT, TIME_COL_W, STATUS_CFG, TOTAL_SLOTS, START_HOUR, END_HOUR,
 } from "./constants";
 
 import {
   toLocalDateStr, hashColor, hashBg, hashBorder, timeToSlot, slotToTime,
-  durationSlots, getInitials, fmtDateVN,
+  durationSlots, getInitials, fmtDateVN, getClosestTimeOption,
 } from "./helpers";
 
 import { GridServiceCard } from "./GridServiceCard";
@@ -72,6 +72,8 @@ export default function Appointments() {
     gridH,
     navigateDate,
     handleDelete,
+    scrollToCurrentTime,
+    customerColorsMap,
   } = useAppointments();
 
   return (
@@ -162,7 +164,7 @@ export default function Appointments() {
                 mode: "create",
                 prefill: {
                   staffId: "",
-                  startTime: "09:00",
+                  startTime: getClosestTimeOption(START_HOUR, END_HOUR),
                   date: selectedDate
                 }
               })}
@@ -180,13 +182,18 @@ export default function Appointments() {
           </div>
           <div className={styles.waitingListScrollable}>
             {customerList.map(cust => {
-              const active = selectedCustomer === cust.name;
-              const cc = hashColor(cust.name);
+              const active = selectedCustomer === cust.id;
+              const colors = customerColorsMap.get(cust.id) ?? {
+                accentColor: hashColor(cust.name),
+                bgColor: hashBg(cust.name),
+                bdColor: hashBorder(cust.name)
+              };
+              const cc = colors.accentColor;
               return (
                 <button
-                  key={cust.name}
+                  key={cust.id}
                   onClick={() => {
-                    setSelectedCustomer(cust.name);
+                    setSelectedCustomer(cust.id);
                     const targetScrollTop = cust.earliest * SLOT_HEIGHT - 40;
                     if (gridScrollRef.current) gridScrollRef.current.scrollTop = Math.max(0, targetScrollTop);
                     if (sidebarScrollRef.current) sidebarScrollRef.current.scrollTop = Math.max(0, targetScrollTop);
@@ -218,12 +225,15 @@ export default function Appointments() {
           {viewMode === "by-staff" ? (
             <>
               <span className={styles.legendTitle}>Màu = khách hàng:</span>
-              {Array.from(new Set(todayItems.map(i => i.customerName))).slice(0, 8).map(name => (
-                <div key={name} className={styles.legendItem}>
-                  <div className={styles.legendColorBox} style={{ background: hashColor(name) }} />
-                  <span className={styles.legendText}>{name}</span>
-                </div>
-              ))}
+              {customerCols.slice(0, 8).map(c => {
+                const cc = customerColorsMap.get(c.id)?.accentColor ?? hashColor(c.name);
+                return (
+                  <div key={c.id} className={styles.legendItem}>
+                    <div className={styles.legendColorBox} style={{ background: cc }} />
+                    <span className={styles.legendText}>{c.name}</span>
+                  </div>
+                );
+              })}
             </>
           ) : (
             <>
@@ -238,7 +248,12 @@ export default function Appointments() {
           )}
 
           {/* Current Time Line Legend on the right */}
-          <div className={styles.currentTimeLegend}>
+          <div
+            className={styles.currentTimeLegend}
+            style={{ cursor: "pointer" }}
+            onClick={scrollToCurrentTime}
+            title="Click để cuộn tới giờ hiện tại"
+          >
             <div className={styles.currentTimeLineBox} />
             <div className={styles.currentTimeDotBox} />
             <span className={styles.currentTimeText}>Giờ hiện tại</span>
@@ -289,7 +304,7 @@ export default function Appointments() {
                   <div
                     key={s.id}
                     className={styles.columnHeaderCell}
-                    style={{ borderTop: `3px solid ${s.color}` }}
+                    style={{ borderTop: `3px solid ${s.color}`, width: colW }}
                   >
                     <div
                       className={styles.staffHeaderAvatar}
@@ -309,18 +324,23 @@ export default function Appointments() {
                   </div>
                 ))
                 : customerCols.map(c => {
-                  const cc = hashColor(c.name);
+                  const colors = customerColorsMap.get(c.id) ?? {
+                    accentColor: hashColor(c.name),
+                    bgColor: hashBg(c.name),
+                    bdColor: hashBorder(c.name)
+                  };
+                  const cc = colors.accentColor;
                   return (
                     <div
                       key={c.id}
                       className={styles.columnHeaderCell}
-                      style={{ borderTop: `3px solid ${cc}` }}
+                      style={{ borderTop: `3px solid ${cc}`, width: colW }}
                     >
                       <div
                         className={styles.customerHeaderAvatar}
                         style={{
-                          background: hashBg(c.name),
-                          border: `2px solid ${hashBorder(c.name)}`,
+                          background: colors.bgColor,
+                          border: `2px solid ${colors.bdColor}`,
                           color: cc,
                         }}
                       >
@@ -365,7 +385,7 @@ export default function Appointments() {
               {activeCols.map(col => {
                 const colId = col.id;
                 const colItems = todayItems.filter(item =>
-                  viewMode === "by-staff" ? item.staffId === colId : item.customerName === colId
+                  viewMode === "by-staff" ? item.staffId === colId : item.groupId === colId
                 );
 
                 return (
@@ -536,7 +556,12 @@ export default function Appointments() {
                 const slots = durationSlots(item.service.duration);
                 const topPx = startSlot * SLOT_HEIGHT + 3;
                 const height = slots * SLOT_HEIGHT - 6;
-                const cc = hashColor(item.customerName);
+                const colors = customerColorsMap.get(item.groupId) ?? {
+                  accentColor: hashColor(item.customerName),
+                  bgColor: hashBg(item.customerName),
+                  bdColor: hashBorder(item.customerName)
+                };
+                const cc = colors.accentColor;
                 const isBeingDragged = dragState?.id === item.id;
                 const staff = staffList.find(s => s.id === item.staffId);
                 const cfg = STATUS_CFG[item.status];
@@ -548,7 +573,7 @@ export default function Appointments() {
                     onDragStart={e => {
                       const ghost = document.createElement("div");
                       const w = (e.currentTarget as HTMLDivElement).getBoundingClientRect().width;
-                      ghost.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:${w}px;height:${height}px;background:${hashBg(item.customerName)};border:1.5px solid ${hashBorder(item.customerName)};border-left:4px solid ${cc};border-radius:8px;padding:6px 10px;box-sizing:border-box;font-family:system-ui,sans-serif;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,0.15)`;
+                      ghost.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:${w}px;height:${height}px;background:${colors.bgColor};border:1.5px solid ${colors.bdColor};border-left:4px solid ${cc};border-radius:8px;padding:6px 10px;box-sizing:border-box;font-family:system-ui,sans-serif;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,0.15)`;
                       ghost.innerHTML = `<div style="font-size:12px;font-weight:700;color:#0f172a">${item.service.name}</div><div style="font-size:10px;color:#64748b;margin-top:2px">${item.customerName} · ${item.service.duration}p</div>`;
                       document.body.appendChild(ghost);
                       e.dataTransfer.setData("text/plain", item.id);
@@ -561,8 +586,8 @@ export default function Appointments() {
                     style={{
                       top: topPx,
                       height,
-                      background: hashBg(item.customerName),
-                      border: `1.5px solid ${hashBorder(item.customerName)}`,
+                      background: colors.bgColor,
+                      border: `1.5px solid ${colors.bdColor}`,
                       borderLeft: `4px solid ${cc}`,
                       padding: height < 40 ? "2px 6px" : "5px 8px",
                       opacity: isBeingDragged ? 0.3 : 1,

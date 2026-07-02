@@ -1,9 +1,13 @@
 import { Controller, Post, Body, Param, Query, HttpStatus, HttpException } from "@nestjs/common";
 import { ImportEngineService } from "./import-engine.service";
+import { NotificationGateway } from "../notification.gateway";
 
 @Controller("api/import")
 export class ImportEngineController {
-  constructor(private readonly importEngineService: ImportEngineService) {}
+  constructor(
+    private readonly importEngineService: ImportEngineService,
+    private readonly notificationGateway: NotificationGateway
+  ) {}
 
   /**
    * Endpoint to analyze file headers using DeepSeek.
@@ -85,9 +89,27 @@ export class ImportEngineController {
       return mappedRow;
     });
 
-    // 2. Delegate data saving to the strategy
+    // 2. Delegate data saving to the strategy and broadcast updates
     try {
-      return await strategy.execute(tenantId, branchId || null, transformedData);
+      const result = await strategy.execute(tenantId, branchId || null, transformedData);
+
+      if (result && result.importedCount > 0) {
+        let event = "";
+        if (entity === "service") event = "services.updated";
+        else if (entity === "inventory") event = "inventories.updated";
+        else if (entity === "staff") event = "staff.updated";
+        else if (entity === "customer") event = "customers.updated";
+        else if (entity === "payroll") event = "payrolls.updated";
+
+        if (event) {
+          this.notificationGateway.broadcastToTenant(tenantId, event, {
+            branchId,
+            senderId: null, // Broadcast to all clients including the sender so they update
+          });
+        }
+      }
+
+      return result;
     } catch (err: any) {
       throw new HttpException(
         `Import execution failed: ${err.message || err}`,

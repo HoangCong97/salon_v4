@@ -209,7 +209,7 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
               </div>
             </>
           ) : (
-            <div className={styles.container}>
+            <div className={styles.modalAdjustContainer}>
               <div className={styles.adjustInfoCard}>
                 <div className={styles.adjustInfoName}>{name}</div>
                 <div className={styles.adjustInfoStock}>

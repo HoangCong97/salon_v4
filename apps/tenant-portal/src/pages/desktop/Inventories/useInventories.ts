@@ -375,5 +375,6 @@ export function useInventories() {
     handleOpenAdjustModal,
     handleSave,
     handleDelete,
+    fetchInventory,
   };
 }

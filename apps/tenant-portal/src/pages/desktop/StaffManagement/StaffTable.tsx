@@ -3,6 +3,8 @@ import { Search, Plus, Users, Edit2, Trash2, Upload, Download } from "lucide-rea
 
 import { ExcelInput, ExcelSelect, ExcelMultipleSelect, ExcelRow } from "../../../components/desktop/TableComponents";
 import { ExportButton } from "../../../components/desktop/ExportButton";
+import { ImportButton } from "../../../components/desktop/ImportButton";
+import { Tooltip } from "../../../components/desktop/ui/Tooltip";
 
 import { useAuthStore } from "../../../store/useAuthStore";
 import { useToast } from "../../../components/desktop/ToastProvider";
@@ -197,12 +199,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
         {/* Right: Action Buttons */}
         <div className={styles.actionsRight}>
           {canManage && (
-            <button
-              className={`btn btn-secondary ${styles.importBtn}`}
-              onClick={handleOpenImportModal}
-            >
-              <Download size={16} /> Nhập dữ liệu
-            </button>
+            <ImportButton onClick={handleOpenImportModal} />
           )}
 
           <ExportButton
@@ -405,30 +402,32 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                       {canManage && (
                         <td className={styles.actionTd}>
                           <div className={styles.actionButtons}>
-                            <button
-                              className={`btn btn-secondary ${styles.actionBtn}`}
-                              style={{
-                                opacity: isSuspended ? 0.5 : 1,
-                                cursor: isSuspended ? "not-allowed" : "pointer"
-                              }}
-                              onClick={() => !isSuspended && handleOpenEditModal(item)}
-                              disabled={isSuspended}
-                              title={isSuspended ? "Tài khoản tạm ngừng không thể chỉnh sửa" : "Chỉnh sửa"}
-                            >
-                              <Edit2 size={12} />
-                            </button>
-                            <button
-                              className={`btn btn-danger ${styles.actionBtn}`}
-                              style={{
-                                opacity: (isAdminRow || isSuspended) ? 0.5 : 1,
-                                cursor: (isAdminRow || isSuspended) ? "not-allowed" : "pointer"
-                              }}
-                              disabled={isAdminRow || isSuspended}
-                              onClick={() => !isAdminRow && !isSuspended && handleDeleteStaff(item.id)}
-                              title={isSuspended ? "Tài khoản tạm ngừng không thể xóa" : "Xóa"}
-                            >
-                              <Trash2 size={12} />
-                            </button>
+                            <Tooltip content={isSuspended ? "Tài khoản tạm ngừng không thể chỉnh sửa" : "Chỉnh sửa chi tiết"}>
+                              <button
+                                className={`btn btn-secondary ${styles.actionBtn}`}
+                                style={{
+                                  opacity: isSuspended ? 0.5 : 1,
+                                  cursor: isSuspended ? "not-allowed" : "pointer"
+                                }}
+                                onClick={() => !isSuspended && handleOpenEditModal(item)}
+                                disabled={isSuspended}
+                              >
+                                <Edit2 size={12} />
+                              </button>
+                            </Tooltip>
+                            <Tooltip content={isSuspended ? "Tài khoản tạm ngừng không thể xóa" : (isAdminRow ? "Không thể xóa tài khoản Admin" : "Xóa nhân viên")}>
+                              <button
+                                className={`btn btn-danger ${styles.actionBtn}`}
+                                style={{
+                                  opacity: (isAdminRow || isSuspended) ? 0.5 : 1,
+                                  cursor: (isAdminRow || isSuspended) ? "not-allowed" : "pointer"
+                                }}
+                                disabled={isAdminRow || isSuspended}
+                                onClick={() => !isAdminRow && !isSuspended && handleDeleteStaff(item.id)}
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </Tooltip>
                           </div>
                         </td>
                       )}
