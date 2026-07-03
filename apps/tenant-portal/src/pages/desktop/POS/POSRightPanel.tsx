@@ -267,7 +267,14 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
               onClick={() => setActiveInvoiceId(inv.id)}
               className={`${styles.tabItem} ${isActive ? styles.tabActive : styles.tabInactive}`}
             >
-              <span>{inv.name} {inv.cart.length > 0 && `(${inv.cart.length})`}</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                {inv.name}
+                {inv.cart.length > 0 && (
+                  <span className={isActive ? styles.tabBadgeActive : styles.tabBadgeInactive}>
+                    {inv.cart.length}
+                  </span>
+                )}
+              </span>
               {invoices.length > 1 && (
                 <button
                   type="button"

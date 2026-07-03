@@ -59,6 +59,32 @@
   border-color: #cbd5e1;
 }
 
+.tabBadgeActive {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--color-primary);
+  color: white;
+}
+
+.tabBadgeInactive {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  background: #cbd5e1;
+  color: #475569;
+}
+
 .tabDeleteBtn {
   background: none;
   border: none;
