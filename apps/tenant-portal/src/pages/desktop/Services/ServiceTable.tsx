@@ -71,7 +71,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
   const handleDiscountInputBlur = async (service: Service) => {
     const finalDiscountPrice = getInlineValue(service, "discountPrice");
     await handleAutoSave(service.id, { discountPrice: finalDiscountPrice });
-    
+
     // Clear temporary inputs
     handleInlineChange(service.id, "discountInput" as keyof Service, undefined);
     handleInlineChange(service.id, "promoInput" as keyof Service, undefined);
@@ -123,7 +123,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
             <th className={styles.th} style={{ width: "140px", textAlign: "center" }}>Giá bán khác</th>
             <th className={styles.th} style={{ width: "140px", textAlign: "center" }}>Giảm giá</th>
             <th className={styles.th} style={{ width: "140px", textAlign: "center" }}>Giá KM</th>
-            <th className={styles.th} style={{ width: "100px", textAlign: "center" }}>Hoa hồng (%)</th>
+            <th className={styles.th} style={{ width: "120px", textAlign: "center" }}>Hoa hồng (%)</th>
             {canManage && <th className={styles.th} style={{ width: "100px", textAlign: "center" }}>Thao tác</th>}
           </tr>
         </thead>
@@ -204,8 +204,8 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                       getInlineValue(service, "discountInput" as keyof Service) !== undefined
                         ? (getInlineValue(service, "discountInput" as keyof Service) as string)
                         : (displayDiscountVal !== null && service.price > displayDiscountVal
-                            ? formatNumber(Number(service.price) - Number(displayDiscountVal))
-                            : "")
+                          ? formatNumber(Number(service.price) - Number(displayDiscountVal))
+                          : "")
                     }
                     onChange={(val) => handleDiscountInputChange(service, val)}
                     onBlur={() => handleDiscountInputBlur(service)}

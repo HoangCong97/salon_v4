@@ -127,7 +127,7 @@
 
 /* InvoiceFilter.tsx cards */
 .filterCard {
-  padding: 16px;
+  padding: 0 0 8px 0;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 12px;
@@ -150,12 +150,112 @@
   padding: 0 8px;
 }
 
+.dateRangeGroup {
+  grid-column: span 2;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.presetSelectWrapper {
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.singleRangeContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.singleRangeInputWrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  padding: 0 10px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 236px;
+}
+
+.singleRangeInputWrapper:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+.singleRangeInputWrapper.disabled {
+  background: #f8fafc;
+  cursor: not-allowed;
+}
+
+.calendarIcon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.segmentDateInput {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.segmentUnit {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  font-size: 13px;
+  font-family: inherit;
+  width: 18px;
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.segmentUnitYear {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  font-size: 13px;
+  font-family: inherit;
+  width: 32px;
+  text-align: center;
+  color: var(--text-primary);
+}
+
+.segmentUnit:disabled,
+.segmentUnitYear:disabled {
+  color: var(--text-muted) !important;
+  cursor: not-allowed;
+}
+
+.segmentDivider {
+  color: var(--text-muted);
+  font-size: 11px;
+  user-select: none;
+}
+
+.rangeDivider {
+  color: var(--text-muted);
+  font-size: 12px;
+  user-select: none;
+  margin: 0 4px;
+}
+
 /* InvoiceTable.tsx layout */
 .tableCard {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 16px;
+  padding: 0;
   flex-grow: 1;
   overflow: hidden;
 }
@@ -172,146 +272,147 @@
   min-height: 250px;
 }
 
+.tableContainer th {
+  height: 40px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+.tableContainer td {
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
 .thAvatar {
   position: sticky;
   top: 0;
   background: #f8fafc;
-  z-index: 10;
-  width: 90px;
-  min-width: 90px;
-  max-width: 90px;
+  z-index: 20;
+  width: 110px;
+  min-width: 110px;
+  max-width: 110px;
   text-align: center;
-  padding: 12px 8px;
+  padding: 6px 8px;
 }
 
 .thStaff {
   position: sticky;
   top: 0;
   background: #f8fafc;
-  z-index: 10;
+  z-index: 20;
   width: 280px;
   min-width: 280px;
   max-width: 280px;
-  padding: 12px 12px;
+  padding: 6px 12px;
 }
 
 .thTime {
   position: sticky;
   top: 0;
   background: #f8fafc;
-  z-index: 10;
+  z-index: 20;
   width: 70px;
   min-width: 70px;
   max-width: 70px;
   text-align: center;
-  padding: 12px 8px;
+  padding: 6px 8px;
 }
 
 .thDetails {
   position: sticky;
   top: 0;
   background: #f8fafc;
-  z-index: 10;
+  z-index: 20;
   width: auto;
   min-width: 220px;
-  padding: 12px 12px;
+  padding: 6px 12px;
 }
 
 .thTotal {
   position: sticky;
   top: 0;
   background: #f8fafc;
-  z-index: 10;
+  z-index: 20;
   width: 100px;
   min-width: 100px;
   max-width: 100px;
   text-align: right;
-  padding: 12px 8px;
+  padding: 6px 8px;
 }
 
 .thDiscount {
   position: sticky;
   top: 0;
   background: #f8fafc;
-  z-index: 10;
+  z-index: 20;
   width: 80px;
   min-width: 80px;
   max-width: 80px;
   text-align: right;
-  padding: 12px 8px;
+  padding: 6px 8px;
 }
 
 .thFinal {
   position: sticky;
   top: 0;
   background: #f8fafc;
-  z-index: 10;
+  z-index: 20;
   width: 100px;
   min-width: 100px;
   max-width: 100px;
   text-align: right;
-  padding: 12px 8px;
+  padding: 6px 8px;
 }
 
-.thPayment {
+.thTransaction {
   position: sticky;
   top: 0;
   background: #f8fafc;
-  z-index: 10;
-  width: 115px;
-  min-width: 115px;
-  max-width: 115px;
+  z-index: 20;
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
   text-align: center;
-  padding: 12px 6px;
+  padding: 6px 8px;
 }
 
 .thCustomer {
   position: sticky;
   top: 0;
   background: #f8fafc;
-  z-index: 10;
+  z-index: 20;
   width: 120px;
   min-width: 120px;
   max-width: 120px;
-  padding: 12px 12px;
-}
-
-.thSource {
-  position: sticky;
-  top: 0;
-  background: #f8fafc;
-  z-index: 10;
-  width: 85px;
-  min-width: 85px;
-  max-width: 85px;
-  text-align: center;
-  padding: 12px 8px;
+  padding: 6px 12px;
 }
 
 .thAction {
   position: sticky;
   top: 0;
   background: #f8fafc;
-  z-index: 10;
+  z-index: 20;
   width: 60px;
   min-width: 60px;
   max-width: 60px;
   text-align: center;
-  padding: 12px 6px;
+  padding: 6px 6px;
 }
 
 .tdCentered {
   text-align: center;
   vertical-align: middle;
   padding: 4px 8px;
-  width: 90px;
-  min-width: 90px;
-  max-width: 90px;
+  width: 110px;
+  min-width: 110px;
+  max-width: 110px;
 }
 
 .tdStaff {
   font-weight: 500;
-  padding: 10px 12px;
+  padding: 4px 12px;
   width: 280px;
   min-width: 280px;
   max-width: 280px;
@@ -319,21 +420,21 @@
 
 .tdTime {
   text-align: center;
-  padding: 10px 8px;
+  padding: 4px 8px;
   width: 70px;
   min-width: 70px;
   max-width: 70px;
 }
 
 .tdDetails {
-  padding: 10px 12px;
+  padding: 4px 12px;
   width: auto;
   min-width: 220px;
 }
 
 .tdTotal {
   text-align: right;
-  padding: 10px 8px;
+  padding: 4px 8px;
   width: 100px;
   min-width: 100px;
   max-width: 100px;
@@ -341,7 +442,7 @@
 
 .tdDiscount {
   text-align: right;
-  padding: 10px 8px;
+  padding: 4px 8px;
   width: 80px;
   min-width: 80px;
   max-width: 80px;
@@ -350,41 +451,33 @@
 .tdFinal {
   font-weight: 800;
   text-align: right;
-  padding: 10px 8px;
+  padding: 4px 8px;
   color: var(--color-primary);
   width: 100px;
   min-width: 100px;
   max-width: 100px;
 }
 
-.tdPayment {
+.tdTransaction {
   text-align: center;
-  padding: 10px 6px;
-  width: 115px;
-  min-width: 115px;
-  max-width: 115px;
-}
-
-.tdCustomer {
-  font-weight: 600;
-  padding: 10px 12px;
+  padding: 4px 8px;
   width: 120px;
   min-width: 120px;
   max-width: 120px;
 }
 
-.tdSource {
-  text-align: center;
-  padding: 10px 8px;
-  width: 85px;
-  min-width: 85px;
-  max-width: 85px;
+.tdCustomer {
+  font-weight: 600;
+  padding: 4px 12px;
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
 }
 
 .actionTd {
   text-align: center !important;
   vertical-align: middle !important;
-  padding: 10px 6px !important;
+  padding: 4px 6px !important;
   width: 60px;
   min-width: 60px;
   max-width: 60px;
@@ -409,6 +502,8 @@
 .avatarContainer {
   display: flex;
   justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
 .avatarList {
@@ -417,8 +512,8 @@
 }
 
 .avatarImg {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 1.5px solid white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -427,23 +522,23 @@
 }
 
 .avatarPlaceholder {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 1.5px solid white;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
 }
 
 .avatarExtra {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: #e2e8f0;
   border: 1.5px solid white;
@@ -451,7 +546,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
@@ -464,11 +559,17 @@
 }
 
 .dateCell {
-  padding: 10px 16px;
+  position: sticky;
+  top: 39px;
+  z-index: 15;
+  background-color: hsl(0, 0%, 98.5%) !important;
+  padding: 6px 16px !important;
   font-weight: 700;
   color: var(--color-primary);
   font-size: 12.5px;
   text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-color);
 }
 
 .textEllipsis {
@@ -527,22 +628,42 @@
   color: var(--color-primary);
 }
 
-.paginationRow {
-  display: flex;
-  justify-content: space-between;
+.transactionIcons {
+  display: inline-flex;
   align-items: center;
-  padding-top: 12px;
-  border-top: 1px solid var(--border-color);
-}
-
-.paginationInfo {
-  font-size: 12.5px;
-  color: var(--text-secondary);
-}
-
-.paginationButtons {
-  display: flex;
   gap: 8px;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.txnIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.txnIconCash {
+  background: #ecfdf5;
+  color: #10b981;
+}
+
+.txnIconTransfer {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.txnIconBooking {
+  background: #faf5ff;
+  color: #8b5cf6;
+}
+
+.txnIconWalkin {
+  background: #f1f5f9;
+  color: #475569;
 }
 
 /* InvoiceDetailModal.tsx elements */
@@ -687,15 +808,15 @@
 }
 
 .widthStaff {
-  max-width: 240px;
+  max-width: 256px;
 }
 
 .widthDetails {
-  max-width: 350px;
+  max-width: 600px;
 }
 
 .widthCustomer {
-  max-width: 96px;
+  max-width: 110px;
 }
 
 .noDataCell {
@@ -713,3 +834,6 @@
   background-color: var(--color-bg-hover, rgba(0, 0, 0, 0.02));
 }
 
+.clickableRow {
+  cursor: pointer;
+}

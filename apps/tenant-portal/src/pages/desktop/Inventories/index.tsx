@@ -25,6 +25,7 @@ export default function Inventories() {
   const {
     loading,
     error,
+    items,
     filteredItems,
     searchTerm,
     setSearchTerm,
@@ -97,46 +98,55 @@ export default function Inventories() {
   return (
     <>
       <div className={`animate-fade-in ${styles.container}`}>
-        {/* Header filter controls */}
-        <InventoryHeader
-          showLowStockOnly={showLowStockOnly}
-          setShowLowStockOnly={setShowLowStockOnly}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          onOpenCreateModal={handleOpenCreateModal}
-          onOpenImportModal={() => {
-            setDroppedFile(null);
-            setIsImportModalOpen(true);
-          }}
-          filteredItems={filteredItems}
-          exportColumns={inventoryExportColumns}
-          canManage={canManage}
-        />
-
-        {/* Main Content */}
-        {loading ? (
-          <LoadingState text="Đang tải danh sách sản phẩm..." />
-        ) : error ? (
-          <ErrorState message={error} />
-        ) : filteredItems.length === 0 ? (
-          <EmptyState
-            title="Không tìm thấy sản phẩm"
-            description="Hãy thử điều chỉnh bộ lọc hoặc tạo sản phẩm mới."
-            icon={<Package size={48} />}
-          />
-        ) : (
-          <InventoryTable
+        <div className="table-panel">
+          {/* Header filter controls */}
+          <InventoryHeader
+            showLowStockOnly={showLowStockOnly}
+            setShowLowStockOnly={setShowLowStockOnly}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            onOpenCreateModal={handleOpenCreateModal}
+            onOpenImportModal={() => {
+              setDroppedFile(null);
+              setIsImportModalOpen(true);
+            }}
             filteredItems={filteredItems}
-            getInlineValue={getInlineValue}
-            handleInlineChange={handleInlineChange}
-            handlePriceChange={handlePriceChange}
-            handleAutoSave={handleAutoSave}
-            formatNumber={formatNumber}
-            onOpenAdjustModal={handleOpenAdjustModal}
-            onOpenEditModal={handleOpenEditModal}
-            onDelete={handleDelete}
+            exportColumns={inventoryExportColumns}
+            canManage={canManage}
           />
-        )}
+
+          {/* Main Content */}
+          {loading ? (
+            <LoadingState text="Đang tải danh sách sản phẩm..." />
+          ) : error ? (
+            <ErrorState message={error} />
+          ) : filteredItems.length === 0 ? (
+            <EmptyState
+              title="Không tìm thấy sản phẩm"
+              description="Hãy thử điều chỉnh bộ lọc hoặc tạo sản phẩm mới."
+              icon={<Package size={48} />}
+            />
+          ) : (
+            <div className={styles.tableWrapper}>
+              <InventoryTable
+                filteredItems={filteredItems}
+                getInlineValue={getInlineValue}
+                handleInlineChange={handleInlineChange}
+                handlePriceChange={handlePriceChange}
+                handleAutoSave={handleAutoSave}
+                formatNumber={formatNumber}
+                onOpenAdjustModal={handleOpenAdjustModal}
+                onOpenEditModal={handleOpenEditModal}
+                onDelete={handleDelete}
+              />
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="table-panel-footer">
+            Hiển thị {filteredItems.length}/{items.length} sản phẩm
+          </div>
+        </div>
 
         {/* Modal Dialog */}
         <InventoryModal

@@ -44,7 +44,7 @@ export const PayrollHeader: React.FC<PayrollHeaderProps> = ({
   onGeneratePayroll,
 }) => {
   return (
-    <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", flexWrap: "wrap", gap: "16px" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
       {/* Filters (All flat on the same row: Employee, Branch, Year, Month) */}
       <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", flexGrow: 1, minWidth: 0 }}>
         {/* Lọc theo nhân viên */}

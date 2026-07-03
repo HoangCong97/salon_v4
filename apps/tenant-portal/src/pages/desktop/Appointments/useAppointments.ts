@@ -362,15 +362,17 @@ export function useAppointments() {
   };
 
   const handleCardResize = useCallback((id: string, newDuration: number) => {
-    // Safeguard: Check if duration did not change
-    const existing = items.find(item => item.id === id);
-    if (existing && existing.service.duration === newDuration) {
-      return;
-    }
-
     setItems(prev => prev.map(item =>
       item.id === id ? { ...item, service: { ...item.service, duration: newDuration } } : item
     ));
+  }, []);
+
+  const handleCardResizeEnd = useCallback((id: string, newDuration: number) => {
+    const original = dbBookings.find(item => item.id === id);
+    if (original && original.service.duration === newDuration) {
+      return;
+    }
+
     // Persist to backend
     api.put(`/tenants/${currentTenantId}/bookings/${id}/resize`, { duration: newDuration })
       .then(() => {
@@ -381,7 +383,7 @@ export function useAppointments() {
         toast.error("Lỗi cập nhật thời lượng: " + err.message);
         queryClient.invalidateQueries({ queryKey: queryKeys.appointments.all(currentTenantId!) });
       });
-  }, [items, currentTenantId, queryClient]);
+  }, [dbBookings, currentTenantId, queryClient]);
 
   const timeSlots = useMemo(() => Array.from({ length: TOTAL_SLOTS }, (_, i) => i), []);
   const gridH = TOTAL_SLOTS * SLOT_HEIGHT;
@@ -447,6 +449,7 @@ export function useAppointments() {
     handleDrop,
     handleModalSave,
     handleCardResize,
+    handleCardResizeEnd,
     timeSlots,
     gridH,
     navigateDate,

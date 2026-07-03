@@ -129,9 +129,70 @@ export function useInvoices() {
       : null;
 
   // Filter conditions
-  const getTodayISO = () => new Date().toISOString().split("T")[0];
+  const getTodayISO = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const getStartOfWeekISO = () => {
+    const d = new Date();
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(d.setDate(diff));
+    const year = monday.getFullYear();
+    const month = String(monday.getMonth() + 1).padStart(2, "0");
+    const dateVal = String(monday.getDate()).padStart(2, "0");
+    return `${year}-${month}-${dateVal}`;
+  };
+
+  const getEndOfWeekISO = () => {
+    const d = new Date();
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? 0 : 7);
+    const sunday = new Date(d.setDate(diff));
+    const year = sunday.getFullYear();
+    const month = String(sunday.getMonth() + 1).padStart(2, "0");
+    const dateVal = String(sunday.getDate()).padStart(2, "0");
+    return `${year}-${month}-${dateVal}`;
+  };
+
+  const getStartOfMonthISO = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    return `${year}-${month}-01`;
+  };
+
+  const getEndOfMonthISO = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = d.getMonth() + 1;
+    const lastDay = new Date(year, month, 0).getDate();
+    return `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+  };
+
+  const [datePreset, setDatePreset] = useState<"today" | "week" | "month" | "custom">("today");
   const [startDate, setStartDate] = useState(getTodayISO);
   const [endDate, setEndDate] = useState(getTodayISO);
+
+  const handlePresetChange = (preset: "today" | "week" | "month" | "custom") => {
+    setDatePreset(preset);
+    if (preset === "today") {
+      const today = getTodayISO();
+      setStartDate(today);
+      setEndDate(today);
+    } else if (preset === "week") {
+      setStartDate(getStartOfWeekISO());
+      setEndDate(getEndOfWeekISO());
+    } else if (preset === "month") {
+      setStartDate(getStartOfMonthISO());
+      setEndDate(getEndOfMonthISO());
+    }
+  };
+
   const [selectedStaffId, setSelectedStaffId] = useState<string>("ALL");
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("ALL");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("ALL");
@@ -166,19 +227,15 @@ export function useInvoices() {
   // Apply filters on the invoices list
   const filteredInvoices = useMemo(() => {
     return resolvedInvoices.filter((inv) => {
-      // 1. Filter by Start Date
-      if (startDate) {
-        const startSecs = new Date(startDate + "T00:00:00").getTime();
-        const invSecs = new Date(inv.createdAt).getTime();
-        if (invSecs < startSecs) return false;
-      }
+      // Convert inv.createdAt to local YYYY-MM-DD string
+      const dateObj = new Date(inv.createdAt);
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+      const day = String(dateObj.getDate()).padStart(2, "0");
+      const invDateStr = `${year}-${month}-${day}`;
 
-      // 2. Filter by End Date
-      if (endDate) {
-        const endSecs = new Date(endDate + "T23:59:59").getTime();
-        const invSecs = new Date(inv.createdAt).getTime();
-        if (invSecs > endSecs) return false;
-      }
+      if (startDate && invDateStr < startDate) return false;
+      if (endDate && invDateStr > endDate) return false;
 
       // 3. Filter by Stylist/Employee
       if (selectedStaffId !== "ALL") {
@@ -252,6 +309,8 @@ export function useInvoices() {
     setStartDate,
     endDate,
     setEndDate,
+    datePreset,
+    handlePresetChange,
     selectedStaffId,
     setSelectedStaffId,
     selectedCustomerId,
@@ -262,6 +321,7 @@ export function useInvoices() {
     setOrderSource,
     selectedInvoice,
     setSelectedInvoice,
+    resolvedInvoices,
     filteredInvoices,
     summaryStats,
   };

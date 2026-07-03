@@ -4,6 +4,16 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  height: calc(100vh - 120px);
+  overflow: hidden;
+}
+
+.tableWrapper {
+  flex-grow: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .loadingWrapper {

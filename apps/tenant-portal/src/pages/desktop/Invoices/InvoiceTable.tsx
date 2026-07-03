@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Eye } from "lucide-react";
+import React from "react";
+import { Eye, DollarSign, CreditCard, Globe, Store } from "lucide-react";
 import { formatCurrencyVND } from "@salon/shared-utils";
 
 import { Tooltip } from "../../../components/desktop/ui/Tooltip";
@@ -23,14 +23,6 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
   customers,
   onViewDetail,
 }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
-  const totalPages = Math.ceil(invoices.length / itemsPerPage);
-
-  const paginatedInvoices = invoices.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   const formatTimeHHMM = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -109,167 +101,146 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
   let lastDate = "";
 
   return (
-    <div className={`card ${styles.tableCard}`}>
-      <h3 className={styles.tableTitle}>
-        DANH SÁCH HOÁ ĐƠN ĐÃ THANH TOÁN ({invoices.length})
-      </h3>
-
-      <div className={`data-table-container ${styles.tableContainer}`}>
-        <table className="data-table">
-          <thead>
+    <div className={`data-table-container ${styles.tableContainer}`}>
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th className={styles.thAvatar}>Ảnh nhân viên</th>
+            <th className={styles.thStaff}>Nhân viên thực hiện</th>
+            <th className={styles.thTime}>Thời gian</th>
+            <th className={styles.thDetails}>Chi tiết dịch vụ</th>
+            <th className={styles.thTotal}>Tổng dịch vụ</th>
+            <th className={styles.thDiscount}>Tổng giảm</th>
+            <th className={styles.thFinal}>Thanh toán</th>
+            <th className={styles.thCustomer}>Khách hàng</th>
+            <th className={styles.thTransaction}>Loại giao dịch</th>
+            <th className={styles.thAction}>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          {invoices.length === 0 ? (
             <tr>
-              <th className={styles.thAvatar}>Ảnh nhân viên</th>
-              <th className={styles.thStaff}>Nhân viên thực hiện</th>
-              <th className={styles.thTime}>Thời gian</th>
-              <th className={styles.thDetails}>Chi tiết dịch vụ</th>
-              <th className={styles.thTotal}>Tổng dịch vụ</th>
-              <th className={styles.thDiscount}>Tổng giảm</th>
-              <th className={styles.thFinal}>Thanh toán</th>
-              <th className={styles.thPayment}>Hình thức</th>
-              <th className={styles.thCustomer}>Khách hàng</th>
-              <th className={styles.thSource}>Nguồn</th>
-              <th className={styles.thAction}>Thao tác</th>
+              <td colSpan={10} className={styles.noDataCell}>
+                Không tìm thấy hóa đơn phù hợp với bộ lọc.
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {paginatedInvoices.length === 0 ? (
-              <tr>
-                <td colSpan={11} className={styles.noDataCell}>
-                  Không tìm thấy hóa đơn phù hợp với bộ lọc.
-                </td>
-              </tr>
-            ) : (
-              paginatedInvoices.map((inv) => {
-                const customerObj = customers.find((c) => c.id === inv.customerId);
-                const customerName = customerObj ? customerObj.name : (inv.customer?.name || "Khách vãng lai");
+          ) : (
+            invoices.map((inv) => {
+              const customerObj = customers.find((c) => c.id === inv.customerId);
+              const customerName = customerObj ? customerObj.name : (inv.customer?.name || "Khách vãng lai");
 
-                const uniqueStaffNames = Array.from(
-                  new Set(
-                    inv.items
-                      ?.map((item) => {
-                        const sId = item.staffId || item.stylist?.id;
-                        const sObj = activeStaff.find((s) => s.id === sId);
-                        return sObj ? sObj.name.split("(")[0].trim() : null;
-                      })
-                      .filter(Boolean)
-                  )
-                ).join(", ") || "Không gán";
+              const uniqueStaffNames = Array.from(
+                new Set(
+                  inv.items
+                    ?.map((item) => {
+                      const sId = item.staffId || item.stylist?.id;
+                      const sObj = activeStaff.find((s) => s.id === sId);
+                      return sObj ? sObj.name.split("(")[0].trim() : null;
+                    })
+                    .filter(Boolean)
+                )
+              ).join(", ") || "Không gán";
 
-                const serviceDetailsStr = inv.items
-                  ?.map((item) => `${item.name}${item.quantity > 1 ? ` x${item.quantity}` : ""}`)
-                  .join(", ") || "-";
+              const serviceDetailsStr = inv.items
+                ?.map((item) => `${item.name}${item.quantity > 1 ? ` x${item.quantity}` : ""}`)
+                .join(", ") || "-";
 
-                const totalServicePrice = inv.items?.reduce((sum, item) => sum + item.price * item.quantity, 0) || inv.totalPrice || inv.finalAmount;
-                const discountAmount = inv.discountAmount || 0;
+              const totalServicePrice = inv.items?.reduce((sum, item) => sum + item.price * item.quantity, 0) || inv.totalPrice || inv.finalAmount;
+              const discountAmount = inv.discountAmount || 0;
 
-                const currentDateStr = formatDateDMY(inv.createdAt);
-                const showDateSeparator = currentDateStr !== lastDate;
-                lastDate = currentDateStr;
+              const currentDateStr = formatDateDMY(inv.createdAt);
+              const showDateSeparator = currentDateStr !== lastDate;
+              lastDate = currentDateStr;
 
-                return (
-                  <React.Fragment key={inv.id}>
-                    {showDateSeparator && (
-                      <tr className={styles.dateRow}>
-                        <td colSpan={11} className={styles.dateCell}>
-                          📅 Ngày {currentDateStr}
-                        </td>
-                      </tr>
-                    )}
-                    <tr className={styles.tableRow}>
-                      <td className={styles.tdCentered}>
-                        <div className={styles.avatarContainer}>
-                          {renderStaffAvatars(inv.items)}
-                        </div>
-                      </td>
-                      <td className={styles.tdStaff}>
-                        <Tooltip content={uniqueStaffNames}>
-                          <div className={`${styles.textEllipsis} ${styles.widthStaff}`}>
-                            {uniqueStaffNames}
-                          </div>
-                        </Tooltip>
-                      </td>
-                      <td className={styles.tdTime}>{formatTimeHHMM(inv.createdAt)}</td>
-                      <td className={styles.tdDetails}>
-                        <Tooltip content={serviceDetailsStr}>
-                          <div className={`${styles.textEllipsis} ${styles.widthDetails}`}>
-                            {serviceDetailsStr}
-                          </div>
-                        </Tooltip>
-                      </td>
-                      <td className={styles.tdTotal}>{formatCurrencyVND(totalServicePrice)}</td>
-                      <td className={`${styles.tdDiscount} ${discountAmount > 0 ? "var(--color-danger)" : ""}`} style={{ fontWeight: discountAmount > 0 ? "700" : "400" }}>
-                        {discountAmount > 0 ? `-${formatCurrencyVND(discountAmount)}` : "0đ"}
-                      </td>
-                      <td className={styles.tdFinal}>{formatCurrencyVND(inv.finalAmount)}</td>
-                      <td className={styles.tdPayment}>
-                        <span className={inv.paymentMethod === "CASH" ? styles.badgeCash : styles.badgeTransfer}>
-                          {inv.paymentMethod === "CASH" ? "Tiền mặt" : "Chuyển khoản"}
-                        </span>
-                      </td>
-                      <td className={styles.tdCustomer}>
-                        <Tooltip content={customerName}>
-                          <div className={`${styles.textEllipsis} ${styles.widthCustomer}`}>
-                            {customerName}
-                          </div>
-                        </Tooltip>
-                      </td>
-                      <td className={styles.tdSource}>
-                        <span className={inv.orderSource === "BOOKING" ? styles.badgeBooking : styles.badgeWalkin}>
-                          {inv.orderSource === "BOOKING" ? "Lịch hẹn" : "Tại quầy"}
-                        </span>
-                      </td>
-                      <td className={styles.actionTd}>
-                        <div className={styles.actionButtons}>
-                          <Tooltip content="Xem chi tiết hóa đơn">
-                            <button
-                              type="button"
-                              className={`btn btn-secondary ${styles.actionBtn}`}
-                              onClick={() => onViewDetail(inv)}
-                            >
-                              <Eye size={12} />
-                            </button>
-                          </Tooltip>
-                        </div>
+              return (
+                <React.Fragment key={inv.id}>
+                  {showDateSeparator && (
+                    <tr className={styles.dateRow}>
+                      <td colSpan={10} className={styles.dateCell}>
+                        📅 Ngày {currentDateStr}
                       </td>
                     </tr>
-                  </React.Fragment>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination component */}
-      {totalPages > 1 && (
-        <div className={styles.paginationRow}>
-          <span className={styles.paginationInfo}>
-            Trang <strong>{currentPage}</strong> / {totalPages} (Tổng số {invoices.length} hoá đơn)
-          </span>
-          <div className={styles.paginationButtons}>
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={currentPage === 1}
-              onClick={() => {
-                setCurrentPage((p) => Math.max(p - 1, 1));
-              }}
-            >
-              Trước
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={currentPage === totalPages}
-              onClick={() => {
-                setCurrentPage((p) => Math.min(p + 1, totalPages));
-              }}
-            >
-              Sau
-            </Button>
-          </div>
-        </div>
-      )}
+                  )}
+                  <tr
+                    className={`${styles.tableRow} ${styles.clickableRow}`}
+                    onClick={() => onViewDetail(inv)}
+                  >
+                    <td className={styles.tdCentered}>
+                      <div className={styles.avatarContainer}>
+                        {renderStaffAvatars(inv.items)}
+                      </div>
+                    </td>
+                    <td className={styles.tdStaff}>
+                      <Tooltip content={uniqueStaffNames}>
+                        <div className={`${styles.textEllipsis} ${styles.widthStaff}`}>
+                          {uniqueStaffNames}
+                        </div>
+                      </Tooltip>
+                    </td>
+                    <td className={styles.tdTime}>{formatTimeHHMM(inv.createdAt)}</td>
+                    <td className={styles.tdDetails}>
+                      <Tooltip content={serviceDetailsStr}>
+                        <div className={`${styles.textEllipsis} ${styles.widthDetails}`}>
+                          {serviceDetailsStr}
+                        </div>
+                      </Tooltip>
+                    </td>
+                    <td className={styles.tdTotal}>{formatCurrencyVND(totalServicePrice)}</td>
+                    <td className={`${styles.tdDiscount} ${discountAmount > 0 ? "var(--color-danger)" : ""}`} style={{ fontWeight: discountAmount > 0 ? "700" : "400" }}>
+                      {discountAmount > 0 ? `-${formatCurrencyVND(discountAmount)}` : "0đ"}
+                    </td>
+                    <td className={styles.tdFinal}>{formatCurrencyVND(inv.finalAmount)}</td>
+                    <td className={styles.tdCustomer}>
+                      <Tooltip content={customerName}>
+                        <div className={`${styles.textEllipsis} ${styles.widthCustomer}`}>
+                          {customerName}
+                        </div>
+                      </Tooltip>
+                    </td>
+                    <td className={styles.tdTransaction}>
+                      <Tooltip
+                        content={`${inv.paymentMethod === "CASH" ? "Tiền mặt" : "Chuyển khoản"}, ${inv.orderSource === "BOOKING" ? "Online" : "Tại quầy"
+                          }`}
+                      >
+                        <div className={styles.transactionIcons}>
+                          <span
+                            className={`${styles.txnIcon} ${inv.paymentMethod === "CASH" ? styles.txnIconCash : styles.txnIconTransfer
+                              }`}
+                          >
+                            {inv.paymentMethod === "CASH" ? <DollarSign size={15} /> : <CreditCard size={15} />}
+                          </span>
+                          <span
+                            className={`${styles.txnIcon} ${inv.orderSource === "BOOKING" ? styles.txnIconBooking : styles.txnIconWalkin
+                              }`}
+                          >
+                            {inv.orderSource === "BOOKING" ? <Globe size={15} /> : <Store size={15} />}
+                          </span>
+                        </div>
+                      </Tooltip>
+                    </td>
+                    <td className={styles.actionTd}>
+                      <div className={styles.actionButtons}>
+                        <Tooltip content="Xem chi tiết hóa đơn">
+                          <button
+                            type="button"
+                            className={`btn btn-secondary ${styles.actionBtn}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onViewDetail(inv);
+                            }}
+                          >
+                            <Eye size={12} />
+                          </button>
+                        </Tooltip>
+                      </div>
+                    </td>
+                  </tr>
+                </React.Fragment>
+              );
+            })
+          )}
+        </tbody>
+      </table>
     </div>
   );
 };

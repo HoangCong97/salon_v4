@@ -4,7 +4,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  height: 100%;
+  height: calc(100vh - 120px);
+  overflow: hidden;
   position: relative;
 }
 
@@ -57,20 +58,10 @@
   padding: 8px 14px;
 }
 
-.cardContent {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 16px;
-  min-height: 0;
-  overflow: hidden;
-}
-
 .filtersBar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
   gap: 12px;
 }
 

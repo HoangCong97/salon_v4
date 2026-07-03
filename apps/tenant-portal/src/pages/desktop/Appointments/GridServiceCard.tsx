@@ -18,12 +18,13 @@ interface GridServiceCardProps {
   onDragEnd: () => void;
   onDoubleClick: () => void;
   onResize?: (id: string, newDuration: number) => void;
+  onResizeEnd?: (id: string, newDuration: number) => void;
 }
 
 export function GridServiceCard({
   item, topPx, height, accentColor, bgColor, bdColor,
   dragActive, isBeingDragged,
-  onDragStart, onDragEnd, onDoubleClick, onResize,
+  onDragStart, onDragEnd, onDoubleClick, onResize, onResizeEnd,
 }: GridServiceCardProps) {
   const cfg = STATUS_CFG[item.status];
 
@@ -72,14 +73,18 @@ export function GridServiceCard({
 
     const startY = e.clientY;
     const startHeight = height;
+    let currentDuration = item.service.duration;
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaY = moveEvent.clientY - startY;
       const newHeight = Math.max(SLOT_HEIGHT - 6, startHeight + deltaY);
       const slots = Math.max(1, Math.round((newHeight + 6) / SLOT_HEIGHT));
       const newDuration = slots * 15; // 15 mins per slot
-      if (onResize) {
-        onResize(item.id, newDuration);
+      if (newDuration !== currentDuration) {
+        currentDuration = newDuration;
+        if (onResize) {
+          onResize(item.id, newDuration);
+        }
       }
     };
 
@@ -87,6 +92,9 @@ export function GridServiceCard({
       setIsResizing(false);
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
+      if (onResizeEnd) {
+        onResizeEnd(item.id, currentDuration);
+      }
     };
 
     document.addEventListener("mousemove", handleMouseMove);

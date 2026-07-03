@@ -1,13 +1,112 @@
-import React from "react";
-import { Input } from "../../../components/desktop/ui/Input";
+import React, { useState, useEffect } from "react";
+import { CalendarDays } from "lucide-react";
 import { PaymentMethod, OrderSource, Staff, Customer } from "./types";
 import styles from "./Invoices.module.css";
+
+interface SegmentDateInputProps {
+  value: string; // YYYY-MM-DD
+  onChange: (val: string) => void;
+  disabled?: boolean;
+}
+
+const SegmentDateInput: React.FC<SegmentDateInputProps> = ({ value, onChange, disabled }) => {
+  const [localDay, setLocalDay] = useState("");
+  const [localMonth, setLocalMonth] = useState("");
+  const [localYear, setLocalYear] = useState("");
+
+  useEffect(() => {
+    if (value) {
+      const parts = value.split("-");
+      if (parts.length === 3) {
+        setLocalYear(parts[0]);
+        setLocalMonth(parts[1]);
+        setLocalDay(parts[2]);
+      }
+    } else {
+      setLocalYear("");
+      setLocalMonth("");
+      setLocalDay("");
+    }
+  }, [value]);
+
+  const handleDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 2);
+    setLocalDay(val);
+    if (val.length === 2 && val !== "00") {
+      const next = e.target.nextElementSibling?.nextElementSibling as HTMLInputElement;
+      if (next) next.focus();
+    }
+    triggerChange(val, localMonth, localYear);
+  };
+
+  const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 2);
+    setLocalMonth(val);
+    if (val.length === 2 && val !== "00") {
+      const next = e.target.nextElementSibling?.nextElementSibling as HTMLInputElement;
+      if (next) next.focus();
+    }
+    triggerChange(localDay, val, localYear);
+  };
+
+  const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+    setLocalYear(val);
+    triggerChange(localDay, localMonth, val);
+  };
+
+  const triggerChange = (d: string, m: string, y: string) => {
+    if (d.length === 2 && m.length === 2 && y.length === 4) {
+      const dateStr = `${y}-${m}-${d}`;
+      const timestamp = Date.parse(dateStr);
+      if (!isNaN(timestamp)) {
+        onChange(dateStr);
+      }
+    }
+  };
+
+  return (
+    <div className={styles.segmentDateInput}>
+      <input
+        type="text"
+        placeholder="DD"
+        value={localDay}
+        disabled={disabled}
+        onChange={handleDayChange}
+        className={styles.segmentUnit}
+        onClick={(e) => (e.target as HTMLInputElement).select()}
+      />
+      <span className={styles.segmentDivider}>-</span>
+      <input
+        type="text"
+        placeholder="MM"
+        value={localMonth}
+        disabled={disabled}
+        onChange={handleMonthChange}
+        className={styles.segmentUnit}
+        onClick={(e) => (e.target as HTMLInputElement).select()}
+      />
+      <span className={styles.segmentDivider}>-</span>
+      <input
+        type="text"
+        placeholder="YYYY"
+        value={localYear}
+        disabled={disabled}
+        onChange={handleYearChange}
+        className={styles.segmentUnitYear}
+        onClick={(e) => (e.target as HTMLInputElement).select()}
+      />
+    </div>
+  );
+};
 
 interface InvoiceFilterProps {
   startDate: string;
   setStartDate: (s: string) => void;
   endDate: string;
   setEndDate: (s: string) => void;
+  datePreset: "today" | "week" | "month" | "custom";
+  setDatePreset: (preset: "today" | "week" | "month" | "custom") => void;
   selectedStaffId: string;
   setSelectedStaffId: (s: string) => void;
   selectedCustomerId: string;
@@ -25,6 +124,8 @@ export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
   setStartDate,
   endDate,
   setEndDate,
+  datePreset,
+  setDatePreset,
   selectedStaffId,
   setSelectedStaffId,
   selectedCustomerId,
@@ -37,32 +138,45 @@ export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
   customers,
 }) => {
   return (
-    <div className={`card ${styles.filterCard}`}>
-      {/* Date Start */}
-      <div>
-        <Input
-          label="TỪ NGÀY"
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          style={{ width: "100%" }}
-        />
-      </div>
+    <div className={styles.filterCard}>
+      {/* Date Range Merged Group */}
+      <div className={styles.dateRangeGroup}>
+        <div className={styles.presetSelectWrapper}>
+          <label className={styles.selectLabel}>THỜI GIAN</label>
+          <select
+            className={`form-input ${styles.selectElement}`}
+            value={datePreset}
+            onChange={(e) => setDatePreset(e.target.value as any)}
+          >
+            <option value="today">Hôm nay</option>
+            <option value="week">Tuần này</option>
+            <option value="month">Tháng này</option>
+            <option value="custom">Tùy chỉnh</option>
+          </select>
+        </div>
 
-      {/* Date End */}
-      <div>
-        <Input
-          label="ĐẾN NGÀY"
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          style={{ width: "100%" }}
-        />
+        <div className={styles.singleRangeContainer}>
+          <label className={styles.selectLabel}>KHOẢNG THỜI GIAN</label>
+          <div className={`${styles.singleRangeInputWrapper} ${datePreset !== "custom" ? styles.disabled : ""}`}>
+            <CalendarDays size={14} className={styles.calendarIcon} />
+            <SegmentDateInput
+              value={startDate}
+              disabled={datePreset !== "custom"}
+              onChange={setStartDate}
+            />
+            <span className={styles.rangeDivider}>-</span>
+            <SegmentDateInput
+              value={endDate}
+              disabled={datePreset !== "custom"}
+              onChange={setEndDate}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Staff Filter */}
       <div>
-        <label className={styles.selectLabel}>NHÂN VIÊN thực hiện</label>
+        <label className={styles.selectLabel}>NHÂN VIÊN THỰC HIỆN</label>
         <select
           className={`form-input ${styles.selectElement}`}
           value={selectedStaffId}

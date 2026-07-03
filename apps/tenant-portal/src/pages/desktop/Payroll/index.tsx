@@ -302,52 +302,61 @@ export default function Payroll() {
     <div
       className={`${isDragActive ? "flash-active" : "animate-fade-in"} ${styles.container}`}
     >
-      {/* Header filters and controls */}
-      <PayrollHeader
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        selectedMonth={selectedMonth}
-        setSelectedMonth={setSelectedMonth}
-        selectedYear={selectedYear}
-        setSelectedYear={setSelectedYear}
-        selectedBranch={selectedBranch}
-        setSelectedBranch={setSelectedBranch}
-        branches={branches}
-        canManage={canManage}
-        onOpenImportModal={() => {
-          setDroppedFile(null);
-          setIsImportModalOpen(true);
-        }}
-        onMarkAllPaid={handleMarkAllPaid}
-        filteredPayrolls={filteredPayrolls}
-        periodStr={periodStr}
-        exportColumns={exportColumns}
-        onGeneratePayroll={handleGeneratePayroll}
-      />
-
-      {/* Main content table */}
-      {loading ? (
-        <LoadingState text="Đang tải dữ liệu bảng lương..." />
-      ) : error ? (
-        <ErrorState title="Không thể tải bảng lương" message={error} />
-      ) : filteredPayrolls.length === 0 ? (
-        <EmptyState
-          title="Không tìm thấy dữ liệu lương"
-          description={searchTerm ? "Không có kết quả phù hợp." : "Chưa lập bảng lương cho chu kỳ này. Vui lòng bấm 'Lập bảng lương' để bắt đầu."}
-          icon={<Coins size={48} />}
-        />
-      ) : (
-        <PayrollTable
-          filteredPayrolls={filteredPayrolls}
-          getInlineValue={getInlineValue}
-          handleNumericChange={handleNumericChange}
-          handleAutoSave={handleAutoSave}
-          formatMoney={formatMoney}
-          getInitials={getInitials}
+      <div className="table-panel">
+        {/* Header filters and controls */}
+        <PayrollHeader
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedMonth={selectedMonth}
+          setSelectedMonth={setSelectedMonth}
+          selectedYear={selectedYear}
+          setSelectedYear={setSelectedYear}
+          selectedBranch={selectedBranch}
+          setSelectedBranch={setSelectedBranch}
+          branches={branches}
           canManage={canManage}
-          handleMarkPaid={handleMarkPaid}
+          onOpenImportModal={() => {
+            setDroppedFile(null);
+            setIsImportModalOpen(true);
+          }}
+          onMarkAllPaid={handleMarkAllPaid}
+          filteredPayrolls={filteredPayrolls}
+          periodStr={periodStr}
+          exportColumns={exportColumns}
+          onGeneratePayroll={handleGeneratePayroll}
         />
-      )}
+
+        {/* Main content table */}
+        {loading ? (
+          <LoadingState text="Đang tải dữ liệu bảng lương..." />
+        ) : error ? (
+          <ErrorState title="Không thể tải bảng lương" message={error} />
+        ) : filteredPayrolls.length === 0 ? (
+          <EmptyState
+            title="Không tìm thấy dữ liệu lương"
+            description={searchTerm ? "Không có kết quả phù hợp." : "Chưa lập bảng lương cho chu kỳ này. Vui lòng bấm 'Lập bảng lương' để bắt đầu."}
+            icon={<Coins size={48} />}
+          />
+        ) : (
+          <div className={styles.tableWrapper}>
+            <PayrollTable
+              filteredPayrolls={filteredPayrolls}
+              getInlineValue={getInlineValue}
+              handleNumericChange={handleNumericChange}
+              handleAutoSave={handleAutoSave}
+              formatMoney={formatMoney}
+              getInitials={getInitials}
+              canManage={canManage}
+              handleMarkPaid={handleMarkPaid}
+            />
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="table-panel-footer">
+          Hiển thị {filteredPayrolls.length}/{payrolls.length} bảng lương
+        </div>
+      </div>
 
       {/* Drag and Drop dropzone background cue */}
       <DragOverlay

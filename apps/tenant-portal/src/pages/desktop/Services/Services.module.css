@@ -4,7 +4,8 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
-  min-height: 100%;
+  height: calc(100vh - 120px);
+  overflow: hidden;
 }
 
 .filterCard {
@@ -13,14 +14,20 @@
   gap: 16px;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
+}
+
+.tableWrapper {
+  flex-grow: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .categoriesList {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding-bottom: 4px;
   align-items: center;
 }
 
@@ -35,16 +42,22 @@
   white-space: nowrap;
   flex-shrink: 0;
   height: 36px;
+  box-sizing: border-box;
 }
 
 .tabButton {
-  padding: 8px 16px;
-  border-radius: var(--radius-full);
+  height: 36px !important;
+  padding: 0 16px !important;
+  border-radius: var(--radius-full) !important;
   border: none;
   cursor: pointer;
   font-weight: 600;
   font-size: 13px;
   transition: all 0.15s ease;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box;
 }
 
 .actionsWrapper {
@@ -59,7 +72,7 @@
 .searchContainer {
   position: relative;
   width: 100%;
-  max-width: 320px;
+  max-width: 220px;
   flex-shrink: 1;
   min-width: 160px;
 }
@@ -143,7 +156,9 @@
    ========================================================================== */
 
 .tableContainer {
-  overflow: visible !important;
+  flex-grow: 1;
+  overflow-y: auto !important;
+  min-height: 0;
 }
 
 .th {

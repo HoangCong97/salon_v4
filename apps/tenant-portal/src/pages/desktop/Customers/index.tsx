@@ -49,7 +49,7 @@ export default function Customers() {
   return (
     <div className={`animate-fade-in ${styles.container}`}>
       {/* Main Grid View */}
-      <div className={`card ${styles.cardContent}`}>
+      <div className="table-panel">
         {/* Filters bar */}
         <div className={styles.filtersBar}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", flexGrow: 1 }}>
@@ -63,10 +63,6 @@ export default function Customers() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-            </div>
-
-            <div className={styles.searchResultCount}>
-              Tìm thấy <strong>{filteredCustomers.length}</strong> khách hàng
             </div>
           </div>
 
@@ -116,6 +112,11 @@ export default function Customers() {
             />
           </div>
         )}
+
+        {/* Footer */}
+        <div className="table-panel-footer">
+          Hiển thị {filteredCustomers.length}/{customers.length} khách hàng
+        </div>
       </div>
 
       {/* Drag & Drop Visual Overlay */}

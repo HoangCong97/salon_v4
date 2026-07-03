@@ -68,6 +68,7 @@ export default function Appointments() {
     handleDrop,
     handleModalSave,
     handleCardResize,
+    handleCardResizeEnd,
     timeSlots,
     gridH,
     navigateDate,
@@ -496,6 +497,7 @@ export default function Appointments() {
                           onDragEnd={handleDragEnd}
                           onDoubleClick={() => setModal({ mode: "edit", item })}
                           onResize={handleCardResize}
+                          onResizeEnd={handleCardResizeEnd}
                         />
                       );
                     })}

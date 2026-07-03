@@ -33,7 +33,7 @@ export const InventoryHeader: React.FC<InventoryHeaderProps> = ({
   canManage,
 }) => {
   return (
-    <div className={`card ${styles.headerCard}`}>
+    <div className={styles.headerCard}>
       {/* Left side: Search & Filter */}
       <div className={styles.filtersLeft}>
         <Input
@@ -78,7 +78,7 @@ export const InventoryHeader: React.FC<InventoryHeaderProps> = ({
             className={`btn btn-primary ${styles.addButton}`}
             onClick={onOpenCreateModal}
           >
-            <Plus size={18} /> Nhập sản phẩm mới
+            <Plus size={18} /> Sản phẩm mới
           </button>
         )}
       </div>

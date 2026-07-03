@@ -4,6 +4,16 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  height: calc(100vh - 120px);
+  overflow: hidden;
+}
+
+.tableWrapper {
+  flex-grow: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .loadingWrapper {
@@ -58,7 +68,6 @@
   gap: 16px;
   align-items: center;
   justify-content: space-between;
-  padding: 16px;
 }
 
 .filtersLeft {
@@ -103,7 +112,9 @@
 
 /* Table styling */
 .tableContainer {
-  overflow: visible;
+  flex-grow: 1;
+  overflow-y: auto !important;
+  min-height: 0;
 }
 
 .thDefault {
@@ -347,4 +358,3 @@
   flex-direction: column;
   gap: 16px;
 }
-

@@ -318,110 +318,119 @@ export default function Services() {
   return (
     <>
       <div className={`animate-fade-in ${styles.container}`}>
-        {/* Filter, Actions and Search Bar */}
-        <div className={`card ${styles.filterCard}`}>
-          {/* Search Container (Far Left) */}
-          <div className={styles.searchContainer}>
-            <Search size={16} className={styles.searchIcon} />
-            <input
-              type="text"
-              className={`form-input ${styles.searchInput}`}
-              placeholder="Tìm kiếm dịch vụ..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+        <div className="table-panel">
+          {/* Filter, Actions and Search Bar */}
+          <div className={styles.filterCard}>
+            {/* Search Container (Far Left) */}
+            <div className={styles.searchContainer}>
+              <Search size={16} className={styles.searchIcon} />
+              <input
+                type="text"
+                className={`form-input ${styles.searchInput}`}
+                placeholder="Tìm kiếm dịch vụ..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
 
-          {/* Category Tabs */}
-          <div className={styles.categoriesList}>
-            {canManage && (
+            {/* Category Tabs */}
+            <div className={styles.categoriesList}>
+              {canManage && (
+                <button
+                  className={`btn btn-secondary ${styles.categoryBtn}`}
+                  onClick={handleOpenCategoriesModal}
+                >
+                  <Layers size={16} /> Phân loại
+                </button>
+              )}
               <button
-                className={`btn btn-secondary ${styles.categoryBtn}`}
-                onClick={handleOpenCategoriesModal}
-              >
-                <Layers size={16} /> Phân loại
-              </button>
-            )}
-            <button
-              onClick={() => setSelectedCategory("Tất cả")}
-              className={styles.tabButton}
-              style={{
-                backgroundColor: selectedCategory === "Tất cả" ? "var(--color-primary)" : "hsl(210, 40%, 94%)",
-                color: selectedCategory === "Tất cả" ? "white" : "var(--text-secondary)",
-              }}
-            >
-              Tất cả
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
+                onClick={() => setSelectedCategory("Tất cả")}
                 className={styles.tabButton}
                 style={{
-                  backgroundColor: selectedCategory === cat.id ? "var(--color-primary)" : "hsl(210, 40%, 94%)",
-                  color: selectedCategory === cat.id ? "white" : "var(--text-secondary)",
+                  backgroundColor: selectedCategory === "Tất cả" ? "var(--color-primary)" : "hsl(210, 40%, 94%)",
+                  color: selectedCategory === "Tất cả" ? "white" : "var(--text-secondary)",
                 }}
               >
-                {cat.name}
+                Tất cả
               </button>
-            ))}
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={styles.tabButton}
+                  style={{
+                    backgroundColor: selectedCategory === cat.id ? "var(--color-primary)" : "hsl(210, 40%, 94%)",
+                    color: selectedCategory === cat.id ? "white" : "var(--text-secondary)",
+                  }}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Actions */}
+            <div className={styles.actionsWrapper}>
+              {canManage && (
+                <ImportButton
+                  onClick={() => {
+                    setDroppedFile(null);
+                    setIsImportModalOpen(true);
+                  }}
+                />
+              )}
+
+              <ExportButton
+                data={filteredServices}
+                fileName="danh_sach_dich_vu"
+                columns={serviceExportColumns}
+              />
+
+              {canManage && (
+                <button
+                  className={`btn btn-primary ${styles.addServiceBtn}`}
+                  onClick={handleOpenCreateModal}
+                >
+                  <Plus size={18} /> Thêm dịch vụ
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Actions */}
-          <div className={styles.actionsWrapper}>
-            {canManage && (
-              <ImportButton
-                onClick={() => {
-                  setDroppedFile(null);
-                  setIsImportModalOpen(true);
-                }}
-              />
-            )}
-
-            <ExportButton
-              data={filteredServices}
-              fileName="danh_sach_dich_vu"
-              columns={serviceExportColumns}
+          {/* Main Content */}
+          {loading ? (
+            <LoadingState text="Đang tải danh sách dịch vụ..." />
+          ) : error ? (
+            <ErrorState message={error} />
+          ) : filteredServices.length === 0 ? (
+            <EmptyState
+              title="Không tìm thấy dịch vụ nào"
+              description="Hãy thử điều chỉnh bộ lọc hoặc thêm dịch vụ mới."
+              icon={<Layers size={48} />}
             />
+          ) : (
+            <div className={styles.tableWrapper}>
+              <ServiceTable
+                filteredServices={filteredServices}
+                categories={categories}
+                inlineEdits={inlineEdits}
+                handleInlineChange={handleInlineChange}
+                handlePriceChange={handlePriceChange}
+                handleAutoSave={handleAutoSave}
+                handleCommissionAutoSave={handleCommissionAutoSave}
+                handleOpenEditModal={handleOpenEditModal}
+                handleDelete={handleDelete}
+                getInlineValue={getInlineValue}
+                formatNumber={formatNumber}
+                getColorStyle={getColorStyle}
+              />
+            </div>
+          )}
 
-            {canManage && (
-              <button
-                className={`btn btn-primary ${styles.addServiceBtn}`}
-                onClick={handleOpenCreateModal}
-              >
-                <Plus size={18} /> Thêm dịch vụ
-              </button>
-            )}
+          {/* Footer */}
+          <div className="table-panel-footer">
+            Hiển thị {filteredServices.length}/{services.length} dịch vụ
           </div>
         </div>
-
-        {/* Main Content */}
-        {loading ? (
-          <LoadingState text="Đang tải danh sách dịch vụ..." />
-        ) : error ? (
-          <ErrorState message={error} />
-        ) : filteredServices.length === 0 ? (
-          <EmptyState
-            title="Không tìm thấy dịch vụ nào"
-            description="Hãy thử điều chỉnh bộ lọc hoặc thêm dịch vụ mới."
-            icon={<Layers size={48} />}
-          />
-        ) : (
-          <ServiceTable
-            filteredServices={filteredServices}
-            categories={categories}
-            inlineEdits={inlineEdits}
-            handleInlineChange={handleInlineChange}
-            handlePriceChange={handlePriceChange}
-            handleAutoSave={handleAutoSave}
-            handleCommissionAutoSave={handleCommissionAutoSave}
-            handleOpenEditModal={handleOpenEditModal}
-            handleDelete={handleDelete}
-            getInlineValue={getInlineValue}
-            formatNumber={formatNumber}
-            getColorStyle={getColorStyle}
-          />
-        )}
       </div>
 
       {/* Categories Management Modal */}

@@ -33,8 +33,11 @@ export default function Invoices() {
     setOrderSource,
     selectedInvoice,
     setSelectedInvoice,
+    resolvedInvoices,
     filteredInvoices,
     summaryStats,
+    datePreset,
+    handlePresetChange,
   } = useInvoices();
 
   if (loading) {
@@ -57,13 +60,15 @@ export default function Invoices() {
         />
       </div>
 
-      {/* Filters Bar */}
-      <div className={styles.flexShrink0}>
+      {/* Merged Filters & Listing Table Panel */}
+      <div className={`table-panel ${styles.tableWrapper}`}>
         <InvoiceFilter
           startDate={startDate}
           setStartDate={setStartDate}
           endDate={endDate}
           setEndDate={setEndDate}
+          datePreset={datePreset}
+          setDatePreset={handlePresetChange}
           selectedStaffId={selectedStaffId}
           setSelectedStaffId={setSelectedStaffId}
           selectedCustomerId={selectedCustomerId}
@@ -75,16 +80,17 @@ export default function Invoices() {
           activeStaff={activeStaff}
           customers={customers}
         />
-      </div>
-
-      {/* Main Listing Table */}
-      <div className={styles.tableWrapper}>
         <InvoiceTable
           invoices={filteredInvoices}
           activeStaff={activeStaff}
           customers={customers}
           onViewDetail={setSelectedInvoice}
         />
+
+        {/* Footer */}
+        <div className="table-panel-footer">
+          Hiển thị {filteredInvoices.length}/{resolvedInvoices.length} hóa đơn
+        </div>
       </div>
 
       {/* Detailed View Modal */}

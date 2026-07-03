@@ -339,6 +339,7 @@ export function useInventories() {
   return {
     loading,
     error,
+    items,
     filteredItems,
     searchTerm,
     setSearchTerm,
