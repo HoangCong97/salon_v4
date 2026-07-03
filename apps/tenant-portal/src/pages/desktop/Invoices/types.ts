@@ -25,11 +25,14 @@ export type PaymentMethod = "CASH" | "BANK_TRANSFER" | "ALL";
 export type OrderSource = "WALK_IN" | "BOOKING" | "ALL";
 
 export interface InvoiceItem {
+  id?: string;
   itemId: string;
   itemType: ItemType;
   name?: string;
   price: number;
   quantity: number;
+  discountAmount?: number;
+  finalAmount?: number;
   staffId?: string;
   stylist?: {
     id: string;

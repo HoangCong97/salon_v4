@@ -1,9 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuthStore, SubscriptionData } from "../../store/useAuthStore";
 import { LayoutDashboard, Store, Users, BarChart3, MapPin, Layers, Package, CalendarDays, Receipt, Contact, CalendarClock, Crown, Sparkles, Award, Coins } from "lucide-react";
 import { Tooltip } from "./ui/Tooltip";
 import { useWebSocket } from "../../hooks/useWebSocket";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "../../utils/apiClient";
+import { queryKeys } from "../../utils/queryKeys";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -150,6 +153,7 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
     logoUrl, 
     hasPermission, 
     currentTenantId, 
+    currentBranchId,
     subscription, 
     subscriptionLoading, 
     fetchSubscription, 
@@ -173,6 +177,24 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
       fetchSubscription();
     }
   });
+
+  // Fetch invoices to count today's invoices
+  const { data: invoices } = useQuery<any[]>({
+    queryKey: queryKeys.invoices.list(currentTenantId!, currentBranchId!),
+    queryFn: () => api.get(`/tenants/${currentTenantId}/branches/${currentBranchId}/invoices`),
+    enabled: !!currentTenantId && !!currentBranchId,
+  });
+
+  const todayInvoiceCount = useMemo(() => {
+    if (!invoices) return 0;
+    const d = new Date();
+    const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    return invoices.filter((inv) => {
+      const dateObj = new Date(inv.createdAt);
+      const invDateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, "0")}-${String(dateObj.getDate()).padStart(2, "0")}`;
+      return invDateStr === todayStr;
+    }).length;
+  }, [invoices]);
 
   const menuItems = [
     { path: "/", label: "Tổng quan", icon: LayoutDashboard, permission: "booking.view" },
@@ -318,6 +340,29 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 <>
                   <Icon size={20} style={{ flexShrink: 0 }} />
                   {!collapsed && <span style={{ fontSize: "14px", whiteSpace: "nowrap" }}>{item.label}</span>}
+                  
+                  {item.path === "/invoices" && todayInvoiceCount > 0 && (
+                    <span
+                      style={{
+                        position: collapsed ? "absolute" : "static",
+                        top: collapsed ? "4px" : "auto",
+                        right: collapsed ? "4px" : "auto",
+                        marginLeft: collapsed ? "0" : "auto",
+                        backgroundColor: "#ef4444",
+                        color: "white",
+                        fontSize: "10.5px",
+                        fontWeight: "700",
+                        borderRadius: "9999px",
+                        padding: "2px 6px",
+                        lineHeight: "1",
+                        minWidth: "18px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {todayInvoiceCount}
+                    </span>
+                  )}
+
                   {collapsed && isActive && (
                     <div
                       style={{

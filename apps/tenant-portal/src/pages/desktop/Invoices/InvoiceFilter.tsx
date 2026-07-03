@@ -142,7 +142,6 @@ export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
       {/* Date Range Merged Group */}
       <div className={styles.dateRangeGroup}>
         <div className={styles.presetSelectWrapper}>
-          <label className={styles.selectLabel}>THỜI GIAN</label>
           <select
             className={`form-input ${styles.selectElement}`}
             value={datePreset}
@@ -156,7 +155,6 @@ export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
         </div>
 
         <div className={styles.singleRangeContainer}>
-          <label className={styles.selectLabel}>KHOẢNG THỜI GIAN</label>
           <div className={`${styles.singleRangeInputWrapper} ${datePreset !== "custom" ? styles.disabled : ""}`}>
             <CalendarDays size={14} className={styles.calendarIcon} />
             <SegmentDateInput
@@ -176,7 +174,6 @@ export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
 
       {/* Staff Filter */}
       <div>
-        <label className={styles.selectLabel}>NHÂN VIÊN THỰC HIỆN</label>
         <select
           className={`form-input ${styles.selectElement}`}
           value={selectedStaffId}
@@ -193,7 +190,6 @@ export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
 
       {/* Customer Filter */}
       <div>
-        <label className={styles.selectLabel}>KHÁCH HÀNG</label>
         <select
           className={`form-input ${styles.selectElement}`}
           value={selectedCustomerId}
@@ -210,7 +206,6 @@ export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
 
       {/* Payment Method Filter */}
       <div>
-        <label className={styles.selectLabel}>HÌNH THỨC TT</label>
         <select
           className={`form-input ${styles.selectElement}`}
           value={paymentMethod}
@@ -224,7 +219,6 @@ export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
 
       {/* Order Source Filter */}
       <div>
-        <label className={styles.selectLabel}>NGUỒN ĐƠN</label>
         <select
           className={`form-input ${styles.selectElement}`}
           value={orderSource}

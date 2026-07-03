@@ -1,5 +1,5 @@
 import React from "react";
-import { Eye, DollarSign, CreditCard, Globe, Store } from "lucide-react";
+import { Eye, DollarSign, CreditCard, Globe, Store, Edit2, Trash2 } from "lucide-react";
 import { formatCurrencyVND } from "@salon/shared-utils";
 
 import { Tooltip } from "../../../components/desktop/ui/Tooltip";
@@ -15,6 +15,10 @@ interface InvoiceTableProps {
   activeStaff: Staff[];
   customers: Customer[];
   onViewDetail: (invoice: Invoice) => void;
+  onEditInvoice?: (invoice: Invoice) => void;
+  onDeleteInvoice?: (invoiceId: string) => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 export const InvoiceTable: React.FC<InvoiceTableProps> = ({
@@ -22,6 +26,10 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
   activeStaff,
   customers,
   onViewDetail,
+  onEditInvoice,
+  onDeleteInvoice,
+  canEdit = false,
+  canDelete = false,
 }) => {
 
   const formatTimeHHMM = (dateStr: string) => {
@@ -105,9 +113,9 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
       <table className="data-table">
         <thead>
           <tr>
+            <th className={styles.thTime}>Thời gian</th>
             <th className={styles.thAvatar}>Ảnh nhân viên</th>
             <th className={styles.thStaff}>Nhân viên thực hiện</th>
-            <th className={styles.thTime}>Thời gian</th>
             <th className={styles.thDetails}>Chi tiết dịch vụ</th>
             <th className={styles.thTotal}>Tổng dịch vụ</th>
             <th className={styles.thDiscount}>Tổng giảm</th>
@@ -165,6 +173,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                     className={`${styles.tableRow} ${styles.clickableRow}`}
                     onClick={() => onViewDetail(inv)}
                   >
+                    <td className={styles.tdTime}>{formatTimeHHMM(inv.createdAt)}</td>
                     <td className={styles.tdCentered}>
                       <div className={styles.avatarContainer}>
                         {renderStaffAvatars(inv.items)}
@@ -177,7 +186,6 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                         </div>
                       </Tooltip>
                     </td>
-                    <td className={styles.tdTime}>{formatTimeHHMM(inv.createdAt)}</td>
                     <td className={styles.tdDetails}>
                       <Tooltip content={serviceDetailsStr}>
                         <div className={`${styles.textEllipsis} ${styles.widthDetails}`}>
@@ -220,18 +228,34 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                     </td>
                     <td className={styles.actionTd}>
                       <div className={styles.actionButtons}>
-                        <Tooltip content="Xem chi tiết hóa đơn">
-                          <button
-                            type="button"
-                            className={`btn btn-secondary ${styles.actionBtn}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onViewDetail(inv);
-                            }}
-                          >
-                            <Eye size={12} />
-                          </button>
-                        </Tooltip>
+                        {canEdit && onEditInvoice && (
+                          <Tooltip content="Chỉnh sửa hóa đơn">
+                            <button
+                              type="button"
+                              className={`btn btn-secondary ${styles.actionBtn}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEditInvoice(inv);
+                              }}
+                            >
+                              <Edit2 size={12} />
+                            </button>
+                          </Tooltip>
+                        )}
+                        {canDelete && onDeleteInvoice && (
+                          <Tooltip content="Xóa hóa đơn">
+                            <button
+                              type="button"
+                              className={styles.actionBtnDanger}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDeleteInvoice(inv.id);
+                              }}
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </Tooltip>
+                        )}
                       </div>
                     </td>
                   </tr>

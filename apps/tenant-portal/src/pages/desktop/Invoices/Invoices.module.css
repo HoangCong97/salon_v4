@@ -127,7 +127,6 @@
 
 /* InvoiceFilter.tsx cards */
 .filterCard {
-  padding: 0 0 8px 0;
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 12px;
@@ -269,7 +268,13 @@
 .tableContainer {
   flex-grow: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   min-height: 250px;
+}
+
+.tableContainer table {
+  width: 100%;
+  table-layout: fixed;
 }
 
 .tableContainer th {
@@ -326,7 +331,7 @@
   background: #f8fafc;
   z-index: 20;
   width: auto;
-  min-width: 220px;
+  min-width: 120px;
   padding: 6px 12px;
 }
 
@@ -335,9 +340,8 @@
   top: 0;
   background: #f8fafc;
   z-index: 20;
-  width: 100px;
-  min-width: 100px;
-  max-width: 100px;
+  width: 110px;
+  min-width: 110px;
   text-align: right;
   padding: 6px 8px;
 }
@@ -347,9 +351,8 @@
   top: 0;
   background: #f8fafc;
   z-index: 20;
-  width: 80px;
-  min-width: 80px;
-  max-width: 80px;
+  width: 100px;
+  min-width: 100px;
   text-align: right;
   padding: 6px 8px;
 }
@@ -359,9 +362,8 @@
   top: 0;
   background: #f8fafc;
   z-index: 20;
-  width: 100px;
-  min-width: 100px;
-  max-width: 100px;
+  width: 110px;
+  min-width: 110px;
   text-align: right;
   padding: 6px 8px;
 }
@@ -394,9 +396,9 @@
   top: 0;
   background: #f8fafc;
   z-index: 20;
-  width: 60px;
-  min-width: 60px;
-  max-width: 60px;
+  width: 110px;
+  min-width: 110px;
+  max-width: 110px;
   text-align: center;
   padding: 6px 6px;
 }
@@ -405,9 +407,9 @@
   text-align: center;
   vertical-align: middle;
   padding: 4px 8px;
-  width: 110px;
-  min-width: 110px;
-  max-width: 110px;
+  width: 70px;
+  min-width: 70px;
+  max-width: 70px;
 }
 
 .tdStaff {
@@ -429,23 +431,23 @@
 .tdDetails {
   padding: 4px 12px;
   width: auto;
-  min-width: 220px;
+  min-width: 120px;
 }
 
 .tdTotal {
   text-align: right;
   padding: 4px 8px;
-  width: 100px;
-  min-width: 100px;
-  max-width: 100px;
+  width: 110px;
+  min-width: 110px;
+  text-overflow: clip;
 }
 
 .tdDiscount {
   text-align: right;
   padding: 4px 8px;
-  width: 80px;
-  min-width: 80px;
-  max-width: 80px;
+  width: 100px;
+  min-width: 100px;
+  text-overflow: clip;
 }
 
 .tdFinal {
@@ -453,21 +455,21 @@
   text-align: right;
   padding: 4px 8px;
   color: var(--color-primary);
-  width: 100px;
-  min-width: 100px;
-  max-width: 100px;
+  width: 110px;
+  min-width: 110px;
+  text-overflow: clip;
 }
 
 .tdTransaction {
   text-align: center;
   padding: 4px 8px;
-  width: 120px;
-  min-width: 120px;
-  max-width: 120px;
+  width: 90px;
+  min-width: 90px;
+  max-width: 90px;
 }
 
 .tdCustomer {
-  font-weight: 600;
+  font-weight: 400;
   padding: 4px 12px;
   width: 120px;
   min-width: 120px;
@@ -478,9 +480,9 @@
   text-align: center !important;
   vertical-align: middle !important;
   padding: 4px 6px !important;
-  width: 60px;
-  min-width: 60px;
-  max-width: 60px;
+  width: 90px;
+  min-width: 90px;
+  max-width: 90px;
 }
 
 .actionButtons {
@@ -808,15 +810,15 @@
 }
 
 .widthStaff {
-  max-width: 256px;
+  max-width: 100%;
 }
 
 .widthDetails {
-  max-width: 600px;
+  max-width: 100%;
 }
 
 .widthCustomer {
-  max-width: 110px;
+  max-width: 100%;
 }
 
 .noDataCell {
@@ -834,6 +836,103 @@
   background-color: var(--color-bg-hover, rgba(0, 0, 0, 0.02));
 }
 
-.clickableRow {
+.clickableRow,
+.clickableRow * {
+  cursor: pointer !important;
+}
+
+/* Inline Edit Styles */
+.editInput {
+  width: 100%;
+  border: none;
+  border-bottom: 1.5px solid var(--color-primary);
+  background: transparent;
+  padding: 4px 2px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+  outline: none;
+  color: var(--text-primary);
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.editInput:focus {
+  border-bottom-color: var(--color-primary-hover);
+  background: var(--color-primary-light);
+}
+
+.editDatetimeInput {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 12.5px;
+  font-family: inherit;
+  color: var(--text-primary);
+  background: white;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.editDatetimeInput:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-light);
+}
+
+.actionBtnDanger {
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  border-radius: var(--radius-sm) !important;
+  height: 26px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-danger-light) !important;
+  color: var(--color-danger) !important;
+  border: 1px solid transparent !important;
+}
+
+.actionBtnDanger:hover {
+  background: var(--color-danger) !important;
+  color: white !important;
+}
+
+.itemDeleteBtn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
   cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.itemDeleteBtn:hover {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.editBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--color-warning-light);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-warning);
+}
+
+.itemsTable tr td {
+  height: 38px !important;
+  vertical-align: middle !important;
+  padding: 0 16px !important;
+}
+
+.itemsTable tr td.itemsTdEdit {
+  padding: 0 !important;
 }

@@ -141,6 +141,8 @@ export async function ensureStandardPermissions() {
     { slug: "pos.view", groupName: "Bán hàng POS", name: "Truy cập POS", description: "Cho phép truy cập màn hình bán hàng POS" },
     { slug: "invoice.view", groupName: "Hóa đơn", name: "Xem hóa đơn", description: "Xem lịch sử danh sách hóa đơn" },
     { slug: "invoice.create", groupName: "Hóa đơn", name: "Tạo hóa đơn", description: "Tạo và in hóa đơn thanh toán" },
+    { slug: "invoice.edit", groupName: "Hóa đơn", name: "Sửa hóa đơn", description: "Chỉnh sửa mặt hàng và thời gian hóa đơn" },
+    { slug: "invoice.delete", groupName: "Hóa đơn", name: "Xóa hóa đơn", description: "Xóa hóa đơn khỏi hệ thống" },
 
     { slug: "customer.view", groupName: "Khách hàng", name: "Xem khách hàng", description: "Xem danh sách khách hàng" },
     { slug: "customer.manage", groupName: "Khách hàng", name: "Quản lý khách hàng", description: "Thêm, sửa, xóa khách hàng" },

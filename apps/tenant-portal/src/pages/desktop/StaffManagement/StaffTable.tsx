@@ -209,8 +209,8 @@ export const StaffTable: React.FC<StaffTableProps> = ({
           />
 
           {canManage && (
-            <button 
-              className={`btn btn-primary ${styles.addStaffBtn}`} 
+            <button
+              className={`btn btn-primary ${styles.addStaffBtn}`}
               onClick={handleOpenCreateModal}
             >
               <Plus size={18} /> Thêm nhân viên mới
@@ -243,7 +243,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                   <th className={styles.th} style={{ width: "150px" }}>Chức vụ</th>
                   <th className={styles.th} style={{ width: "150px", textAlign: "center" }}>Lương cơ bản</th>
                   <th className={styles.th} style={{ width: "140px" }}>Trạng thái</th>
-                  {canManage && <th className={styles.th} style={{ width: "120px", textAlign: "center" }}>Hành động</th>}
+                  {canManage && <th className={styles.th} style={{ width: "120px", textAlign: "center" }}>Thao tác</th>}
                 </tr>
               </thead>
               <tbody>

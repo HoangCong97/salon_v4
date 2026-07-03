@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 import { InvoiceSummary } from "./InvoiceSummary";
 import { InvoiceFilter } from "./InvoiceFilter";
@@ -8,6 +9,7 @@ import { LoadingState } from "../../../components/desktop/ui/LoadingState";
 import { ErrorState } from "../../../components/desktop/ui/ErrorState";
 
 import { useInvoices } from "./useInvoices";
+import { useAuthStore } from "../../../store/useAuthStore";
 
 import styles from "./Invoices.module.css";
 
@@ -38,7 +40,22 @@ export default function Invoices() {
     summaryStats,
     datePreset,
     handlePresetChange,
+    handleDeleteInvoice,
   } = useInvoices();
+
+  const navigate = useNavigate();
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+  const canEdit = hasPermission("invoice.edit");
+  const canDelete = hasPermission("invoice.delete");
+
+  const handleEditInvoiceClick = (invoice: any) => {
+    navigate("/pos", { state: { editInvoice: invoice } });
+    handleCloseModal();
+  };
+
+  const handleCloseModal = () => {
+    setSelectedInvoice(null);
+  };
 
   if (loading) {
     return <LoadingState text="Đang tải lịch sử hóa đơn..." />;
@@ -84,7 +101,13 @@ export default function Invoices() {
           invoices={filteredInvoices}
           activeStaff={activeStaff}
           customers={customers}
-          onViewDetail={setSelectedInvoice}
+          onViewDetail={(inv) => {
+            setSelectedInvoice(inv);
+          }}
+          onEditInvoice={handleEditInvoiceClick}
+          onDeleteInvoice={handleDeleteInvoice}
+          canEdit={canEdit}
+          canDelete={canDelete}
         />
 
         {/* Footer */}
@@ -97,14 +120,15 @@ export default function Invoices() {
       {selectedInvoice && (
         <InvoiceDetailModal
           invoice={selectedInvoice}
-          onClose={() => setSelectedInvoice(null)}
+          onClose={handleCloseModal}
           activeStaff={activeStaff}
           customers={customers}
           branches={branches}
           currentBranchId={currentBranchId}
+          canEdit={canEdit}
+          onEditInvoice={handleEditInvoiceClick}
         />
       )}
     </div>
   );
 }
-

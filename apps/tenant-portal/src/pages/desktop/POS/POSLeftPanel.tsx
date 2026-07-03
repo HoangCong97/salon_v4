@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Search, Users, Check, GripVertical, Star } from "lucide-react";
 
 import { formatCurrencyVND } from "@salon/shared-utils";
+import styles from "./POS.module.css";
 
 export const getEmployeeColor = (id: string, activeStaff?: any[]) => {
   const colors = [
@@ -205,14 +206,21 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
           <Users size={16} /> NHÂN VIÊN CHI NHÁNH (Có thể sử dụng hàng phím số để chọn)
         </h4>
         <div
-          className="no-scrollbar"
+          className={styles.thinScrollbar}
           style={{
             display: "flex",
             gap: "10px",
             overflowX: "auto",
-            height: "44px",
+            height: "48px",
             alignItems: "center",
-            boxSizing: "border-box"
+            boxSizing: "border-box",
+            paddingBottom: "4px"
+          }}
+          onWheel={(e) => {
+            const container = e.currentTarget;
+            if (e.deltaY !== 0) {
+              container.scrollLeft += e.deltaY;
+            }
           }}
         >
           {activeStaff.map((s, idx) => {
@@ -273,11 +281,11 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
               type="button"
               onClick={() => setSelectedCategory("All")}
               style={{
-                padding: "0 12px",
+                padding: "0 16px",
                 height: "36px",
                 fontSize: "12.5px",
                 fontWeight: "600",
-                borderRadius: "var(--radius-sm)",
+                borderRadius: "var(--radius-full)",
                 border: selectedCategory === "All" ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
                 background: selectedCategory === "All" ? "var(--color-primary)" : "white",
                 color: selectedCategory === "All" ? "white" : "var(--text-primary)",
@@ -299,11 +307,11 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
                   type="button"
                   onClick={() => setSelectedCategory(filterValue)}
                   style={{
-                    padding: "0 12px",
+                    padding: "0 16px",
                     height: "36px",
                     fontSize: "12.5px",
                     fontWeight: "600",
-                    borderRadius: "var(--radius-sm)",
+                    borderRadius: "var(--radius-full)",
                     border: isActive ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
                     background: isActive ? "var(--color-primary)" : "white",
                     color: isActive ? "white" : "var(--text-primary)",
@@ -322,11 +330,11 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
               type="button"
               onClick={() => setSelectedCategory("Product")}
               style={{
-                padding: "0 12px",
+                padding: "0 16px",
                 height: "36px",
                 fontSize: "12.5px",
                 fontWeight: "600",
-                borderRadius: "var(--radius-sm)",
+                borderRadius: "var(--radius-full)",
                 border: selectedCategory === "Product" ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
                 background: selectedCategory === "Product" ? "var(--color-primary)" : "white",
                 color: selectedCategory === "Product" ? "white" : "var(--text-primary)",
@@ -343,11 +351,11 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
               type="button"
               onClick={() => setSelectedCategory("Package")}
               style={{
-                padding: "0 12px",
+                padding: "0 16px",
                 height: "36px",
                 fontSize: "12.5px",
                 fontWeight: "600",
-                borderRadius: "var(--radius-sm)",
+                borderRadius: "var(--radius-full)",
                 border: selectedCategory === "Package" ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
                 background: selectedCategory === "Package" ? "var(--color-primary)" : "white",
                 color: selectedCategory === "Package" ? "white" : "var(--text-primary)",

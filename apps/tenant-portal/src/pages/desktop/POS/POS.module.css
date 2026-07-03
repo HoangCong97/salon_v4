@@ -13,41 +13,50 @@
 .tabsScroll {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   border-bottom: 1px solid var(--border-color);
-  height: 40px;
-  margin-bottom: 12px;
+  height: 48px;
+  margin-bottom: 16px;
   overflow-x: auto;
   flex-shrink: 0;
   box-sizing: border-box;
+  padding-bottom: 4px;
 }
 
 .tabItem {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 12px;
-  height: 28px;
+  padding: 6px 8px;
+  height: 32px;
   box-sizing: border-box;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
   font-weight: 600;
   font-size: 12.5px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
   position: relative;
+  user-select: none;
 }
 
 .tabActive {
-  border: 2px solid var(--color-primary);
   background: var(--color-primary-light);
   color: var(--color-primary);
+  border: 1.5px solid var(--color-primary);
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.15);
 }
 
 .tabInactive {
-  border: 2px solid var(--border-color);
-  background: white;
+  background: #f8fafc;
   color: var(--text-secondary);
+  border: 1.5px solid var(--border-color);
+}
+
+.tabInactive:hover {
+  background: #f1f5f9;
+  color: var(--text-primary);
+  border-color: #cbd5e1;
 }
 
 .tabDeleteBtn {
@@ -57,27 +66,51 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
+  padding: 2px;
+  border-radius: 50%;
+  transition: all 0.15s;
 }
 
 .tabDeleteBtnActive {
   color: var(--color-primary);
+  opacity: 0.7;
+}
+
+.tabDeleteBtnActive:hover {
+  background: rgba(99, 102, 241, 0.2);
+  opacity: 1;
 }
 
 .tabDeleteBtnInactive {
   color: var(--text-muted);
 }
 
+.tabDeleteBtnInactive:hover {
+  background: rgba(148, 163, 184, 0.2);
+  color: var(--text-secondary);
+}
+
 .addTabBtn {
-  padding: 4px 8px;
-  height: 28px;
-  font-size: 12px;
+  padding: 4px 12px !important;
+  height: 32px;
+  font-size: 12.5px;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 4px;
-  border-radius: var(--radius-sm);
+  gap: 6px;
+  border-radius: var(--radius-full);
   flex-shrink: 0;
+  background: #f8fafc;
+  border: 1px dashed var(--border-color) !important;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addTabBtn:hover {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .customerSection {
@@ -720,4 +753,22 @@
 
 .btnPadding {
   padding: 8px 16px;
+}
+
+.thinScrollbar::-webkit-scrollbar {
+  height: 4px;
+  background: transparent;
+}
+
+.thinScrollbar::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: var(--radius-full);
+}
+
+.thinScrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.6);
+}
+
+.thinScrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }

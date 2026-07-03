@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Printer } from "lucide-react";
+import { Printer, Edit3 } from "lucide-react";
 import { formatCurrencyVND } from "@salon/shared-utils";
 
 import { Modal } from "../../../components/desktop/ui/Modal";
 import { Button } from "../../../components/desktop/ui/Button";
 import { POSReceiptModal } from "../POS/POSReceiptModal";
+import { ExcelInput } from "../../../components/desktop/TableComponents";
 
 import { Invoice, Staff, Customer, Branch } from "./types";
 
@@ -17,6 +18,8 @@ interface InvoiceDetailModalProps {
   customers: Customer[];
   branches: Branch[];
   currentBranchId: string | null;
+  canEdit?: boolean;
+  onEditInvoice?: (invoice: Invoice) => void;
 }
 
 export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
@@ -26,6 +29,8 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
   customers,
   branches,
   currentBranchId,
+  canEdit = false,
+  onEditInvoice,
 }) => {
   const [showPrintModal, setShowPrintModal] = useState(false);
 
@@ -64,6 +69,15 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
       <Button variant="secondary" onClick={onClose}>
         Đóng
       </Button>
+      {canEdit && onEditInvoice && (
+        <Button
+          variant="secondary"
+          onClick={() => onEditInvoice(invoice)}
+          icon={<Edit3 size={14} />}
+        >
+          Chỉnh sửa
+        </Button>
+      )}
       <Button
         variant="primary"
         onClick={() => setShowPrintModal(true)}
@@ -87,13 +101,13 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
           {/* Metadata Grid */}
           <div className={styles.metaGrid}>
             <div>
+              <span className={styles.metaLabel}>THU NGÂN</span>
+              <strong className={styles.metaValueBold}>{invoice.cashier?.name || "Thu ngân"}</strong>
+            </div>
+            <div>
               <span className={styles.metaLabel}>KHÁCH HÀNG</span>
               <strong className={styles.metaValueBold}>{customerName}</strong>
               {customerPhone && <span className={styles.metaValueMuted}>SĐT: {customerPhone}</span>}
-            </div>
-            <div>
-              <span className={styles.metaLabel}>THU NGÂN</span>
-              <strong className={styles.metaValueBold}>{invoice.cashier?.name || "Thu ngân"}</strong>
             </div>
             <div>
               <span className={styles.metaLabel}>THỜI GIAN THANH TOÁN</span>
@@ -117,9 +131,9 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
                 <thead>
                   <tr>
                     <th>Tên dịch vụ/sản phẩm</th>
-                    <th className={styles.itemsThCenter}>Số lượng</th>
                     <th>Thợ gán lượt</th>
                     <th className={styles.itemsThRight}>Đơn giá</th>
+                    <th className={styles.itemsThRight}>Giảm giá</th>
                     <th className={styles.itemsThRight}>Thành tiền</th>
                   </tr>
                 </thead>
@@ -127,13 +141,38 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
                   {invoice.items?.map((item, idx) => {
                     const sId = item.staffId || item.stylist?.id;
                     const staffMember = activeStaff.find((s) => s.id === sId);
+                    const discountVal = item.discountAmount || 0;
+                    const finalVal = item.price * item.quantity - discountVal;
                     return (
                       <tr key={idx}>
-                        <td className={styles.itemsTdBold}>{item.name}</td>
-                        <td className={styles.itemsTdCenter}>{item.quantity}</td>
+                        <td className={styles.itemsTdBold}>
+                          {item.name}
+                        </td>
                         <td>{staffMember ? staffMember.name.split("(")[0] : "Không gán"}</td>
-                        <td className={styles.itemsTdRight}>{formatCurrencyVND(item.price)}</td>
-                        <td className={styles.itemsTdRightBold}>{formatCurrencyVND(item.price * item.quantity)}</td>
+                        <td className={`${styles.itemsTdEdit} ${styles.itemsTdRight}`}>
+                          <ExcelInput
+                            type="number"
+                            value={item.price}
+                            onChange={() => {}}
+                            textAlign="right"
+                            unit="đ"
+                            disabled={true}
+                          />
+                        </td>
+                        <td className={`${styles.itemsTdEdit} ${styles.itemsTdRight}`} style={{ color: discountVal > 0 ? "var(--color-danger)" : "inherit" }}>
+                          <ExcelInput
+                            type="number"
+                            value={discountVal}
+                            onChange={() => {}}
+                            textAlign="right"
+                            unit="đ"
+                            textColor={discountVal > 0 ? "var(--color-danger)" : undefined}
+                            disabled={true}
+                          />
+                        </td>
+                        <td className={styles.itemsTdRightBold}>
+                          {formatCurrencyVND(finalVal)}
+                        </td>
                       </tr>
                     );
                   })}

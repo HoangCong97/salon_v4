@@ -38,7 +38,7 @@ export const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({
           <DollarSign size={24} />
         </div>
         <div>
-          <span className={styles.cardLabel}>TIỀN MẶT (KÉT CÁT)</span>
+          <span className={styles.cardLabel}>TIỀN MẶT</span>
           <strong className={`${styles.cardValue} ${styles.valueCash}`}>
             {formatCurrencyVND(cashRevenue)}
           </strong>
@@ -51,7 +51,7 @@ export const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({
           <CreditCard size={24} />
         </div>
         <div>
-          <span className={styles.cardLabel}>CHUYỂN KHOẢN (QR)</span>
+          <span className={styles.cardLabel}>CHUYỂN KHOẢN</span>
           <strong className={`${styles.cardValue} ${styles.valueTransfer}`}>
             {formatCurrencyVND(transferRevenue)}
           </strong>

@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../../store/useAuthStore";
 import { api } from "../../../utils/apiClient";
 import { queryKeys } from "../../../utils/queryKeys";
@@ -15,6 +15,7 @@ import {
 
 export function useInvoices() {
   const { currentTenantId, currentBranchId, branches } = useAuthStore();
+  const queryClient = useQueryClient();
 
   // Queries
   const {
@@ -298,6 +299,23 @@ export function useInvoices() {
     };
   }, [filteredInvoices]);
 
+  // Delete invoice handler
+  const handleDeleteInvoice = useCallback(async (invoiceId: string) => {
+    if (!currentTenantId || !currentBranchId) return;
+    if (!window.confirm("Bạn có chắc chắn muốn xóa hóa đơn này?")) return;
+    try {
+      await api.delete(
+        `/tenants/${currentTenantId}/branches/${currentBranchId}/invoices/${invoiceId}`
+      );
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.invoices.all(currentTenantId, currentBranchId)
+      });
+      setSelectedInvoice(null);
+    } catch (err) {
+      alert(`Lỗi xóa hóa đơn: ${(err as any).message}`);
+    }
+  }, [currentTenantId, currentBranchId, queryClient]);
+
   return {
     currentBranchId,
     branches,
@@ -324,5 +342,6 @@ export function useInvoices() {
     resolvedInvoices,
     filteredInvoices,
     summaryStats,
+    handleDeleteInvoice,
   };
 }

@@ -3,7 +3,7 @@ import {
   Users, Trash2, Plus, Tag, CreditCard, QrCode, FileText, X, Printer, Loader2
 } from "lucide-react";
 
-import { ExcelInput, ExcelSelect } from "../../../components/desktop/TableComponents";
+import { ExcelInput, ExcelSelect, ExcelRow } from "../../../components/desktop/TableComponents";
 
 import { formatCurrencyVND } from "@salon/shared-utils";
 
@@ -31,6 +31,10 @@ interface Invoice {
   voucherCode: string;
   discountPercent: number;
   paymentMethod: string;
+  isEditing?: boolean;
+  editingInvoiceId?: string;
+  originalCreatedAt?: string;
+  createdAt?: string;
 }
 
 interface StaffMember {
@@ -77,6 +81,8 @@ interface POSRightPanelProps {
   adjustQuantity: (cartId: string, amount: number) => void;
   customers: Array<{ id: string; name: string; phone: string; rank: string }>;
   onCreateCustomer: (name: string, phone: string) => void;
+  canEditInvoice: boolean;
+  updateInvoiceCreatedAt: (dateStr: string) => void;
 }
 
 const formatNumber = (val: number | string | undefined | null): string => {
@@ -84,6 +90,32 @@ const formatNumber = (val: number | string | undefined | null): string => {
   const cleaned = String(val).replace(/\D/g, "");
   if (!cleaned) return "";
   return new Intl.NumberFormat("vi-VN").format(parseInt(cleaned, 10));
+};
+
+const formatDateTimeDMYHM = (dateStr?: string) => {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "";
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+  return `${day}-${month}-${year} ${hours}:${minutes}`;
+};
+
+const parseDateTimeDMYHM = (str: string): Date | null => {
+  const match = str.trim().match(/^(\d{2})[-/.](\d{2})[-/.](\d{4})\s+(\d{2}):(\d{2})$/);
+  if (!match) return null;
+  const day = parseInt(match[1], 10);
+  const month = parseInt(match[2], 10) - 1;
+  const year = parseInt(match[3], 10);
+  const hours = parseInt(match[4], 10);
+  const minutes = parseInt(match[5], 10);
+
+  const d = new Date(year, month, day, hours, minutes);
+  if (isNaN(d.getTime())) return null;
+  return d;
 };
 
 export const POSRightPanel: React.FC<POSRightPanelProps> = ({
@@ -114,8 +146,12 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
   adjustQuantity,
   customers,
   onCreateCustomer,
+  canEditInvoice,
+  updateInvoiceCreatedAt,
 }) => {
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
+  const activeInvoice = invoices.find(inv => inv.id === activeInvoiceId);
+  const isEditing = activeInvoice?.isEditing;
 
   const [customerQuery, setCustomerQuery] = React.useState("");
   const [showSuggestions, setShowSuggestions] = React.useState(false);
@@ -123,6 +159,55 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
   const [prefillName, setPrefillName] = React.useState("");
   const [prefillPhone, setPrefillPhone] = React.useState("");
   const [showQRPopover, setShowQRPopover] = React.useState(false);
+  const [currentTime, setCurrentTime] = React.useState(() => new Date().toISOString());
+  const [dateTimeStr, setDateTimeStr] = React.useState("");
+  const isFocusedRef = React.useRef(false);
+  const tabsScrollRef = React.useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to the rightmost tab when a new tab is created
+  React.useEffect(() => {
+    if (tabsScrollRef.current) {
+      tabsScrollRef.current.scrollTo({
+        left: tabsScrollRef.current.scrollWidth,
+        behavior: "smooth"
+      });
+    }
+  }, [invoices.length]);
+
+  // Live ticking clock for new/unmodified invoices
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date().toISOString());
+    }, 10000); // Update every 10 seconds
+    return () => clearInterval(timer);
+  }, []);
+
+  React.useEffect(() => {
+    if (isFocusedRef.current) return;
+    const activeDate = activeInvoice?.createdAt || activeInvoice?.originalCreatedAt || currentTime;
+    setDateTimeStr(formatDateTimeDMYHM(activeDate));
+  }, [activeInvoiceId, activeInvoice?.createdAt, activeInvoice?.originalCreatedAt, currentTime]);
+
+  const handleDateTimeStrChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setDateTimeStr(val);
+
+    const parsedDate = parseDateTimeDMYHM(val);
+    if (parsedDate) {
+      updateInvoiceCreatedAt(parsedDate.toISOString());
+    }
+  };
+
+  const handleBlur = () => {
+    isFocusedRef.current = false;
+    const parsedDate = parseDateTimeDMYHM(dateTimeStr);
+    if (parsedDate) {
+      updateInvoiceCreatedAt(parsedDate.toISOString());
+    } else {
+      const activeDate = activeInvoice?.createdAt || activeInvoice?.originalCreatedAt || currentTime;
+      setDateTimeStr(formatDateTimeDMYHM(activeDate));
+    }
+  };
 
   React.useEffect(() => {
     if (selectedCustomer && selectedCustomerId !== "c1") {
@@ -164,7 +249,16 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
       `}</style>
 
       {/* Invoice Tabs */}
-      <div className={`no-scrollbar ${styles.tabsScroll}`}>
+      <div
+        ref={tabsScrollRef}
+        className={`${styles.thinScrollbar} ${styles.tabsScroll}`}
+        onWheel={(e) => {
+          const container = e.currentTarget;
+          if (e.deltaY !== 0) {
+            container.scrollLeft += e.deltaY;
+          }
+        }}
+      >
         {invoices.map((inv) => {
           const isActive = inv.id === activeInvoiceId;
           return (
@@ -191,15 +285,42 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
           className={`btn btn-secondary ${styles.addTabBtn}`}
           onClick={addNewInvoice}
         >
-          <Plus size={12} /> HĐ mới
+          <Plus size={12} />
         </button>
       </div>
 
       {/* Customer Selection */}
       <div className={styles.customerSection}>
-        <h3 className={styles.customerHeader}>
-          <Users size={18} className={styles.customerIcon} /> KHÁCH HÀNG
-        </h3>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+          <h3 className={styles.customerHeader} style={{ margin: 0 }}>
+            <Users size={18} className={styles.customerIcon} /> KHÁCH HÀNG
+          </h3>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: 500, minWidth: "60px" }}>Thời gian:</span>
+            <input
+              type="text"
+              value={dateTimeStr}
+              onChange={handleDateTimeStrChange}
+              onBlur={handleBlur}
+              onFocus={() => { isFocusedRef.current = true; }}
+              placeholder="DD-MM-YYYY HH:MM"
+              disabled={!canEditInvoice}
+              className="form-input"
+              style={{
+                fontSize: "12.5px",
+                padding: "4px 8px",
+                height: "28px",
+                width: "130px",
+                border: "1px solid var(--border-color)",
+                borderRadius: "var(--radius-sm)",
+                opacity: canEditInvoice ? 1 : 0.6,
+                cursor: canEditInvoice ? "text" : "not-allowed",
+                background: canEditInvoice ? "white" : "#f1f5f9",
+                textAlign: "center"
+              }}
+            />
+          </div>
+        </div>
 
         {showSuggestions && (
           <div
@@ -313,7 +434,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                   const hasMultiplePrices = cItem.itemType === "SERVICE" && availablePrices.length > 1;
 
                   return (
-                    <tr
+                    <ExcelRow
                       key={cItem.id}
                       onContextMenu={(e) => {
                         e.preventDefault();
@@ -417,7 +538,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                           </button>
                         </div>
                       </td>
-                    </tr>
+                    </ExcelRow>
                   );
                 })}
               </tbody>
@@ -507,7 +628,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
             </>
           ) : (
             <>
-              <Printer size={16} /> IN HOÁ ĐƠN & THANH TOÁN
+              <Printer size={16} /> {isEditing ? "CẬP NHẬT HOÁ ĐƠN" : "IN HOÁ ĐƠN & THANH TOÁN"}
             </>
           )}
         </button>

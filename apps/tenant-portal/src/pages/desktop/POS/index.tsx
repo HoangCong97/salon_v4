@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { POSLeftPanel } from "./POSLeftPanel";
 import { POSRightPanel } from "./POSRightPanel";
@@ -131,10 +132,12 @@ const getInitialOrder = (key: string): string[] => {
 };
 
 export default function POS() {
-  const { currentTenantId, currentBranchId, branches, user } = useAuthStore();
+  const { currentTenantId, currentBranchId, branches, user, hasPermission } = useAuthStore();
   const confirm = useConfirm();
   const toast = useToast();
   const queryClient = useQueryClient();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Data states
   const [staff, setStaff] = useState<StaffMember[]>([]);
@@ -254,7 +257,6 @@ export default function POS() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [flashStaff, setFlashStaff] = useState(false);
 
-  // Multi-invoice Tab State
   const [invoices, setInvoices] = useState<Array<{
     id: string;
     name: string;
@@ -272,6 +274,9 @@ export default function POS() {
     voucherCode: string;
     discountPercent: number;
     paymentMethod: string;
+    isEditing?: boolean;
+    editingInvoiceId?: string;
+    originalCreatedAt?: string;
   }>>(getInitialInvoices);
   const [activeInvoiceId, setActiveInvoiceId] = useState<string>(getInitialActiveInvoiceId);
 
@@ -399,6 +404,79 @@ export default function POS() {
   useEffect(() => {
     localStorage.setItem("pos_order_packages", JSON.stringify(packagesOrder));
   }, [packagesOrder]);
+
+  const loadedEditInvoiceIdRef = React.useRef<string | null>(null);
+
+  // Load editing invoice from navigate state if exists
+  useEffect(() => {
+    if (!location.state?.editInvoice) {
+      loadedEditInvoiceIdRef.current = null;
+      return;
+    }
+
+    const editInv = location.state.editInvoice;
+    if (loadedEditInvoiceIdRef.current === editInv.id) {
+      return;
+    }
+
+    // Mark as loaded immediately to prevent duplicate execution
+    loadedEditInvoiceIdRef.current = editInv.id;
+    const exists = invoices.some(inv => inv.editingInvoiceId === editInv.id);
+
+    if (!exists) {
+      const mappedCart = (editInv.items || []).map((item: any) => {
+        const quantity = item.quantity || 1;
+        const totalDiscount = item.discountAmount || 0;
+        const unitDiscount = Math.round(totalDiscount / quantity);
+        const unitPrice = item.price;
+
+        return {
+          id: `${item.itemId}-${item.staffId || item.stylist?.id || ""}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          itemId: item.itemId,
+          name: item.name || "Dịch vụ",
+          price: unitPrice,
+          quantity: quantity,
+          itemType: item.itemType,
+          staffId: item.staffId || item.stylist?.id || "",
+          discount: unitDiscount
+        };
+      });
+
+      const newId = `edit-${editInv.id}`;
+      const newInvoiceTab = {
+        id: newId,
+        name: `Sửa HĐ #${editInv.id.substring(0, 6)}`,
+        cart: mappedCart,
+        selectedCustomerId: editInv.customerId || "c1",
+        voucherCode: "",
+        discountPercent: 0,
+        paymentMethod: editInv.paymentMethod || "CASH",
+        isEditing: true,
+        editingInvoiceId: editInv.id,
+        originalCreatedAt: editInv.createdAt
+      };
+
+      setInvoices(prev => {
+        const alreadyInPrev = prev.some(inv => inv.editingInvoiceId === editInv.id);
+        if (alreadyInPrev) return prev;
+
+        if (prev.length === 1 && prev[0].id === "inv-1" && prev[0].cart.length === 0) {
+          return [newInvoiceTab];
+        }
+        return [...prev, newInvoiceTab];
+      });
+      setActiveInvoiceId(newId);
+      toast.info(`Đã tải hóa đơn #${editInv.id.substring(0, 6)} để chỉnh sửa.`);
+    } else {
+      const tab = invoices.find(inv => inv.editingInvoiceId === editInv.id);
+      if (tab) {
+        setActiveInvoiceId(tab.id);
+      }
+    }
+
+    // Clear routing state to avoid re-loading on reload
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.state, navigate, invoices, toast]);
 
   // Keyboard shortcut: Press 1-9 to select active staff members by order
   useEffect(() => {
@@ -555,6 +633,15 @@ export default function POS() {
     }));
   };
 
+  const canEditInvoice = hasPermission ? hasPermission("invoice.edit") : false;
+
+  const updateInvoiceCreatedAt = (dateStr: string) => {
+    setInvoices((prev) => prev.map((inv) => {
+      if (inv.id !== activeInvoiceId) return inv;
+      return { ...inv, createdAt: dateStr };
+    }));
+  };
+
   const applyVoucher = () => {
     const code = voucherCode.trim().toUpperCase();
     let percent = 0;
@@ -583,33 +670,97 @@ export default function POS() {
   const handleCheckout = async () => {
     if (cart.length === 0) return;
     setCheckingOut(true);
+    const isEditing = activeInvoice.isEditing;
+    const invoiceId = activeInvoice.editingInvoiceId;
     try {
-      const payload = {
-        customerId: selectedCustomerId === "c1" ? undefined : selectedCustomerId,
-        cashierId: user?.id,
-        items: cart.map((c) => ({
+      // Calculate subtotal of cart (price after item-level discount)
+      const cartSubtotal = cart.reduce((sum, item) => sum + (item.price - (item.discount || 0)) * item.quantity, 0);
+      
+      // Voucher discount
+      const overallVoucherDiscount = Math.round(cartSubtotal * (discountPercent / 100));
+      
+      // Final amount to pay
+      const finalPayAmount = cartSubtotal - overallVoucherDiscount;
+      
+      // Total original price before any discount
+      const originalTotalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      
+      // Total invoice discount = originalTotalPrice - finalPayAmount
+      const totalInvoiceDiscount = originalTotalPrice - finalPayAmount;
+      
+      // Map items with distributed discounts
+      const payloadItems = cart.map((c) => {
+        const itemDiscount = (c.discount || 0) * c.quantity;
+        const itemRemaining = (c.price - (c.discount || 0)) * c.quantity;
+        // distribute voucher discount proportionally
+        const voucherDiscount = cartSubtotal > 0 ? Math.round(itemRemaining * (overallVoucherDiscount / cartSubtotal)) : 0;
+        const totalItemDiscount = itemDiscount + voucherDiscount;
+        
+        return {
           itemId: c.itemId,
           itemType: c.itemType,
           staffId: c.staffId,
-          price: c.price - (c.discount || 0),
-          quantity: c.quantity
-        })),
-        discountAmount,
-        paymentMethod,
-        paymentStatus: "PAID"
-      };
+          price: c.price,
+          quantity: c.quantity,
+          discountAmount: totalItemDiscount
+        };
+      });
 
-      const invoiceData = await api.post<any>(`/tenants/${currentTenantId}/branches/${currentBranchId}/invoices`, payload);
+      let invoiceData;
+      if (isEditing && invoiceId) {
+        const payload = {
+          createdAt: activeInvoice.originalCreatedAt,
+          items: payloadItems
+        };
+        invoiceData = await api.put<any>(`/tenants/${currentTenantId}/branches/${currentBranchId}/invoices/${invoiceId}`, payload);
+      } else {
+        const payload = {
+          customerId: selectedCustomerId === "c1" ? undefined : selectedCustomerId,
+          cashierId: user?.id,
+          items: payloadItems,
+          discountAmount: totalInvoiceDiscount,
+          paymentMethod,
+          paymentStatus: "PAID"
+        };
+        invoiceData = await api.post<any>(`/tenants/${currentTenantId}/branches/${currentBranchId}/invoices`, payload);
+      }
+
       setReceiptData(invoiceData);
       setShowReceipt(true);
       resetActiveInvoice();
-      toast.success("Thanh toán và tạo hóa đơn thành công!");
+      
+      if (isEditing) {
+        toast.success("Cập nhật hóa đơn thành công!");
+        // Close editing tab
+        setInvoices(prev => {
+          const next = prev.filter(inv => inv.id !== activeInvoiceId);
+          if (next.length === 0) {
+            return [{
+              id: "inv-1",
+              name: "Hóa đơn 1",
+              cart: [],
+              selectedCustomerId: "c1",
+              voucherCode: "",
+              discountPercent: 0,
+              paymentMethod: "CASH"
+            }];
+          }
+          return next;
+        });
+        // Switch active tab
+        setInvoices(prev => {
+          setActiveInvoiceId(prev[0].id);
+          return prev;
+        });
+      } else {
+        toast.success("Thanh toán và tạo hóa đơn thành công!");
+      }
       queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all(currentTenantId!, currentBranchId!) });
     } catch (e: any) {
       // Offline fallback
       const mockInvoice = {
-        id: Math.random().toString(36).substring(7).toUpperCase(),
-        createdAt: new Date().toISOString(),
+        id: isEditing && invoiceId ? invoiceId : Math.random().toString(36).substring(7).toUpperCase(),
+        createdAt: isEditing && activeInvoice.originalCreatedAt ? activeInvoice.originalCreatedAt : new Date().toISOString(),
         totalPrice: subtotal,
         discountAmount,
         finalAmount,
@@ -628,7 +779,33 @@ export default function POS() {
       setReceiptData(mockInvoice);
       setShowReceipt(true);
       resetActiveInvoice();
-      toast.info("Đã tạo hóa đơn ngoại tuyến (offline) và lưu tạm thời.");
+      
+      if (isEditing) {
+        toast.info("Đã cập nhật hóa đơn ngoại tuyến (offline) và lưu tạm thời.");
+        // Close editing tab
+        setInvoices(prev => {
+          const next = prev.filter(inv => inv.id !== activeInvoiceId);
+          if (next.length === 0) {
+            return [{
+              id: "inv-1",
+              name: "Hóa đơn 1",
+              cart: [],
+              selectedCustomerId: "c1",
+              voucherCode: "",
+              discountPercent: 0,
+              paymentMethod: "CASH"
+            }];
+          }
+          return next;
+        });
+        // Switch active tab
+        setInvoices(prev => {
+          setActiveInvoiceId(prev[0].id);
+          return prev;
+        });
+      } else {
+        toast.info("Đã tạo hóa đơn ngoại tuyến (offline) và lưu tạm thời.");
+      }
     } finally {
       setCheckingOut(false);
     }
@@ -740,6 +917,8 @@ export default function POS() {
           adjustQuantity={adjustQuantity}
           customers={customers}
           onCreateCustomer={handleCreateCustomer}
+          canEditInvoice={canEditInvoice}
+          updateInvoiceCreatedAt={updateInvoiceCreatedAt}
         />
 
       </div>
