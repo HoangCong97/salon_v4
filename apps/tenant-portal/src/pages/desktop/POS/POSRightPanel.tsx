@@ -65,6 +65,7 @@ interface POSRightPanelProps {
   voucherCode: string;
   setVoucherCode: (code: string) => void;
   applyVoucher: () => void;
+  clearVoucher: () => void;
   paymentMethod: string;
   setPaymentMethod: (method: string) => void;
   subtotal: number;
@@ -72,7 +73,7 @@ interface POSRightPanelProps {
   discountAmount: number;
   finalAmount: number;
   checkingOut: boolean;
-  handleCheckout: () => Promise<void>;
+  handleCheckout: (skipReceipt?: boolean) => Promise<void>;
   activeStaff: StaffMember[];
   activeServices: ServiceItem[];
   updateCartItemStylist: (cartId: string, newStylistId: string) => void;
@@ -130,6 +131,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
   voucherCode,
   setVoucherCode,
   applyVoucher,
+  clearVoucher,
   paymentMethod,
   setPaymentMethod,
   subtotal,
@@ -152,6 +154,12 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
   const activeInvoice = invoices.find(inv => inv.id === activeInvoiceId);
   const isEditing = activeInvoice?.isEditing;
+
+  // VietQR configuration
+  const bankId = import.meta.env.VITE_BANK_ID || "MB";
+  const bankAccount = import.meta.env.VITE_BANK_ACCOUNT || "0973666999";
+  const bankAccountName = import.meta.env.VITE_BANK_ACCOUNT_NAME || "HOANG CONG";
+  const qrUrl = `https://img.vietqr.io/image/${bankId}-${bankAccount}-compact2.png?amount=${finalAmount}&addInfo=Thanh%20toan%20POS%20${activeInvoiceId.substring(0, 8)}&accountName=${encodeURIComponent(bankAccountName)}`;
 
   const [customerQuery, setCustomerQuery] = React.useState("");
   const [showSuggestions, setShowSuggestions] = React.useState(false);
@@ -267,14 +275,12 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
               onClick={() => setActiveInvoiceId(inv.id)}
               className={`${styles.tabItem} ${isActive ? styles.tabActive : styles.tabInactive}`}
             >
-              <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                {inv.name}
-                {inv.cart.length > 0 && (
-                  <span className={isActive ? styles.tabBadgeActive : styles.tabBadgeInactive}>
-                    {inv.cart.length}
-                  </span>
-                )}
-              </span>
+              <span className={styles.tabText}>{inv.name}</span>
+              {inv.cart.length > 0 && (
+                <span className={isActive ? styles.tabBadgeActive : styles.tabBadgeInactive}>
+                  {inv.cart.length}
+                </span>
+              )}
               {invoices.length > 1 && (
                 <button
                   type="button"
@@ -568,6 +574,16 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
               value={voucherCode}
               onChange={(e) => setVoucherCode(e.target.value)}
             />
+            {voucherCode && (
+              <button
+                type="button"
+                className={styles.voucherClearBtn}
+                onClick={clearVoucher}
+                title="Xóa mã giảm giá"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
           <button
             type="button"
@@ -624,21 +640,36 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
         </div>
 
         {/* Print & checkout button */}
-        <button
-          className={`btn btn-primary ${styles.checkoutBtn}`}
-          disabled={cart.length === 0 || checkingOut}
-          onClick={handleCheckout}
-        >
-          {checkingOut ? (
-            <>
-              <Loader2 className="animate-spin" size={16} /> Đang xử lý...
-            </>
-          ) : (
-            <>
-              <Printer size={16} /> {isEditing ? "CẬP NHẬT HOÁ ĐƠN" : "IN HOÁ ĐƠN & THANH TOÁN"}
-            </>
-          )}
-        </button>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", width: "100%" }}>
+          <button
+            type="button"
+            className={`btn ${styles.checkoutBtnSuccess}`}
+            disabled={cart.length === 0 || checkingOut}
+            onClick={() => handleCheckout(true)}
+            style={{ display: "flex", gap: "6px", alignItems: "center", justifyContent: "center" }}
+          >
+            {checkingOut ? (
+              <Loader2 className="animate-spin" size={16} />
+            ) : (
+              isEditing ? "CẬP NHẬT" : "THANH TOÁN"
+            )}
+          </button>
+          <button
+            type="button"
+            className={`btn btn-primary ${styles.checkoutBtn}`}
+            disabled={cart.length === 0 || checkingOut}
+            onClick={() => handleCheckout(false)}
+            style={{ display: "flex", gap: "6px", alignItems: "center", justifyContent: "center" }}
+          >
+            {checkingOut ? (
+              <Loader2 className="animate-spin" size={16} />
+            ) : (
+              <>
+                <Printer size={16} /> {isEditing ? "CẬP NHẬT & IN" : "IN & THANH TOÁN"}
+              </>
+            )}
+          </button>
+        </div>
 
       </div>
 
@@ -664,7 +695,11 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
           <h4 className={styles.qrHeader}>MÃ QR THANH TOÁN</h4>
 
           <div className={styles.qrCodeBorder}>
-            <QrCode size={250} style={{ color: "#7e22ce" }} />
+            <img 
+              src={qrUrl} 
+              alt="VietQR Payment Code" 
+              style={{ width: "250px", height: "250px", objectFit: "contain", display: "block" }} 
+            />
           </div>
 
           <div className={styles.qrFooterDesc}>

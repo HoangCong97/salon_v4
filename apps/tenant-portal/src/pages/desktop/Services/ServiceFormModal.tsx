@@ -81,7 +81,11 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
         if (service) {
           setName(service.name);
           setCategoryId(service.categoryId || "");
-          setCommissionInput(service.category ? Number(service.category.defaultCommission) : 0);
+          setCommissionInput(
+            service.commission !== null && service.commission !== undefined
+              ? Number(service.commission)
+              : (service.category ? Number(service.category.defaultCommission) : 0)
+          );
           setPriceInput(String(Number(service.price)));
 
           const calculatedDeduction = Number(service.price) - Number(service.discountPrice ?? service.price);
@@ -131,22 +135,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
     e.preventDefault();
     if (!name.trim()) return;
 
-    // Check if commission was modified from the category default, update category first if so
-    if (categoryId) {
-      const selectedCat = categories.find((c) => c.id === categoryId);
-      if (selectedCat && Number(selectedCat.defaultCommission) !== commissionInput) {
-        try {
-          await api.put(`/tenants/${currentTenantId}/service-categories/${categoryId}`, {
-            name: selectedCat.name,
-            color: selectedCat.color,
-            defaultCommission: commissionInput,
-          });
-          await fetchCategories(true);
-        } catch (err) {
-          console.error("Failed to update default commission", err);
-        }
-      }
-    }
+    // Remove automatic category commission update so it doesn't edit the category default commission
 
     const selectedCatObj = categories.find((c) => c.id === categoryId);
     const existingService = services.find(
@@ -191,6 +180,7 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
       imageUrl: imageUrl || null,
       branchId: currentBranchId || null,
       additionalPrices: additionalPrices.map(Number),
+      commission: commissionInput,
     };
 
     try {

@@ -325,6 +325,17 @@ export function useInventories() {
     }
   };
 
+  const handleToggleActive = async (itemId: string, currentState: boolean) => {
+    try {
+      await api.patch(`/tenants/${currentTenantId}/inventories/${itemId}/toggle-active`);
+      toast.success(currentState ? "Đã ẩn sản phẩm khỏi POS" : "Đã hiện sản phẩm trên POS");
+      await fetchInventory();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(msg);
+    }
+  };
+
   // Filter Logic
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
@@ -376,6 +387,7 @@ export function useInventories() {
     handleOpenAdjustModal,
     handleSave,
     handleDelete,
+    handleToggleActive,
     fetchInventory,
   };
 }

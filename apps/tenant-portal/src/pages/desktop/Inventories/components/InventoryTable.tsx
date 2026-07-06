@@ -1,5 +1,5 @@
 import React from "react";
-import { AlertTriangle, Edit2, Trash2 } from "lucide-react";
+import { AlertTriangle, Edit2, Trash2, Eye, EyeOff } from "lucide-react";
 import { ExcelInput } from "../../../../components/desktop/TableComponents";
 import { Tooltip } from "../../../../components/desktop/ui/Tooltip";
 import { InventoryItem } from "../types";
@@ -7,7 +7,7 @@ import styles from "../Inventories.module.css";
 
 interface InventoryTableProps {
   filteredItems: InventoryItem[];
-  getInlineValue: (item: InventoryItem, field: keyof InventoryItem) => string | number | undefined | null;
+  getInlineValue: (item: InventoryItem, field: keyof InventoryItem) => string | number | boolean | undefined | null;
   handleInlineChange: (itemId: string, field: keyof InventoryItem, value: string | number | undefined | null) => void;
   handlePriceChange: (itemId: string, field: "costPrice" | "sellPrice" | "quantity", valStr: string) => void;
   handleAutoSave: (itemId: string, updatedFields: Partial<InventoryItem>) => Promise<void>;
@@ -15,6 +15,7 @@ interface InventoryTableProps {
   onOpenAdjustModal: (item: InventoryItem) => void;
   onOpenEditModal: (item: InventoryItem) => void;
   onDelete: (id: string) => void;
+  onToggleActive: (itemId: string, currentState: boolean) => Promise<void>;
 }
 
 export const InventoryTable: React.FC<InventoryTableProps> = ({
@@ -27,6 +28,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
   onOpenAdjustModal,
   onOpenEditModal,
   onDelete,
+  onToggleActive,
 }) => {
   return (
     <div className={`data-table-container ${styles.tableContainer}`}>
@@ -47,7 +49,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
             const isOutOfStock = item.quantity === 0;
 
             return (
-              <tr key={item.id}>
+              <tr key={item.id} className={item.isActive === false ? styles.rowInactive : ''}>
                 <td className={styles.tdDefault}>
                   <ExcelInput
                     value={getInlineValue(item, "name") as string}
@@ -100,6 +102,14 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 </td>
                 <td className={styles.tdAction}>
                   <div className={styles.btnWrapper}>
+                    <Tooltip content={item.isActive === false ? "Hiện trên POS" : "Ẩn khỏi POS"}>
+                      <button
+                        className={`btn ${item.isActive === false ? 'btn-warning' : 'btn-secondary'} ${styles.actionBtn}`}
+                        onClick={() => onToggleActive(item.id, item.isActive !== false)}
+                      >
+                        {item.isActive === false ? <EyeOff size={12} /> : <Eye size={12} />}
+                      </button>
+                    </Tooltip>
                     <Tooltip content="Nhập / Xuất kho">
                       <button
                         className={`btn btn-secondary ${styles.btnAdjust}`}
@@ -118,7 +128,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     </Tooltip>
                     <Tooltip content="Xóa sản phẩm">
                       <button
-                        className={`btn btn-danger ${styles.actionBtn}`}
+                        className={`btn btn-danger-light ${styles.actionBtn}`}
                         onClick={() => onDelete(item.id)}
                       >
                         <Trash2 size={12} />

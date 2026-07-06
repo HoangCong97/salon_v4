@@ -17,6 +17,7 @@ import { CustomerController } from "./customer.controller";
 import { BookingController } from "./booking.controller";
 import { PayrollController } from "./payroll.controller";
 import { CustomerPortalController } from "./customer-portal.controller";
+import { DashboardController } from "./dashboard.controller";
 import { NotificationModule } from "./notification.module";
 import { Request, Response, NextFunction } from "express";
 
@@ -38,7 +39,8 @@ import { Request, Response, NextFunction } from "express";
     CustomerController,
     BookingController,
     PayrollController,
-    CustomerPortalController
+    CustomerPortalController,
+    DashboardController
   ],
   providers: [AppService]
 })

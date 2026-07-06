@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, Headers, HttpStatus, HttpException } from "@nestjs/common";
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, Headers, HttpStatus, HttpException } from "@nestjs/common";
 import { prisma } from "@salon/database";
 import { NotificationGateway } from "./notification.gateway";
 
@@ -110,6 +110,7 @@ export class InventoryController {
       discountPrice?: number;
       imageUrl?: string;
       branchId?: string;
+      isActive?: boolean;
     }
   ) {
     try {
@@ -140,6 +141,7 @@ export class InventoryController {
           quantity: body.quantity ?? 0,
           discountAmount: discountAmount,
           imageUrl: body.imageUrl ?? null,
+          isActive: body.isActive !== undefined ? body.isActive : undefined,
           updatedAt: new Date()
         }
       });
@@ -159,7 +161,46 @@ export class InventoryController {
     }
   }
 
-  // 4. SOFT DELETE INVENTORY ITEM
+  // 4. TOGGLE INVENTORY ACTIVE STATUS (HIDE/SHOW FROM POS)
+  @Patch(":id/toggle-active")
+  async toggleInventoryActive(
+    @Param("tenantId") tenantId: string,
+    @Param("id") id: string,
+    @Headers("x-user-id") senderId: string
+  ) {
+    try {
+      const existing = await prisma.inventory.findFirst({
+        where: { id, tenantId, deletedAt: null }
+      });
+
+      if (!existing) {
+        throw new HttpException("Product not found", HttpStatus.NOT_FOUND);
+      }
+
+      const updated = await prisma.inventory.update({
+        where: { id },
+        data: {
+          isActive: !existing.isActive,
+          updatedAt: new Date()
+        }
+      });
+
+      this.notificationGateway.broadcastToTenant(tenantId, "inventories.updated", { branchId: updated.branchId, senderId });
+
+      return {
+        ...updated,
+        discountPrice: Number(updated.sellPrice) - Number(updated.discountAmount || 0)
+      };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      throw new HttpException(
+        `Failed to toggle product status: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  // 5. SOFT DELETE INVENTORY ITEM
   @Delete(":id")
   async deleteInventory(
     @Param("tenantId") tenantId: string,

@@ -26,13 +26,15 @@
 .tabItem {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
   height: 32px;
   box-sizing: border-box;
   border-radius: var(--radius-full);
   font-weight: 600;
   font-size: 12.5px;
+  line-height: 1;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
@@ -59,14 +61,19 @@
   border-color: #cbd5e1;
 }
 
+.tabText {
+  position: relative;
+  top: 0.5px;
+}
+
 .tabBadgeActive {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 700;
   background: var(--color-primary);
   color: white;
@@ -76,10 +83,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 700;
   background: #cbd5e1;
   color: #475569;
@@ -89,10 +96,12 @@
   background: none;
   border: none;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
   border-radius: 50%;
   transition: all 0.15s;
 }
@@ -292,6 +301,15 @@
   cursor: context-menu;
 }
 
+.td,
+.tdName,
+.tdStaff,
+.tdPrice,
+.tdDiscount,
+.tdTotal {
+  border-bottom: 1px solid var(--border-color);
+}
+
 .td {
   padding: 8px 10px;
   vertical-align: middle;
@@ -407,8 +425,31 @@
 
 .voucherInput {
   padding-left: 30px !important;
+  padding-right: 30px !important;
   height: 34px !important;
   font-size: 12.5px !important;
+}
+
+.voucherClearBtn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.15s;
+}
+
+.voucherClearBtn:hover {
+  background: #f1f5f9;
+  color: var(--text-primary);
 }
 
 .voucherApplyBtn {
@@ -511,6 +552,27 @@
   padding: 12px;
   font-size: 14px;
   font-weight: 700;
+}
+
+.checkoutBtnSuccess {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  background-color: var(--color-success) !important;
+  color: white !important;
+  border: 1px solid transparent !important;
+  transition: background-color 0.15s ease;
+}
+
+.checkoutBtnSuccess:hover:not(:disabled) {
+  background-color: hsl(142, 71%, 38%) !important;
+}
+
+.checkoutBtnSuccess:disabled {
+  background-color: #e2e8f0 !important;
+  color: #94a3b8 !important;
+  cursor: not-allowed;
 }
 
 .qrCardPopover {

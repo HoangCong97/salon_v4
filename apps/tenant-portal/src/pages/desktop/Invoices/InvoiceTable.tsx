@@ -246,7 +246,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                           <Tooltip content="Xóa hóa đơn">
                             <button
                               type="button"
-                              className={styles.actionBtnDanger}
+                              className={`btn btn-danger-light ${styles.actionBtn}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onDeleteInvoice(inv.id);

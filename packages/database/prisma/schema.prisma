@@ -312,6 +312,8 @@ model Service {
   additionalPrices Decimal[] @default([]) @map("additional_prices") @db.Decimal(15, 0)
   duration        Int?      // In minutes
   imageUrl        String?   @map("image_url")
+  isActive        Boolean   @default(true) @map("is_active")
+  commission      Decimal?  @db.Decimal(5, 2)
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
@@ -336,6 +338,7 @@ model Inventory {
   quantity      Int       @default(0)
   discountAmount Decimal?  @default(0) @map("discount_amount") @db.Decimal(15, 0)
   imageUrl      String?   @map("image_url")
+  isActive      Boolean   @default(true) @map("is_active")
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt     DateTime? @map("deleted_at") @db.Timestamptz

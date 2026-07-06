@@ -7,6 +7,7 @@ export interface InventoryItem {
   discountPrice?: number;
   imageUrl?: string;
   branchId?: string;
+  isActive?: boolean;
 }
 
 export type AdjustType = "import" | "export";

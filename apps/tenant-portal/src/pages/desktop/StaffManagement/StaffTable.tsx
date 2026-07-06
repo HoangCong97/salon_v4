@@ -417,7 +417,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                             </Tooltip>
                             <Tooltip content={isSuspended ? "Tài khoản tạm ngừng không thể xóa" : (isAdminRow ? "Không thể xóa tài khoản Admin" : "Xóa nhân viên")}>
                               <button
-                                className={`btn btn-danger ${styles.actionBtn}`}
+                                className={`btn btn-danger-light ${styles.actionBtn}`}
                                 style={{
                                   opacity: (isAdminRow || isSuspended) ? 0.5 : 1,
                                   cursor: (isAdminRow || isSuspended) ? "not-allowed" : "pointer"

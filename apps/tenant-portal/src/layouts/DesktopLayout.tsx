@@ -31,7 +31,10 @@ export default function DesktopLayout() {
         <Topbar />
 
         {/* Scrollable Content Container */}
-        <div style={{ flexGrow: 1, overflowY: "auto", padding: "24px", background: "var(--bg-app)" }}>
+        <div 
+          className={collapsed ? "sidebar-collapsed" : "sidebar-expanded"}
+          style={{ flexGrow: 1, overflowY: "auto", padding: "24px", background: "var(--bg-app)" }}
+        >
           <Outlet />
         </div>
       </div>

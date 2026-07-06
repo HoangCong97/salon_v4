@@ -19,8 +19,9 @@ export interface Service {
   duration?: number;
   imageUrl?: string;
   branchId?: string;
-  commission?: number;
+  commission?: number | null;
   additionalPrices?: number[];
+  isActive?: boolean;
 }
 
 export const COLOR_PRESETS = [

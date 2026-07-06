@@ -113,6 +113,12 @@ export const queryKeys = {
       ["appointments", tenantId, branchId, "list"] as const,
   },
 
+  /** Thống kê tổng quan (Dashboard Stats) */
+  dashboard: {
+    stats: (tenantId: string, branchId: string) =>
+      ["dashboard", tenantId, branchId, "stats"] as const,
+  },
+
   /** Gói combo (Service Packages) */
   servicePackages: {
     list: (tenantId: string, branchId?: string | null) =>

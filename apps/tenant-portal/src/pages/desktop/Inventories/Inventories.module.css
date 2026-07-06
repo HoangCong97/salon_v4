@@ -358,3 +358,12 @@
   flex-direction: column;
   gap: 16px;
 }
+
+.rowInactive {
+  opacity: 0.45;
+  transition: opacity 0.2s ease;
+}
+
+.rowInactive:hover {
+  opacity: 0.7;
+}

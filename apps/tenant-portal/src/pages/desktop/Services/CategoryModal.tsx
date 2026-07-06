@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { X, Loader2, Layers } from "lucide-react";
 
 import { CustomNumberInput } from "./CustomNumberInput";
+import { Button } from "../../../components/desktop/ui/Button";
 
 import { useConfirm } from "../../../components/desktop/ConfirmDialog";
 import { useToast } from "../../../components/desktop/ToastProvider";
@@ -37,6 +38,8 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
   const [categoryName, setCategoryName] = useState("");
   const [categoryColor, setCategoryColor] = useState("blue");
   const [categoryCommission, setCategoryCommission] = useState<number>(0);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isApplyingBulk, setIsApplyingBulk] = useState(false);
 
   if (!isOpen) return null;
 
@@ -49,6 +52,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
       defaultCommission: categoryCommission,
     };
 
+    setIsSaving(true);
     try {
       let savedCat;
       const isNew = editingCategoryId === "new";
@@ -70,6 +74,8 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
       }
     } catch (err: any) {
       toast.error(err.message || "Lỗi khi lưu phân loại");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -105,11 +111,13 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
   const handleBulkApplyCommission = async () => {
     if (!editingCategoryId || editingCategoryId === "new" || !currentTenantId) return;
 
+    setIsApplyingBulk(true);
     try {
       await api.put(`/tenants/${currentTenantId}/service-categories/${editingCategoryId}`, {
         name: categoryName,
         color: categoryColor,
         defaultCommission: categoryCommission,
+        bulkApplyCommission: true,
       });
 
       await fetchCategories();
@@ -117,6 +125,8 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
       toast.success(`Đã áp dụng hoa hồng mặc định ${categoryCommission}% cho tất cả dịch vụ thuộc phân loại này.`);
     } catch (err: any) {
       toast.error(err.message || "Lỗi khi áp dụng hoa hồng");
+    } finally {
+      setIsApplyingBulk(false);
     }
   };
 
@@ -285,29 +295,21 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                   <div style={{ flex: 1 }}>
                     <CustomNumberInput min={0} max={100} step={1} value={categoryCommission} onChange={setCategoryCommission} />
                   </div>
-                  <button
+                  <Button
                     type="button"
-                    className="btn"
+                    variant="primary"
+                    size="sm"
                     disabled={!editingCategoryId || editingCategoryId === "new"}
+                    loading={isApplyingBulk}
                     onClick={handleBulkApplyCommission}
                     style={{
-                      padding: "8px 12px",
-                      fontSize: "12px",
                       height: "38px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px",
                       whiteSpace: "nowrap",
-                      backgroundColor: (!editingCategoryId || editingCategoryId === "new") ? "hsl(210, 15%, 85%)" : "var(--color-primary)",
-                      color: (!editingCategoryId || editingCategoryId === "new") ? "var(--text-muted)" : "white",
-                      cursor: (!editingCategoryId || editingCategoryId === "new") ? "not-allowed" : "pointer",
-                      border: "none",
-                      transition: "background-color 0.15s ease",
                     }}
                     title={editingCategoryId && editingCategoryId !== "new" ? "Áp dụng mức hoa hồng này cho tất cả dịch vụ thuộc phân loại này" : "Hãy chọn một phân loại để áp dụng hàng loạt"}
                   >
                     Áp dụng hàng loạt
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -345,33 +347,23 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
               </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "auto", paddingTop: "12px", borderTop: "1px solid hsl(210, 40%, 92%)" }}>
-                <button
+                <Button
                   type="button"
-                  className="btn btn-secondary"
+                  variant="secondary"
                   onClick={handleCancelEdit}
                   disabled={editingCategoryId !== "new" && !isChanged}
-                  style={{
-                    opacity: (editingCategoryId !== "new" && !isChanged) ? 0.5 : 1,
-                    cursor: (editingCategoryId !== "new" && !isChanged) ? "not-allowed" : "pointer",
-                    pointerEvents: (editingCategoryId !== "new" && !isChanged) ? "none" : "auto",
-                  }}
                 >
                   Hủy
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  className="btn btn-primary"
+                  variant="primary"
                   onClick={handleSaveCategory}
                   disabled={!isChanged || !categoryName.trim()}
-                  style={{
-                    backgroundColor: (!isChanged || !categoryName.trim()) ? "hsl(210, 15%, 85%)" : "var(--color-primary)",
-                    color: (!isChanged || !categoryName.trim()) ? "var(--text-muted)" : "white",
-                    cursor: (!isChanged || !categoryName.trim()) ? "not-allowed" : "pointer",
-                    border: "none",
-                  }}
+                  loading={isSaving}
                 >
                   {editingCategoryId === "new" ? "Lưu phân loại" : "Lưu thay đổi"}
-                </button>
+                </Button>
               </div>
             </div>
           )}

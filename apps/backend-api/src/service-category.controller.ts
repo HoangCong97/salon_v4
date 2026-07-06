@@ -77,6 +77,7 @@ export class ServiceCategoryController {
       name: string;
       color: string;
       defaultCommission?: number;
+      bulkApplyCommission?: boolean;
     }
   ) {
     try {
@@ -105,6 +106,13 @@ export class ServiceCategoryController {
           updatedAt: new Date()
         }
       });
+
+      if (body.bulkApplyCommission) {
+        await prisma.service.updateMany({
+          where: { categoryId: id, tenantId, deletedAt: null },
+          data: { commission: null }
+        });
+      }
 
       this.notificationGateway.broadcastToTenant(tenantId, "services.updated", { senderId });
 

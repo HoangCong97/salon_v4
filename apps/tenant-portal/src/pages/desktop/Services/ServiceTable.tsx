@@ -1,5 +1,5 @@
 import React from "react";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2, Eye, EyeOff } from "lucide-react";
 
 import { ExcelInput, ExcelSelect, ExcelChipsInput } from "../../../components/desktop/TableComponents";
 import { Tooltip } from "../../../components/desktop/ui/Tooltip";
@@ -20,6 +20,7 @@ interface ServiceTableProps {
   handleCommissionAutoSave: (serviceId: string, commissionVal: number) => Promise<void>;
   handleOpenEditModal: (service: Service) => void;
   handleDelete: (id: string) => Promise<void>;
+  handleToggleActive: (serviceId: string, currentState: boolean) => Promise<void>;
   getInlineValue: (service: Service, field: keyof Service) => any;
   formatNumber: (val: number | string | undefined | null) => string;
   getColorStyle: (colorName: string) => any;
@@ -35,6 +36,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
   handleCommissionAutoSave,
   handleOpenEditModal,
   handleDelete,
+  handleToggleActive,
   getInlineValue,
   formatNumber,
   getColorStyle,
@@ -142,7 +144,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
               : null;
 
             return (
-              <tr key={service.id}>
+              <tr key={service.id} className={service.isActive === false ? styles.rowInactive : ''}>
                 <td className={styles.td}>
                   <ExcelInput
                     value={getInlineValue(service, "name") as string}
@@ -257,7 +259,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                     <ExcelInput
                       type="number"
                       value={
-                        getInlineValue(service, "commission") !== undefined
+                        getInlineValue(service, "commission") !== undefined && getInlineValue(service, "commission") !== null
                           ? (getInlineValue(service, "commission") as number)
                           : (currentCategoryObj.defaultCommission || 0)
                       }
@@ -285,6 +287,14 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                 {canManage && (
                   <td className={styles.actionTd}>
                     <div className={styles.actionButtons}>
+                      <Tooltip content={service.isActive === false ? "Hiện trên POS" : "Ẩn khỏi POS"}>
+                        <button
+                          className={`btn ${service.isActive === false ? 'btn-warning' : 'btn-secondary'} ${styles.actionBtn}`}
+                          onClick={() => handleToggleActive(service.id, service.isActive !== false)}
+                        >
+                          {service.isActive === false ? <EyeOff size={12} /> : <Eye size={12} />}
+                        </button>
+                      </Tooltip>
                       <Tooltip content="Chỉnh sửa chi tiết">
                         <button
                           className={`btn btn-secondary ${styles.actionBtn}`}
@@ -295,7 +305,7 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                       </Tooltip>
                       <Tooltip content="Xóa dịch vụ">
                         <button
-                          className={`btn btn-danger ${styles.actionBtn}`}
+                          className={`btn btn-danger-light ${styles.actionBtn}`}
                           onClick={() => handleDelete(service.id)}
                         >
                           <Trash2 size={12} />

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, Headers, HttpStatus, HttpException } from "@nestjs/common";
+import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, Headers, HttpStatus, HttpException } from "@nestjs/common";
 import { prisma } from "@salon/database";
 import { NotificationGateway } from "./notification.gateway";
 
@@ -37,7 +37,8 @@ export class ServiceController {
 
       return services.map((s) => ({
         ...s,
-        discountPrice: Number(s.price) - Number(s.discountAmount || 0)
+        discountPrice: Number(s.price) - Number(s.discountAmount || 0),
+        commission: s.commission !== null ? Number(s.commission) : null
       }));
     } catch (error) {
       throw new HttpException(
@@ -115,6 +116,7 @@ export class ServiceController {
       imageUrl?: string;
       branchId?: string;
       additionalPrices?: number[];
+      commission?: number;
     }
   ) {
     try {
@@ -136,7 +138,8 @@ export class ServiceController {
           discountAmount: discountAmount,
           additionalPrices: body.additionalPrices ? body.additionalPrices.map(Number) : [],
           duration: body.duration || null,
-          imageUrl: body.imageUrl || null
+          imageUrl: body.imageUrl || null,
+          commission: body.commission !== undefined && body.commission !== null ? body.commission : null
         },
         include: {
           category: true
@@ -175,6 +178,8 @@ export class ServiceController {
       imageUrl?: string;
       branchId?: string;
       additionalPrices?: number[];
+      isActive?: boolean;
+      commission?: number;
     }
   ) {
     try {
@@ -206,6 +211,8 @@ export class ServiceController {
           additionalPrices: body.additionalPrices ? body.additionalPrices.map(Number) : undefined,
           duration: body.duration || null,
           imageUrl: body.imageUrl ?? null,
+          isActive: body.isActive !== undefined ? body.isActive : undefined,
+          commission: body.commission !== undefined ? (body.commission !== null ? body.commission : null) : undefined,
           updatedAt: new Date()
         },
         include: {
@@ -228,7 +235,49 @@ export class ServiceController {
     }
   }
 
-  // 4. SOFT DELETE SERVICE
+  // 4. TOGGLE SERVICE ACTIVE STATUS (HIDE/SHOW FROM POS)
+  @Patch(":id/toggle-active")
+  async toggleServiceActive(
+    @Param("tenantId") tenantId: string,
+    @Param("id") id: string,
+    @Headers("x-user-id") senderId: string
+  ) {
+    try {
+      const existing = await prisma.service.findFirst({
+        where: { id, tenantId, deletedAt: null }
+      });
+
+      if (!existing) {
+        throw new HttpException("Service not found", HttpStatus.NOT_FOUND);
+      }
+
+      const updated = await prisma.service.update({
+        where: { id },
+        data: {
+          isActive: !existing.isActive,
+          updatedAt: new Date()
+        },
+        include: {
+          category: true
+        }
+      });
+
+      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", { branchId: updated.branchId, senderId });
+
+      return {
+        ...updated,
+        discountPrice: Number(updated.price) - Number(updated.discountAmount || 0)
+      };
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      throw new HttpException(
+        `Failed to toggle service status: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  // 5. SOFT DELETE SERVICE
   @Delete(":id")
   async deleteService(
     @Param("tenantId") tenantId: string,

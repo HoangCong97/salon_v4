@@ -280,6 +280,18 @@ a {
   background-color: hsl(346, 84%, 53%);
 }
 
+.btn-danger-light {
+  background-color: var(--color-danger-light) !important;
+  color: var(--color-danger) !important;
+  border: 1px solid transparent !important;
+  transition: all 0.15s ease !important;
+}
+
+.btn-danger-light:hover {
+  background-color: var(--color-danger) !important;
+  color: white !important;
+}
+
 /* Table styles */
 .data-table-container {
   overflow-x: auto;

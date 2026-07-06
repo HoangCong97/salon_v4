@@ -132,31 +132,7 @@ export default function Services() {
   };
 
   const handleCommissionAutoSave = async (serviceId: string, commissionVal: number) => {
-    const service = services.find((s) => s.id === serviceId);
-    if (!service || !service.categoryId) return;
-    const category = categories.find((c) => c.id === service.categoryId);
-    if (!category) return;
-
-    if (Number(category.defaultCommission) === commissionVal) return;
-
-    try {
-      await api.put(`/tenants/${currentTenantId}/service-categories/${service.categoryId}`, {
-        name: category.name,
-        color: category.color,
-        defaultCommission: commissionVal,
-      });
-
-      setInlineEdits((prev) => {
-        const copy = { ...prev };
-        delete copy[serviceId];
-        return copy;
-      });
-
-      queryClient.invalidateQueries({ queryKey: queryKeys.serviceCategories.all(currentTenantId!) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.services.all(currentTenantId!) });
-    } catch (err: any) {
-      console.error("Commission auto save failed:", err);
-    }
+    await handleAutoSave(serviceId, { commission: commissionVal });
   };
 
   const handleInlineChange = (serviceId: string, field: keyof Service, value: any) => {
@@ -240,6 +216,7 @@ export default function Services() {
       imageUrl: updatedService.imageUrl || null,
       branchId: updatedService.branchId || null,
       additionalPrices: updatedService.additionalPrices ? updatedService.additionalPrices.map(Number) : [],
+      commission: updatedService.commission !== undefined && updatedService.commission !== null ? Number(updatedService.commission) : null,
     };
 
     try {
@@ -298,6 +275,16 @@ export default function Services() {
     try {
       await api.delete(`/tenants/${currentTenantId}/services/${id}`);
       toast.success("Đã xóa dịch vụ thành công!");
+      await fetchServices();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleToggleActive = async (serviceId: string, currentState: boolean) => {
+    try {
+      await api.patch(`/tenants/${currentTenantId}/services/${serviceId}/toggle-active`);
+      toast.success(currentState ? "Đã ẩn dịch vụ khỏi POS" : "Đã hiện dịch vụ trên POS");
       await fetchServices();
     } catch (err: any) {
       toast.error(err.message);
@@ -419,6 +406,7 @@ export default function Services() {
                 handleCommissionAutoSave={handleCommissionAutoSave}
                 handleOpenEditModal={handleOpenEditModal}
                 handleDelete={handleDelete}
+                handleToggleActive={handleToggleActive}
                 getInlineValue={getInlineValue}
                 formatNumber={formatNumber}
                 getColorStyle={getColorStyle}

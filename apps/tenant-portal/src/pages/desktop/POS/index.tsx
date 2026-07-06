@@ -30,6 +30,7 @@ interface ServiceItem {
   discountPrice?: number | null;
   additionalPrices?: number[] | null;
   discountAmount?: number | null;
+  isActive?: boolean;
 }
 
 interface ProductItem {
@@ -38,6 +39,7 @@ interface ProductItem {
   sellPrice: number;
   quantity: number;
   discountAmount?: number | null;
+  isActive?: boolean;
 }
 
 interface PackageItem {
@@ -151,10 +153,10 @@ export default function POS() {
   const [productsOrder, setProductsOrder] = useState<string[]>(() => getInitialOrder("pos_order_products"));
   const [packagesOrder, setPackagesOrder] = useState<string[]>(() => getInitialOrder("pos_order_packages"));
 
-  // State mappings
+  // State mappings — filter out hidden items from POS
   const activeStaff = staff;
-  const activeServices = services;
-  const activeProducts = inventories;
+  const activeServices = services.filter(s => s.isActive !== false);
+  const activeProducts = inventories.filter(p => p.isActive !== false);
   const activePackages = packages;
 
   // Customers dynamic state
@@ -310,7 +312,16 @@ export default function POS() {
 
   const addNewInvoice = () => {
     const newId = `inv-${Date.now()}`;
-    const nextNum = invoices.length + 1;
+    
+    // Find the next available invoice number by scanning existing names
+    const existingNums = invoices
+      .map(inv => {
+        const match = inv.name.match(/Hóa đơn (\d+)/i);
+        return match ? parseInt(match[1], 10) : 0;
+      })
+      .filter(num => num > 0);
+    const nextNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
+
     const newInvoice = {
       id: newId,
       name: `Hóa đơn ${nextNum}`,
@@ -645,14 +656,14 @@ export default function POS() {
   const applyVoucher = () => {
     const code = voucherCode.trim().toUpperCase();
     let percent = 0;
-    if (code === "VOUCHER10%") {
+    if (code === "10") {
       percent = 10;
       toast.success("Áp dụng mã giảm giá 10% thành công!");
-    } else if (code === "VOUCHER20%") {
+    } else if (code === "20") {
       percent = 20;
       toast.success("Áp dụng mã giảm giá 20% thành công!");
     } else {
-      toast.error("Mã giảm giá không hợp lệ (Thử dùng VOUCHER10% hoặc VOUCHER20%)");
+      toast.error("Mã giảm giá không hợp lệ (Thử dùng 10 hoặc 20)");
       return;
     }
 
@@ -662,12 +673,21 @@ export default function POS() {
     }));
   };
 
+  const clearVoucher = () => {
+    setVoucherCode("");
+    setInvoices((prev) => prev.map((inv) => {
+      if (inv.id !== activeInvoiceId) return inv;
+      return { ...inv, discountPercent: 0 };
+    }));
+    toast.info("Đã xóa mã giảm giá!");
+  };
+
   const subtotal = cart.reduce((sum, item) => sum + (item.price - (item.discount || 0)) * item.quantity, 0);
   const discountAmount = Math.round(subtotal * (discountPercent / 100));
   const finalAmount = subtotal - discountAmount;
 
   // Checkout Handler
-  const handleCheckout = async () => {
+  const handleCheckout = async (skipReceipt = false) => {
     if (cart.length === 0) return;
     setCheckingOut(true);
     const isEditing = activeInvoice.isEditing;
@@ -675,19 +695,19 @@ export default function POS() {
     try {
       // Calculate subtotal of cart (price after item-level discount)
       const cartSubtotal = cart.reduce((sum, item) => sum + (item.price - (item.discount || 0)) * item.quantity, 0);
-      
+
       // Voucher discount
       const overallVoucherDiscount = Math.round(cartSubtotal * (discountPercent / 100));
-      
+
       // Final amount to pay
       const finalPayAmount = cartSubtotal - overallVoucherDiscount;
-      
+
       // Total original price before any discount
       const originalTotalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      
+
       // Total invoice discount = originalTotalPrice - finalPayAmount
       const totalInvoiceDiscount = originalTotalPrice - finalPayAmount;
-      
+
       // Map items with distributed discounts
       const payloadItems = cart.map((c) => {
         const itemDiscount = (c.discount || 0) * c.quantity;
@@ -695,7 +715,7 @@ export default function POS() {
         // distribute voucher discount proportionally
         const voucherDiscount = cartSubtotal > 0 ? Math.round(itemRemaining * (overallVoucherDiscount / cartSubtotal)) : 0;
         const totalItemDiscount = itemDiscount + voucherDiscount;
-        
+
         return {
           itemId: c.itemId,
           itemType: c.itemType,
@@ -725,10 +745,30 @@ export default function POS() {
         invoiceData = await api.post<any>(`/tenants/${currentTenantId}/branches/${currentBranchId}/invoices`, payload);
       }
 
-      setReceiptData(invoiceData);
-      setShowReceipt(true);
+      // Map names to items in the server response
+      const enrichedInvoice = {
+        ...invoiceData,
+        items: invoiceData.items?.map((it: any) => {
+          let name = "Sản phẩm / Dịch vụ";
+          if (it.itemType === "SERVICE") {
+            name = services.find(s => s.id === it.itemId)?.name || name;
+          } else if (it.itemType === "PRODUCT") {
+            name = inventories.find(p => p.id === it.itemId)?.name || name;
+          } else if (it.itemType === "PACKAGE") {
+            name = packages.find(pkg => pkg.id === it.itemId)?.name || name;
+          }
+          return {
+            ...it,
+            name
+          };
+        })
+      };
+      setReceiptData(enrichedInvoice);
+      if (!skipReceipt) {
+        setShowReceipt(true);
+      }
       resetActiveInvoice();
-      
+
       if (isEditing) {
         toast.success("Cập nhật hóa đơn thành công!");
         // Close editing tab
@@ -777,9 +817,11 @@ export default function POS() {
         }))
       };
       setReceiptData(mockInvoice);
-      setShowReceipt(true);
+      if (!skipReceipt) {
+        setShowReceipt(true);
+      }
       resetActiveInvoice();
-      
+
       if (isEditing) {
         toast.info("Đã cập nhật hóa đơn ngoại tuyến (offline) và lưu tạm thời.");
         // Close editing tab
@@ -903,6 +945,7 @@ export default function POS() {
           applyVoucher={applyVoucher}
           paymentMethod={paymentMethod}
           setPaymentMethod={setPaymentMethod}
+          clearVoucher={clearVoucher}
           subtotal={subtotal}
           discountPercent={discountPercent}
           discountAmount={discountAmount}

@@ -62,6 +62,7 @@ export default function Inventories() {
     handleOpenAdjustModal,
     handleSave,
     handleDelete,
+    handleToggleActive,
     fetchInventory,
   } = useInventories();
 
@@ -138,6 +139,7 @@ export default function Inventories() {
                 onOpenAdjustModal={handleOpenAdjustModal}
                 onOpenEditModal={handleOpenEditModal}
                 onDelete={handleDelete}
+                onToggleActive={handleToggleActive}
               />
             </div>
           )}

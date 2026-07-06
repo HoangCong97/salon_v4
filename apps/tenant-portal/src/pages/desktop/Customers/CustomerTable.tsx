@@ -130,7 +130,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
                         </Tooltip>
                         <Tooltip content="Xóa khách hàng">
                           <button
-                            className={`btn btn-danger ${styles.actionBtn}`}
+                            className={`btn btn-danger-light ${styles.actionBtn}`}
                             onClick={() => handleDelete(customer.id)}
                           >
                             <Trash2 size={12} />
