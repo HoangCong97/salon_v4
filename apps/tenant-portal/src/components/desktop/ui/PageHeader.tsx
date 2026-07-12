@@ -19,7 +19,9 @@ export const PageHeader: React.FC<React.PropsWithChildren<PageHeaderProps>> = ({
         {icon && <div className={styles.headerIconBg}>{icon}</div>}
         <div className={styles.headerTextWrapper}>
           <h2 className={styles.headerTitle}>{title}</h2>
-          {subtitle && <span className={styles.headerSubtitle}>{subtitle}</span>}
+          {subtitle && (
+            <span className={styles.headerSubtitle}>{subtitle}</span>
+          )}
         </div>
       </div>
       {children && <div className={styles.actionsWrapper}>{children}</div>}

@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Param, Query, Headers, HttpStatus, HttpException } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  Headers,
+  HttpStatus,
+  HttpException,
+} from "@nestjs/common";
 import { prisma } from "@salon/database";
 import { NotificationGateway } from "./notification.gateway";
 
@@ -12,11 +22,14 @@ export class ShiftsController {
     @Param("tenantId") tenantId: string,
     @Param("branchId") branchId: string,
     @Query("startDate") startDate: string,
-    @Query("endDate") endDate: string
+    @Query("endDate") endDate: string,
   ) {
     try {
       if (!startDate || !endDate) {
-        throw new HttpException("startDate và endDate là bắt buộc", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "startDate và endDate là bắt buộc",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const shifts = await prisma.employeeShift.findMany({
@@ -25,25 +38,25 @@ export class ShiftsController {
           branchId,
           workDate: {
             gte: new Date(startDate + "T00:00:00.000Z"),
-            lte: new Date(endDate + "T23:59:59.999Z")
+            lte: new Date(endDate + "T23:59:59.999Z"),
           },
-          deletedAt: null
+          deletedAt: null,
         },
         include: {
           staff: {
             select: {
               id: true,
               name: true,
-              email: true
-            }
-          }
+              email: true,
+            },
+          },
         },
         orderBy: {
-          workDate: "asc"
-        }
+          workDate: "asc",
+        },
       });
 
-      return shifts.map(s => ({
+      return shifts.map((s) => ({
         id: s.id,
         staffId: s.staffId,
         staffName: s.staff.name,
@@ -51,13 +64,13 @@ export class ShiftsController {
         shiftName: s.shiftName || "",
         startTime: s.startTime || "",
         endTime: s.endTime || "",
-        isOff: s.isOff
+        isOff: s.isOff,
       }));
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to fetch shifts: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -66,7 +79,7 @@ export class ShiftsController {
   @Get("branches/:branchId/shifts/staff")
   async getBranchStaffForShifts(
     @Param("tenantId") tenantId: string,
-    @Param("branchId") branchId: string
+    @Param("branchId") branchId: string,
   ) {
     try {
       const staffList = await prisma.user.findMany({
@@ -76,9 +89,9 @@ export class ShiftsController {
           userBranches: {
             some: {
               branchId,
-              deletedAt: null
-            }
-          }
+              deletedAt: null,
+            },
+          },
         },
         select: {
           id: true,
@@ -89,27 +102,27 @@ export class ShiftsController {
           role: {
             select: {
               id: true,
-              name: true
-            }
-          }
+              name: true,
+            },
+          },
         },
         orderBy: {
-          name: "asc"
-        }
+          name: "asc",
+        },
       });
 
-      return staffList.map(user => ({
+      return staffList.map((user) => ({
         id: user.id,
         name: user.name,
         email: user.email,
         phone: user.phone || "",
         avatar: user.avatar || "",
-        role: user.role ? user.role.name : "Employee"
+        role: user.role ? user.role.name : "Employee",
       }));
     } catch (error) {
       throw new HttpException(
         `Failed to fetch staff: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -120,7 +133,8 @@ export class ShiftsController {
     @Param("tenantId") tenantId: string,
     @Param("branchId") branchId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: {
+    @Body()
+    body: {
       shifts: Array<{
         id?: string;
         staffId: string;
@@ -131,12 +145,15 @@ export class ShiftsController {
         isOff: boolean;
         clear?: boolean; // If true, deletes/clears this shift
       }>;
-    }
+    },
   ) {
     try {
       const { shifts } = body;
       if (!Array.isArray(shifts)) {
-        throw new HttpException("shifts must be an array", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "shifts must be an array",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       if (shifts.length === 0) {
@@ -162,15 +179,15 @@ export class ShiftsController {
               staffId: { in: staffIds },
               workDate: {
                 gte: minDate,
-                lte: maxDate
-              }
-            }
+                lte: maxDate,
+              },
+            },
           ],
-          deletedAt: null
-        }
+          deletedAt: null,
+        },
       });
 
-      const findExisting = (s: typeof shifts[0]) => {
+      const findExisting = (s: (typeof shifts)[0]) => {
         if (s.id) {
           return existingShifts.find((es) => es.id === s.id);
         }
@@ -178,21 +195,22 @@ export class ShiftsController {
         return existingShifts.find(
           (es) =>
             es.staffId === s.staffId &&
-            es.workDate.getTime() === utcDate.getTime()
+            es.workDate.getTime() === utcDate.getTime(),
         );
       };
 
       // 2. Perform updates, creates, and soft deletes in parallel
       const operations = shifts.map(async (s) => {
         const utcDate = new Date(s.workDate + "T00:00:00.000Z");
-        const isCleared = s.clear || (!s.isOff && !s.shiftName && !s.startTime && !s.endTime);
+        const isCleared =
+          s.clear || (!s.isOff && !s.shiftName && !s.startTime && !s.endTime);
         const existing = findExisting(s);
 
         if (isCleared) {
           if (existing) {
             return prisma.employeeShift.update({
               where: { id: existing.id },
-              data: { deletedAt: new Date() }
+              data: { deletedAt: new Date() },
             });
           }
           return null;
@@ -206,8 +224,8 @@ export class ShiftsController {
               startTime: s.startTime || null,
               endTime: s.endTime || null,
               isOff: s.isOff,
-              updatedAt: new Date()
-            }
+              updatedAt: new Date(),
+            },
           });
         } else {
           return prisma.employeeShift.create({
@@ -219,8 +237,8 @@ export class ShiftsController {
               shiftName: s.shiftName || null,
               startTime: s.startTime || null,
               endTime: s.endTime || null,
-              isOff: s.isOff
-            }
+              isOff: s.isOff,
+            },
           });
         }
       });
@@ -228,14 +246,17 @@ export class ShiftsController {
       const rawResults = await Promise.all(operations);
       const results = rawResults.filter((r) => r !== null);
 
-      this.notificationGateway.broadcastToTenant(tenantId, "shifts.updated", { branchId, senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "shifts.updated", {
+        branchId,
+        senderId,
+      });
 
       return { success: true, count: results.length };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to save shifts: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -246,11 +267,14 @@ export class ShiftsController {
     @Param("tenantId") tenantId: string,
     @Param("staffId") staffId: string,
     @Query("startDate") startDate: string,
-    @Query("endDate") endDate: string
+    @Query("endDate") endDate: string,
   ) {
     try {
       if (!startDate || !endDate) {
-        throw new HttpException("startDate và endDate là bắt buộc", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "startDate và endDate là bắt buộc",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const shifts = await prisma.employeeShift.findMany({
@@ -259,28 +283,28 @@ export class ShiftsController {
           staffId,
           workDate: {
             gte: new Date(startDate + "T00:00:00.000Z"),
-            lte: new Date(endDate + "T23:59:59.999Z")
+            lte: new Date(endDate + "T23:59:59.999Z"),
           },
-          deletedAt: null
+          deletedAt: null,
         },
         orderBy: {
-          workDate: "asc"
-        }
+          workDate: "asc",
+        },
       });
 
-      return shifts.map(s => ({
+      return shifts.map((s) => ({
         id: s.id,
         workDate: s.workDate.toISOString().split("T")[0],
         shiftName: s.shiftName || "",
         startTime: s.startTime || "",
         endTime: s.endTime || "",
-        isOff: s.isOff
+        isOff: s.isOff,
       }));
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to fetch personal shifts: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

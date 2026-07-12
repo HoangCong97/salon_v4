@@ -1,20 +1,26 @@
-import { Controller, Get, Param, Query, HttpStatus, HttpException } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  HttpStatus,
+  HttpException,
+} from "@nestjs/common";
 import { prisma } from "@salon/database";
 
 @Controller("api/tenants/:tenantId/branches/:branchId/dashboard-stats")
 export class DashboardController {
-  
   @Get()
   async getDashboardStats(
     @Param("tenantId") tenantId: string,
     @Param("branchId") branchId: string,
-    @Query("month") monthParam?: string
+    @Query("month") monthParam?: string,
   ) {
     try {
       // 1. Timezone offset UTC+7 (Vietnam Time)
       const nowLocal = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
       const todayStr = nowLocal.toISOString().split("T")[0]; // yyyy-MM-dd
-      
+
       const startOfToday = new Date(`${todayStr}T00:00:00+07:00`);
       const endOfToday = new Date(`${todayStr}T23:59:59.999+07:00`);
 
@@ -34,28 +40,49 @@ export class DashboardController {
       }
 
       const targetMonthStr = String(targetMonth + 1).padStart(2, "0");
-      const targetDaysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
-      const startOfTargetMonth = new Date(`${targetYear}-${targetMonthStr}-01T00:00:00+07:00`);
-      const endOfTargetMonth = new Date(`${targetYear}-${targetMonthStr}-${targetDaysInMonth}T23:59:59.999+07:00`);
+      const targetDaysInMonth = new Date(
+        targetYear,
+        targetMonth + 1,
+        0,
+      ).getDate();
+      const startOfTargetMonth = new Date(
+        `${targetYear}-${targetMonthStr}-01T00:00:00+07:00`,
+      );
+      const endOfTargetMonth = new Date(
+        `${targetYear}-${targetMonthStr}-${targetDaysInMonth}T23:59:59.999+07:00`,
+      );
 
       // Current calendar month (for general stats cards comparison)
       const curYear = nowLocal.getFullYear();
       const curMonth = nowLocal.getMonth();
       const curMonthStr = String(curMonth + 1).padStart(2, "0");
-      const startOfThisMonth = new Date(`${curYear}-${curMonthStr}-01T00:00:00+07:00`);
+      const startOfThisMonth = new Date(
+        `${curYear}-${curMonthStr}-01T00:00:00+07:00`,
+      );
 
       // Last calendar month (for comparison cards)
       const lastMonthYear = curMonth === 0 ? curYear - 1 : curYear;
       const lastMonthVal = curMonth === 0 ? 12 : curMonth;
       const lastMonthStr = String(lastMonthVal).padStart(2, "0");
-      const startOfLastMonth = new Date(`${lastMonthYear}-${lastMonthStr}-01T00:00:00+07:00`);
+      const startOfLastMonth = new Date(
+        `${lastMonthYear}-${lastMonthStr}-01T00:00:00+07:00`,
+      );
       const endOfLastMonth = new Date(startOfThisMonth.getTime() - 1);
 
       // Start of 12 months ago (for the horizontal bar chart)
-      const startOf12MonthsAgo = new Date(curYear - 1, curMonth + 1, 1, 0, 0, 0);
+      const startOf12MonthsAgo = new Date(
+        curYear - 1,
+        curMonth + 1,
+        1,
+        0,
+        0,
+        0,
+      );
 
       // Start of 7 days ago
-      const sevenDaysAgoLocal = new Date(nowLocal.getTime() - 6 * 24 * 60 * 60 * 1000);
+      const sevenDaysAgoLocal = new Date(
+        nowLocal.getTime() - 6 * 24 * 60 * 60 * 1000,
+      );
       const sevenDaysAgoStr = sevenDaysAgoLocal.toISOString().split("T")[0];
       const startOfSevenDaysAgo = new Date(`${sevenDaysAgoStr}T00:00:00+07:00`);
 
@@ -76,66 +103,135 @@ export class DashboardController {
         dailyTurnsQueue,
         allServices,
         allInventories,
-        allServicePackages
+        allServicePackages,
       ] = await Promise.all([
         // Invoices Today
         prisma.invoice.findMany({
-          where: { tenantId, branchId, deletedAt: null, status: "COMPLETED", createdAt: { gte: startOfToday, lte: endOfToday } },
-          select: { finalAmount: true }
+          where: {
+            tenantId,
+            branchId,
+            deletedAt: null,
+            status: "COMPLETED",
+            createdAt: { gte: startOfToday, lte: endOfToday },
+          },
+          select: { finalAmount: true },
         }),
         // Invoices Yesterday
         prisma.invoice.findMany({
-          where: { tenantId, branchId, deletedAt: null, status: "COMPLETED", createdAt: { gte: startOfYesterday, lte: endOfYesterday } },
-          select: { finalAmount: true }
+          where: {
+            tenantId,
+            branchId,
+            deletedAt: null,
+            status: "COMPLETED",
+            createdAt: { gte: startOfYesterday, lte: endOfYesterday },
+          },
+          select: { finalAmount: true },
         }),
         // Invoices This Month
         prisma.invoice.findMany({
-          where: { tenantId, branchId, deletedAt: null, status: "COMPLETED", createdAt: { gte: startOfThisMonth, lte: endOfToday } },
-          select: { finalAmount: true }
+          where: {
+            tenantId,
+            branchId,
+            deletedAt: null,
+            status: "COMPLETED",
+            createdAt: { gte: startOfThisMonth, lte: endOfToday },
+          },
+          select: { finalAmount: true },
         }),
         // Invoices Last Month
         prisma.invoice.findMany({
-          where: { tenantId, branchId, deletedAt: null, status: "COMPLETED", createdAt: { gte: startOfLastMonth, lte: endOfLastMonth } },
-          select: { finalAmount: true }
+          where: {
+            tenantId,
+            branchId,
+            deletedAt: null,
+            status: "COMPLETED",
+            createdAt: { gte: startOfLastMonth, lte: endOfLastMonth },
+          },
+          select: { finalAmount: true },
         }),
         // Invoices Last 7 Days (for payment breakdown)
         prisma.invoice.findMany({
-          where: { tenantId, branchId, deletedAt: null, status: "COMPLETED", createdAt: { gte: startOfSevenDaysAgo } },
-          select: { finalAmount: true, createdAt: true, paymentMethod: true }
+          where: {
+            tenantId,
+            branchId,
+            deletedAt: null,
+            status: "COMPLETED",
+            createdAt: { gte: startOfSevenDaysAgo },
+          },
+          select: { finalAmount: true, createdAt: true, paymentMethod: true },
         }),
         // Invoices Last 12 Months
         prisma.invoice.findMany({
-          where: { tenantId, branchId, deletedAt: null, status: "COMPLETED", createdAt: { gte: startOf12MonthsAgo, lte: endOfToday } },
-          select: { totalPrice: true, finalAmount: true, discountAmount: true, createdAt: true }
+          where: {
+            tenantId,
+            branchId,
+            deletedAt: null,
+            status: "COMPLETED",
+            createdAt: { gte: startOf12MonthsAgo, lte: endOfToday },
+          },
+          select: {
+            totalPrice: true,
+            finalAmount: true,
+            discountAmount: true,
+            createdAt: true,
+          },
         }),
         // Invoices Target Month (selected month for daily table)
         prisma.invoice.findMany({
-          where: { tenantId, branchId, deletedAt: null, status: "COMPLETED", createdAt: { gte: startOfTargetMonth, lte: endOfTargetMonth } },
+          where: {
+            tenantId,
+            branchId,
+            deletedAt: null,
+            status: "COMPLETED",
+            createdAt: { gte: startOfTargetMonth, lte: endOfTargetMonth },
+          },
           include: {
             customer: { select: { id: true, name: true, phone: true } },
             cashier: { select: { id: true, name: true } },
-            items: true
+            items: true,
           },
-          orderBy: { createdAt: "asc" } // Order asc to align with daily aggregation order
+          orderBy: { createdAt: "asc" }, // Order asc to align with daily aggregation order
         }),
         // Bookings Today
         prisma.booking.findMany({
-          where: { tenantId, branchId, deletedAt: null, startTime: { gte: startOfToday, lte: endOfToday } },
-          select: { id: true, status: true }
+          where: {
+            tenantId,
+            branchId,
+            deletedAt: null,
+            startTime: { gte: startOfToday, lte: endOfToday },
+          },
+          select: { id: true, status: true },
         }),
         // Bookings Last 7 Days
         prisma.booking.findMany({
-          where: { tenantId, branchId, deletedAt: null, startTime: { gte: startOfSevenDaysAgo } },
-          select: { id: true, status: true, startTime: true }
+          where: {
+            tenantId,
+            branchId,
+            deletedAt: null,
+            startTime: { gte: startOfSevenDaysAgo },
+          },
+          select: { id: true, status: true, startTime: true },
         }),
         // Staff Shifts Today
         prisma.employeeShift.findMany({
-          where: { tenantId, branchId, deletedAt: null, workDate: startOfToday, isOff: false },
-          select: { id: true, staffId: true }
+          where: {
+            tenantId,
+            branchId,
+            deletedAt: null,
+            workDate: startOfToday,
+            isOff: false,
+          },
+          select: { id: true, staffId: true },
         }),
         // Low stock count (quantity <= 5)
         prisma.inventory.count({
-          where: { tenantId, branchId, deletedAt: null, isActive: true, quantity: { lte: 5 } }
+          where: {
+            tenantId,
+            branchId,
+            deletedAt: null,
+            isActive: true,
+            quantity: { lte: 5 },
+          },
         }),
         // Recent Bookings
         prisma.booking.findMany({
@@ -146,37 +242,63 @@ export class DashboardController {
               where: { deletedAt: null },
               include: {
                 service: { select: { name: true } },
-                staff: { select: { name: true } }
-              }
-            }
+                staff: { select: { name: true } },
+              },
+            },
           },
           orderBy: { startTime: "desc" },
-          take: 5
+          take: 5,
         }),
         // Daily turns queue
         prisma.employeeDailyTurn.findMany({
-          where: { tenantId, branchId, workDate: startOfToday, deletedAt: null },
+          where: {
+            tenantId,
+            branchId,
+            workDate: startOfToday,
+            deletedAt: null,
+          },
           include: { staff: { select: { name: true, avatar: true } } },
-          orderBy: { totalCustomersToday: "desc" }
+          orderBy: { totalCustomersToday: "desc" },
         }),
         // Name mappings
-        prisma.service.findMany({ where: { tenantId, deletedAt: null }, select: { id: true, name: true } }),
-        prisma.inventory.findMany({ where: { tenantId, deletedAt: null }, select: { id: true, name: true } }),
-        prisma.servicePackage.findMany({ where: { tenantId, deletedAt: null }, select: { id: true, name: true } })
+        prisma.service.findMany({
+          where: { tenantId, deletedAt: null },
+          select: { id: true, name: true },
+        }),
+        prisma.inventory.findMany({
+          where: { tenantId, deletedAt: null },
+          select: { id: true, name: true },
+        }),
+        prisma.servicePackage.findMany({
+          where: { tenantId, deletedAt: null },
+          select: { id: true, name: true },
+        }),
       ]);
 
       // Map item names
       const itemNames = new Map<string, string>();
-      allServices.forEach(s => itemNames.set(s.id, s.name));
-      allInventories.forEach(i => itemNames.set(i.id, i.name));
-      allServicePackages.forEach(p => itemNames.set(p.id, p.name));
+      allServices.forEach((s) => itemNames.set(s.id, s.name));
+      allInventories.forEach((i) => itemNames.set(i.id, i.name));
+      allServicePackages.forEach((p) => itemNames.set(p.id, p.name));
 
       // 3. Aggregate stats in-memory
-      const todayRevenue = invoicesToday.reduce((sum, inv) => sum + Number(inv.finalAmount), 0);
-      const yesterdayRevenue = invoicesYesterday.reduce((sum, inv) => sum + Number(inv.finalAmount), 0);
-      
-      const thisMonthRevenue = invoicesThisMonth.reduce((sum, inv) => sum + Number(inv.finalAmount), 0);
-      const lastMonthRevenue = invoicesLastMonth.reduce((sum, inv) => sum + Number(inv.finalAmount), 0);
+      const todayRevenue = invoicesToday.reduce(
+        (sum, inv) => sum + Number(inv.finalAmount),
+        0,
+      );
+      const yesterdayRevenue = invoicesYesterday.reduce(
+        (sum, inv) => sum + Number(inv.finalAmount),
+        0,
+      );
+
+      const thisMonthRevenue = invoicesThisMonth.reduce(
+        (sum, inv) => sum + Number(inv.finalAmount),
+        0,
+      );
+      const lastMonthRevenue = invoicesLastMonth.reduce(
+        (sum, inv) => sum + Number(inv.finalAmount),
+        0,
+      );
 
       const getGrowth = (current: number, previous: number) => {
         if (previous === 0) return current > 0 ? 100 : 0;
@@ -184,10 +306,15 @@ export class DashboardController {
       };
 
       const dailyRevenueGrowth = getGrowth(todayRevenue, yesterdayRevenue);
-      const monthlyRevenueGrowth = getGrowth(thisMonthRevenue, lastMonthRevenue);
+      const monthlyRevenueGrowth = getGrowth(
+        thisMonthRevenue,
+        lastMonthRevenue,
+      );
 
       const totalBookingsToday = bookingsToday.length;
-      const completedBookingsToday = bookingsToday.filter(b => b.status === "COMPLETED").length;
+      const completedBookingsToday = bookingsToday.filter(
+        (b) => b.status === "COMPLETED",
+      ).length;
 
       const totalStaffScheduled = staffOnShiftToday.length;
       const totalStaffActive = dailyTurnsQueue.length;
@@ -201,21 +328,32 @@ export class DashboardController {
         const monthLabel = `${String(mVal + 1).padStart(2, "0")}/${yVal}`; // e.g. 12/2024
         const yearMonth = `${yVal}-${String(mVal + 1).padStart(2, "0")}`; // e.g. 2024-12
 
-        const monthInvoices = invoicesLast12Months.filter(inv => {
-          const invLocal = new Date(inv.createdAt.getTime() + 7 * 60 * 60 * 1000);
+        const monthInvoices = invoicesLast12Months.filter((inv) => {
+          const invLocal = new Date(
+            inv.createdAt.getTime() + 7 * 60 * 60 * 1000,
+          );
           return invLocal.toISOString().startsWith(yearMonth);
         });
 
-        const totalPrice = monthInvoices.reduce((sum, inv) => sum + Number(inv.totalPrice), 0);
-        const finalAmount = monthInvoices.reduce((sum, inv) => sum + Number(inv.finalAmount), 0);
-        const discountAmount = monthInvoices.reduce((sum, inv) => sum + Number(inv.discountAmount), 0);
+        const totalPrice = monthInvoices.reduce(
+          (sum, inv) => sum + Number(inv.totalPrice),
+          0,
+        );
+        const finalAmount = monthInvoices.reduce(
+          (sum, inv) => sum + Number(inv.finalAmount),
+          0,
+        );
+        const discountAmount = monthInvoices.reduce(
+          (sum, inv) => sum + Number(inv.discountAmount),
+          0,
+        );
 
         monthlyTrends.push({
           month: monthLabel,
           yearMonth,
           totalPrice,
           finalAmount,
-          discountAmount
+          discountAmount,
         });
       }
 
@@ -224,24 +362,37 @@ export class DashboardController {
       for (let d = 1; d <= targetDaysInMonth; d++) {
         const dStr = `${targetYear}-${targetMonthStr}-${String(d).padStart(2, "0")}`;
         const dateLabel = `${d} thg ${targetMonthStr}, ${targetYear}`;
-        
-        const dayInvoices = invoicesTargetMonth.filter(inv => {
-          const invLocal = new Date(inv.createdAt.getTime() + 7 * 60 * 60 * 1000);
+
+        const dayInvoices = invoicesTargetMonth.filter((inv) => {
+          const invLocal = new Date(
+            inv.createdAt.getTime() + 7 * 60 * 60 * 1000,
+          );
           return invLocal.toISOString().startsWith(dStr);
         });
-        
-        const totalPrice = dayInvoices.reduce((sum, inv) => sum + Number(inv.totalPrice), 0);
-        const finalAmount = dayInvoices.reduce((sum, inv) => sum + Number(inv.finalAmount), 0);
-        const discountAmount = dayInvoices.reduce((sum, inv) => sum + Number(inv.discountAmount), 0);
-        
+
+        const totalPrice = dayInvoices.reduce(
+          (sum, inv) => sum + Number(inv.totalPrice),
+          0,
+        );
+        const finalAmount = dayInvoices.reduce(
+          (sum, inv) => sum + Number(inv.finalAmount),
+          0,
+        );
+        const discountAmount = dayInvoices.reduce(
+          (sum, inv) => sum + Number(inv.discountAmount),
+          0,
+        );
+
         const dayDate = new Date(`${dStr}T12:00:00+07:00`);
         let dayOfWeek = dayDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
         if (dayOfWeek === 0) dayOfWeek = 7; // Map Sunday to 7
-        
-        const formattedInvoices = dayInvoices.map(inv => {
-          const timeLocal = new Date(inv.createdAt.getTime() + 7 * 60 * 60 * 1000);
+
+        const formattedInvoices = dayInvoices.map((inv) => {
+          const timeLocal = new Date(
+            inv.createdAt.getTime() + 7 * 60 * 60 * 1000,
+          );
           const timeStr = timeLocal.toISOString().substr(11, 5); // HH:MM
-          
+
           return {
             id: inv.id,
             invoiceNumber: inv.id.substring(0, 8).toUpperCase(),
@@ -254,7 +405,7 @@ export class DashboardController {
             customerName: inv.customer?.name || "Khách vãng lai",
             cashierName: inv.cashier?.name || "Hệ thống",
             note: inv.note || "",
-            items: inv.items.map(item => ({
+            items: inv.items.map((item) => ({
               id: item.id,
               name: itemNames.get(item.itemId) || "Sản phẩm/Dịch vụ đã xóa",
               itemType: item.itemType,
@@ -262,11 +413,11 @@ export class DashboardController {
               quantity: item.quantity,
               totalPrice: Number(item.totalPrice),
               discountAmount: Number(item.discountAmount),
-              finalAmount: Number(item.finalAmount)
-            }))
+              finalAmount: Number(item.finalAmount),
+            })),
           };
         });
-        
+
         dailyRevenues.push({
           date: dateLabel,
           dateRaw: dStr,
@@ -275,7 +426,7 @@ export class DashboardController {
           totalPrice,
           finalAmount,
           discountAmount,
-          invoices: formattedInvoices
+          invoices: formattedInvoices,
         });
       }
 
@@ -283,7 +434,7 @@ export class DashboardController {
       const paymentMethodTotals: Record<string, number> = {
         CASH: 0,
         CREDIT: 0,
-        TRANSFER: 0
+        TRANSFER: 0,
       };
       let totalRevenue7Days = 0;
       for (const inv of invoicesLast7Days) {
@@ -292,29 +443,37 @@ export class DashboardController {
         paymentMethodTotals[method] = (paymentMethodTotals[method] || 0) + amt;
         totalRevenue7Days += amt;
       }
-      const paymentMethodsBreakdown = Object.entries(paymentMethodTotals).map(([method, amount]) => ({
-        method,
-        amount,
-        percentage: totalRevenue7Days > 0 ? Math.round((amount / totalRevenue7Days) * 100) : 0
-      }));
+      const paymentMethodsBreakdown = Object.entries(paymentMethodTotals).map(
+        ([method, amount]) => ({
+          method,
+          amount,
+          percentage:
+            totalRevenue7Days > 0
+              ? Math.round((amount / totalRevenue7Days) * 100)
+              : 0,
+        }),
+      );
 
       // 7. Aggregate Top Services & Staff Performance (from target month completed invoices)
-      const completedInvoiceIds = invoicesTargetMonth.map(i => i.id);
+      const completedInvoiceIds = invoicesTargetMonth.map((i) => i.id);
 
       // Load all users to resolve staff names
       const allUsers = await prisma.user.findMany({
         where: { tenantId, deletedAt: null },
-        select: { id: true, name: true }
+        select: { id: true, name: true },
       });
-      const userNameMap = new Map(allUsers.map(u => [u.id, u.name]));
+      const userNameMap = new Map(allUsers.map((u) => [u.id, u.name]));
 
       // 7.a Staff Performance aggregation
-      const staffPerformanceMap = new Map<string, {
-        staffName: string;
-        revenue: number;
-        customers: Set<string>;
-        recordCount: number;
-      }>();
+      const staffPerformanceMap = new Map<
+        string,
+        {
+          staffName: string;
+          revenue: number;
+          customers: Set<string>;
+          recordCount: number;
+        }
+      >();
 
       for (const inv of invoicesTargetMonth) {
         const custId = inv.customerId || `guest-${inv.id}`;
@@ -322,58 +481,71 @@ export class DashboardController {
           if (item.staffId) {
             const staffId = item.staffId;
             const staffName = userNameMap.get(staffId) || "Nhân viên khác";
-            
+
             const existing = staffPerformanceMap.get(staffId) || {
               staffName,
               revenue: 0,
               customers: new Set<string>(),
-              recordCount: 0
+              recordCount: 0,
             };
-            
+
             existing.revenue += Number(item.finalAmount);
             existing.customers.add(custId);
             existing.recordCount += 1;
-            
+
             staffPerformanceMap.set(staffId, existing);
           }
         }
       }
 
-      const staffPerformance = Array.from(staffPerformanceMap.entries()).map(([staffId, data]) => ({
-        staffId,
-        staffName: data.staffName,
-        revenue: data.revenue,
-        customers: data.customers.size,
-        recordCount: data.recordCount
-      })).sort((a, b) => b.revenue - a.revenue);
+      const staffPerformance = Array.from(staffPerformanceMap.entries())
+        .map(([staffId, data]) => ({
+          staffId,
+          staffName: data.staffName,
+          revenue: data.revenue,
+          customers: data.customers.size,
+          recordCount: data.recordCount,
+        }))
+        .sort((a, b) => b.revenue - a.revenue);
 
       // 7.b Top Services aggregation
-      let topServices: Array<{ id: string; name: string; count: number; revenue: number }> = [];
+      let topServices: Array<{
+        id: string;
+        name: string;
+        count: number;
+        revenue: number;
+      }> = [];
       if (completedInvoiceIds.length > 0) {
         const invoiceItemsThisMonth = await prisma.invoiceItem.findMany({
           where: {
             invoiceId: { in: completedInvoiceIds },
             itemType: "SERVICE",
-            deletedAt: null
+            deletedAt: null,
           },
           select: {
             itemId: true,
             quantity: true,
-            finalAmount: true
-          }
+            finalAmount: true,
+          },
         });
 
-        const serviceNameMap = new Map(allServices.map(s => [s.id, s.name]));
-        const serviceStats = new Map<string, { count: number, revenue: number }>();
+        const serviceNameMap = new Map(allServices.map((s) => [s.id, s.name]));
+        const serviceStats = new Map<
+          string,
+          { count: number; revenue: number }
+        >();
         for (const item of invoiceItemsThisMonth) {
           const serviceId = item.itemId;
           const qty = item.quantity;
           const revenue = Number(item.finalAmount);
 
-          const existing = serviceStats.get(serviceId) || { count: 0, revenue: 0 };
+          const existing = serviceStats.get(serviceId) || {
+            count: 0,
+            revenue: 0,
+          };
           serviceStats.set(serviceId, {
             count: existing.count + qty,
-            revenue: existing.revenue + revenue
+            revenue: existing.revenue + revenue,
           });
         }
 
@@ -382,19 +554,25 @@ export class DashboardController {
             id: serviceId,
             name: serviceNameMap.get(serviceId) || "Dịch vụ đã xóa",
             count: stats.count,
-            revenue: stats.revenue
+            revenue: stats.revenue,
           }))
           .sort((a, b) => b.revenue - a.revenue) // Sort by revenue descending
           .slice(0, 15);
       }
 
       // 8. Format Recent Bookings list
-      const formattedRecentBookings = recentBookingsList.map(b => {
+      const formattedRecentBookings = recentBookingsList.map((b) => {
         const timeLocal = new Date(b.startTime.getTime() + 7 * 60 * 60 * 1000);
         const timeStr = timeLocal.toISOString().substr(11, 5); // HH:MM
-        
-        const serviceNames = b.bookingDetails.map(d => d.service.name).join(", ") || "Không có dịch vụ";
-        const staffNames = b.bookingDetails.map(d => d.staff?.name).filter(Boolean).join(", ") || "Chưa gán thợ";
+
+        const serviceNames =
+          b.bookingDetails.map((d) => d.service.name).join(", ") ||
+          "Không có dịch vụ";
+        const staffNames =
+          b.bookingDetails
+            .map((d) => d.staff?.name)
+            .filter(Boolean)
+            .join(", ") || "Chưa gán thợ";
 
         return {
           id: b.id,
@@ -402,7 +580,7 @@ export class DashboardController {
           service: serviceNames,
           staff: staffNames,
           time: timeStr,
-          status: b.status
+          status: b.status,
         };
       });
 
@@ -411,7 +589,7 @@ export class DashboardController {
         rank: idx + 1,
         name: t.staff.name,
         avatar: t.staff.avatar,
-        served: t.totalCustomersToday
+        served: t.totalCustomersToday,
       }));
 
       // 10. Return everything
@@ -419,38 +597,38 @@ export class DashboardController {
         daily: {
           revenue: todayRevenue,
           previous: yesterdayRevenue,
-          growth: dailyRevenueGrowth
+          growth: dailyRevenueGrowth,
         },
         monthly: {
           revenue: thisMonthRevenue,
           previous: lastMonthRevenue,
-          growth: monthlyRevenueGrowth
+          growth: monthlyRevenueGrowth,
         },
         bookings: {
           total: totalBookingsToday,
-          completed: completedBookingsToday
+          completed: completedBookingsToday,
         },
         staff: {
           scheduled: totalStaffScheduled,
-          active: totalStaffActive
+          active: totalStaffActive,
         },
         inventory: {
-          lowStock: lowStockCount
+          lowStock: lowStockCount,
         },
         charts: {
           monthlyTrends,
           dailyRevenues,
           paymentMethods: paymentMethodsBreakdown,
           topServices,
-          staffPerformance
+          staffPerformance,
         },
         recentBookings: formattedRecentBookings,
-        dailyTurns: formattedTurns
+        dailyTurns: formattedTurns,
       };
     } catch (error) {
       throw new HttpException(
         `Failed to calculate dashboard statistics: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

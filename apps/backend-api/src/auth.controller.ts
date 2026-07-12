@@ -1,19 +1,35 @@
-import { Controller, Post, Body, HttpStatus, HttpException } from "@nestjs/common";
+import {
+  Controller,
+  Post,
+  Body,
+  HttpStatus,
+  HttpException,
+} from "@nestjs/common";
 import { prisma } from "@salon/database";
 import { ensureStandardRolesAndPermissions } from "./staff.controller";
 
 @Controller("api/auth")
 export class AuthController {
-
   @Post("login")
-  async login(@Body() body: { tenantRef?: string; loginId?: string; email?: string; password?: string }) {
+  async login(
+    @Body()
+    body: {
+      tenantRef?: string;
+      loginId?: string;
+      email?: string;
+      password?: string;
+    },
+  ) {
     try {
       const tenantRef = body.tenantRef;
       const loginIdVal = body.loginId || body.email;
       const { password } = body;
 
       if (!loginIdVal || !password) {
-        throw new HttpException("ID đăng nhập và Mật khẩu là bắt buộc", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "ID đăng nhập và Mật khẩu là bắt buộc",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       let tenantId: string | undefined;
@@ -22,15 +38,20 @@ export class AuthController {
           where: {
             OR: [
               { phone: tenantRef.trim() },
-              { name: { contains: tenantRef.trim(), mode: 'insensitive' } },
-              { brandName: { contains: tenantRef.trim(), mode: 'insensitive' } }
+              { name: { contains: tenantRef.trim(), mode: "insensitive" } },
+              {
+                brandName: { contains: tenantRef.trim(), mode: "insensitive" },
+              },
             ],
-            deletedAt: null
-          }
+            deletedAt: null,
+          },
         });
 
         if (!tenant) {
-          throw new HttpException("Cửa hàng / Thương hiệu không tồn tại", HttpStatus.NOT_FOUND);
+          throw new HttpException(
+            "Cửa hàng / Thương hiệu không tồn tại",
+            HttpStatus.NOT_FOUND,
+          );
         }
         tenantId = tenant.id;
       }
@@ -40,31 +61,37 @@ export class AuthController {
         where: {
           loginId: loginIdVal.toLowerCase().trim(),
           tenantId: tenantId,
-          deletedAt: null
+          deletedAt: null,
         },
         include: {
           role: {
             include: {
               permissions: {
                 include: {
-                  permission: true
-                }
-              }
-            }
-          }
-        }
+                  permission: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       if (users.length === 0) {
-        throw new HttpException("Tài khoản không tồn tại trong hệ thống", HttpStatus.UNAUTHORIZED);
+        throw new HttpException(
+          "Tài khoản không tồn tại trong hệ thống",
+          HttpStatus.UNAUTHORIZED,
+        );
       }
 
       // Find user with correct password if duplicate loginIds exist across tenants
-      const fullUser = users.find(u => u.password === password) || users[0];
+      const fullUser = users.find((u) => u.password === password) || users[0];
 
       // Plaintext password comparison for local development
       if (fullUser.password !== password) {
-        throw new HttpException("Mật khẩu không chính xác", HttpStatus.UNAUTHORIZED);
+        throw new HttpException(
+          "Mật khẩu không chính xác",
+          HttpStatus.UNAUTHORIZED,
+        );
       }
 
       if (fullUser.status !== "ACTIVE" && fullUser.status !== "SUSPENDED") {
@@ -72,7 +99,7 @@ export class AuthController {
       }
 
       // Ensure all standard roles and permissions exist for this tenant (run in background to avoid blocking login latency)
-      ensureStandardRolesAndPermissions(fullUser.tenantId).catch(err => {
+      ensureStandardRolesAndPermissions(fullUser.tenantId).catch((err) => {
         console.error("Failed to ensure roles in background:", err);
       });
 
@@ -90,7 +117,8 @@ export class AuthController {
       }
 
       // Map all permissions assigned to this user's role
-      const permissions = fullUser.role?.permissions.map(rp => rp.permission.slug) || [];
+      const permissions =
+        fullUser.role?.permissions.map((rp) => rp.permission.slug) || [];
 
       return {
         id: fullUser.id,
@@ -99,16 +127,17 @@ export class AuthController {
         loginId: fullUser.loginId,
         role: mappedRole,
         tenantId: fullUser.tenantId,
-        avatar: fullUser.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80",
+        avatar:
+          fullUser.avatar ||
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80",
         permissions,
-        status: fullUser.status
+        status: fullUser.status,
       };
-
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Đăng nhập thất bại: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

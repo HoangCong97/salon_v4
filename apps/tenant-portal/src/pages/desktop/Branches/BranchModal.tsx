@@ -106,7 +106,11 @@ export default function BranchModal({
   return (
     <div className={styles.modalOverlay}>
       <div className={`card animate-fade-in ${styles.modalCard}`}>
-        <button type="button" className={styles.modalCloseBtn} onClick={onClose}>
+        <button
+          type="button"
+          className={styles.modalCloseBtn}
+          onClick={onClose}
+        >
           <X size={20} />
         </button>
         <h2 className={styles.modalTitle}>
@@ -135,7 +139,11 @@ export default function BranchModal({
                   type="text"
                   value={slogan}
                   onChange={(e) => setSlogan(e.target.value)}
-                  placeholder={tenantInfo?.slogan ? `Kế thừa: ${tenantInfo.slogan}` : "Để trống để kế thừa"}
+                  placeholder={
+                    tenantInfo?.slogan
+                      ? `Kế thừa: ${tenantInfo.slogan}`
+                      : "Để trống để kế thừa"
+                  }
                 />
               </div>
             </div>
@@ -144,13 +152,19 @@ export default function BranchModal({
             <h4 className={styles.sectionHeader}>Thông tin liên hệ riêng</h4>
             <div className={styles.formGrid2Col}>
               <div className="form-group">
-                <label className="form-label">Số Hotline riêng (Công khai)</label>
+                <label className="form-label">
+                  Số Hotline riêng (Công khai)
+                </label>
                 <input
                   className={`form-input ${styles.formInputHeight}`}
                   type="text"
                   value={hotline}
                   onChange={(e) => setHotline(e.target.value)}
-                  placeholder={tenantInfo?.hotline ? `Kế thừa: ${tenantInfo.hotline}` : "Để trống để kế thừa"}
+                  placeholder={
+                    tenantInfo?.hotline
+                      ? `Kế thừa: ${tenantInfo.hotline}`
+                      : "Để trống để kế thừa"
+                  }
                 />
               </div>
               <div className="form-group">
@@ -160,7 +174,11 @@ export default function BranchModal({
                   type="text"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder={tenantInfo?.phone ? `Kế thừa: ${tenantInfo.phone}` : "Điện thoại CSKH riêng"}
+                  placeholder={
+                    tenantInfo?.phone
+                      ? `Kế thừa: ${tenantInfo.phone}`
+                      : "Điện thoại CSKH riêng"
+                  }
                 />
               </div>
               <div className={`form-group ${styles.gridColSpan2}`}>
@@ -170,7 +188,11 @@ export default function BranchModal({
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={tenantInfo?.email ? `Kế thừa: ${tenantInfo.email}` : "Email CSKH riêng"}
+                  placeholder={
+                    tenantInfo?.email
+                      ? `Kế thừa: ${tenantInfo.email}`
+                      : "Email CSKH riêng"
+                  }
                 />
               </div>
               <div className={`form-group ${styles.gridColSpan2}`}>
@@ -187,16 +209,24 @@ export default function BranchModal({
             </div>
 
             {/* Section 4: Public social links */}
-            <h4 className={styles.sectionHeader}>Mạng xã hội & Kênh truyền thông riêng</h4>
+            <h4 className={styles.sectionHeader}>
+              Mạng xã hội & Kênh truyền thông riêng
+            </h4>
             <div className={styles.formGrid2Col}>
               <div className="form-group">
-                <label className="form-label">Link Fanpage riêng (Facebook)</label>
+                <label className="form-label">
+                  Link Fanpage riêng (Facebook)
+                </label>
                 <input
                   className={`form-input ${styles.formInputHeight}`}
                   type="text"
                   value={fanpageUrl}
                   onChange={(e) => setFanpageUrl(e.target.value)}
-                  placeholder={tenantInfo?.fanpageUrl ? `Kế thừa: ${tenantInfo.fanpageUrl}` : "https://facebook.com/..."}
+                  placeholder={
+                    tenantInfo?.fanpageUrl
+                      ? `Kế thừa: ${tenantInfo.fanpageUrl}`
+                      : "https://facebook.com/..."
+                  }
                 />
               </div>
               <div className="form-group">
@@ -206,7 +236,11 @@ export default function BranchModal({
                   type="text"
                   value={instagramUrl}
                   onChange={(e) => setInstagramUrl(e.target.value)}
-                  placeholder={tenantInfo?.instagramUrl ? `Kế thừa: ${tenantInfo.instagramUrl}` : "https://instagram.com/..."}
+                  placeholder={
+                    tenantInfo?.instagramUrl
+                      ? `Kế thừa: ${tenantInfo.instagramUrl}`
+                      : "https://instagram.com/..."
+                  }
                 />
               </div>
               <div className="form-group">
@@ -216,7 +250,11 @@ export default function BranchModal({
                   type="text"
                   value={tiktokUrl}
                   onChange={(e) => setTiktokUrl(e.target.value)}
-                  placeholder={tenantInfo?.tiktokUrl ? `Kế thừa: ${tenantInfo.tiktokUrl}` : "https://tiktok.com/@..."}
+                  placeholder={
+                    tenantInfo?.tiktokUrl
+                      ? `Kế thừa: ${tenantInfo.tiktokUrl}`
+                      : "https://tiktok.com/@..."
+                  }
                 />
               </div>
               <div className="form-group">
@@ -226,7 +264,11 @@ export default function BranchModal({
                   type="text"
                   value={websiteUrl}
                   onChange={(e) => setWebsiteUrl(e.target.value)}
-                  placeholder={tenantInfo?.websiteUrl ? `Kế thừa: ${tenantInfo.websiteUrl}` : "https://www.example.com"}
+                  placeholder={
+                    tenantInfo?.websiteUrl
+                      ? `Kế thừa: ${tenantInfo.websiteUrl}`
+                      : "https://www.example.com"
+                  }
                 />
               </div>
             </div>
@@ -254,4 +296,3 @@ export default function BranchModal({
     </div>
   );
 }
-

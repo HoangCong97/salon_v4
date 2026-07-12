@@ -14,7 +14,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       icon ? styles.inputWithIcon : "",
       error ? styles.errorInput : "",
       className,
-    ].filter(Boolean).join(" ");
+    ]
+      .filter(Boolean)
+      .join(" ");
 
     return (
       <div className={styles.wrapper} style={style}>
@@ -26,7 +28,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {error && <span className={styles.errorMessage}>{error}</span>}
       </div>
     );
-  }
+  },
 );
 
 Input.displayName = "Input";

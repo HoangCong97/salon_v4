@@ -1,6 +1,14 @@
 import React from "react";
 import { createPortal } from "react-dom";
-import { UserPlus, X, Edit, Layers, Trash2, CheckCircle, Sparkles } from "lucide-react";
+import {
+  UserPlus,
+  X,
+  Edit,
+  Layers,
+  Trash2,
+  CheckCircle,
+  Sparkles,
+} from "lucide-react";
 import { TenantData, PlanData } from "../types";
 
 interface TenantModalsProps {
@@ -14,14 +22,16 @@ interface TenantModalsProps {
     plan: string;
     address: string;
   };
-  setNewSalon: React.Dispatch<React.SetStateAction<{
-    name: string;
-    owner: string;
-    phone: string;
-    email: string;
-    plan: string;
-    address: string;
-  }>>;
+  setNewSalon: React.Dispatch<
+    React.SetStateAction<{
+      name: string;
+      owner: string;
+      phone: string;
+      email: string;
+      plan: string;
+      address: string;
+    }>
+  >;
   plans: PlanData[];
   handleCreateSalon: (e: React.FormEvent) => void;
   showEditModal: boolean;
@@ -34,20 +44,27 @@ interface TenantModalsProps {
     email: string;
     address: string;
   };
-  setEditForm: React.Dispatch<React.SetStateAction<{
-    name: string;
-    owner: string;
-    phone: string;
-    email: string;
-    address: string;
-  }>>;
+  setEditForm: React.Dispatch<
+    React.SetStateAction<{
+      name: string;
+      owner: string;
+      phone: string;
+      email: string;
+      address: string;
+    }>
+  >;
   handleUpdateTenant: (e: React.FormEvent) => void;
   showPlanModal: boolean;
   setShowPlanModal: (val: boolean) => void;
   selectedTenant: TenantData | null;
   tempPlan: string;
   setTempPlan: (val: string) => void;
-  getPlanDetails: (planCode: string) => { name: string; bgColor: string; color: string; price: number };
+  getPlanDetails: (planCode: string) => {
+    name: string;
+    bgColor: string;
+    color: string;
+    price: number;
+  };
   handleUpdatePlan: () => void;
   showDeleteConfirmModal: boolean;
   setShowDeleteConfirmModal: (val: boolean) => void;

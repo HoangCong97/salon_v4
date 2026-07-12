@@ -16,7 +16,12 @@ export const CustomNumberInput: React.FC<CustomNumberInputProps> = ({
 }) => {
   const handleIncrement = () => {
     if (disabled) return;
-    const currentVal = value !== undefined && value !== null && !isNaN(value) ? value : (min !== undefined ? min : 0);
+    const currentVal =
+      value !== undefined && value !== null && !isNaN(value)
+        ? value
+        : min !== undefined
+          ? min
+          : 0;
     let nextVal = currentVal + step;
     if (max !== undefined && nextVal > max) nextVal = max;
     onChange(nextVal);
@@ -24,14 +29,26 @@ export const CustomNumberInput: React.FC<CustomNumberInputProps> = ({
 
   const handleDecrement = () => {
     if (disabled) return;
-    const currentVal = value !== undefined && value !== null && !isNaN(value) ? value : (min !== undefined ? min : 0);
+    const currentVal =
+      value !== undefined && value !== null && !isNaN(value)
+        ? value
+        : min !== undefined
+          ? min
+          : 0;
     let nextVal = currentVal - step;
     if (min !== undefined && nextVal < min) nextVal = min;
     onChange(nextVal);
   };
 
   return (
-    <div style={{ position: "relative", display: "flex", alignItems: "center", width: "100%" }}>
+    <div
+      style={{
+        position: "relative",
+        display: "flex",
+        alignItems: "center",
+        width: "100%",
+      }}
+    >
       <input
         className={`form-input custom-number-input ${className || ""}`}
         type="number"
@@ -84,8 +101,14 @@ export const CustomNumberInput: React.FC<CustomNumberInputProps> = ({
             outline: "none",
             height: "50%",
           }}
-          onMouseEnter={(e) => !disabled && (e.currentTarget.style.backgroundColor = "hsl(210, 40%, 90%)")}
-          onMouseLeave={(e) => !disabled && (e.currentTarget.style.backgroundColor = "hsl(210, 40%, 96%)")}
+          onMouseEnter={(e) =>
+            !disabled &&
+            (e.currentTarget.style.backgroundColor = "hsl(210, 40%, 90%)")
+          }
+          onMouseLeave={(e) =>
+            !disabled &&
+            (e.currentTarget.style.backgroundColor = "hsl(210, 40%, 96%)")
+          }
         >
           <ChevronUp size={16} strokeWidth={2.5} />
         </button>
@@ -109,8 +132,14 @@ export const CustomNumberInput: React.FC<CustomNumberInputProps> = ({
             outline: "none",
             height: "50%",
           }}
-          onMouseEnter={(e) => !disabled && (e.currentTarget.style.backgroundColor = "hsl(210, 40%, 90%)")}
-          onMouseLeave={(e) => !disabled && (e.currentTarget.style.backgroundColor = "hsl(210, 40%, 96%)")}
+          onMouseEnter={(e) =>
+            !disabled &&
+            (e.currentTarget.style.backgroundColor = "hsl(210, 40%, 90%)")
+          }
+          onMouseLeave={(e) =>
+            !disabled &&
+            (e.currentTarget.style.backgroundColor = "hsl(210, 40%, 96%)")
+          }
         >
           <ChevronDown size={16} strokeWidth={2.5} />
         </button>

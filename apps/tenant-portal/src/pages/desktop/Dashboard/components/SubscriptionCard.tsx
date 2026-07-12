@@ -1,5 +1,12 @@
 import React from "react";
-import { Loader2, Crown, Clock, Building2, Users, Sparkles } from "lucide-react";
+import {
+  Loader2,
+  Crown,
+  Clock,
+  Building2,
+  Users,
+  Sparkles,
+} from "lucide-react";
 
 import { SubscriptionData } from "../types";
 
@@ -11,7 +18,11 @@ interface SubscriptionCardProps {
   onUpgradeClick: () => void;
 }
 
-export function SubscriptionCard({ subData, subLoading, onUpgradeClick }: SubscriptionCardProps) {
+export function SubscriptionCard({
+  subData,
+  subLoading,
+  onUpgradeClick,
+}: SubscriptionCardProps) {
   const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return "N/A";
     const d = new Date(dateStr);
@@ -38,8 +49,14 @@ export function SubscriptionCard({ subData, subLoading, onUpgradeClick }: Subscr
     return (
       <div className={`card ${styles.subLoadingWrapper}`}>
         <div className={styles.subLoadingInner}>
-          <Loader2 className="animate-spin" size={24} style={{ color: "var(--color-primary)" }} />
-          <span className={styles.subLoadingText}>Đang tải gói thành viên...</span>
+          <Loader2
+            className="animate-spin"
+            size={24}
+            style={{ color: "var(--color-primary)" }}
+          />
+          <span className={styles.subLoadingText}>
+            Đang tải gói thành viên...
+          </span>
         </div>
       </div>
     );
@@ -52,22 +69,28 @@ export function SubscriptionCard({ subData, subLoading, onUpgradeClick }: Subscr
       {/* Header */}
       <div className={styles.subCardHeader}>
         <div>
-          <h3 className={styles.subTitle}>
-            Gói ứng dụng
-          </h3>
+          <h3 className={styles.subTitle}>Gói ứng dụng</h3>
           <h2 className={styles.subName}>
-            {isPremium && <Crown size={20} style={{ color: "hsl(35, 92%, 50%)" }} />}
-            {subData?.planName.replace("Gói ", "").replace(" (Free Trial)", "").replace(" (Basic)", "").replace(" (Premium)", "")}
+            {isPremium && (
+              <Crown size={20} style={{ color: "hsl(35, 92%, 50%)" }} />
+            )}
+            {subData?.planName
+              .replace("Gói ", "")
+              .replace(" (Free Trial)", "")
+              .replace(" (Basic)", "")
+              .replace(" (Premium)", "")}
           </h2>
         </div>
-        
+
         {/* Plan Badge */}
         {subData?.planStatus === "EXPIRED" ? (
           <span className="badge badge-danger">Hết hạn</span>
         ) : subData?.planStatus === "TRIAL" ? (
           <span className="badge badge-warning">Dùng thử</span>
         ) : (
-          <span className={`badge badge-success ${isPremium ? styles.badgePremium : ""}`}>
+          <span
+            className={`badge badge-success ${isPremium ? styles.badgePremium : ""}`}
+          >
             Hoạt động
           </span>
         )}
@@ -79,11 +102,23 @@ export function SubscriptionCard({ subData, subLoading, onUpgradeClick }: Subscr
           <Clock size={16} />
           <span>
             {subData?.planStatus === "EXPIRED" ? (
-              <strong style={{ color: "var(--color-danger)" }}>Đã hết hạn vào {formatDate(subData?.planExpiresAt)}</strong>
+              <strong style={{ color: "var(--color-danger)" }}>
+                Đã hết hạn vào {formatDate(subData?.planExpiresAt)}
+              </strong>
             ) : subData?.planStatus === "TRIAL" ? (
-              <>Dùng thử: <strong>Còn {getDaysRemaining(subData?.planExpiresAt)} ngày</strong></>
+              <>
+                Dùng thử:{" "}
+                <strong>
+                  Còn {getDaysRemaining(subData?.planExpiresAt)} ngày
+                </strong>
+              </>
             ) : (
-              <>Thời hạn: <strong>Còn {getDaysRemaining(subData?.planExpiresAt)} ngày</strong></>
+              <>
+                Thời hạn:{" "}
+                <strong>
+                  Còn {getDaysRemaining(subData?.planExpiresAt)} ngày
+                </strong>
+              </>
             )}
           </span>
         </div>
@@ -101,16 +136,22 @@ export function SubscriptionCard({ subData, subLoading, onUpgradeClick }: Subscr
               <Building2 size={14} /> Chi nhánh
             </span>
             <span>
-              {subData?.currentBranchesCount} / {subData?.maxBranches === -1 ? "Vô hạn" : subData?.maxBranches}
+              {subData?.currentBranchesCount} /{" "}
+              {subData?.maxBranches === -1 ? "Vô hạn" : subData?.maxBranches}
             </span>
           </div>
           <div className={styles.quotaProgressTrack}>
-            <div 
+            <div
               className={styles.quotaProgressBar}
-              style={{ 
-                width: subData?.maxBranches === -1 ? "100%" : `${Math.min(100, ((subData?.currentBranchesCount || 0) / (subData?.maxBranches || 1)) * 100)}%`,
-                background: isPremium ? "hsl(35, 92%, 50%)" : "var(--color-primary)"
-              }} 
+              style={{
+                width:
+                  subData?.maxBranches === -1
+                    ? "100%"
+                    : `${Math.min(100, ((subData?.currentBranchesCount || 0) / (subData?.maxBranches || 1)) * 100)}%`,
+                background: isPremium
+                  ? "hsl(35, 92%, 50%)"
+                  : "var(--color-primary)",
+              }}
             />
           </div>
         </div>
@@ -122,16 +163,22 @@ export function SubscriptionCard({ subData, subLoading, onUpgradeClick }: Subscr
               <Users size={14} /> Nhân viên (Thợ)
             </span>
             <span>
-              {subData?.currentStaffCount} / {subData?.maxStaff === -1 ? "Vô hạn" : subData?.maxStaff}
+              {subData?.currentStaffCount} /{" "}
+              {subData?.maxStaff === -1 ? "Vô hạn" : subData?.maxStaff}
             </span>
           </div>
           <div className={styles.quotaProgressTrack}>
-            <div 
+            <div
               className={styles.quotaProgressBar}
-              style={{ 
-                width: subData?.maxStaff === -1 ? "100%" : `${Math.min(100, ((subData?.currentStaffCount || 0) / (subData?.maxStaff || 1)) * 100)}%`,
-                background: isPremium ? "hsl(35, 92%, 50%)" : "var(--color-primary)"
-              }} 
+              style={{
+                width:
+                  subData?.maxStaff === -1
+                    ? "100%"
+                    : `${Math.min(100, ((subData?.currentStaffCount || 0) / (subData?.maxStaff || 1)) * 100)}%`,
+                background: isPremium
+                  ? "hsl(35, 92%, 50%)"
+                  : "var(--color-primary)",
+              }}
             />
           </div>
         </div>
@@ -142,14 +189,17 @@ export function SubscriptionCard({ subData, subLoading, onUpgradeClick }: Subscr
         className={`btn ${styles.upgradeButton}`}
         style={{
           background: isPremium ? "hsl(35, 92%, 50%)" : "var(--color-primary)",
-          boxShadow: isPremium ? "0 4px 12px rgba(245, 158, 11, 0.3)" : undefined
+          boxShadow: isPremium
+            ? "0 4px 12px rgba(245, 158, 11, 0.3)"
+            : undefined,
         }}
         onClick={onUpgradeClick}
       >
         <Sparkles size={16} />
-        {subData?.planStatus === "EXPIRED" ? "Gia hạn gói ngay" : "Nâng cấp / Gia hạn gói"}
+        {subData?.planStatus === "EXPIRED"
+          ? "Gia hạn gói ngay"
+          : "Nâng cấp / Gia hạn gói"}
       </button>
     </div>
   );
 }
-

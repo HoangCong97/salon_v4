@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { X, Users, Edit2, Camera, User, Loader2, ImagePlus } from "lucide-react";
+import {
+  X,
+  Users,
+  Edit2,
+  Camera,
+  User,
+  Loader2,
+  ImagePlus,
+} from "lucide-react";
 
 import { PriceInputWithSuggestion } from "../../../components/desktop/TableComponents";
 
@@ -60,7 +68,11 @@ interface StaffFormModalProps {
   roles: Role[];
   branchList: Branch[];
   currentTenantId: string | null;
-  onSave: (payload: any, mode: "create" | "edit", staffId?: string | null) => void;
+  onSave: (
+    payload: any,
+    mode: "create" | "edit",
+    staffId?: string | null,
+  ) => void;
 }
 
 export const StaffFormModal: React.FC<StaffFormModalProps> = ({
@@ -87,7 +99,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
   const [selectedBranchIds, setSelectedBranchIds] = useState<string[]>([]);
   const [note, setNote] = useState("");
   const [avatar, setAvatar] = useState("");
-  
+
   // Avatar drag-and-drop & immediate upload preview states
   const [hoverAvatar, setHoverAvatar] = useState(false);
   const [isDragOverAvatar, setIsDragOverAvatar] = useState(false);
@@ -105,7 +117,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
   const isSelfAdmin = isAdminRow && isSelf;
 
   const filteredRoles = roles.filter(
-    (r) => isAdminRow || r.name.toUpperCase() !== "ADMIN"
+    (r) => isAdminRow || r.name.toUpperCase() !== "ADMIN",
   );
 
   const formatNumber = (val: number | string | undefined | null): string => {
@@ -167,16 +179,23 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
 
   const handleBranchCheckboxChange = (bId: string) => {
     setSelectedBranchIds((prev) =>
-      prev.includes(bId) ? prev.filter((id) => id !== bId) : [...prev, bId]
+      prev.includes(bId) ? prev.filter((id) => id !== bId) : [...prev, bId],
     );
   };
 
-  const uploadFile = async (base64Data: string, category: string, originalFilename?: string): Promise<string> => {
-    const data = await api.post<{ url: string }>(`/tenants/${currentTenantId}/upload`, {
-      file: base64Data,
-      category,
-      filename: originalFilename
-    });
+  const uploadFile = async (
+    base64Data: string,
+    category: string,
+    originalFilename?: string,
+  ): Promise<string> => {
+    const data = await api.post<{ url: string }>(
+      `/tenants/${currentTenantId}/upload`,
+      {
+        file: base64Data,
+        category,
+        filename: originalFilename,
+      },
+    );
     return data.url;
   };
 
@@ -247,7 +266,13 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
     <div className={styles.modalOverlay}>
       <div
         className={`card animate-fade-in ${styles.modalCard}`}
-        style={{ maxWidth: "600px", maxHeight: "90vh", overflowY: "auto", padding: "28px", position: "relative" }}
+        style={{
+          maxWidth: "600px",
+          maxHeight: "90vh",
+          overflowY: "auto",
+          padding: "28px",
+          position: "relative",
+        }}
         onDragEnter={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -317,35 +342,50 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
               }}
             >
               <ImagePlus size={32} style={{ color: "var(--color-primary)" }} />
-              <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-primary)" }}>
+              <span
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 600,
+                  color: "var(--color-primary)",
+                }}
+              >
                 Thả ảnh vào đây
               </span>
-              <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+              <span
+                style={{ fontSize: "12px", color: "var(--text-secondary)" }}
+              >
                 Ảnh sẽ được sử dụng làm avatar nhân viên
               </span>
             </div>
           </div>
         )}
-        <button
-          className={styles.closeButton}
-          onClick={onClose}
-        >
+        <button className={styles.closeButton} onClick={onClose}>
           <X size={20} />
         </button>
         <h2 className={styles.modalHeader}>
           {mode === "create" ? (
             <>
-              <Users size={20} style={{ color: "var(--color-primary)" }} /> Thêm nhân viên mới
+              <Users size={20} style={{ color: "var(--color-primary)" }} /> Thêm
+              nhân viên mới
             </>
           ) : (
             <>
-              <Edit2 size={20} style={{ color: "var(--color-primary)" }} /> Chỉnh sửa tài khoản nhân sự
+              <Edit2 size={20} style={{ color: "var(--color-primary)" }} />{" "}
+              Chỉnh sửa tài khoản nhân sự
             </>
           )}
         </h2>
 
         {/* Circular Avatar Uploader */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "8px",
+            marginBottom: "20px",
+          }}
+        >
           <div
             style={{
               position: "relative",
@@ -353,18 +393,22 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
               height: "90px",
               borderRadius: "50%",
               overflow: "hidden",
-              border: isDragOverAvatar 
-                ? "2px dashed var(--color-primary)" 
+              border: isDragOverAvatar
+                ? "2px dashed var(--color-primary)"
                 : "2px solid var(--border-color)",
               cursor: "pointer",
-              backgroundColor: isDragOverAvatar ? "rgba(0, 112, 243, 0.05)" : "#f1f5f9",
+              backgroundColor: isDragOverAvatar
+                ? "rgba(0, 112, 243, 0.05)"
+                : "#f1f5f9",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               transform: isDragOverAvatar ? "scale(1.05)" : "scale(1)",
-              transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
+              transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
-            onClick={() => document.getElementById("staff-avatar-input")?.click()}
+            onClick={() =>
+              document.getElementById("staff-avatar-input")?.click()
+            }
             onMouseEnter={() => setHoverAvatar(true)}
             onMouseLeave={() => setHoverAvatar(false)}
             onDragOver={(e) => {
@@ -414,7 +458,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 justifyContent: "center",
                 opacity: hoverAvatar && !isUploading ? 1 : 0,
                 transition: "opacity 0.15s ease",
-                color: "white"
+                color: "white",
               }}
             >
               <Camera size={20} />
@@ -436,7 +480,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                   color: "white",
                   fontSize: "11px",
                   fontWeight: "600",
-                  gap: "4px"
+                  gap: "4px",
                 }}
               >
                 <Loader2 className="animate-spin" size={18} />
@@ -468,10 +512,26 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
           )}
         </div>
 
-        <form onSubmit={handleModalSave} className={styles.modalForm} autoComplete="off">
+        <form
+          onSubmit={handleModalSave}
+          className={styles.modalForm}
+          autoComplete="off"
+        >
           {/* Dummy inputs to fool browser autofill */}
-          <input type="text" name="prevent_autofill_username" style={{ display: "none" }} tabIndex={-1} readOnly />
-          <input type="password" name="prevent_autofill_password" style={{ display: "none" }} tabIndex={-1} readOnly />
+          <input
+            type="text"
+            name="prevent_autofill_username"
+            style={{ display: "none" }}
+            tabIndex={-1}
+            readOnly
+          />
+          <input
+            type="password"
+            name="prevent_autofill_password"
+            style={{ display: "none" }}
+            tabIndex={-1}
+            readOnly
+          />
 
           <div className={styles.modalFormRow}>
             <div className={`form-group ${styles.formGroup}`}>
@@ -504,7 +564,9 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
 
           <div className={styles.modalFormRow}>
             <div className={`form-group ${styles.formGroup}`}>
-              <label className="form-label">Mật khẩu {mode === "create" ? "*" : "(để trống nếu giữ nguyên)"}</label>
+              <label className="form-label">
+                Mật khẩu {mode === "create" ? "*" : "(để trống nếu giữ nguyên)"}
+              </label>
               <input
                 className="form-input"
                 type="text"
@@ -515,9 +577,11 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={mode === "create" ? "Mật khẩu" : "••••••••"}
-                style={{
-                  WebkitTextSecurity: "disc"
-                } as any}
+                style={
+                  {
+                    WebkitTextSecurity: "disc",
+                  } as any
+                }
               />
             </div>
             <div className={`form-group ${styles.formGroup}`}>
@@ -536,7 +600,11 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
           <div className={styles.modalFormRow}>
             <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Giới tính</label>
-              <select className="form-input" value={sex} onChange={(e) => setSex(e.target.value)}>
+              <select
+                className="form-input"
+                value={sex}
+                onChange={(e) => setSex(e.target.value)}
+              >
                 <option value="Nam">Nam</option>
                 <option value="Nữ">Nữ</option>
                 <option value="Khác">Khác</option>
@@ -586,7 +654,9 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
 
           {/* Chi nhánh hoạt động checkboxes */}
           <div className={`form-group ${styles.formGroup}`}>
-            <label className="form-label">Chi nhánh hoạt động (Được chọn nhiều)</label>
+            <label className="form-label">
+              Chi nhánh hoạt động (Được chọn nhiều)
+            </label>
             <div
               style={{
                 display: "grid",
@@ -601,7 +671,13 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
               }}
             >
               {branchList.length === 0 ? (
-                <span style={{ fontSize: "12px", color: "var(--text-muted)", fontStyle: "italic" }}>
+                <span
+                  style={{
+                    fontSize: "12px",
+                    color: "var(--text-muted)",
+                    fontStyle: "italic",
+                  }}
+                >
                   Chưa có chi nhánh nào được tạo
                 </span>
               ) : (
@@ -618,7 +694,9 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                         cursor: "pointer",
                         userSelect: "none",
                         fontWeight: isChecked ? "600" : "400",
-                        color: isChecked ? "var(--color-primary)" : "var(--text-primary)",
+                        color: isChecked
+                          ? "var(--color-primary)"
+                          : "var(--text-primary)",
                       }}
                     >
                       <input
@@ -651,10 +729,19 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
           </div>
 
           <div className={styles.modalFooter}>
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onClose}
+            >
               Hủy bỏ
             </button>
-            <button type="submit" className="btn btn-primary" style={{ minWidth: "120px" }} disabled={isUploading}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ minWidth: "120px" }}
+              disabled={isUploading}
+            >
               {isUploading ? "Đang tải ảnh..." : "Lưu thông tin"}
             </button>
           </div>

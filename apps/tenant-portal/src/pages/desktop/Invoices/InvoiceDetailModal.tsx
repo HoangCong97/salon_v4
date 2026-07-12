@@ -37,8 +37,12 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
   if (!invoice) return null;
 
   const customerObj = customers.find((c) => c.id === invoice.customerId);
-  const customerName = customerObj ? customerObj.name : (invoice.customer?.name || "Khách vãng lai");
-  const customerPhone = customerObj ? customerObj.phone : (invoice.customer?.phone || "");
+  const customerName = customerObj
+    ? customerObj.name
+    : invoice.customer?.name || "Khách vãng lai";
+  const customerPhone = customerObj
+    ? customerObj.phone
+    : invoice.customer?.phone || "";
 
   // Normalize items for printing receipt
   const receiptItems = invoice.items?.map((item) => {
@@ -58,7 +62,8 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
     cashier: invoice.cashier || { name: "Thu ngân" },
     customer: { name: customerName, phone: customerPhone },
     items: receiptItems,
-    totalPrice: invoice.totalPrice || invoice.finalAmount + (invoice.discountAmount || 0),
+    totalPrice:
+      invoice.totalPrice || invoice.finalAmount + (invoice.discountAmount || 0),
     discountAmount: invoice.discountAmount || 0,
     finalAmount: invoice.finalAmount,
     paymentMethod: invoice.paymentMethod,
@@ -102,31 +107,47 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
           <div className={styles.metaGrid}>
             <div>
               <span className={styles.metaLabel}>THU NGÂN</span>
-              <strong className={styles.metaValueBold}>{invoice.cashier?.name || "Thu ngân"}</strong>
+              <strong className={styles.metaValueBold}>
+                {invoice.cashier?.name || "Thu ngân"}
+              </strong>
             </div>
             <div>
               <span className={styles.metaLabel}>KHÁCH HÀNG</span>
               <strong className={styles.metaValueBold}>{customerName}</strong>
-              {customerPhone && <span className={styles.metaValueMuted}>SĐT: {customerPhone}</span>}
+              {customerPhone && (
+                <span className={styles.metaValueMuted}>
+                  SĐT: {customerPhone}
+                </span>
+              )}
             </div>
             <div>
               <span className={styles.metaLabel}>THỜI GIAN THANH TOÁN</span>
-              <span className={styles.metaValueNormal}>{new Date(invoice.createdAt).toLocaleString("vi-VN")}</span>
+              <span className={styles.metaValueNormal}>
+                {new Date(invoice.createdAt).toLocaleString("vi-VN")}
+              </span>
             </div>
             <div>
               <span className={styles.metaLabel}>HÌNH THỨC THANH TOÁN</span>
-              <span className={invoice.paymentMethod === "CASH" ? styles.metaValuePaymentCash : styles.metaValuePaymentTransfer}>
-                {invoice.paymentMethod === "CASH" ? "Tiền mặt (CASH)" : "Chuyển khoản (BANK_TRANSFER)"}
+              <span
+                className={
+                  invoice.paymentMethod === "CASH"
+                    ? styles.metaValuePaymentCash
+                    : styles.metaValuePaymentTransfer
+                }
+              >
+                {invoice.paymentMethod === "CASH"
+                  ? "Tiền mặt (CASH)"
+                  : "Chuyển khoản (BANK_TRANSFER)"}
               </span>
             </div>
           </div>
 
           {/* Items table */}
           <div>
-            <span className={styles.sectionTitle}>
-              DANH SÁCH MẶT HÀNG
-            </span>
-            <div className={`data-table-container ${styles.itemsTableContainer}`}>
+            <span className={styles.sectionTitle}>DANH SÁCH MẶT HÀNG</span>
+            <div
+              className={`data-table-container ${styles.itemsTableContainer}`}
+            >
               <table className={`data-table ${styles.itemsTable}`}>
                 <thead>
                   <tr>
@@ -145,11 +166,15 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
                     const finalVal = item.price * item.quantity - discountVal;
                     return (
                       <tr key={idx}>
-                        <td className={styles.itemsTdBold}>
-                          {item.name}
+                        <td className={styles.itemsTdBold}>{item.name}</td>
+                        <td>
+                          {staffMember
+                            ? staffMember.name.split("(")[0]
+                            : "Không gán"}
                         </td>
-                        <td>{staffMember ? staffMember.name.split("(")[0] : "Không gán"}</td>
-                        <td className={`${styles.itemsTdEdit} ${styles.itemsTdRight}`}>
+                        <td
+                          className={`${styles.itemsTdEdit} ${styles.itemsTdRight}`}
+                        >
                           <ExcelInput
                             type="number"
                             value={item.price}
@@ -159,14 +184,26 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
                             disabled={true}
                           />
                         </td>
-                        <td className={`${styles.itemsTdEdit} ${styles.itemsTdRight}`} style={{ color: discountVal > 0 ? "var(--color-danger)" : "inherit" }}>
+                        <td
+                          className={`${styles.itemsTdEdit} ${styles.itemsTdRight}`}
+                          style={{
+                            color:
+                              discountVal > 0
+                                ? "var(--color-danger)"
+                                : "inherit",
+                          }}
+                        >
                           <ExcelInput
                             type="number"
                             value={discountVal}
                             onChange={() => {}}
                             textAlign="right"
                             unit="đ"
-                            textColor={discountVal > 0 ? "var(--color-danger)" : undefined}
+                            textColor={
+                              discountVal > 0
+                                ? "var(--color-danger)"
+                                : undefined
+                            }
                             disabled={true}
                           />
                         </td>
@@ -185,17 +222,26 @@ export const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({
           <div className={styles.calcSummary}>
             <div className={styles.calcRow}>
               <span className={styles.calcLabel}>Tổng cộng:</span>
-              <span className={styles.calcVal}>{formatCurrencyVND(invoice.totalPrice || invoice.finalAmount + (invoice.discountAmount || 0))}</span>
+              <span className={styles.calcVal}>
+                {formatCurrencyVND(
+                  invoice.totalPrice ||
+                    invoice.finalAmount + (invoice.discountAmount || 0),
+                )}
+              </span>
             </div>
             {invoice.discountAmount > 0 && (
               <div className={styles.calcDiscount}>
                 <span>Giảm giá:</span>
-                <span className={styles.calcVal}>-{formatCurrencyVND(invoice.discountAmount)}</span>
+                <span className={styles.calcVal}>
+                  -{formatCurrencyVND(invoice.discountAmount)}
+                </span>
               </div>
             )}
             <div className={styles.calcTotal}>
               <span className={styles.calcTotalLabel}>THÀNH TIỀN:</span>
-              <span className={styles.calcTotalVal}>{formatCurrencyVND(invoice.finalAmount)}</span>
+              <span className={styles.calcTotalVal}>
+                {formatCurrencyVND(invoice.finalAmount)}
+              </span>
             </div>
           </div>
         </div>

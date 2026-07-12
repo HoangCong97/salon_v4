@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, Headers, HttpStatus, HttpException } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  Headers,
+  HttpStatus,
+  HttpException,
+} from "@nestjs/common";
 import { prisma } from "@salon/database";
 import { NotificationGateway } from "./notification.gateway";
 
@@ -10,36 +23,37 @@ export class InventoryController {
   @Get()
   async getInventories(
     @Param("tenantId") tenantId: string,
-    @Query("branchId") branchId?: string
+    @Query("branchId") branchId?: string,
   ) {
     try {
       const whereClause: any = {
         tenantId,
-        deletedAt: null
+        deletedAt: null,
       };
 
       if (branchId) {
         whereClause.OR = [
           { branchId: branchId },
-          { branchId: null } // Include tenant-wide global inventory items too
+          { branchId: null }, // Include tenant-wide global inventory items too
         ];
       }
 
       const inventories = await prisma.inventory.findMany({
         where: whereClause,
         orderBy: {
-          createdAt: "desc"
-        }
+          createdAt: "desc",
+        },
       });
 
       return inventories.map((item) => ({
         ...item,
-        discountPrice: Number(item.sellPrice) - Number(item.discountAmount || 0)
+        discountPrice:
+          Number(item.sellPrice) - Number(item.discountAmount || 0),
       }));
     } catch (error) {
       throw new HttpException(
         `Failed to fetch inventory: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -49,7 +63,8 @@ export class InventoryController {
   async createInventory(
     @Param("tenantId") tenantId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: {
+    @Body()
+    body: {
       name: string;
       costPrice: number;
       sellPrice: number;
@@ -57,15 +72,21 @@ export class InventoryController {
       discountPrice?: number;
       imageUrl?: string;
       branchId?: string;
-    }
+    },
   ) {
     try {
       if (!body.name) {
-        throw new HttpException("Product name is required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Product name is required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const sellPrice = body.sellPrice || 0;
-      const discountPrice = body.discountPrice !== undefined && body.discountPrice !== null ? body.discountPrice : sellPrice;
+      const discountPrice =
+        body.discountPrice !== undefined && body.discountPrice !== null
+          ? body.discountPrice
+          : sellPrice;
       const discountAmount = Math.max(0, sellPrice - discountPrice);
 
       const created = await prisma.inventory.create({
@@ -77,21 +98,26 @@ export class InventoryController {
           sellPrice: sellPrice,
           quantity: body.quantity ?? 0,
           discountAmount: discountAmount,
-          imageUrl: body.imageUrl || null
-        }
+          imageUrl: body.imageUrl || null,
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "inventories.updated", { branchId: created.branchId, senderId });
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "inventories.updated",
+        { branchId: created.branchId, senderId },
+      );
 
       return {
         ...created,
-        discountPrice: Number(created.sellPrice) - Number(created.discountAmount || 0)
+        discountPrice:
+          Number(created.sellPrice) - Number(created.discountAmount || 0),
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to add inventory: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -102,7 +128,8 @@ export class InventoryController {
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: {
+    @Body()
+    body: {
       name: string;
       costPrice: number;
       sellPrice: number;
@@ -111,16 +138,19 @@ export class InventoryController {
       imageUrl?: string;
       branchId?: string;
       isActive?: boolean;
-    }
+    },
   ) {
     try {
       if (!body.name) {
-        throw new HttpException("Product name is required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Product name is required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       // Ensure item exists and belongs to tenant
       const existing = await prisma.inventory.findFirst({
-        where: { id, tenantId, deletedAt: null }
+        where: { id, tenantId, deletedAt: null },
       });
 
       if (!existing) {
@@ -128,7 +158,10 @@ export class InventoryController {
       }
 
       const sellPrice = body.sellPrice || 0;
-      const discountPrice = body.discountPrice !== undefined && body.discountPrice !== null ? body.discountPrice : sellPrice;
+      const discountPrice =
+        body.discountPrice !== undefined && body.discountPrice !== null
+          ? body.discountPrice
+          : sellPrice;
       const discountAmount = Math.max(0, sellPrice - discountPrice);
 
       const updated = await prisma.inventory.update({
@@ -142,21 +175,26 @@ export class InventoryController {
           discountAmount: discountAmount,
           imageUrl: body.imageUrl ?? null,
           isActive: body.isActive !== undefined ? body.isActive : undefined,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "inventories.updated", { branchId: updated.branchId, senderId });
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "inventories.updated",
+        { branchId: updated.branchId, senderId },
+      );
 
       return {
         ...updated,
-        discountPrice: Number(updated.sellPrice) - Number(updated.discountAmount || 0)
+        discountPrice:
+          Number(updated.sellPrice) - Number(updated.discountAmount || 0),
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to update inventory: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -166,11 +204,11 @@ export class InventoryController {
   async toggleInventoryActive(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
-    @Headers("x-user-id") senderId: string
+    @Headers("x-user-id") senderId: string,
   ) {
     try {
       const existing = await prisma.inventory.findFirst({
-        where: { id, tenantId, deletedAt: null }
+        where: { id, tenantId, deletedAt: null },
       });
 
       if (!existing) {
@@ -181,21 +219,26 @@ export class InventoryController {
         where: { id },
         data: {
           isActive: !existing.isActive,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "inventories.updated", { branchId: updated.branchId, senderId });
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "inventories.updated",
+        { branchId: updated.branchId, senderId },
+      );
 
       return {
         ...updated,
-        discountPrice: Number(updated.sellPrice) - Number(updated.discountAmount || 0)
+        discountPrice:
+          Number(updated.sellPrice) - Number(updated.discountAmount || 0),
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to toggle product status: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -205,33 +248,40 @@ export class InventoryController {
   async deleteInventory(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
-    @Headers("x-user-id") senderId: string
+    @Headers("x-user-id") senderId: string,
   ) {
     try {
       // Ensure item exists and belongs to tenant
       const existing = await prisma.inventory.findFirst({
-        where: { id, tenantId, deletedAt: null }
+        where: { id, tenantId, deletedAt: null },
       });
 
       if (!existing) {
-        throw new HttpException("Product not found or already deleted", HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          "Product not found or already deleted",
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       await prisma.inventory.update({
         where: { id },
         data: {
-          deletedAt: new Date()
-        }
+          deletedAt: new Date(),
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "inventories.updated", { branchId: existing.branchId, senderId });
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "inventories.updated",
+        { branchId: existing.branchId, senderId },
+      );
 
       return { success: true, message: "Product deleted successfully" };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to delete product: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

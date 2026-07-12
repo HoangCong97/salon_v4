@@ -12,13 +12,13 @@ export function exportToSpreadsheet<T>(
   data: T[],
   fileName: string,
   fileType: ExportFileType,
-  columns?: ExportColumnMapping[]
+  columns?: ExportColumnMapping[],
 ) {
   const sheetData: any[][] = [];
 
   // 1. Add headers row
   if (columns && columns.length > 0) {
-    sheetData.push(columns.map(c => c.header));
+    sheetData.push(columns.map((c) => c.header));
   } else if (data.length > 0) {
     sheetData.push(Object.keys(data[0] as any));
   }
@@ -26,7 +26,7 @@ export function exportToSpreadsheet<T>(
   // 2. Add data rows
   if (columns && columns.length > 0) {
     for (const row of data) {
-      const rowData = columns.map(col => {
+      const rowData = columns.map((col) => {
         let val = (row as any)[col.key];
         if (col.transform) {
           val = col.transform(val);

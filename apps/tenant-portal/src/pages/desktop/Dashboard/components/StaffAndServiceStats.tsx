@@ -32,13 +32,25 @@ export function StaffAndServiceStats({ charts }: StaffAndServiceStatsProps) {
   };
 
   // Staff Table Calculations
-  const staffTotalRevenue = staffPerformance.reduce((sum, s) => sum + s.revenue, 0);
-  const staffTotalCustomers = staffPerformance.reduce((sum, s) => sum + s.customers, 0);
-  const staffTotalRecords = staffPerformance.reduce((sum, s) => sum + s.recordCount, 0);
+  const staffTotalRevenue = staffPerformance.reduce(
+    (sum, s) => sum + s.revenue,
+    0,
+  );
+  const staffTotalCustomers = staffPerformance.reduce(
+    (sum, s) => sum + s.customers,
+    0,
+  );
+  const staffTotalRecords = staffPerformance.reduce(
+    (sum, s) => sum + s.recordCount,
+    0,
+  );
 
   // Service Table Calculations
   const serviceTotalQty = topServices.reduce((sum, s) => sum + s.count, 0);
-  const serviceTotalRevenue = topServices.reduce((sum, s) => sum + s.revenue, 0);
+  const serviceTotalRevenue = topServices.reduce(
+    (sum, s) => sum + s.revenue,
+    0,
+  );
 
   // Pad tables to at least 5 rows
   const minRows = 5;
@@ -72,8 +84,10 @@ export function StaffAndServiceStats({ charts }: StaffAndServiceStatsProps) {
   const pieSlices = staffPerformance.map((staff, idx) => {
     const color = sliceColors[idx % sliceColors.length];
     const revenue = staff.revenue;
-    const percentage = staffTotalRevenue > 0 ? (revenue / staffTotalRevenue) * 100 : 0;
-    const angle = staffTotalRevenue > 0 ? (revenue / staffTotalRevenue) * 360 : 0;
+    const percentage =
+      staffTotalRevenue > 0 ? (revenue / staffTotalRevenue) * 100 : 0;
+    const angle =
+      staffTotalRevenue > 0 ? (revenue / staffTotalRevenue) * 360 : 0;
 
     const startAngleRad = (currentAngle * Math.PI) / 180;
     const endAngleRad = ((currentAngle + angle) * Math.PI) / 180;
@@ -88,8 +102,8 @@ export function StaffAndServiceStats({ charts }: StaffAndServiceStatsProps) {
 
     // Label placement (inside slice)
     const midAngleRad = ((currentAngle + angle / 2) * Math.PI) / 180;
-    const labelX = cx + (r * 0.65) * Math.cos(midAngleRad);
-    const labelY = cy + (r * 0.65) * Math.sin(midAngleRad);
+    const labelX = cx + r * 0.65 * Math.cos(midAngleRad);
+    const labelY = cy + r * 0.65 * Math.sin(midAngleRad);
 
     currentAngle += angle;
 
@@ -101,7 +115,7 @@ export function StaffAndServiceStats({ charts }: StaffAndServiceStatsProps) {
       pathData,
       labelX,
       labelY,
-      angle
+      angle,
     };
   });
 
@@ -109,7 +123,6 @@ export function StaffAndServiceStats({ charts }: StaffAndServiceStatsProps) {
     <div className={styles.staffAndServiceSection}>
       {/* Tables Side-by-Side row */}
       <div className={styles.statsTablesGrid}>
-
         {/* STAFF PERFORMANCE TABLE */}
         <div className={styles.splitCard}>
           <TableSectionHeader title="Nhân viên" />
@@ -119,7 +132,9 @@ export function StaffAndServiceStats({ charts }: StaffAndServiceStatsProps) {
               <thead>
                 <tr>
                   <th style={{ textAlign: "left", width: "40%" }}>Nhân viên</th>
-                  <th style={{ textAlign: "right", width: "25%" }}>Giá dịch vụ</th>
+                  <th style={{ textAlign: "right", width: "25%" }}>
+                    Giá dịch vụ
+                  </th>
                   <th style={{ textAlign: "right", width: "15%" }}>Khách</th>
                   <th style={{ textAlign: "right", width: "20%" }}>Records</th>
                 </tr>
@@ -127,17 +142,49 @@ export function StaffAndServiceStats({ charts }: StaffAndServiceStatsProps) {
               <tbody>
                 {paddedStaff.map((staff) => (
                   <tr key={staff.staffId} className={styles.clickableTableRow}>
-                    <td style={{ fontWeight: "500", textAlign: "left", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    <td
+                      style={{
+                        fontWeight: "500",
+                        textAlign: "left",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
                       {staff.staffName || "\u00A0"}
                     </td>
-                    <td style={{ textAlign: "right", color: "var(--color-primary-dark)", fontWeight: "500" }}>
-                      {staff.staffName ? (staff.revenue > 0 ? formatNumber(staff.revenue) : "-") : "\u00A0"}
+                    <td
+                      style={{
+                        textAlign: "right",
+                        color: "var(--color-primary-dark)",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {staff.staffName
+                        ? staff.revenue > 0
+                          ? formatNumber(staff.revenue)
+                          : "-"
+                        : "\u00A0"}
                     </td>
-                    <td style={{ textAlign: "right", color: "var(--text-secondary)", fontWeight: "500" }}>
-                      {staff.staffName ? (staff.customers > 0 ? formatNumber(staff.customers) : "-") : "\u00A0"}
+                    <td
+                      style={{
+                        textAlign: "right",
+                        color: "var(--text-secondary)",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {staff.staffName
+                        ? staff.customers > 0
+                          ? formatNumber(staff.customers)
+                          : "-"
+                        : "\u00A0"}
                     </td>
                     <td style={{ textAlign: "right", fontWeight: "700" }}>
-                      {staff.staffName ? (staff.recordCount > 0 ? formatNumber(staff.recordCount) : "-") : "\u00A0"}
+                      {staff.staffName
+                        ? staff.recordCount > 0
+                          ? formatNumber(staff.recordCount)
+                          : "-"
+                        : "\u00A0"}
                     </td>
                   </tr>
                 ))}
@@ -145,13 +192,31 @@ export function StaffAndServiceStats({ charts }: StaffAndServiceStatsProps) {
               <tfoot>
                 <tr>
                   <td style={{ fontWeight: "700" }}>Tổng cộng</td>
-                  <td style={{ textAlign: "right", fontWeight: "700", color: "var(--color-primary)" }}>
+                  <td
+                    style={{
+                      textAlign: "right",
+                      fontWeight: "700",
+                      color: "var(--color-primary)",
+                    }}
+                  >
                     {formatNumber(staffTotalRevenue)}
                   </td>
-                  <td style={{ textAlign: "right", fontWeight: "700", color: "#f57c00" }}>
+                  <td
+                    style={{
+                      textAlign: "right",
+                      fontWeight: "700",
+                      color: "#f57c00",
+                    }}
+                  >
                     {formatNumber(staffTotalCustomers)}
                   </td>
-                  <td style={{ textAlign: "right", fontWeight: "700", color: "#2196f3" }}>
+                  <td
+                    style={{
+                      textAlign: "right",
+                      fontWeight: "700",
+                      color: "#2196f3",
+                    }}
+                  >
                     {formatNumber(staffTotalRecords)}
                   </td>
                 </tr>
@@ -170,20 +235,44 @@ export function StaffAndServiceStats({ charts }: StaffAndServiceStatsProps) {
                 <tr>
                   <th style={{ textAlign: "left", width: "50%" }}>Dịch vụ</th>
                   <th style={{ textAlign: "right", width: "20%" }}>SL</th>
-                  <th style={{ textAlign: "right", width: "30%" }}>Thành tiền</th>
+                  <th style={{ textAlign: "right", width: "30%" }}>
+                    Thành tiền
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {paddedServices.map((service) => (
                   <tr key={service.id} className={styles.clickableTableRow}>
-                    <td style={{ fontWeight: "500", textAlign: "left", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    <td
+                      style={{
+                        fontWeight: "500",
+                        textAlign: "left",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
                       {service.name || "\u00A0"}
                     </td>
-                    <td style={{ textAlign: "right", color: "var(--text-secondary)", fontWeight: "500" }}>
-                      {service.name ? (service.count > 0 ? formatNumber(service.count) : "-") : "\u00A0"}
+                    <td
+                      style={{
+                        textAlign: "right",
+                        color: "var(--text-secondary)",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {service.name
+                        ? service.count > 0
+                          ? formatNumber(service.count)
+                          : "-"
+                        : "\u00A0"}
                     </td>
                     <td style={{ textAlign: "right", fontWeight: "700" }}>
-                      {service.name ? (service.revenue > 0 ? formatNumber(service.revenue) : "-") : "\u00A0"}
+                      {service.name
+                        ? service.revenue > 0
+                          ? formatNumber(service.revenue)
+                          : "-"
+                        : "\u00A0"}
                     </td>
                   </tr>
                 ))}
@@ -191,10 +280,22 @@ export function StaffAndServiceStats({ charts }: StaffAndServiceStatsProps) {
               <tfoot>
                 <tr>
                   <td style={{ fontWeight: "700" }}>Tổng cộng</td>
-                  <td style={{ textAlign: "right", fontWeight: "700", color: "#f57c00" }}>
+                  <td
+                    style={{
+                      textAlign: "right",
+                      fontWeight: "700",
+                      color: "#f57c00",
+                    }}
+                  >
                     {formatNumber(serviceTotalQty)}
                   </td>
-                  <td style={{ textAlign: "right", fontWeight: "700", color: "var(--color-success)" }}>
+                  <td
+                    style={{
+                      textAlign: "right",
+                      fontWeight: "700",
+                      color: "var(--color-success)",
+                    }}
+                  >
                     {formatNumber(serviceTotalRevenue)}
                   </td>
                 </tr>
@@ -202,17 +303,20 @@ export function StaffAndServiceStats({ charts }: StaffAndServiceStatsProps) {
             </table>
           </div>
         </div>
-
       </div>
 
       {/* STAFF REVENUE PIE CHART CARD */}
       <div className={styles.pieChartCard}>
-
         <div className={styles.pieLayoutContainer}>
           {/* SVG Pie Chart */}
           <div className={styles.pieSvgWrapper}>
             {staffTotalRevenue > 0 ? (
-              <svg width="350" height="350" viewBox="0 0 350 350" className={styles.pieSvg}>
+              <svg
+                width="350"
+                height="350"
+                viewBox="0 0 350 350"
+                className={styles.pieSvg}
+              >
                 <g>
                   {pieSlices.map((slice) => (
                     <g key={slice.staffName}>
@@ -243,7 +347,9 @@ export function StaffAndServiceStats({ charts }: StaffAndServiceStatsProps) {
                 </g>
               </svg>
             ) : (
-              <div className={styles.emptyPieState}>Không có dữ liệu doanh thu</div>
+              <div className={styles.emptyPieState}>
+                Không có dữ liệu doanh thu
+              </div>
             )}
           </div>
 
@@ -255,7 +361,9 @@ export function StaffAndServiceStats({ charts }: StaffAndServiceStatsProps) {
                   className={styles.legendColorIndicator}
                   style={{ backgroundColor: slice.color }}
                 ></span>
-                <span className={styles.legendLabelText}>{slice.staffName}</span>
+                <span className={styles.legendLabelText}>
+                  {slice.staffName}
+                </span>
                 <span className={styles.legendPercentageText}>
                   ({slice.percentage.toFixed(1)}%)
                 </span>

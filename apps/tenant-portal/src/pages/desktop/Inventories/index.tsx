@@ -79,22 +79,75 @@ export default function Inventories() {
   });
 
   // Schema definition for importing products
-  const inventorySchema = useMemo<TargetField[]>(() => [
-    { field: "name", label: "Tên sản phẩm", type: "string", required: true, description: "Tên hiển thị của sản phẩm/hàng hóa" },
-    { field: "sellPrice", label: "Giá bán", type: "number", required: true, description: "Giá niêm yết bán ra (VND)" },
-    { field: "costPrice", label: "Giá vốn", type: "number", required: false, description: "Giá nhập kho (VND)" },
-    { field: "discountPrice", label: "Giá khuyến mãi", type: "number", required: false, description: "Giá khuyến mãi bán ra (VND)" },
-    { field: "quantity", label: "Số lượng", type: "number", required: false, description: "Số lượng tồn kho ban đầu" }
-  ], []);
+  const inventorySchema = useMemo<TargetField[]>(
+    () => [
+      {
+        field: "name",
+        label: "Tên sản phẩm",
+        type: "string",
+        required: true,
+        description: "Tên hiển thị của sản phẩm/hàng hóa",
+      },
+      {
+        field: "sellPrice",
+        label: "Giá bán",
+        type: "number",
+        required: true,
+        description: "Giá niêm yết bán ra (VND)",
+      },
+      {
+        field: "costPrice",
+        label: "Giá vốn",
+        type: "number",
+        required: false,
+        description: "Giá nhập kho (VND)",
+      },
+      {
+        field: "discountPrice",
+        label: "Giá khuyến mãi",
+        type: "number",
+        required: false,
+        description: "Giá khuyến mãi bán ra (VND)",
+      },
+      {
+        field: "quantity",
+        label: "Số lượng",
+        type: "number",
+        required: false,
+        description: "Số lượng tồn kho ban đầu",
+      },
+    ],
+    [],
+  );
 
   // Column mapping for exporting products
-  const inventoryExportColumns = useMemo<ExportColumnMapping[]>(() => [
-    { key: "name", header: "Tên sản phẩm" },
-    { key: "costPrice", header: "Giá vốn (VND)", transform: (val) => Number(val) },
-    { key: "sellPrice", header: "Giá bán (VND)", transform: (val) => Number(val) },
-    { key: "discountPrice", header: "Giá khuyến mãi (VND)", transform: (val) => val !== null && val !== undefined ? Number(val) : "" },
-    { key: "quantity", header: "Số lượng tồn kho", transform: (val) => Number(val) }
-  ], []);
+  const inventoryExportColumns = useMemo<ExportColumnMapping[]>(
+    () => [
+      { key: "name", header: "Tên sản phẩm" },
+      {
+        key: "costPrice",
+        header: "Giá vốn (VND)",
+        transform: (val) => Number(val),
+      },
+      {
+        key: "sellPrice",
+        header: "Giá bán (VND)",
+        transform: (val) => Number(val),
+      },
+      {
+        key: "discountPrice",
+        header: "Giá khuyến mãi (VND)",
+        transform: (val) =>
+          val !== null && val !== undefined ? Number(val) : "",
+      },
+      {
+        key: "quantity",
+        header: "Số lượng tồn kho",
+        transform: (val) => Number(val),
+      },
+    ],
+    [],
+  );
 
   return (
     <>
@@ -201,4 +254,3 @@ export default function Inventories() {
     </>
   );
 }
-

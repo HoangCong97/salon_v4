@@ -4,10 +4,9 @@ import { BaseImportStrategy } from "./base-import.strategy";
 
 @Injectable()
 export class PayrollImportStrategy extends BaseImportStrategy {
-
   validate(row: any): string[] {
     const requiredFields = [
-      { field: "salaryPeriod", label: "Chu kỳ lương (YYYY-MM)" }
+      { field: "salaryPeriod", label: "Chu kỳ lương (YYYY-MM)" },
     ];
 
     const errors = this.validateRequired(row, requiredFields);
@@ -24,7 +23,9 @@ export class PayrollImportStrategy extends BaseImportStrategy {
     if (period) {
       const periodRegex = /^\d{4}-\d{2}$/;
       if (!periodRegex.test(period)) {
-        errors.push("Chu kỳ lương phải đúng định dạng YYYY-MM (Ví dụ: 2026-06).");
+        errors.push(
+          "Chu kỳ lương phải đúng định dạng YYYY-MM (Ví dụ: 2026-06).",
+        );
       }
     }
 
@@ -34,7 +35,7 @@ export class PayrollImportStrategy extends BaseImportStrategy {
   async execute(
     tenantId: string,
     branchId: string | null,
-    data: any[]
+    data: any[],
   ): Promise<{
     importedCount: number;
     failedCount: number;
@@ -50,7 +51,7 @@ export class PayrollImportStrategy extends BaseImportStrategy {
     const staffNameCache = new Map<string, string>();
 
     const allStaff = await prisma.user.findMany({
-      where: { tenantId, deletedAt: null }
+      where: { tenantId, deletedAt: null },
     });
 
     for (const s of allStaff) {
@@ -72,14 +73,20 @@ export class PayrollImportStrategy extends BaseImportStrategy {
           errors.push({
             row: rowNum,
             data: row,
-            reason: validationErrors.join(" ")
+            reason: validationErrors.join(" "),
           });
           continue;
         }
 
-        const email = this.cleanString(row.email || row.staffEmail).toLowerCase().trim();
-        const phone = this.cleanString(row.phone || row.staffPhone || row.sdt).trim();
-        const name = this.cleanString(row.name || row.staffName || row.nhanvien).toLowerCase().trim();
+        const email = this.cleanString(row.email || row.staffEmail)
+          .toLowerCase()
+          .trim();
+        const phone = this.cleanString(
+          row.phone || row.staffPhone || row.sdt,
+        ).trim();
+        const name = this.cleanString(row.name || row.staffName || row.nhanvien)
+          .toLowerCase()
+          .trim();
         const salaryPeriod = this.cleanString(row.salaryPeriod);
 
         // 2. Resolve Staff
@@ -97,7 +104,8 @@ export class PayrollImportStrategy extends BaseImportStrategy {
           errors.push({
             row: rowNum,
             data: row,
-            reason: "Không tìm thấy nhân viên tương ứng trong hệ thống (tìm theo email, sđt hoặc họ tên)."
+            reason:
+              "Không tìm thấy nhân viên tương ứng trong hệ thống (tìm theo email, sđt hoặc họ tên).",
           });
           continue;
         }
@@ -107,14 +115,14 @@ export class PayrollImportStrategy extends BaseImportStrategy {
         if (!targetBranchId) {
           // If branchId query param was not provided, look up user's primary/first branch
           const userBranch = await prisma.userBranch.findFirst({
-            where: { userId: staffId, deletedAt: null }
+            where: { userId: staffId, deletedAt: null },
           });
           if (userBranch) {
             targetBranchId = userBranch.branchId;
           } else {
             // Fallback: pick any branch in the tenant
             const fallbackBranch = await prisma.branch.findFirst({
-              where: { tenantId, deletedAt: null }
+              where: { tenantId, deletedAt: null },
             });
             if (fallbackBranch) {
               targetBranchId = fallbackBranch.id;
@@ -127,23 +135,44 @@ export class PayrollImportStrategy extends BaseImportStrategy {
           errors.push({
             row: rowNum,
             data: row,
-            reason: "Không xác định được chi nhánh áp dụng cho bảng lương."
+            reason: "Không xác định được chi nhánh áp dụng cho bảng lương.",
           });
           continue;
         }
 
         // Clean salary details
-        const baseSalary = this.cleanNumber(row.baseSalary || row.luongcoban, 0);
+        const baseSalary = this.cleanNumber(
+          row.baseSalary || row.luongcoban,
+          0,
+        );
         const allowance = this.cleanNumber(row.allowance || row.phucap, 0);
-        const commissionAmount = this.cleanNumber(row.commissionAmount || row.hoahong || row.commission, 0);
+        const commissionAmount = this.cleanNumber(
+          row.commissionAmount || row.hoahong || row.commission,
+          0,
+        );
         const tipAmount = this.cleanNumber(row.tipAmount || row.tip, 0);
-        const deductionAmount = this.cleanNumber(row.deductionAmount || row.khautru, 0);
-        
-        // Calculate finalSalary
-        const calculatedFinal = baseSalary + allowance + commissionAmount + tipAmount - deductionAmount;
-        const finalSalary = this.cleanNumber(row.finalSalary || row.thucnhan, calculatedFinal > 0 ? calculatedFinal : 0);
+        const deductionAmount = this.cleanNumber(
+          row.deductionAmount || row.khautru,
+          0,
+        );
 
-        const status = this.cleanString(row.status || row.trangthai) === "PAID" || this.cleanString(row.status || row.trangthai) === "Đã thanh toán" ? "PAID" : "DRAFT";
+        // Calculate finalSalary
+        const calculatedFinal =
+          baseSalary +
+          allowance +
+          commissionAmount +
+          tipAmount -
+          deductionAmount;
+        const finalSalary = this.cleanNumber(
+          row.finalSalary || row.thucnhan,
+          calculatedFinal > 0 ? calculatedFinal : 0,
+        );
+
+        const status =
+          this.cleanString(row.status || row.trangthai) === "PAID" ||
+          this.cleanString(row.status || row.trangthai) === "Đã thanh toán"
+            ? "PAID"
+            : "DRAFT";
 
         // 4. Create or Update payroll record
         const existingPayroll = await prisma.employeeMonthlyPayroll.findFirst({
@@ -152,8 +181,8 @@ export class PayrollImportStrategy extends BaseImportStrategy {
             branchId: targetBranchId,
             staffId,
             salaryPeriod,
-            deletedAt: null
-          }
+            deletedAt: null,
+          },
         });
 
         if (existingPayroll) {
@@ -167,9 +196,14 @@ export class PayrollImportStrategy extends BaseImportStrategy {
               deductionAmount,
               finalSalary,
               status,
-              paidAt: status === "PAID" ? (existingPayroll.status === "PAID" ? existingPayroll.paidAt : new Date()) : null,
-              updatedAt: new Date()
-            }
+              paidAt:
+                status === "PAID"
+                  ? existingPayroll.status === "PAID"
+                    ? existingPayroll.paidAt
+                    : new Date()
+                  : null,
+              updatedAt: new Date(),
+            },
           });
         } else {
           await prisma.employeeMonthlyPayroll.create({
@@ -185,8 +219,8 @@ export class PayrollImportStrategy extends BaseImportStrategy {
               deductionAmount,
               finalSalary,
               status,
-              paidAt: status === "PAID" ? new Date() : null
-            }
+              paidAt: status === "PAID" ? new Date() : null,
+            },
           });
         }
 
@@ -196,7 +230,7 @@ export class PayrollImportStrategy extends BaseImportStrategy {
         errors.push({
           row: rowNum,
           data: row,
-          reason: `Lỗi hệ thống: ${err.message || err}`
+          reason: `Lỗi hệ thống: ${err.message || err}`,
         });
       }
     }
@@ -204,7 +238,7 @@ export class PayrollImportStrategy extends BaseImportStrategy {
     return {
       importedCount,
       failedCount,
-      errors
+      errors,
     };
   }
 }

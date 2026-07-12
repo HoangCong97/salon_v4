@@ -1,7 +1,15 @@
 import React, { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useToast } from "../components/desktop/ToastProvider";
-import { KeyRound, AlertCircle, Loader2, Eye, EyeOff, Store, User } from "lucide-react";
+import {
+  KeyRound,
+  AlertCircle,
+  Loader2,
+  Eye,
+  EyeOff,
+  Store,
+  User,
+} from "lucide-react";
 
 export default function Login() {
   const { login } = useAuthStore();
@@ -17,7 +25,9 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!brandName.trim() || !loginId.trim() || !password.trim()) {
-      setError("Vui lòng nhập đầy đủ Tên gian hàng, Tên đăng nhập và Mật khẩu.");
+      setError(
+        "Vui lòng nhập đầy đủ Tên gian hàng, Tên đăng nhập và Mật khẩu.",
+      );
       return;
     }
 
@@ -25,7 +35,12 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const success = await login(brandName.trim(), loginId.trim(), password, rememberMe);
+      const success = await login(
+        brandName.trim(),
+        loginId.trim(),
+        password,
+        rememberMe,
+      );
       if (success) {
         toast.success("Đăng nhập thành công!");
       }
@@ -51,12 +66,13 @@ export default function Login() {
         alignItems: "center",
         justifyContent: "center",
         minHeight: "100vh",
-        background: "linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=80')",
+        background:
+          "linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=80')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         fontFamily: "var(--font-family)",
         padding: "24px",
-        position: "relative"
+        position: "relative",
       }}
     >
       <div
@@ -67,14 +83,23 @@ export default function Login() {
           backgroundColor: "#ffffff",
           borderRadius: "20px",
           padding: "40px",
-          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.15)",
+          boxShadow:
+            "0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.15)",
           display: "flex",
           flexDirection: "column",
-          gap: "24px"
+          gap: "24px",
         }}
       >
         {/* Branding Logo */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", textAlign: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "10px",
+            textAlign: "center",
+          }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <div
               style={{
@@ -85,7 +110,7 @@ export default function Login() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 4px 12px rgba(0, 112, 243, 0.3)"
+                boxShadow: "0 4px 12px rgba(0, 112, 243, 0.3)",
               }}
             >
               <svg
@@ -107,7 +132,14 @@ export default function Login() {
                 <line x1="8.12" y1="8.12" x2="12" y2="12" />
               </svg>
             </div>
-            <span style={{ fontSize: "26px", fontWeight: "800", color: "#1e293b", letterSpacing: "-0.5px" }}>
+            <span
+              style={{
+                fontSize: "26px",
+                fontWeight: "800",
+                color: "#1e293b",
+                letterSpacing: "-0.5px",
+              }}
+            >
               SALON<span style={{ color: "#0070f3" }}>SaaS</span>
             </span>
           </div>
@@ -121,7 +153,7 @@ export default function Login() {
               fontSize: "12px",
               fontWeight: "600",
               letterSpacing: "0.2px",
-              display: "inline-block"
+              display: "inline-block",
             }}
           >
             Hair Salon, Nails, Massage & Spa
@@ -139,7 +171,7 @@ export default function Login() {
               alignItems: "center",
               gap: "8px",
               color: "#b91c1c",
-              fontSize: "13px"
+              fontSize: "13px",
             }}
           >
             <AlertCircle size={16} style={{ flexShrink: 0 }} />
@@ -147,14 +179,34 @@ export default function Login() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+        >
           {/* Tên gian hàng */}
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label style={{ fontSize: "13px", fontWeight: "600", color: "#475569", marginBottom: "6px", display: "block" }}>
+            <label
+              style={{
+                fontSize: "13px",
+                fontWeight: "600",
+                color: "#475569",
+                marginBottom: "6px",
+                display: "block",
+              }}
+            >
               Tên gian hàng *
             </label>
             <div style={{ position: "relative" }}>
-              <Store size={18} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+              <Store
+                size={18}
+                style={{
+                  position: "absolute",
+                  left: "14px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#94a3b8",
+                }}
+              />
               <input
                 type="text"
                 required
@@ -171,11 +223,12 @@ export default function Login() {
                   borderRadius: "8px",
                   outline: "none",
                   fontSize: "14px",
-                  transition: "all 0.15s ease"
+                  transition: "all 0.15s ease",
                 }}
                 onFocus={(e) => {
                   e.target.style.borderColor = "#0070f3";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(0, 112, 243, 0.15)";
+                  e.target.style.boxShadow =
+                    "0 0 0 3px rgba(0, 112, 243, 0.15)";
                 }}
                 onBlur={(e) => {
                   e.target.style.borderColor = "#cbd5e1";
@@ -187,11 +240,28 @@ export default function Login() {
 
           {/* Tên đăng nhập */}
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label style={{ fontSize: "13px", fontWeight: "600", color: "#475569", marginBottom: "6px", display: "block" }}>
+            <label
+              style={{
+                fontSize: "13px",
+                fontWeight: "600",
+                color: "#475569",
+                marginBottom: "6px",
+                display: "block",
+              }}
+            >
               Tên đăng nhập *
             </label>
             <div style={{ position: "relative" }}>
-              <User size={18} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+              <User
+                size={18}
+                style={{
+                  position: "absolute",
+                  left: "14px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#94a3b8",
+                }}
+              />
               <input
                 type="text"
                 required
@@ -208,11 +278,12 @@ export default function Login() {
                   borderRadius: "8px",
                   outline: "none",
                   fontSize: "14px",
-                  transition: "all 0.15s ease"
+                  transition: "all 0.15s ease",
                 }}
                 onFocus={(e) => {
                   e.target.style.borderColor = "#0070f3";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(0, 112, 243, 0.15)";
+                  e.target.style.boxShadow =
+                    "0 0 0 3px rgba(0, 112, 243, 0.15)";
                 }}
                 onBlur={(e) => {
                   e.target.style.borderColor = "#cbd5e1";
@@ -224,11 +295,28 @@ export default function Login() {
 
           {/* Mật khẩu */}
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label style={{ fontSize: "13px", fontWeight: "600", color: "#475569", marginBottom: "6px", display: "block" }}>
+            <label
+              style={{
+                fontSize: "13px",
+                fontWeight: "600",
+                color: "#475569",
+                marginBottom: "6px",
+                display: "block",
+              }}
+            >
               Nhập mật khẩu *
             </label>
             <div style={{ position: "relative" }}>
-              <KeyRound size={18} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+              <KeyRound
+                size={18}
+                style={{
+                  position: "absolute",
+                  left: "14px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#94a3b8",
+                }}
+              />
               <input
                 type="text"
                 required
@@ -236,21 +324,24 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
-                style={{
-                  width: "100%",
-                  padding: "11px 40px 11px 42px",
-                  border: "1px solid #cbd5e1",
-                  backgroundColor: "#ffffff",
-                  color: "#1e293b",
-                  borderRadius: "8px",
-                  outline: "none",
-                  fontSize: "14px",
-                  transition: "all 0.15s ease",
-                  WebkitTextSecurity: showPassword ? "none" : "disc",
-                } as any}
+                style={
+                  {
+                    width: "100%",
+                    padding: "11px 40px 11px 42px",
+                    border: "1px solid #cbd5e1",
+                    backgroundColor: "#ffffff",
+                    color: "#1e293b",
+                    borderRadius: "8px",
+                    outline: "none",
+                    fontSize: "14px",
+                    transition: "all 0.15s ease",
+                    WebkitTextSecurity: showPassword ? "none" : "disc",
+                  } as any
+                }
                 onFocus={(e) => {
                   e.target.style.borderColor = "#0070f3";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(0, 112, 243, 0.15)";
+                  e.target.style.boxShadow =
+                    "0 0 0 3px rgba(0, 112, 243, 0.15)";
                 }}
                 onBlur={(e) => {
                   e.target.style.borderColor = "#cbd5e1";
@@ -270,7 +361,7 @@ export default function Login() {
                   cursor: "pointer",
                   color: "#64748b",
                   display: "flex",
-                  alignItems: "center"
+                  alignItems: "center",
                 }}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -279,8 +370,25 @@ export default function Login() {
           </div>
 
           {/* Duy trì đăng nhập & Quên mật khẩu */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "13px", marginTop: "-4px" }}>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", color: "#475569", cursor: "pointer", fontWeight: "500" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              fontSize: "13px",
+              marginTop: "-4px",
+            }}
+          >
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                color: "#475569",
+                cursor: "pointer",
+                fontWeight: "500",
+              }}
+            >
               <input
                 type="checkbox"
                 checked={rememberMe}
@@ -291,7 +399,7 @@ export default function Login() {
                   borderRadius: "4px",
                   border: "1px solid #cbd5e1",
                   accentColor: "#0070f3",
-                  cursor: "pointer"
+                  cursor: "pointer",
                 }}
               />
               Duy trì đăng nhập
@@ -300,16 +408,18 @@ export default function Login() {
               href="#/forgot-password"
               onClick={(e) => {
                 e.preventDefault();
-                toast.info("Vui lòng liên hệ Hotline hỗ trợ 1900 6522 để khôi phục mật khẩu.");
+                toast.info(
+                  "Vui lòng liên hệ Hotline hỗ trợ 1900 6522 để khôi phục mật khẩu.",
+                );
               }}
               style={{
                 color: "#64748b",
                 textDecoration: "none",
                 fontWeight: "500",
-                transition: "color 0.15s ease"
+                transition: "color 0.15s ease",
               }}
-              onMouseEnter={(e) => e.currentTarget.style.color = "#0070f3"}
-              onMouseLeave={(e) => e.currentTarget.style.color = "#64748b"}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#0070f3")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#64748b")}
             >
               Quên mật khẩu
             </a>
@@ -335,10 +445,14 @@ export default function Login() {
               boxShadow: "0 4px 12px rgba(0, 112, 243, 0.2)",
               transition: "all 0.2s ease",
               width: "100%",
-              marginTop: "10px"
+              marginTop: "10px",
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#0061d5"}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#0070f3"}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor = "#0061d5")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor = "#0070f3")
+            }
           >
             {loading ? (
               <>
@@ -351,21 +465,34 @@ export default function Login() {
         </form>
 
         {/* Register Account */}
-        <div style={{ textAlign: "center", fontSize: "14px", color: "#475569", marginTop: "10px" }}>
+        <div
+          style={{
+            textAlign: "center",
+            fontSize: "14px",
+            color: "#475569",
+            marginTop: "10px",
+          }}
+        >
           Bạn chưa có tài khoản?{" "}
           <a
             href="#/register"
             onClick={(e) => {
               e.preventDefault();
-              toast.info("Vui lòng đăng ký dịch vụ qua Hotline hỗ trợ 1900 6522.");
+              toast.info(
+                "Vui lòng đăng ký dịch vụ qua Hotline hỗ trợ 1900 6522.",
+              );
             }}
             style={{
               color: "#0070f3",
               fontWeight: "600",
-              textDecoration: "none"
+              textDecoration: "none",
             }}
-            onMouseEnter={(e) => e.currentTarget.style.textDecoration = "underline"}
-            onMouseLeave={(e) => e.currentTarget.style.textDecoration = "none"}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.textDecoration = "underline")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.textDecoration = "none")
+            }
           >
             Đăng ký ngay
           </a>
@@ -388,13 +515,26 @@ export default function Login() {
           fontSize: "12px",
           display: "flex",
           flexDirection: "column",
-          gap: "8px"
+          gap: "8px",
         }}
       >
-        <div style={{ fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
+        <div
+          style={{
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+          }}
+        >
           🔑 Tài khoản dùng thử (Seeded):
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "8px",
+          }}
+        >
           <button
             onClick={() => handleQuickFill("0971218625", "0971218625")}
             style={{
@@ -406,12 +546,17 @@ export default function Login() {
               cursor: "pointer",
               textAlign: "left",
               fontSize: "11px",
-              transition: "all 0.15s ease"
+              transition: "all 0.15s ease",
             }}
-            onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.3)"}
-            onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)"}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = "rgba(255, 255, 255, 0.3)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)")
+            }
           >
-            <strong>Chủ Salon (Admin)</strong><br />
+            <strong>Chủ Salon (Admin)</strong>
+            <br />
             CH: 0971218625 / TK: 0971218625
           </button>
 
@@ -426,12 +571,17 @@ export default function Login() {
               cursor: "pointer",
               textAlign: "left",
               fontSize: "11px",
-              transition: "all 0.15s ease"
+              transition: "all 0.15s ease",
             }}
-            onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.3)"}
-            onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)"}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = "rgba(255, 255, 255, 0.3)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)")
+            }
           >
-            <strong>Nhân viên (Mobile)</strong><br />
+            <strong>Nhân viên (Mobile)</strong>
+            <br />
             CH: 0971218625 / TK: tien.le
           </button>
         </div>
@@ -447,14 +597,21 @@ export default function Login() {
           gap: "24px",
           color: "rgba(255, 255, 255, 0.8)",
           fontSize: "13px",
-          fontWeight: "500"
+          fontWeight: "500",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
           <span>📞 Hỗ trợ:</span>
           <strong style={{ color: "white" }}>1900 6522</strong>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            cursor: "pointer",
+          }}
+        >
           <span style={{ fontSize: "16px" }}>🇻🇳</span>
           <span>Tiếng Việt ∨</span>
         </div>

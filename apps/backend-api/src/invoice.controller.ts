@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Query, Headers, HttpException, HttpStatus } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+  Query,
+  Headers,
+  HttpException,
+  HttpStatus,
+} from "@nestjs/common";
 import { prisma } from "@salon/database";
 import { NotificationGateway } from "./notification.gateway";
 
@@ -10,39 +22,39 @@ export class InvoiceController {
   @Get()
   async getInvoices(
     @Param("tenantId") tenantId: string,
-    @Param("branchId") branchId: string
+    @Param("branchId") branchId: string,
   ) {
     try {
       return await prisma.invoice.findMany({
         where: {
           tenantId,
           branchId,
-          deletedAt: null
+          deletedAt: null,
         },
         include: {
           customer: {
             select: {
               id: true,
               name: true,
-              phone: true
-            }
+              phone: true,
+            },
           },
           cashier: {
             select: {
               id: true,
-              name: true
-            }
+              name: true,
+            },
           },
-          items: true
+          items: true,
         },
         orderBy: {
-          createdAt: "desc"
-        }
+          createdAt: "desc",
+        },
       });
     } catch (error) {
       throw new HttpException(
         `Failed to fetch invoices: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -53,7 +65,8 @@ export class InvoiceController {
     @Param("tenantId") tenantId: string,
     @Param("branchId") branchId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: {
+    @Body()
+    body: {
       customerId?: string;
       cashierId?: string;
       items: Array<{
@@ -69,13 +82,25 @@ export class InvoiceController {
       paymentStatus?: string;
       note?: string;
       createdAt?: string;
-    }
+    },
   ) {
     try {
-      const { customerId, cashierId, items, discountAmount = 0, paymentMethod = "CASH", paymentStatus = "PAID", note, createdAt } = body;
+      const {
+        customerId,
+        cashierId,
+        items,
+        discountAmount = 0,
+        paymentMethod = "CASH",
+        paymentStatus = "PAID",
+        note,
+        createdAt,
+      } = body;
 
       if (!items || items.length === 0) {
-        throw new HttpException("Danh sách mặt hàng thanh toán không được trống", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Danh sách mặt hàng thanh toán không được trống",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       // Calculate totals
@@ -106,7 +131,7 @@ export class InvoiceController {
         if (item.itemType === "SERVICE") {
           commission = Math.round(itemFinal * 0.15);
         } else if (item.itemType === "PACKAGE") {
-          commission = Math.round(itemFinal * 0.10);
+          commission = Math.round(itemFinal * 0.1);
         } else if (item.itemType === "PRODUCT") {
           commission = 10000 * item.quantity;
         }
@@ -120,7 +145,7 @@ export class InvoiceController {
           totalPrice: itemTotal,
           discountAmount: itemDiscount,
           finalAmount: itemFinal,
-          employeeCommission: commission
+          employeeCommission: commission,
         });
       }
 
@@ -128,7 +153,8 @@ export class InvoiceController {
 
       const isUuid = (str?: string) => {
         if (!str) return false;
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const uuidRegex =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         return uuidRegex.test(str);
       };
       const dbCustomerId = isUuid(customerId) ? customerId : null;
@@ -148,8 +174,8 @@ export class InvoiceController {
             paymentStatus,
             status: "COMPLETED",
             note,
-            ...(createdAt ? { createdAt: new Date(createdAt) } : {})
-          }
+            ...(createdAt ? { createdAt: new Date(createdAt) } : {}),
+          },
         });
 
         // 1. Bulk create invoice items
@@ -157,14 +183,14 @@ export class InvoiceController {
           await tx.invoiceItem.createMany({
             data: invoiceItemsData.map((itData) => ({
               invoiceId: inv.id,
-              ...itData
-            }))
+              ...itData,
+            })),
           });
         }
 
         // 2. Increment staff daily turn served customer count in bulk
         const staffIdsForTurns = Array.from(
-          new Set(invoiceItemsData.map((it) => it.staffId).filter(Boolean))
+          new Set(invoiceItemsData.map((it) => it.staffId).filter(Boolean)),
         ) as string[];
 
         if (staffIdsForTurns.length > 0) {
@@ -179,8 +205,8 @@ export class InvoiceController {
               branchId,
               staffId: { in: staffIdsForTurns },
               workDate: targetDate,
-              deletedAt: null
-            }
+              deletedAt: null,
+            },
           });
 
           // Calculate total quantity per staffId in-memory
@@ -189,7 +215,7 @@ export class InvoiceController {
             if (itData.staffId) {
               qtyPerStaff.set(
                 itData.staffId,
-                (qtyPerStaff.get(itData.staffId) || 0) + itData.quantity
+                (qtyPerStaff.get(itData.staffId) || 0) + itData.quantity,
               );
             }
           }
@@ -201,8 +227,8 @@ export class InvoiceController {
               where: { id: turn.id },
               data: {
                 totalCustomersToday: turn.totalCustomersToday + qty,
-                updatedAt: new Date()
-              }
+                updatedAt: new Date(),
+              },
             });
           });
 
@@ -212,23 +238,34 @@ export class InvoiceController {
         return inv;
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "invoices.updated", { branchId, senderId });
-      this.notificationGateway.broadcastToTenant(tenantId, "inventories.updated", { branchId, senderId });
-      this.notificationGateway.broadcastToTenant(tenantId, "dailyTurns.updated", { branchId, senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "invoices.updated", {
+        branchId,
+        senderId,
+      });
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "inventories.updated",
+        { branchId, senderId },
+      );
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "dailyTurns.updated",
+        { branchId, senderId },
+      );
 
       return await prisma.invoice.findUnique({
         where: { id: savedInvoice.id },
         include: {
           items: true,
           customer: true,
-          cashier: true
-        }
+          cashier: true,
+        },
       });
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to perform checkout: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -240,7 +277,8 @@ export class InvoiceController {
     @Param("branchId") branchId: string,
     @Param("invoiceId") invoiceId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: {
+    @Body()
+    body: {
       createdAt?: string;
       items: Array<{
         itemId: string;
@@ -250,18 +288,21 @@ export class InvoiceController {
         quantity: number;
         discountAmount?: number;
       }>;
-    }
+    },
   ) {
     try {
       const { items, createdAt } = body;
 
       if (!items || items.length === 0) {
-        throw new HttpException("Hóa đơn phải có ít nhất 1 mặt hàng", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Hóa đơn phải có ít nhất 1 mặt hàng",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       // Verify invoice exists
       const existing = await prisma.invoice.findFirst({
-        where: { id: invoiceId, tenantId, branchId, deletedAt: null }
+        where: { id: invoiceId, tenantId, branchId, deletedAt: null },
       });
       if (!existing) {
         throw new HttpException("Không tìm thấy hóa đơn", HttpStatus.NOT_FOUND);
@@ -294,7 +335,7 @@ export class InvoiceController {
         if (item.itemType === "SERVICE") {
           commission = Math.round(itemFinal * 0.15);
         } else if (item.itemType === "PACKAGE") {
-          commission = Math.round(itemFinal * 0.10);
+          commission = Math.round(itemFinal * 0.1);
         } else if (item.itemType === "PRODUCT") {
           commission = 10000 * item.quantity;
         }
@@ -309,7 +350,7 @@ export class InvoiceController {
           totalPrice: itemTotal,
           discountAmount: itemDiscount,
           finalAmount: itemFinal,
-          employeeCommission: commission
+          employeeCommission: commission,
         });
       }
 
@@ -328,28 +369,31 @@ export class InvoiceController {
           totalPrice,
           discountAmount: totalDiscount,
           finalAmount,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         };
         if (createdAt) {
           updateData.createdAt = new Date(createdAt);
         }
         await tx.invoice.update({
           where: { id: invoiceId },
-          data: updateData
+          data: updateData,
         });
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "invoices.updated", { branchId, senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "invoices.updated", {
+        branchId,
+        senderId,
+      });
 
       return await prisma.invoice.findUnique({
         where: { id: invoiceId },
-        include: { items: true, customer: true, cashier: true }
+        include: { items: true, customer: true, cashier: true },
       });
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to update invoice: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -360,11 +404,11 @@ export class InvoiceController {
     @Param("tenantId") tenantId: string,
     @Param("branchId") branchId: string,
     @Param("invoiceId") invoiceId: string,
-    @Headers("x-user-id") senderId: string
+    @Headers("x-user-id") senderId: string,
   ) {
     try {
       const existing = await prisma.invoice.findFirst({
-        where: { id: invoiceId, tenantId, branchId, deletedAt: null }
+        where: { id: invoiceId, tenantId, branchId, deletedAt: null },
       });
       if (!existing) {
         throw new HttpException("Không tìm thấy hóa đơn", HttpStatus.NOT_FOUND);
@@ -374,22 +418,25 @@ export class InvoiceController {
       await prisma.$transaction(async (tx) => {
         await tx.invoiceItem.updateMany({
           where: { invoiceId },
-          data: { deletedAt: now }
+          data: { deletedAt: now },
         });
         await tx.invoice.update({
           where: { id: invoiceId },
-          data: { deletedAt: now }
+          data: { deletedAt: now },
         });
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "invoices.updated", { branchId, senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "invoices.updated", {
+        branchId,
+        senderId,
+      });
 
       return { success: true };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to delete invoice: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

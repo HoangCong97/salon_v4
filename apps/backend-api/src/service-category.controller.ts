@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Headers, HttpStatus, HttpException } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Headers,
+  HttpStatus,
+  HttpException,
+} from "@nestjs/common";
 import { prisma } from "@salon/database";
 import { NotificationGateway } from "./notification.gateway";
 
@@ -13,16 +24,16 @@ export class ServiceCategoryController {
       return await prisma.serviceCategory.findMany({
         where: {
           tenantId,
-          deletedAt: null
+          deletedAt: null,
         },
         orderBy: {
-          createdAt: "asc"
-        }
+          createdAt: "asc",
+        },
       });
     } catch (error) {
       throw new HttpException(
         `Failed to fetch service categories: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -32,18 +43,25 @@ export class ServiceCategoryController {
   async createCategory(
     @Param("tenantId") tenantId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: {
+    @Body()
+    body: {
       name: string;
       color: string;
       defaultCommission?: number;
-    }
+    },
   ) {
     try {
       if (!body.name) {
-        throw new HttpException("Category name is required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Category name is required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
       if (!body.color) {
-        throw new HttpException("Category color is required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Category color is required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const created = await prisma.serviceCategory.create({
@@ -51,18 +69,20 @@ export class ServiceCategoryController {
           tenantId,
           name: body.name,
           color: body.color,
-          defaultCommission: body.defaultCommission || 0
-        }
+          defaultCommission: body.defaultCommission || 0,
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", { senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", {
+        senderId,
+      });
 
       return created;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to create service category: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -73,28 +93,38 @@ export class ServiceCategoryController {
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: {
+    @Body()
+    body: {
       name: string;
       color: string;
       defaultCommission?: number;
       bulkApplyCommission?: boolean;
-    }
+    },
   ) {
     try {
       if (!body.name) {
-        throw new HttpException("Category name is required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Category name is required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
       if (!body.color) {
-        throw new HttpException("Category color is required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Category color is required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       // Ensure category exists and belongs to tenant
       const existing = await prisma.serviceCategory.findFirst({
-        where: { id, tenantId, deletedAt: null }
+        where: { id, tenantId, deletedAt: null },
       });
 
       if (!existing) {
-        throw new HttpException("Service category not found", HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          "Service category not found",
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       const updated = await prisma.serviceCategory.update({
@@ -103,25 +133,27 @@ export class ServiceCategoryController {
           name: body.name,
           color: body.color,
           defaultCommission: body.defaultCommission ?? 0,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
 
       if (body.bulkApplyCommission) {
         await prisma.service.updateMany({
           where: { categoryId: id, tenantId, deletedAt: null },
-          data: { commission: null }
+          data: { commission: null },
         });
       }
 
-      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", { senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", {
+        senderId,
+      });
 
       return updated;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to update service category: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -131,33 +163,41 @@ export class ServiceCategoryController {
   async deleteCategory(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
-    @Headers("x-user-id") senderId: string
+    @Headers("x-user-id") senderId: string,
   ) {
     try {
       // Ensure category exists and belongs to tenant
       const existing = await prisma.serviceCategory.findFirst({
-        where: { id, tenantId, deletedAt: null }
+        where: { id, tenantId, deletedAt: null },
       });
 
       if (!existing) {
-        throw new HttpException("Service category not found or already deleted", HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          "Service category not found or already deleted",
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       await prisma.serviceCategory.update({
         where: { id },
         data: {
-          deletedAt: new Date()
-        }
+          deletedAt: new Date(),
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", { senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", {
+        senderId,
+      });
 
-      return { success: true, message: "Service category deleted successfully" };
+      return {
+        success: true,
+        message: "Service category deleted successfully",
+      };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to delete service category: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

@@ -5,6 +5,7 @@ Khi làm việc với Frontend trong dự án này, AI Agent phải tuân thủ 
 ---
 
 ### 1. Coding Style
+
 - Dùng **Prettier** và **ESLint**.
 - Không format thủ công.
 - Quy ước đặt tên:
@@ -14,6 +15,7 @@ Khi làm việc với Frontend trong dự án này, AI Agent phải tuân thủ 
   - Hằng số: `UPPER_SNAKE_CASE`
 
 ### 2. React
+
 - Mỗi component chỉ có **một trách nhiệm**.
 - Component nên nhỏ (≈100–200 dòng, cân nhắc tách nếu >300).
 - Không dùng `any` cho props.
@@ -21,6 +23,7 @@ Khi làm việc với Frontend trong dự án này, AI Agent phải tuân thủ 
 - Tách JSX dài thành component con.
 
 ### 3. TypeScript
+
 - `strict: true`
 - Không dùng `any` nếu có thể.
 - `interface` cho object.
@@ -28,23 +31,28 @@ Khi làm việc với Frontend trong dự án này, AI Agent phải tuân thủ 
 - Hạn chế ép kiểu (`as any`).
 
 ### 4. State
+
 - Chỉ lưu state cần thiết.
 - Không lưu dữ liệu có thể tính toán.
 - Không mutate state.
 - Không duplicate state.
 
 ### 5. API
+
 - Không gọi API trực tiếp trong JSX.
 - Tách tầng:
+
 ```
 Page
  └── Hook
       └── Service
            └── API
 ```
+
 - Khuyến nghị TanStack Query v5.
 
 ### 6. CSS
+
 - Tên class rõ ràng.
 - Không lạm dụng inline style.
 - Dùng CSS Variables.
@@ -52,6 +60,7 @@ Page
 - Ưu tiên sử dụng CSS Modules.
 
 ### 7. Thư mục
+
 ```text
 src/
  ├── assets/             // Lưu trữ các tài nguyên tĩnh (static assets) phục vụ cho giao diện.
@@ -67,6 +76,7 @@ src/
 ```
 
 ### 8. Import Order
+
 1. React
 2. Third-party
 3. Components
@@ -76,35 +86,42 @@ src/
 7. CSS
 
 ### 9. Error Handling
+
 - Không bỏ trống `catch`.
 - Log lỗi.
 - Hiển thị thông báo phù hợp.
 - Xử lý Loading / Empty / Error.
 
 ### 10. Performance
+
 - Chỉ dùng `React.memo`, `useMemo`, `useCallback` khi cần.
 - Lazy Loading cho route/component lớn.
 - Virtual List khi dữ liệu rất lớn.
 
 ### 11. Accessibility (A11y)
+
 - Ưu tiên HTML semantic.
 - Ảnh có `alt`.
 - Form có `label`.
 - Hỗ trợ điều hướng bằng bàn phím.
 
 ### 12. Testing
+
 - Unit Test.
 - Integration Test.
 - Có thể bổ sung E2E.
 
 ### 13. Git
+
 #### Branch
-- feature/*
-- bugfix/*
-- hotfix/*
-- release/*
+
+- feature/\*
+- bugfix/\*
+- hotfix/\*
+- release/\*
 
 #### Commit
+
 - feat
 - fix
 - refactor
@@ -116,6 +133,7 @@ src/
 - build
 
 ### 14. Checklist trước khi Merge
+
 - Không còn `any` không cần thiết.
 - Không còn `console.log`.
 - Không có dead code.
@@ -127,6 +145,7 @@ src/
 - Đã chạy Format, Lint và Test.
 
 ### 15. Recommended Stack
+
 - React
 - TypeScript (`strict`)
 - Vite
@@ -140,7 +159,9 @@ src/
 - Conventional Commits
 
 ### AI Rules
+
 AI khi sinh mã phải:
+
 1. Tuân thủ toàn bộ tiêu chuẩn trên.
 2. Không sinh `any` nếu không có lý do.
 3. Luôn ưu tiên code dễ đọc, dễ bảo trì.

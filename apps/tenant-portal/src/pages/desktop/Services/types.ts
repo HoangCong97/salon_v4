@@ -25,27 +25,87 @@ export interface Service {
 }
 
 export const COLOR_PRESETS = [
-  { value: "blue", label: "Xanh dương", bg: "hsl(210, 100%, 96%)", text: "hsl(210, 100%, 45%)", border: "hsl(210, 100%, 90%)" },
-  { value: "green", label: "Xanh lá", bg: "hsl(142, 70%, 95%)", text: "hsl(142, 72%, 29%)", border: "hsl(142, 70%, 88%)" },
-  { value: "orange", label: "Cam", bg: "hsl(30, 100%, 95%)", text: "hsl(30, 100%, 40%)", border: "hsl(30, 100%, 90%)" },
-  { value: "red", label: "Đỏ", bg: "hsl(0, 100%, 96%)", text: "hsl(0, 100%, 45%)", border: "hsl(0, 100%, 90%)" },
-  { value: "sky", label: "Xanh trời", bg: "hsl(193, 90%, 95%)", text: "hsl(193, 90%, 35%)", border: "hsl(193, 90%, 88%)" },
-  { value: "purple", label: "Tím", bg: "hsl(270, 80%, 96%)", text: "hsl(270, 80%, 45%)", border: "hsl(270, 80%, 90%)" },
-  { value: "pink", label: "Hồng", bg: "hsl(330, 80%, 96%)", text: "hsl(330, 80%, 45%)", border: "hsl(330, 80%, 90%)" },
-  { value: "indigo", label: "Chàm", bg: "hsl(235, 80%, 96%)", text: "hsl(235, 80%, 45%)", border: "hsl(235, 80%, 90%)" },
-  { value: "lime", label: "Chanh", bg: "hsl(80, 80%, 94%)", text: "hsl(80, 80%, 30%)", border: "hsl(80, 80%, 85%)" },
-  { value: "teal", label: "Mòng két", bg: "hsl(170, 80%, 94%)", text: "hsl(170, 80%, 30%)", border: "hsl(170, 80%, 85%)" }
+  {
+    value: "blue",
+    label: "Xanh dương",
+    bg: "hsl(210, 100%, 96%)",
+    text: "hsl(210, 100%, 45%)",
+    border: "hsl(210, 100%, 90%)",
+  },
+  {
+    value: "green",
+    label: "Xanh lá",
+    bg: "hsl(142, 70%, 95%)",
+    text: "hsl(142, 72%, 29%)",
+    border: "hsl(142, 70%, 88%)",
+  },
+  {
+    value: "orange",
+    label: "Cam",
+    bg: "hsl(30, 100%, 95%)",
+    text: "hsl(30, 100%, 40%)",
+    border: "hsl(30, 100%, 90%)",
+  },
+  {
+    value: "red",
+    label: "Đỏ",
+    bg: "hsl(0, 100%, 96%)",
+    text: "hsl(0, 100%, 45%)",
+    border: "hsl(0, 100%, 90%)",
+  },
+  {
+    value: "sky",
+    label: "Xanh trời",
+    bg: "hsl(193, 90%, 95%)",
+    text: "hsl(193, 90%, 35%)",
+    border: "hsl(193, 90%, 88%)",
+  },
+  {
+    value: "purple",
+    label: "Tím",
+    bg: "hsl(270, 80%, 96%)",
+    text: "hsl(270, 80%, 45%)",
+    border: "hsl(270, 80%, 90%)",
+  },
+  {
+    value: "pink",
+    label: "Hồng",
+    bg: "hsl(330, 80%, 96%)",
+    text: "hsl(330, 80%, 45%)",
+    border: "hsl(330, 80%, 90%)",
+  },
+  {
+    value: "indigo",
+    label: "Chàm",
+    bg: "hsl(235, 80%, 96%)",
+    text: "hsl(235, 80%, 45%)",
+    border: "hsl(235, 80%, 90%)",
+  },
+  {
+    value: "lime",
+    label: "Chanh",
+    bg: "hsl(80, 80%, 94%)",
+    text: "hsl(80, 80%, 30%)",
+    border: "hsl(80, 80%, 85%)",
+  },
+  {
+    value: "teal",
+    label: "Mòng két",
+    bg: "hsl(170, 80%, 94%)",
+    text: "hsl(170, 80%, 30%)",
+    border: "hsl(170, 80%, 85%)",
+  },
 ];
 
 export const getColorStyle = (colorName: string) => {
-  const preset = COLOR_PRESETS.find(c => c.value === colorName);
+  const preset = COLOR_PRESETS.find((c) => c.value === colorName);
   if (preset) {
     return {
       backgroundColor: preset.bg,
       color: preset.text,
       borderColor: preset.border,
       borderWidth: "1px",
-      borderStyle: "solid"
+      borderStyle: "solid",
     };
   }
   return {
@@ -53,7 +113,7 @@ export const getColorStyle = (colorName: string) => {
     color: "var(--text-secondary)",
     borderColor: "hsl(210, 40%, 90%)",
     borderWidth: "1px",
-    borderStyle: "solid"
+    borderStyle: "solid",
   };
 };
 

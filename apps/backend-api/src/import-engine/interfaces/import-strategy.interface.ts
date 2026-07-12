@@ -13,7 +13,11 @@ export interface ImportStrategy {
    * @param data The array of validated row objects.
    * @returns Result details with counts of successfully imported records.
    */
-  execute(tenantId: string, branchId: string | null, data: any[]): Promise<{
+  execute(
+    tenantId: string,
+    branchId: string | null,
+    data: any[],
+  ): Promise<{
     importedCount: number;
     failedCount: number;
     errors: Array<{ row: number; data: any; reason: string }>;

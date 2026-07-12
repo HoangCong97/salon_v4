@@ -1,4 +1,9 @@
-export type AppointmentStatus = "PENDING" | "CONFIRMED" | "IN_PROGRESS" | "DONE" | "CANCELLED";
+export type AppointmentStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "IN_PROGRESS"
+  | "DONE"
+  | "CANCELLED";
 export type AppointmentSource = "ONLINE" | "WALK_IN";
 export type ViewMode = "by-staff" | "by-customer";
 

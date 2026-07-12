@@ -1,19 +1,32 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpStatus, HttpException } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  HttpStatus,
+  HttpException,
+} from "@nestjs/common";
 import { prisma } from "@salon/database";
 
 @Controller("api/tenants/:tenantId/payrolls")
 export class PayrollController {
-
   // 1. GET ALL PAYROLLS FOR A PERIOD
   @Get()
   async getPayrolls(
     @Param("tenantId") tenantId: string,
     @Query("period") period: string, // YYYY-MM
-    @Query("branchId") branchId?: string
+    @Query("branchId") branchId?: string,
   ) {
     try {
       if (!period) {
-        throw new HttpException("period (YYYY-MM) is required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "period (YYYY-MM) is required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const payrolls = await prisma.employeeMonthlyPayroll.findMany({
@@ -21,7 +34,7 @@ export class PayrollController {
           tenantId,
           branchId: branchId || undefined,
           salaryPeriod: period,
-          deletedAt: null
+          deletedAt: null,
         },
         include: {
           staff: {
@@ -30,16 +43,16 @@ export class PayrollController {
               name: true,
               email: true,
               phone: true,
-              avatar: true
-            }
-          }
+              avatar: true,
+            },
+          },
         },
         orderBy: {
-          createdAt: "desc"
-        }
+          createdAt: "desc",
+        },
       });
 
-      return payrolls.map(p => ({
+      return payrolls.map((p) => ({
         id: p.id,
         tenantId: p.tenantId,
         branchId: p.branchId,
@@ -53,13 +66,13 @@ export class PayrollController {
         finalSalary: Number(p.finalSalary),
         status: p.status,
         paidAt: p.paidAt ? p.paidAt.toISOString() : null,
-        staff: p.staff
+        staff: p.staff,
       }));
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to fetch payrolls: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -68,12 +81,15 @@ export class PayrollController {
   @Post("generate")
   async generatePayroll(
     @Param("tenantId") tenantId: string,
-    @Body() body: { period: string; branchId: string }
+    @Body() body: { period: string; branchId: string },
   ) {
     try {
       const { period, branchId } = body;
       if (!period || !branchId) {
-        throw new HttpException("period and branchId are required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "period and branchId are required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       // Fetch all staff members assigned to this branch
@@ -84,15 +100,15 @@ export class PayrollController {
           user: {
             tenantId,
             deletedAt: null,
-            status: "ACTIVE"
-          }
+            status: "ACTIVE",
+          },
         },
         include: {
-          user: true
-        }
+          user: true,
+        },
       });
 
-      const staffMembers = userBranches.map(ub => ub.user);
+      const staffMembers = userBranches.map((ub) => ub.user);
       const generated = [];
 
       // Period dates for advance lookup
@@ -111,8 +127,8 @@ export class PayrollController {
           branchId,
           staffId: { in: staffIds },
           salaryPeriod: period,
-          deletedAt: null
-        }
+          deletedAt: null,
+        },
       });
 
       // 2. Bulk query all approved advances in this period
@@ -123,11 +139,11 @@ export class PayrollController {
           staffId: { in: staffIds },
           advanceDate: {
             gte: startDate,
-            lte: endDate
+            lte: endDate,
           },
           status: "APPROVED",
-          deletedAt: null
-        }
+          deletedAt: null,
+        },
       });
 
       // 3. Bulk query all invoice items for commission in this period
@@ -136,13 +152,13 @@ export class PayrollController {
           staffId: { in: staffIds },
           createdAt: {
             gte: startDate,
-            lte: endDate
+            lte: endDate,
           },
           invoice: {
             paymentStatus: "PAID",
-            deletedAt: null
-          }
-        }
+            deletedAt: null,
+          },
+        },
       });
 
       const dataToCreate = [];
@@ -156,11 +172,19 @@ export class PayrollController {
 
         // Sum advances for this staff member in-memory
         const staffAdvances = allAdvances.filter((a) => a.staffId === staff.id);
-        const totalAdvances = staffAdvances.reduce((sum, adv) => sum + Number(adv.amount), 0);
+        const totalAdvances = staffAdvances.reduce(
+          (sum, adv) => sum + Number(adv.amount),
+          0,
+        );
 
         // Sum commissions for this staff member in-memory
-        const staffInvoiceItems = allInvoiceItems.filter((item) => item.staffId === staff.id);
-        const totalCommissions = staffInvoiceItems.reduce((sum, item) => sum + Number(item.employeeCommission || 0), 0);
+        const staffInvoiceItems = allInvoiceItems.filter(
+          (item) => item.staffId === staff.id,
+        );
+        const totalCommissions = staffInvoiceItems.reduce(
+          (sum, item) => sum + Number(item.employeeCommission || 0),
+          0,
+        );
 
         const baseSalary = Number(staff.baseSalary || 0);
         const finalSalary = baseSalary + totalCommissions - totalAdvances;
@@ -176,13 +200,13 @@ export class PayrollController {
           tipAmount: 0,
           deductionAmount: totalAdvances,
           finalSalary: finalSalary > 0 ? finalSalary : 0,
-          status: "DRAFT"
+          status: "DRAFT",
         });
       }
 
       if (dataToCreate.length > 0) {
         await prisma.employeeMonthlyPayroll.createMany({
-          data: dataToCreate
+          data: dataToCreate,
         });
 
         // Query the newly created payroll records to return them
@@ -192,8 +216,8 @@ export class PayrollController {
             branchId,
             staffId: { in: dataToCreate.map((d) => d.staffId) },
             salaryPeriod: period,
-            deletedAt: null
-          }
+            deletedAt: null,
+          },
         });
         alreadyCreatedPayrolls.push(...newlyCreated);
       }
@@ -203,7 +227,7 @@ export class PayrollController {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to generate payroll: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -212,7 +236,8 @@ export class PayrollController {
   @Put("bulk")
   async bulkUpdatePayrolls(
     @Param("tenantId") tenantId: string,
-    @Body() body: {
+    @Body()
+    body: {
       payrolls: Array<{
         id: string;
         baseSalary: number;
@@ -221,13 +246,16 @@ export class PayrollController {
         tipAmount: number;
         deductionAmount: number;
         status: string;
-      }>
-    }
+      }>;
+    },
   ) {
     try {
       const { payrolls } = body;
       if (!Array.isArray(payrolls)) {
-        throw new HttpException("payrolls must be an array", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "payrolls must be an array",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const updatePromises = payrolls.map((p) => {
@@ -249,8 +277,8 @@ export class PayrollController {
             finalSalary: finalSalary > 0 ? finalSalary : 0,
             status: p.status,
             paidAt: p.status === "PAID" ? new Date() : null,
-            updatedAt: new Date()
-          }
+            updatedAt: new Date(),
+          },
         });
       });
 
@@ -259,7 +287,7 @@ export class PayrollController {
     } catch (error) {
       throw new HttpException(
         `Failed to bulk update payrolls: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -269,33 +297,58 @@ export class PayrollController {
   async updatePayroll(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
-    @Body() body: {
+    @Body()
+    body: {
       baseSalary?: number;
       allowance?: number;
       commissionAmount?: number;
       tipAmount?: number;
       deductionAmount?: number;
       status?: string;
-    }
+    },
   ) {
     try {
       const existing = await prisma.employeeMonthlyPayroll.findUnique({
-        where: { id }
+        where: { id },
       });
 
       if (!existing || existing.tenantId !== tenantId) {
-        throw new HttpException("Payroll record not found", HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          "Payroll record not found",
+          HttpStatus.NOT_FOUND,
+        );
       }
 
-      const baseSalary = body.baseSalary !== undefined ? Number(body.baseSalary) : Number(existing.baseSalary);
-      const allowance = body.allowance !== undefined ? Number(body.allowance) : Number(existing.allowance || 0);
-      const commissionAmount = body.commissionAmount !== undefined ? Number(body.commissionAmount) : Number(existing.commissionAmount || 0);
-      const tipAmount = body.tipAmount !== undefined ? Number(body.tipAmount) : Number(existing.tipAmount || 0);
-      const deductionAmount = body.deductionAmount !== undefined ? Number(body.deductionAmount) : Number(existing.deductionAmount || 0);
-      
-      const finalSalary = baseSalary + allowance + commissionAmount + tipAmount - deductionAmount;
+      const baseSalary =
+        body.baseSalary !== undefined
+          ? Number(body.baseSalary)
+          : Number(existing.baseSalary);
+      const allowance =
+        body.allowance !== undefined
+          ? Number(body.allowance)
+          : Number(existing.allowance || 0);
+      const commissionAmount =
+        body.commissionAmount !== undefined
+          ? Number(body.commissionAmount)
+          : Number(existing.commissionAmount || 0);
+      const tipAmount =
+        body.tipAmount !== undefined
+          ? Number(body.tipAmount)
+          : Number(existing.tipAmount || 0);
+      const deductionAmount =
+        body.deductionAmount !== undefined
+          ? Number(body.deductionAmount)
+          : Number(existing.deductionAmount || 0);
+
+      const finalSalary =
+        baseSalary + allowance + commissionAmount + tipAmount - deductionAmount;
       const status = body.status || existing.status;
-      const paidAt = status === "PAID" ? (existing.status === "PAID" ? existing.paidAt : new Date()) : null;
+      const paidAt =
+        status === "PAID"
+          ? existing.status === "PAID"
+            ? existing.paidAt
+            : new Date()
+          : null;
 
       return await prisma.employeeMonthlyPayroll.update({
         where: { id },
@@ -308,14 +361,14 @@ export class PayrollController {
           finalSalary: finalSalary > 0 ? finalSalary : 0,
           status,
           paidAt,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to update payroll: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -324,26 +377,32 @@ export class PayrollController {
   @Get("advances")
   async getAdvances(
     @Param("tenantId") tenantId: string,
-    @Query("branchId") branchId?: string
+    @Query("branchId") branchId?: string,
   ) {
     try {
       const advances = await prisma.salaryAdvance.findMany({
         where: {
           tenantId,
           branchId: branchId || undefined,
-          deletedAt: null
+          deletedAt: null,
         },
         include: {
           staff: {
-            select: { id: true, name: true, email: true, phone: true, avatar: true }
-          }
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              avatar: true,
+            },
+          },
         },
         orderBy: {
-          advanceDate: "desc"
-        }
+          advanceDate: "desc",
+        },
       });
 
-      return advances.map(a => ({
+      return advances.map((a) => ({
         id: a.id,
         tenantId: a.tenantId,
         branchId: a.branchId,
@@ -352,12 +411,12 @@ export class PayrollController {
         amount: Number(a.amount),
         status: a.status,
         note: a.note,
-        staff: a.staff
+        staff: a.staff,
       }));
     } catch (error) {
       throw new HttpException(
         `Failed to fetch advances: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -366,19 +425,23 @@ export class PayrollController {
   @Post("advances")
   async createAdvance(
     @Param("tenantId") tenantId: string,
-    @Body() body: {
+    @Body()
+    body: {
       branchId: string;
       staffId: string;
       advanceDate: string; // YYYY-MM-DD
       amount: number;
       status?: string;
       note?: string;
-    }
+    },
   ) {
     try {
       const { branchId, staffId, advanceDate, amount, status, note } = body;
       if (!branchId || !staffId || !advanceDate || !amount) {
-        throw new HttpException("Missing required fields", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Missing required fields",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const advance = await prisma.salaryAdvance.create({
@@ -389,25 +452,31 @@ export class PayrollController {
           advanceDate: new Date(advanceDate),
           amount,
           status: status || "PENDING",
-          note: note || null
+          note: note || null,
         },
         include: {
           staff: {
-            select: { id: true, name: true, email: true, phone: true, avatar: true }
-          }
-        }
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              avatar: true,
+            },
+          },
+        },
       });
 
       return {
         ...advance,
         amount: Number(advance.amount),
-        advanceDate: advance.advanceDate.toISOString()
+        advanceDate: advance.advanceDate.toISOString(),
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to create advance: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -417,20 +486,24 @@ export class PayrollController {
   async updateAdvance(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
-    @Body() body: {
+    @Body()
+    body: {
       amount?: number;
       status?: string;
       note?: string;
       advanceDate?: string;
-    }
+    },
   ) {
     try {
       const existing = await prisma.salaryAdvance.findUnique({
-        where: { id }
+        where: { id },
       });
 
       if (!existing || existing.tenantId !== tenantId) {
-        throw new HttpException("Advance record not found", HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          "Advance record not found",
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       const updated = await prisma.salaryAdvance.update({
@@ -439,26 +512,34 @@ export class PayrollController {
           amount: body.amount !== undefined ? body.amount : existing.amount,
           status: body.status || existing.status,
           note: body.note !== undefined ? body.note : existing.note,
-          advanceDate: body.advanceDate ? new Date(body.advanceDate) : existing.advanceDate,
-          updatedAt: new Date()
+          advanceDate: body.advanceDate
+            ? new Date(body.advanceDate)
+            : existing.advanceDate,
+          updatedAt: new Date(),
         },
         include: {
           staff: {
-            select: { id: true, name: true, email: true, phone: true, avatar: true }
-          }
-        }
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              avatar: true,
+            },
+          },
+        },
       });
 
       return {
         ...updated,
         amount: Number(updated.amount),
-        advanceDate: updated.advanceDate.toISOString()
+        advanceDate: updated.advanceDate.toISOString(),
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to update advance: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -467,22 +548,25 @@ export class PayrollController {
   @Delete("advances/:id")
   async deleteAdvance(
     @Param("tenantId") tenantId: string,
-    @Param("id") id: string
+    @Param("id") id: string,
   ) {
     try {
       const existing = await prisma.salaryAdvance.findUnique({
-        where: { id }
+        where: { id },
       });
 
       if (!existing || existing.tenantId !== tenantId) {
-        throw new HttpException("Advance record not found", HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          "Advance record not found",
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       await prisma.salaryAdvance.update({
         where: { id },
         data: {
-          deletedAt: new Date()
-        }
+          deletedAt: new Date(),
+        },
       });
 
       return { success: true };
@@ -490,7 +574,7 @@ export class PayrollController {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to delete advance: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -499,7 +583,7 @@ export class PayrollController {
   @Get("attendances")
   async getAttendances(
     @Param("tenantId") tenantId: string,
-    @Query("branchId") branchId?: string
+    @Query("branchId") branchId?: string,
   ) {
     try {
       const attendances = await prisma.employeeAttendance.findMany({
@@ -507,19 +591,25 @@ export class PayrollController {
           tenantId,
           branchId: branchId || undefined,
           workStatus: { not: "PRESENT" },
-          deletedAt: null
+          deletedAt: null,
         },
         include: {
           staff: {
-            select: { id: true, name: true, email: true, phone: true, avatar: true }
-          }
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              avatar: true,
+            },
+          },
         },
         orderBy: {
-          workDate: "desc"
-        }
+          workDate: "desc",
+        },
       });
 
-      return attendances.map(a => ({
+      return attendances.map((a) => ({
         id: a.id,
         tenantId: a.tenantId,
         branchId: a.branchId,
@@ -531,12 +621,12 @@ export class PayrollController {
         lateMinutes: a.lateMinutes,
         overTimeMinutes: a.overTimeMinutes,
         note: a.note,
-        staff: a.staff
+        staff: a.staff,
       }));
     } catch (error) {
       throw new HttpException(
         `Failed to fetch attendances: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -545,7 +635,8 @@ export class PayrollController {
   @Post("attendances")
   async saveAttendanceAnomaly(
     @Param("tenantId") tenantId: string,
-    @Body() body: {
+    @Body()
+    body: {
       id?: string;
       branchId: string;
       staffId: string;
@@ -553,12 +644,16 @@ export class PayrollController {
       workStatus: string; // ABSENT, LATE, HALFDAY, etc.
       lateMinutes?: number;
       note?: string;
-    }
+    },
   ) {
     try {
-      const { id, branchId, staffId, workDate, workStatus, lateMinutes, note } = body;
+      const { id, branchId, staffId, workDate, workStatus, lateMinutes, note } =
+        body;
       if (!branchId || !staffId || !workDate || !workStatus) {
-        throw new HttpException("Missing required fields", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Missing required fields",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const dateObj = new Date(workDate);
@@ -572,13 +667,19 @@ export class PayrollController {
             workStatus,
             lateMinutes: lateMinutes || 0,
             note: note || null,
-            updatedAt: new Date()
+            updatedAt: new Date(),
           },
           include: {
             staff: {
-              select: { id: true, name: true, email: true, phone: true, avatar: true }
-            }
-          }
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                avatar: true,
+              },
+            },
+          },
         });
       } else {
         const existing = await prisma.employeeAttendance.findFirst({
@@ -587,8 +688,8 @@ export class PayrollController {
             branchId,
             staffId,
             workDate: dateObj,
-            deletedAt: null
-          }
+            deletedAt: null,
+          },
         });
 
         if (existing) {
@@ -598,13 +699,19 @@ export class PayrollController {
               workStatus,
               lateMinutes: lateMinutes || 0,
               note: note || null,
-              updatedAt: new Date()
+              updatedAt: new Date(),
             },
             include: {
               staff: {
-                select: { id: true, name: true, email: true, phone: true, avatar: true }
-              }
-            }
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  phone: true,
+                  avatar: true,
+                },
+              },
+            },
           });
         } else {
           attendance = await prisma.employeeAttendance.create({
@@ -615,13 +722,19 @@ export class PayrollController {
               workDate: dateObj,
               workStatus,
               lateMinutes: lateMinutes || 0,
-              note: note || null
+              note: note || null,
             },
             include: {
               staff: {
-                select: { id: true, name: true, email: true, phone: true, avatar: true }
-              }
-            }
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  phone: true,
+                  avatar: true,
+                },
+              },
+            },
           });
         }
       }
@@ -629,14 +742,18 @@ export class PayrollController {
       return {
         ...attendance,
         workDate: attendance.workDate.toISOString(),
-        checkInAt: attendance.checkInAt ? attendance.checkInAt.toISOString() : null,
-        checkOutAt: attendance.checkOutAt ? attendance.checkOutAt.toISOString() : null
+        checkInAt: attendance.checkInAt
+          ? attendance.checkInAt.toISOString()
+          : null,
+        checkOutAt: attendance.checkOutAt
+          ? attendance.checkOutAt.toISOString()
+          : null,
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to save attendance: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -645,22 +762,25 @@ export class PayrollController {
   @Delete("attendances/:id")
   async deleteAttendance(
     @Param("tenantId") tenantId: string,
-    @Param("id") id: string
+    @Param("id") id: string,
   ) {
     try {
       const existing = await prisma.employeeAttendance.findUnique({
-        where: { id }
+        where: { id },
       });
 
       if (!existing || existing.tenantId !== tenantId) {
-        throw new HttpException("Attendance record not found", HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          "Attendance record not found",
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       await prisma.employeeAttendance.update({
         where: { id },
         data: {
-          deletedAt: new Date()
-        }
+          deletedAt: new Date(),
+        },
       });
 
       return { success: true };
@@ -668,7 +788,7 @@ export class PayrollController {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to delete attendance: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

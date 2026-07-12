@@ -9,23 +9,25 @@ Tài liệu này chi tiết hóa cấu trúc Layout thích ứng (Adaptive Layou
 Phân hệ Tenant Portal kế thừa toàn bộ các thiết lập CSS variables, cấu trúc layout cơ bản, và phong cách thiết kế (Dark Glassmorphism, harmonious HSL palettes) từ [super_layout](file:///c:/Workspace/Web09_salon-app/.ai_env/user_description/layout/super_layout).
 
 ### 1. Bảng màu & Giao diện (Color & Theming)
+
 - **Hệ màu chủ đạo (HSL)**:
   - Nền hệ thống: `var(--bg-system-gray)` (Light: `#F8FAFC` / Dark: `#0F172A`).
   - Màu thương hiệu (Brand Accent): `var(--color-primary)` (Slate/Charcoal cao cấp kết hợp với Rose Gold hoặc Emerald HSL).
 - **Màu sắc trạng thái (Status Colors)**:
   - **Lịch hẹn (Booking)**:
-    - *Chờ xác nhận*: `var(--color-warning)` (Amber/Orange).
-    - *Đã xác nhận*: `var(--color-info)` (Sky Blue).
-    - *Đã hoàn thành*: `var(--color-success)` (Emerald/Green).
-    - *Đã hủy / Khách không đến*: `var(--color-danger)` (Crimson/Red).
+    - _Chờ xác nhận_: `var(--color-warning)` (Amber/Orange).
+    - _Đã xác nhận_: `var(--color-info)` (Sky Blue).
+    - _Đã hoàn thành_: `var(--color-success)` (Emerald/Green).
+    - _Đã hủy / Khách không đến_: `var(--color-danger)` (Crimson/Red).
   - **Hóa đơn & Thanh toán (Invoice)**:
-    - *Đã thanh toán*: `var(--color-success)`.
-    - *Chờ thanh toán*: `var(--color-warning)`.
-    - *Đã hủy*: `var(--color-danger)`.
+    - _Đã thanh toán_: `var(--color-success)`.
+    - _Chờ thanh toán_: `var(--color-warning)`.
+    - _Đã hủy_: `var(--color-danger)`.
 - **Hiệu ứng mượt mà**:
   - Áp dụng **Glassmorphism** nhẹ (`backdrop-filter: blur(12px)`) đối với các thanh điều hướng, modal nổi và ngăn kéo chi tiết (Drawers).
 
 ### 2. Định dạng thích ứng (Adaptive Layout Grid)
+
 Hệ thống sử dụng **Adaptive Routing & Layout** dựa trên vai trò người dùng (JWT Role) và kích thước màn hình để quyết định render layout phù hợp:
 
 - **A. Desktop/Tablet Layout (Admin, Manager, Cashier)**:
@@ -42,7 +44,9 @@ Hệ thống sử dụng **Adaptive Routing & Layout** dựa trên vai trò ngư
 ## 🖥️ II. CHI TIẾT GIAO DIỆN DESKTOP (ADMIN, MANAGER, CASHIER VIEW)
 
 ### 1. Bổ sung Topbar Tenant
+
 Khác với `super_layout`, Topbar của Tenant Portal bổ sung:
+
 - **Thanh chọn chi nhánh (Branch Selector Dropdown)**: Cho phép chuyển đổi nhanh giữa các chi nhánh (`branch_id`) mà người dùng có quyền quản lý.
 - **Trạng thái tua làm việc (Turn System status)**: Đối với Cashier/Manager, hiển thị nhanh số lượng thợ đang trong ca và trạng thái xoay tua.
 
@@ -54,6 +58,7 @@ Khác với `super_layout`, Topbar của Tenant Portal bổ sung:
 ```
 
 ### 2. Sidebar Điều hướng (Tenant Navigation)
+
 - **`Tổng quan` (Dashboard)**: Báo cáo nhanh doanh số chi nhánh, lượt khách, hiệu suất nhân viên.
 - **`Lịch hẹn` (Scheduler Grid)**: Lưới quản lý đặt lịch hẹn thời gian thực.
 - **`Bán hàng & POS` (Checkout)**: Màn hình tạo hóa đơn, chọn dịch vụ và thanh toán.
@@ -68,6 +73,7 @@ Khác với `super_layout`, Topbar của Tenant Portal bổ sung:
 ## ✏️ III. BLUEPRINT CÁC TRANG CHÍNH TRÊN DESKTOP
 
 ### 1. Trang Quản Lý Lịch Hẹn (Scheduler Grid Layout)
+
 Giao diện hiển thị lịch hẹn dạng lưới trực quan theo nhân viên và dòng thời gian trong ngày.
 
 ```
@@ -92,6 +98,7 @@ Giao diện hiển thị lịch hẹn dạng lưới trực quan theo nhân viê
   - **Hover Tooltip**: Di chuột vào thẻ lịch hẹn để xem chi tiết: Tên khách, số điện thoại, ghi chú dịch vụ và tổng tiền dự kiến.
 
 ### 2. Màn hình Bán hàng tại Quầy & POS Checkout (Split-Pane Layout)
+
 Sử dụng bố cục Split-Pane bất đối xứng chia màn hình thành 2 phần chính:
 
 - **Phía bên trái (7/12) - Khu vực Lựa chọn & Tìm kiếm nhanh**:
@@ -130,7 +137,9 @@ Sử dụng bố cục Split-Pane bất đối xứng chia màn hình thành 2 p
 Giao diện dành riêng cho nhân viên thực hiện dịch vụ được thiết kế theo triết lý **Mobile-first** nhằm mang lại trải nghiệm tối giản, mượt mà như một ứng dụng Native trên iOS/Android.
 
 ### 1. Thanh điều hướng dưới cùng (Bottom Navigation Bar)
+
 Cố định dưới đáy màn hình giúp nhân viên dễ dàng chuyển đổi tab chỉ bằng một tay.
+
 - **`Lịch Hẹn` (Calendar/List Icon)**: Xem lịch làm việc và danh sách khách hàng được gán trong ngày.
 - **`Chấm Công` (Clock/Check-in Icon)**: Nút bấm điểm danh check-in/out, xem ca trực tuần.
 - **`Hoa Hồng` (Dollar/Chart Icon)**: Bảng thống kê thu nhập tạm tính, tua thợ của ngày và lịch sử lương.
@@ -150,6 +159,7 @@ Cố định dưới đáy màn hình giúp nhân viên dễ dàng chuyển đ�
 ```
 
 ### 2. Thiết kế các màn hình chính trên Mobile
+
 - **Trang Lịch Hẹn cá nhân (Shift Worklist)**:
   - Hiển thị theo dòng thời gian (Timeline) các khung giờ đã có khách đặt.
   - Các thẻ lịch hẹn phân biệt rõ ràng trạng thái qua màu sắc badge.
@@ -158,7 +168,7 @@ Cố định dưới đáy màn hình giúp nhân viên dễ dàng chuyển đ�
   - Hiển thị bản đồ định vị GPS chi nhánh hiện tại và nút bấm to tròn `Check-in / Check-out` hiệu ứng sóng âm khi nhân viên đến salon.
   - Bảng tổng hợp ca trực tuần hiện tại: Ngày làm việc, ca sáng/chiều, trạng thái đi muộn/về sớm.
 - **Trang Thống Kê Thu Nhập (Real-time Commission)**:
-  - Chỉ số tổng hợp (Widgets) nổi bật: Doanh thu thực hiện hôm nay, Hoa hồng tạm tính, Vị trí xoay tua hiện tại trong ngày (ví dụ: *Bạn đang ở lượt số 2 - Sắp tới lượt nhận khách*).
+  - Chỉ số tổng hợp (Widgets) nổi bật: Doanh thu thực hiện hôm nay, Hoa hồng tạm tính, Vị trí xoay tua hiện tại trong ngày (ví dụ: _Bạn đang ở lượt số 2 - Sắp tới lượt nhận khách_).
   - Danh sách chi tiết các hóa đơn dịch vụ đã hoàn thành trong ngày để nhân viên tự đối soát.
 
 ---
@@ -172,4 +182,4 @@ Cố định dưới đáy màn hình giúp nhân viên dễ dàng chuyển đ�
    - Khi thực hiện các tác vụ quan trọng như hủy lịch hẹn, xóa thẻ dịch vụ của khách, thanh toán hóa đơn giá trị lớn: Bắt buộc mở Modal xác nhận từ tâm màn hình với hai lựa chọn rõ ràng.
    - Nút xác nhận hành động nguy hiểm luôn có màu nền đỏ (`var(--color-danger)`) hoặc cam đậm.
 3. **Empty States**:
-   - Khi lưới lịch hẹn trống hoặc danh sách khách hàng tìm kiếm không thấy kết quả: Hiển thị hình ảnh minh họa mờ (SVG/Icon) cùng gợi ý hành động cụ thể (ví dụ: *"Chưa có lịch hẹn nào được đặt trong ngày hôm nay. Bấm nút bên dưới để tạo mới"*).
+   - Khi lưới lịch hẹn trống hoặc danh sách khách hàng tìm kiếm không thấy kết quả: Hiển thị hình ảnh minh họa mờ (SVG/Icon) cùng gợi ý hành động cụ thể (ví dụ: _"Chưa có lịch hẹn nào được đặt trong ngày hôm nay. Bấm nút bên dưới để tạo mới"_).

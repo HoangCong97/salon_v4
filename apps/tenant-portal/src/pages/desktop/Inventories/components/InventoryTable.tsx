@@ -7,10 +7,24 @@ import styles from "../Inventories.module.css";
 
 interface InventoryTableProps {
   filteredItems: InventoryItem[];
-  getInlineValue: (item: InventoryItem, field: keyof InventoryItem) => string | number | boolean | undefined | null;
-  handleInlineChange: (itemId: string, field: keyof InventoryItem, value: string | number | undefined | null) => void;
-  handlePriceChange: (itemId: string, field: "costPrice" | "sellPrice" | "quantity", valStr: string) => void;
-  handleAutoSave: (itemId: string, updatedFields: Partial<InventoryItem>) => Promise<void>;
+  getInlineValue: (
+    item: InventoryItem,
+    field: keyof InventoryItem,
+  ) => string | number | boolean | undefined | null;
+  handleInlineChange: (
+    itemId: string,
+    field: keyof InventoryItem,
+    value: string | number | undefined | null,
+  ) => void;
+  handlePriceChange: (
+    itemId: string,
+    field: "costPrice" | "sellPrice" | "quantity",
+    valStr: string,
+  ) => void;
+  handleAutoSave: (
+    itemId: string,
+    updatedFields: Partial<InventoryItem>,
+  ) => Promise<void>;
   formatNumber: (val: number | string | undefined | null) => string;
   onOpenAdjustModal: (item: InventoryItem) => void;
   onOpenEditModal: (item: InventoryItem) => void;
@@ -36,11 +50,19 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
         <thead>
           <tr>
             <th className={styles.thDefault}>Tên sản phẩm</th>
-            <th className={`${styles.thDefault} ${styles.thCostPrice}`}>Giá vốn (giá nhập)</th>
-            <th className={`${styles.thDefault} ${styles.thSellPrice}`}>Giá bán lẻ</th>
+            <th className={`${styles.thDefault} ${styles.thCostPrice}`}>
+              Giá vốn (giá nhập)
+            </th>
+            <th className={`${styles.thDefault} ${styles.thSellPrice}`}>
+              Giá bán lẻ
+            </th>
             <th className={`${styles.thDefault} ${styles.thQty}`}>Tồn kho</th>
-            <th className={`${styles.thDefault} ${styles.thStatus}`}>Trạng thái</th>
-            <th className={`${styles.thDefault} ${styles.thAction}`}>Thao tác</th>
+            <th className={`${styles.thDefault} ${styles.thStatus}`}>
+              Trạng thái
+            </th>
+            <th className={`${styles.thDefault} ${styles.thAction}`}>
+              Thao tác
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -49,20 +71,37 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
             const isOutOfStock = item.quantity === 0;
 
             return (
-              <tr key={item.id} className={item.isActive === false ? styles.rowInactive : ''}>
+              <tr
+                key={item.id}
+                className={item.isActive === false ? styles.rowInactive : ""}
+              >
                 <td className={styles.tdDefault}>
                   <ExcelInput
                     value={getInlineValue(item, "name") as string}
-                    onChange={(val: string) => handleInlineChange(item.id, "name", val)}
-                    onBlur={() => handleAutoSave(item.id, { name: getInlineValue(item, "name") as string })}
+                    onChange={(val: string) =>
+                      handleInlineChange(item.id, "name", val)
+                    }
+                    onBlur={() =>
+                      handleAutoSave(item.id, {
+                        name: getInlineValue(item, "name") as string,
+                      })
+                    }
                     fontWeight="600"
                   />
                 </td>
                 <td className={styles.tdDefault}>
                   <ExcelInput
-                    value={formatNumber(getInlineValue(item, "costPrice") as number | string)}
-                    onChange={(val: string) => handlePriceChange(item.id, "costPrice", val)}
-                    onBlur={() => handleAutoSave(item.id, { costPrice: getInlineValue(item, "costPrice") as number })}
+                    value={formatNumber(
+                      getInlineValue(item, "costPrice") as number | string,
+                    )}
+                    onChange={(val: string) =>
+                      handlePriceChange(item.id, "costPrice", val)
+                    }
+                    onBlur={() =>
+                      handleAutoSave(item.id, {
+                        costPrice: getInlineValue(item, "costPrice") as number,
+                      })
+                    }
                     textAlign="center"
                     fontWeight="500"
                     unit="đ"
@@ -70,9 +109,17 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 </td>
                 <td className={styles.tdDefault}>
                   <ExcelInput
-                    value={formatNumber(getInlineValue(item, "sellPrice") as number | string)}
-                    onChange={(val: string) => handlePriceChange(item.id, "sellPrice", val)}
-                    onBlur={() => handleAutoSave(item.id, { sellPrice: getInlineValue(item, "sellPrice") as number })}
+                    value={formatNumber(
+                      getInlineValue(item, "sellPrice") as number | string,
+                    )}
+                    onChange={(val: string) =>
+                      handlePriceChange(item.id, "sellPrice", val)
+                    }
+                    onBlur={() =>
+                      handleAutoSave(item.id, {
+                        sellPrice: getInlineValue(item, "sellPrice") as number,
+                      })
+                    }
                     textAlign="center"
                     fontWeight="500"
                     unit="đ"
@@ -81,19 +128,37 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 <td className={styles.tdDefault}>
                   <ExcelInput
                     type="number"
-                    value={getInlineValue(item, "quantity") as number || 0}
-                    onChange={(val: string) => handleInlineChange(item.id, "quantity", parseInt(val) || 0)}
-                    onBlur={() => handleAutoSave(item.id, { quantity: getInlineValue(item, "quantity") as number })}
+                    value={(getInlineValue(item, "quantity") as number) || 0}
+                    onChange={(val: string) =>
+                      handleInlineChange(
+                        item.id,
+                        "quantity",
+                        parseInt(val) || 0,
+                      )
+                    }
+                    onBlur={() =>
+                      handleAutoSave(item.id, {
+                        quantity: getInlineValue(item, "quantity") as number,
+                      })
+                    }
                     textAlign="center"
                     fontWeight="600"
-                    textColor={isOutOfStock ? "var(--color-danger)" : isLowStock ? "var(--color-warning)" : "inherit"}
+                    textColor={
+                      isOutOfStock
+                        ? "var(--color-danger)"
+                        : isLowStock
+                          ? "var(--color-warning)"
+                          : "inherit"
+                    }
                   />
                 </td>
                 <td className={styles.tdStatus}>
                   {isOutOfStock ? (
                     <span className="badge badge-danger">Hết hàng</span>
                   ) : isLowStock ? (
-                    <span className={`badge badge-warning ${styles.badgeLowStock}`}>
+                    <span
+                      className={`badge badge-warning ${styles.badgeLowStock}`}
+                    >
                       <AlertTriangle size={12} /> Sắp hết hàng
                     </span>
                   ) : (
@@ -102,12 +167,24 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 </td>
                 <td className={styles.tdAction}>
                   <div className={styles.btnWrapper}>
-                    <Tooltip content={item.isActive === false ? "Hiện trên POS" : "Ẩn khỏi POS"}>
+                    <Tooltip
+                      content={
+                        item.isActive === false
+                          ? "Hiện trên POS"
+                          : "Ẩn khỏi POS"
+                      }
+                    >
                       <button
-                        className={`btn ${item.isActive === false ? 'btn-warning' : 'btn-secondary'} ${styles.actionBtn}`}
-                        onClick={() => onToggleActive(item.id, item.isActive !== false)}
+                        className={`btn ${item.isActive === false ? "btn-warning" : "btn-secondary"} ${styles.actionBtn}`}
+                        onClick={() =>
+                          onToggleActive(item.id, item.isActive !== false)
+                        }
                       >
-                        {item.isActive === false ? <EyeOff size={12} /> : <Eye size={12} />}
+                        {item.isActive === false ? (
+                          <EyeOff size={12} />
+                        ) : (
+                          <Eye size={12} />
+                        )}
                       </button>
                     </Tooltip>
                     <Tooltip content="Nhập / Xuất kho">
@@ -144,4 +221,3 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
     </div>
   );
 };
-

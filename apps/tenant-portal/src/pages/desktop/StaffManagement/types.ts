@@ -50,23 +50,51 @@ export interface DailyTurn {
 export const getRoleColorStyle = (roleName: string) => {
   const name = (roleName || "").toUpperCase();
   if (name.includes("ADMIN")) {
-    return { backgroundColor: "var(--color-danger-light)", color: "var(--color-danger)", border: "none" };
+    return {
+      backgroundColor: "var(--color-danger-light)",
+      color: "var(--color-danger)",
+      border: "none",
+    };
   } else if (name.includes("MANAGER")) {
-    return { backgroundColor: "var(--color-warning-light)", color: "var(--color-warning)", border: "none" };
+    return {
+      backgroundColor: "var(--color-warning-light)",
+      color: "var(--color-warning)",
+      border: "none",
+    };
   } else if (name.includes("CASHIER")) {
-    return { backgroundColor: "var(--color-info-light)", color: "var(--color-info)", border: "none" };
+    return {
+      backgroundColor: "var(--color-info-light)",
+      color: "var(--color-info)",
+      border: "none",
+    };
   } else {
-    return { backgroundColor: "var(--color-primary-light)", color: "var(--color-primary)", border: "none" };
+    return {
+      backgroundColor: "var(--color-primary-light)",
+      color: "var(--color-primary)",
+      border: "none",
+    };
   }
 };
 
 export const getStatusColorStyle = (status: string) => {
   if (status === "ACTIVE") {
-    return { backgroundColor: "var(--color-success-light)", color: "var(--color-success)", border: "none" };
+    return {
+      backgroundColor: "var(--color-success-light)",
+      color: "var(--color-success)",
+      border: "none",
+    };
   } else if (status === "SUSPENDED") {
-    return { backgroundColor: "var(--color-warning-light)", color: "var(--color-warning)", border: "none" };
+    return {
+      backgroundColor: "var(--color-warning-light)",
+      color: "var(--color-warning)",
+      border: "none",
+    };
   }
-  return { backgroundColor: "var(--color-danger-light)", color: "var(--color-danger)", border: "none" };
+  return {
+    backgroundColor: "var(--color-danger-light)",
+    color: "var(--color-danger)",
+    border: "none",
+  };
 };
 
 export const getAdminUser = (staffList: StaffMember[]): StaffMember | null => {
@@ -76,7 +104,8 @@ export const getAdminUser = (staffList: StaffMember[]): StaffMember | null => {
     if (!oldest) return current;
     if (!current.createdAt) return oldest;
     if (!oldest.createdAt) return current;
-    return new Date(current.createdAt) < new Date(oldest.createdAt) ? current : oldest;
+    return new Date(current.createdAt) < new Date(oldest.createdAt)
+      ? current
+      : oldest;
   }, null);
 };
-

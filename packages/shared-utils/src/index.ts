@@ -15,7 +15,10 @@ export function formatCurrencyVND(amount: number | string): string {
 /**
  * Format Date to Vietnamese format (e.g. 23/06/2026 17:30)
  */
-export function formatDateVN(date: Date | string | number, includeTime = true): string {
+export function formatDateVN(
+  date: Date | string | number,
+  includeTime = true,
+): string {
   const d = new Date(date);
   if (isNaN(d.getTime())) return "";
 

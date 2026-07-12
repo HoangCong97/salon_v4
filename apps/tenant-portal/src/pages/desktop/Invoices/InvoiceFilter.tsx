@@ -9,7 +9,11 @@ interface SegmentDateInputProps {
   disabled?: boolean;
 }
 
-const SegmentDateInput: React.FC<SegmentDateInputProps> = ({ value, onChange, disabled }) => {
+const SegmentDateInput: React.FC<SegmentDateInputProps> = ({
+  value,
+  onChange,
+  disabled,
+}) => {
   const [localDay, setLocalDay] = useState("");
   const [localMonth, setLocalMonth] = useState("");
   const [localYear, setLocalYear] = useState("");
@@ -33,7 +37,8 @@ const SegmentDateInput: React.FC<SegmentDateInputProps> = ({ value, onChange, di
     const val = e.target.value.replace(/\D/g, "").slice(0, 2);
     setLocalDay(val);
     if (val.length === 2 && val !== "00") {
-      const next = e.target.nextElementSibling?.nextElementSibling as HTMLInputElement;
+      const next = e.target.nextElementSibling
+        ?.nextElementSibling as HTMLInputElement;
       if (next) next.focus();
     }
     triggerChange(val, localMonth, localYear);
@@ -43,7 +48,8 @@ const SegmentDateInput: React.FC<SegmentDateInputProps> = ({ value, onChange, di
     const val = e.target.value.replace(/\D/g, "").slice(0, 2);
     setLocalMonth(val);
     if (val.length === 2 && val !== "00") {
-      const next = e.target.nextElementSibling?.nextElementSibling as HTMLInputElement;
+      const next = e.target.nextElementSibling
+        ?.nextElementSibling as HTMLInputElement;
       if (next) next.focus();
     }
     triggerChange(localDay, val, localYear);
@@ -155,7 +161,9 @@ export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
         </div>
 
         <div className={styles.singleRangeContainer}>
-          <div className={`${styles.singleRangeInputWrapper} ${datePreset !== "custom" ? styles.disabled : ""}`}>
+          <div
+            className={`${styles.singleRangeInputWrapper} ${datePreset !== "custom" ? styles.disabled : ""}`}
+          >
             <CalendarDays size={14} className={styles.calendarIcon} />
             <SegmentDateInput
               value={startDate}
@@ -232,4 +240,3 @@ export const InvoiceFilter: React.FC<InvoiceFilterProps> = ({
     </div>
   );
 };
-

@@ -1,5 +1,11 @@
 import React, { useState, useRef } from "react";
-import { Upload, Loader2, FileSpreadsheet, AlertCircle, Download } from "lucide-react";
+import {
+  Upload,
+  Loader2,
+  FileSpreadsheet,
+  AlertCircle,
+  Download,
+} from "lucide-react";
 
 interface FileUploaderProps {
   onFileSelect: (file: File) => void;
@@ -29,7 +35,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
       validateAndSelect(file);
@@ -47,7 +53,9 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     if (ext === "xlsx" || ext === "xls" || ext === "csv") {
       onFileSelect(file);
     } else {
-      alert("Định dạng file không hợp lệ! Vui lòng chọn file .xlsx, .xls hoặc .csv");
+      alert(
+        "Định dạng file không hợp lệ! Vui lòng chọn file .xlsx, .xls hoặc .csv",
+      );
     }
   };
 
@@ -91,9 +99,19 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
       >
         {isAnalyzing ? (
           <>
-            <Loader2 className="animate-spin" size={48} style={{ color: "var(--color-primary)" }} />
+            <Loader2
+              className="animate-spin"
+              size={48}
+              style={{ color: "var(--color-primary)" }}
+            />
             <div>
-              <h4 style={{ fontWeight: "600", fontSize: "15px", marginBottom: "6px" }}>
+              <h4
+                style={{
+                  fontWeight: "600",
+                  fontSize: "15px",
+                  marginBottom: "6px",
+                }}
+              >
                 Đang phân tích file bằng AI...
               </h4>
               <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>
@@ -118,13 +136,32 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
               <Upload size={28} />
             </div>
             <div>
-              <h4 style={{ fontWeight: "600", fontSize: "15px", marginBottom: "6px" }}>
+              <h4
+                style={{
+                  fontWeight: "600",
+                  fontSize: "15px",
+                  marginBottom: "6px",
+                }}
+              >
                 Kéo thả file bảng tính vào đây
               </h4>
-              <p style={{ color: "var(--text-secondary)", fontSize: "13px", marginBottom: "16px" }}>
+              <p
+                style={{
+                  color: "var(--text-secondary)",
+                  fontSize: "13px",
+                  marginBottom: "16px",
+                }}
+              >
                 Hỗ trợ định dạng .xlsx, .xls, .csv. Dung lượng tối đa 10MB.
               </p>
-              <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                }}
+              >
                 <button
                   type="button"
                   className="btn btn-outline"
@@ -136,13 +173,9 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                   <Download size={15} />
                   Tải file mẫu Excel
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                >
+                <button type="button" className="btn btn-outline">
                   Chọn file từ máy tính
                 </button>
-                
               </div>
             </div>
           </>

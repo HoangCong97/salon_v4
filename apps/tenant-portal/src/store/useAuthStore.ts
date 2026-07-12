@@ -62,12 +62,12 @@ interface AuthState {
   brandName: string | null;
   logoUrl: string | null;
   isLoading: boolean;
-  
+
   // Subscription states
   subscription: SubscriptionData | null;
   subscriptionLoading: boolean;
   fetchSubscription: () => Promise<void>;
-  
+
   // Pricing Modal states
   isPricingModalOpen: boolean;
   setIsPricingModalOpen: (isOpen: boolean) => void;
@@ -79,7 +79,12 @@ interface AuthState {
   isBuying: boolean;
   handleBuyPlan: (planCode: string) => Promise<void>;
 
-  login: (tenantRef: string, loginId: string, password: string, rememberMe?: boolean) => Promise<boolean>;
+  login: (
+    tenantRef: string,
+    loginId: string,
+    password: string,
+    rememberMe?: boolean,
+  ) => Promise<boolean>;
   logout: () => void;
   setRole: (role: UserRole) => void | Promise<void>;
   setBranch: (branchId: string) => void;
@@ -108,7 +113,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!currentTenantId) return;
     set({ subscriptionLoading: true });
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/subscription`);
+      const res = await fetch(
+        `http://localhost:3000/api/tenants/${currentTenantId}/subscription`,
+      );
       if (res.ok) {
         const data = await res.json();
         set({ subscription: data });
@@ -152,11 +159,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!currentTenantId) return;
     set({ isBuying: true });
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/buy-plan`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planCode })
-      });
+      const res = await fetch(
+        `http://localhost:3000/api/tenants/${currentTenantId}/buy-plan`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ planCode }),
+        },
+      );
       if (res.ok) {
         const data = await res.json();
         set({ checkoutInvoice: data });
@@ -170,26 +180,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isBuying: false });
     }
   },
-  
+
   login: async (tenantRef, loginId, password, rememberMe = true) => {
     set({ isLoading: true });
     try {
       const res = await fetch("http://localhost:3000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tenantRef, loginId, password })
+        body: JSON.stringify({ tenantRef, loginId, password }),
       });
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.message || "Tài khoản hoặc mật khẩu không chính xác");
+        throw new Error(
+          errorData.message || "Tài khoản hoặc mật khẩu không chính xác",
+        );
       }
 
       const userData = await res.json();
       set({ user: userData, currentTenantId: userData.tenantId });
 
       // Fetch branches for logged in tenant
-      const branchesRes = await fetch(`http://localhost:3000/api/tenants/${userData.tenantId}/branches`);
+      const branchesRes = await fetch(
+        `http://localhost:3000/api/tenants/${userData.tenantId}/branches`,
+      );
       let mappedBranches: BranchInfo[] = [];
       let currentBranchId: string | null = null;
 
@@ -199,7 +213,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           mappedBranches = branchData.map((b: any) => ({
             id: b.id,
             name: b.name,
-            address: b.address || ""
+            address: b.address || "",
           }));
           currentBranchId = mappedBranches[0].id;
         }
@@ -208,7 +222,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({
         branches: mappedBranches,
         currentBranchId,
-        isLoading: false
+        isLoading: false,
       });
 
       await get().fetchBrandInfo();
@@ -246,7 +260,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     sessionStorage.removeItem("branches");
     sessionStorage.removeItem("rememberMe");
 
-    set({ user: null, currentBranchId: null, currentTenantId: null, branches: [] });
+    set({
+      user: null,
+      currentBranchId: null,
+      currentTenantId: null,
+      branches: [],
+    });
   },
   setRole: async (role) => {
     const tenantId = get().currentTenantId;
@@ -254,17 +273,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     try {
       // 1. Fetch all roles of the tenant
-      const rolesRes = await fetch(`http://localhost:3000/api/tenants/${tenantId}/roles`);
+      const rolesRes = await fetch(
+        `http://localhost:3000/api/tenants/${tenantId}/roles`,
+      );
       if (!rolesRes.ok) throw new Error();
       const roles = await rolesRes.json();
 
       // Find matching role case-insensitively
-      const matchedRole = roles.find((r: any) => r.name.toLowerCase() === role.toLowerCase());
+      const matchedRole = roles.find(
+        (r: any) => r.name.toLowerCase() === role.toLowerCase(),
+      );
       if (matchedRole) {
         // 2. Fetch role permission IDs
-        const rolePermsRes = await fetch(`http://localhost:3000/api/tenants/${tenantId}/roles/${matchedRole.id}/permissions`);
+        const rolePermsRes = await fetch(
+          `http://localhost:3000/api/tenants/${tenantId}/roles/${matchedRole.id}/permissions`,
+        );
         // 3. Fetch all system permissions (to map IDs to slugs)
-        const allPermsRes = await fetch(`http://localhost:3000/api/tenants/${tenantId}/permissions`);
+        const allPermsRes = await fetch(
+          `http://localhost:3000/api/tenants/${tenantId}/permissions`,
+        );
 
         if (rolePermsRes.ok && allPermsRes.ok) {
           const assignedIds: string[] = await rolePermsRes.json();
@@ -276,11 +303,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             .map((p: any) => p.slug);
 
           set((state) => ({
-            user: state.user ? {
-              ...state.user,
-              role,
-              permissions: permissionSlugs
-            } : null
+            user: state.user
+              ? {
+                  ...state.user,
+                  role,
+                  permissions: permissionSlugs,
+                }
+              : null,
           }));
           return;
         }
@@ -288,32 +317,36 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (e) {
       console.error("Failed to fetch role permissions dynamically", e);
       set((state) => ({
-        user: state.user ? {
-          ...state.user,
-          role,
-          permissions: []
-        } : null
+        user: state.user
+          ? {
+              ...state.user,
+              role,
+              permissions: [],
+            }
+          : null,
       }));
     }
   },
   setBranch: (currentBranchId) => set({ currentBranchId }),
-  
+
   setTenant: async (tenantId) => {
     set({ currentTenantId: tenantId, isLoading: true });
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${tenantId}/branches`);
+      const res = await fetch(
+        `http://localhost:3000/api/tenants/${tenantId}/branches`,
+      );
       if (res.ok) {
         const branchData = await res.json();
         if (Array.isArray(branchData) && branchData.length > 0) {
           const mappedBranches = branchData.map((b: any) => ({
             id: b.id,
             name: b.name,
-            address: b.address || ""
+            address: b.address || "",
           }));
           set({
             branches: mappedBranches,
             currentBranchId: mappedBranches[0].id,
-            isLoading: false
+            isLoading: false,
           });
           await get().fetchBrandInfo();
           await get().fetchSubscription();
@@ -325,7 +358,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({
         branches: [],
         currentBranchId: null,
-        isLoading: false
+        isLoading: false,
       });
     }
   },
@@ -334,10 +367,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     try {
       // 1. Check if there is stored session
-      const storedUser = localStorage.getItem("user") || sessionStorage.getItem("user");
-      const storedTenantId = localStorage.getItem("tenantId") || sessionStorage.getItem("tenantId");
-      const storedBranchId = localStorage.getItem("branchId") || sessionStorage.getItem("branchId");
-      const storedBranches = localStorage.getItem("branches") || sessionStorage.getItem("branches");
+      const storedUser =
+        localStorage.getItem("user") || sessionStorage.getItem("user");
+      const storedTenantId =
+        localStorage.getItem("tenantId") || sessionStorage.getItem("tenantId");
+      const storedBranchId =
+        localStorage.getItem("branchId") || sessionStorage.getItem("branchId");
+      const storedBranches =
+        localStorage.getItem("branches") || sessionStorage.getItem("branches");
 
       if (storedUser) {
         const parsedBranches = storedBranches ? JSON.parse(storedBranches) : [];
@@ -346,7 +383,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           currentTenantId: storedTenantId,
           currentBranchId: storedBranchId,
           branches: parsedBranches,
-          isLoading: false
+          isLoading: false,
         });
         await get().fetchBrandInfo();
         await get().fetchSubscription();
@@ -354,38 +391,44 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       // If no stored user, do default tenant list fetch
-      const tenantsRes = await fetch("http://localhost:3000/api/super-admin/tenants");
+      const tenantsRes = await fetch(
+        "http://localhost:3000/api/super-admin/tenants",
+      );
       if (tenantsRes.ok) {
         const tenantData = await tenantsRes.json();
         if (Array.isArray(tenantData) && tenantData.length > 0) {
           const mappedTenants = tenantData.map((t: any) => ({
             id: t.id,
             name: t.name,
-            status: t.status
+            status: t.status,
           }));
-          
+
           // Try to select first ACTIVE tenant, or fallback to first tenant
-          const activeTenant = mappedTenants.find((t) => t.status === "ACTIVE") || mappedTenants[0];
-          
+          const activeTenant =
+            mappedTenants.find((t) => t.status === "ACTIVE") ||
+            mappedTenants[0];
+
           set({
             tenants: mappedTenants,
-            currentTenantId: activeTenant.id
+            currentTenantId: activeTenant.id,
           });
 
           // Fetch branches for selected tenant
-          const branchesRes = await fetch(`http://localhost:3000/api/tenants/${activeTenant.id}/branches`);
+          const branchesRes = await fetch(
+            `http://localhost:3000/api/tenants/${activeTenant.id}/branches`,
+          );
           if (branchesRes.ok) {
             const branchData = await branchesRes.json();
             if (Array.isArray(branchData) && branchData.length > 0) {
               const mappedBranches = branchData.map((b: any) => ({
                 id: b.id,
                 name: b.name,
-                address: b.address || ""
+                address: b.address || "",
               }));
               set({
                 branches: mappedBranches,
                 currentBranchId: mappedBranches[0].id,
-                isLoading: false
+                isLoading: false,
               });
               await get().fetchBrandInfo();
               await get().fetchSubscription();
@@ -401,7 +444,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         currentTenantId: null,
         branches: [],
         currentBranchId: null,
-        isLoading: false
+        isLoading: false,
       });
     }
   },
@@ -412,12 +455,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { currentTenantId } = get();
     if (!currentTenantId) return;
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}`);
+      const res = await fetch(
+        `http://localhost:3000/api/tenants/${currentTenantId}`,
+      );
       if (res.ok) {
         const data = await res.json();
         set({
           brandName: data.brandName || data.name,
-          logoUrl: data.logoUrl || null
+          logoUrl: data.logoUrl || null,
         });
       }
     } catch (e) {
@@ -435,5 +480,5 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
     if (user.role === "ADMIN") return true;
     return user.permissions?.includes(permission) || false;
-  }
+  },
 }));

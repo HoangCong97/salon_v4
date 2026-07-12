@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { ChevronLeft, ChevronRight, Filter, ChevronDown, Plus } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  ChevronDown,
+  Plus,
+} from "lucide-react";
 import { Staff, TYPE_OPTIONS } from "../types";
 
 import styles from "../AttendanceCalendar.module.css";
@@ -56,13 +62,22 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
   // Handle click outside to close dropdowns
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (branchDropdownRef.current && !branchDropdownRef.current.contains(event.target as Node)) {
+      if (
+        branchDropdownRef.current &&
+        !branchDropdownRef.current.contains(event.target as Node)
+      ) {
         setIsBranchDropdownOpen(false);
       }
-      if (staffDropdownRef.current && !staffDropdownRef.current.contains(event.target as Node)) {
+      if (
+        staffDropdownRef.current &&
+        !staffDropdownRef.current.contains(event.target as Node)
+      ) {
         setIsStaffDropdownOpen(false);
       }
-      if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target as Node)) {
+      if (
+        typeDropdownRef.current &&
+        !typeDropdownRef.current.contains(event.target as Node)
+      ) {
         setIsTypeDropdownOpen(false);
       }
     }
@@ -74,7 +89,9 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
 
   // Filtered staff list for dropdown search
   const filteredStaffForDropdown = useMemo(() => {
-    return staffList.filter((s) => s.name.toLowerCase().includes(staffSearchQuery.toLowerCase()));
+    return staffList.filter((s) =>
+      s.name.toLowerCase().includes(staffSearchQuery.toLowerCase()),
+    );
   }, [staffList, staffSearchQuery]);
 
   return (
@@ -90,16 +107,10 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
             Hôm nay
           </button>
           <div className={styles.btnGroupBorder}>
-            <button
-              onClick={onPrevMonth}
-              className={styles.navArrowBtn}
-            >
+            <button onClick={onPrevMonth} className={styles.navArrowBtn}>
               <ChevronLeft size={16} />
             </button>
-            <button
-              onClick={onNextMonth}
-              className={styles.navArrowBtn}
-            >
+            <button onClick={onNextMonth} className={styles.navArrowBtn}>
               <ChevronRight size={16} />
             </button>
           </div>
@@ -129,13 +140,20 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
                 className={styles.dropdownTriggerBtn}
               >
                 <span>
-                  🏢 Chi nhánh: {branches.find(b => b.id === currentBranchId)?.name || "Chưa chọn"}
+                  🏢 Chi nhánh:{" "}
+                  {branches.find((b) => b.id === currentBranchId)?.name ||
+                    "Chưa chọn"}
                 </span>
-                <ChevronDown size={12} style={{ color: "var(--text-muted)", marginLeft: "2px" }} />
+                <ChevronDown
+                  size={12}
+                  style={{ color: "var(--text-muted)", marginLeft: "2px" }}
+                />
               </button>
 
               {isBranchDropdownOpen && (
-                <div className={`${styles.dropdownMenu} ${styles.branchDropdown}`}>
+                <div
+                  className={`${styles.dropdownMenu} ${styles.branchDropdown}`}
+                >
                   {branches.map((b) => {
                     const isSelected = b.id === currentBranchId;
                     return (
@@ -171,10 +189,13 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
                 {selectedStaffIds.length === staffList.length
                   ? "Nhân viên: Tất cả"
                   : selectedStaffIds.length === 0
-                  ? "Nhân viên: Không có"
-                  : `Nhân viên: ${selectedStaffIds.length}/${staffList.length}`}
+                    ? "Nhân viên: Không có"
+                    : `Nhân viên: ${selectedStaffIds.length}/${staffList.length}`}
               </span>
-              <ChevronDown size={12} style={{ color: "var(--text-muted)", marginLeft: "2px" }} />
+              <ChevronDown
+                size={12}
+                style={{ color: "var(--text-muted)", marginLeft: "2px" }}
+              />
             </button>
 
             {isStaffDropdownOpen && (
@@ -194,7 +215,9 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
                 <div className={styles.dropdownQuickActions}>
                   <button
                     type="button"
-                    onClick={() => setSelectedStaffIds(staffList.map(s => s.id))}
+                    onClick={() =>
+                      setSelectedStaffIds(staffList.map((s) => s.id))
+                    }
                     className={styles.dropdownQuickBtnSelect}
                   >
                     Chọn tất cả
@@ -227,14 +250,25 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
                             checked={isChecked}
                             onChange={() => {
                               if (isChecked) {
-                                setSelectedStaffIds(selectedStaffIds.filter(id => id !== staff.id));
+                                setSelectedStaffIds(
+                                  selectedStaffIds.filter(
+                                    (id) => id !== staff.id,
+                                  ),
+                                );
                               } else {
-                                setSelectedStaffIds([...selectedStaffIds, staff.id]);
+                                setSelectedStaffIds([
+                                  ...selectedStaffIds,
+                                  staff.id,
+                                ]);
                               }
                             }}
                             style={{ cursor: "pointer" }}
                           />
-                          <span style={{ fontWeight: isChecked ? "600" : "400" }}>{staff.name}</span>
+                          <span
+                            style={{ fontWeight: isChecked ? "600" : "400" }}
+                          >
+                            {staff.name}
+                          </span>
                         </label>
                       );
                     })
@@ -258,10 +292,13 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
                 {selectedTypes.length === TYPE_OPTIONS.length
                   ? "Loại: Tất cả"
                   : selectedTypes.length === 0
-                  ? "Loại: Không có"
-                  : `Loại: ${selectedTypes.length}/${TYPE_OPTIONS.length}`}
+                    ? "Loại: Không có"
+                    : `Loại: ${selectedTypes.length}/${TYPE_OPTIONS.length}`}
               </span>
-              <ChevronDown size={12} style={{ color: "var(--text-muted)", marginLeft: "2px" }} />
+              <ChevronDown
+                size={12}
+                style={{ color: "var(--text-muted)", marginLeft: "2px" }}
+              />
             </button>
 
             {isTypeDropdownOpen && (
@@ -270,7 +307,9 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
                 <div className={styles.dropdownQuickActions}>
                   <button
                     type="button"
-                    onClick={() => setSelectedTypes(TYPE_OPTIONS.map(o => o.value))}
+                    onClick={() =>
+                      setSelectedTypes(TYPE_OPTIONS.map((o) => o.value))
+                    }
                     className={styles.dropdownQuickBtnSelect}
                   >
                     Chọn tất cả
@@ -298,16 +337,37 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
                           checked={isChecked}
                           onChange={() => {
                             if (isChecked) {
-                              setSelectedTypes(selectedTypes.filter(val => val !== opt.value));
+                              setSelectedTypes(
+                                selectedTypes.filter(
+                                  (val) => val !== opt.value,
+                                ),
+                              );
                             } else {
                               setSelectedTypes([...selectedTypes, opt.value]);
                             }
                           }}
                           style={{ cursor: "pointer" }}
                         />
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                          <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: opt.color }}></span>
-                          <span style={{ fontWeight: isChecked ? "600" : "400" }}>{opt.label}</span>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: "8px",
+                              height: "8px",
+                              borderRadius: "50%",
+                              backgroundColor: opt.color,
+                            }}
+                          ></span>
+                          <span
+                            style={{ fontWeight: isChecked ? "600" : "400" }}
+                          >
+                            {opt.label}
+                          </span>
                         </span>
                       </label>
                     );
@@ -318,11 +378,12 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
           </div>
 
           {/* Reset Filters Button */}
-          {(selectedStaffIds.length !== staffList.length || selectedTypes.length !== TYPE_OPTIONS.length) && (
+          {(selectedStaffIds.length !== staffList.length ||
+            selectedTypes.length !== TYPE_OPTIONS.length) && (
             <button
               onClick={() => {
-                setSelectedStaffIds(staffList.map(s => s.id));
-                setSelectedTypes(TYPE_OPTIONS.map(o => o.value));
+                setSelectedStaffIds(staffList.map((s) => s.id));
+                setSelectedTypes(TYPE_OPTIONS.map((o) => o.value));
               }}
               className={styles.resetFiltersBtn}
             >
@@ -344,4 +405,3 @@ export const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
     </div>
   );
 };
-

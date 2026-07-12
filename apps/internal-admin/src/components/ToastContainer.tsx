@@ -11,7 +11,7 @@ let toastListener: ((toast: Toast) => void) | null = null;
 
 /**
  * Triggers a real-time toast alert in the application.
- * 
+ *
  * @param message The alert message
  * @param type The alert type: 'success' | 'info' | 'warning' | 'error'
  */
@@ -20,7 +20,7 @@ export const showToast = (message: string, type: Toast["type"] = "info") => {
     toastListener({
       id: Math.random().toString(36).substring(2, 9),
       message,
-      type
+      type,
     });
   }
 };
@@ -58,41 +58,42 @@ const ToastContainer: React.FC = () => {
         flexDirection: "column",
         gap: "12px",
         maxWidth: "380px",
-        width: "100%"
+        width: "100%",
       }}
     >
       {toasts.map((toast) => {
-        const Icon = toast.type === "success"
-          ? CheckCircle
-          : toast.type === "error"
-          ? AlertCircle
-          : Info;
+        const Icon =
+          toast.type === "success"
+            ? CheckCircle
+            : toast.type === "error"
+              ? AlertCircle
+              : Info;
 
         const colorMap = {
           success: {
             bg: "rgba(220, 252, 231, 0.95)",
             border: "1px solid rgba(74, 222, 128, 0.4)",
             text: "rgb(21, 128, 61)",
-            icon: "rgb(34, 197, 94)"
+            icon: "rgb(34, 197, 94)",
           },
           error: {
             bg: "rgba(254, 226, 226, 0.95)",
             border: "1px solid rgba(248, 113, 113, 0.4)",
             text: "rgb(185, 28, 28)",
-            icon: "rgb(239, 68, 68)"
+            icon: "rgb(239, 68, 68)",
           },
           warning: {
             bg: "rgba(254, 243, 199, 0.95)",
             border: "1px solid rgba(251, 191, 36, 0.4)",
             text: "rgb(180, 83, 9)",
-            icon: "rgb(245, 158, 11)"
+            icon: "rgb(245, 158, 11)",
           },
           info: {
             bg: "rgba(219, 234, 254, 0.95)",
             border: "1px solid rgba(96, 165, 250, 0.4)",
             text: "rgb(29, 78, 216)",
-            icon: "rgb(59, 130, 246)"
-          }
+            icon: "rgb(59, 130, 246)",
+          },
         };
 
         const style = colorMap[toast.type];
@@ -109,16 +110,19 @@ const ToastContainer: React.FC = () => {
               borderRadius: "12px",
               backgroundColor: style.bg,
               border: style.border,
-              boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)",
+              boxShadow:
+                "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)",
               backdropFilter: "blur(8px)",
               color: style.text,
               fontSize: "14px",
               fontWeight: 500,
-              position: "relative"
+              position: "relative",
             }}
           >
             <Icon size={20} color={style.icon} style={{ flexShrink: 0 }} />
-            <div style={{ flexGrow: 1, marginRight: "12px", lineHeight: 1.4 }}>{toast.message}</div>
+            <div style={{ flexGrow: 1, marginRight: "12px", lineHeight: 1.4 }}>
+              {toast.message}
+            </div>
             <button
               onClick={() => removeToast(toast.id)}
               style={{
@@ -131,7 +135,7 @@ const ToastContainer: React.FC = () => {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                transition: "opacity 0.2s"
+                transition: "opacity 0.2s",
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.opacity = "1";

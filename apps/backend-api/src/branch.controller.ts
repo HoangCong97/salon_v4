@@ -1,10 +1,19 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, HttpStatus, HttpException } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  HttpStatus,
+  HttpException,
+} from "@nestjs/common";
 import { prisma } from "@salon/database";
 import { deleteOldFile } from "./file-utils";
 
 @Controller("api/tenants/:tenantId/branches")
 export class BranchController {
-  
   // 1. GET ALL BRANCHES FOR TENANT
   @Get()
   async getBranches(@Param("tenantId") tenantId: string) {
@@ -12,16 +21,16 @@ export class BranchController {
       return await prisma.branch.findMany({
         where: {
           tenantId,
-          deletedAt: null
+          deletedAt: null,
         },
         orderBy: {
-          createdAt: "asc"
-        }
+          createdAt: "asc",
+        },
       });
     } catch (error) {
       throw new HttpException(
         `Failed to fetch branches: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -30,7 +39,8 @@ export class BranchController {
   @Post()
   async createBranch(
     @Param("tenantId") tenantId: string,
-    @Body() body: {
+    @Body()
+    body: {
       name: string;
       phone?: string;
       email?: string;
@@ -44,11 +54,14 @@ export class BranchController {
       instagramUrl?: string;
       tiktokUrl?: string;
       websiteUrl?: string;
-    }
+    },
   ) {
     try {
       if (!body.name) {
-        throw new HttpException("Branch name is required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Branch name is required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       return await prisma.branch.create({
@@ -66,14 +79,14 @@ export class BranchController {
           fanpageUrl: body.fanpageUrl || null,
           instagramUrl: body.instagramUrl || null,
           tiktokUrl: body.tiktokUrl || null,
-          websiteUrl: body.websiteUrl || null
-        }
+          websiteUrl: body.websiteUrl || null,
+        },
       });
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to create branch: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -83,7 +96,8 @@ export class BranchController {
   async updateBranch(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
-    @Body() body: {
+    @Body()
+    body: {
       name: string;
       phone?: string;
       email?: string;
@@ -97,16 +111,19 @@ export class BranchController {
       instagramUrl?: string;
       tiktokUrl?: string;
       websiteUrl?: string;
-    }
+    },
   ) {
     try {
       if (!body.name) {
-        throw new HttpException("Branch name is required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Branch name is required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       // Ensure branch exists and belongs to this tenant
       const existing = await prisma.branch.findFirst({
-        where: { id, tenantId, deletedAt: null }
+        where: { id, tenantId, deletedAt: null },
       });
 
       if (!existing) {
@@ -116,7 +133,10 @@ export class BranchController {
       if (body.logoUrl !== undefined && body.logoUrl !== existing.logoUrl) {
         await deleteOldFile(existing.logoUrl);
       }
-      if (body.bannerUrl !== undefined && body.bannerUrl !== existing.bannerUrl) {
+      if (
+        body.bannerUrl !== undefined &&
+        body.bannerUrl !== existing.bannerUrl
+      ) {
         await deleteOldFile(existing.bannerUrl);
       }
 
@@ -136,14 +156,14 @@ export class BranchController {
           instagramUrl: body.instagramUrl ?? null,
           tiktokUrl: body.tiktokUrl ?? null,
           websiteUrl: body.websiteUrl ?? null,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to update branch: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -152,23 +172,26 @@ export class BranchController {
   @Delete(":id")
   async deleteBranch(
     @Param("tenantId") tenantId: string,
-    @Param("id") id: string
+    @Param("id") id: string,
   ) {
     try {
       // Ensure branch exists and belongs to this tenant
       const existing = await prisma.branch.findFirst({
-        where: { id, tenantId, deletedAt: null }
+        where: { id, tenantId, deletedAt: null },
       });
 
       if (!existing) {
-        throw new HttpException("Branch not found or already deleted", HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          "Branch not found or already deleted",
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       await prisma.branch.update({
         where: { id },
         data: {
-          deletedAt: new Date()
-        }
+          deletedAt: new Date(),
+        },
       });
 
       return { success: true, message: "Branch deleted successfully" };
@@ -176,7 +199,7 @@ export class BranchController {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to delete branch: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

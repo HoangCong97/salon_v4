@@ -24,26 +24,40 @@ export const useWebSocketSync = () => {
 
     switch (event) {
       case "staff.updated":
-        queryClient.invalidateQueries({ queryKey: queryKeys.staff.all(currentTenantId) });
-        queryClient.invalidateQueries({ queryKey: ["shifts", currentTenantId] });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.staff.all(currentTenantId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["shifts", currentTenantId],
+        });
         if (isOtherUser) {
-          toast.info("Danh sách nhân sự vừa được cập nhật bởi một người dùng khác.");
+          toast.info(
+            "Danh sách nhân sự vừa được cập nhật bởi một người dùng khác.",
+          );
         }
         break;
 
       case "roles.updated":
-        queryClient.invalidateQueries({ queryKey: queryKeys.roles.all(currentTenantId) });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.roles.all(currentTenantId),
+        });
         if (isOtherUser) {
-          toast.info("Cơ cấu chức vụ hoặc quyền hạn vừa được cập nhật bởi một người dùng khác.");
+          toast.info(
+            "Cơ cấu chức vụ hoặc quyền hạn vừa được cập nhật bởi một người dùng khác.",
+          );
         }
         break;
 
       case "dailyTurns.updated":
         const turnBranchId = data?.branchId || currentBranchId;
         if (turnBranchId) {
-          queryClient.invalidateQueries({ queryKey: queryKeys.dailyTurns.all(currentTenantId, turnBranchId) });
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.dailyTurns.all(currentTenantId, turnBranchId),
+          });
           if (isOtherUser && turnBranchId === currentBranchId) {
-            toast.info("Hàng đợi xoay tua thợ vừa được cập nhật bởi một người dùng khác.");
+            toast.info(
+              "Hàng đợi xoay tua thợ vừa được cập nhật bởi một người dùng khác.",
+            );
           }
         }
         break;
@@ -51,9 +65,13 @@ export const useWebSocketSync = () => {
       case "shifts.updated":
         const shiftBranchId = data?.branchId || currentBranchId;
         if (shiftBranchId) {
-          queryClient.invalidateQueries({ queryKey: queryKeys.shifts.all(currentTenantId, shiftBranchId) });
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.shifts.all(currentTenantId, shiftBranchId),
+          });
           if (isOtherUser && shiftBranchId === currentBranchId) {
-            toast.info("Lịch trực ca làm việc vừa được cập nhật bởi một người dùng khác.");
+            toast.info(
+              "Lịch trực ca làm việc vừa được cập nhật bởi một người dùng khác.",
+            );
           }
         }
         break;
@@ -65,9 +83,13 @@ export const useWebSocketSync = () => {
           // Invalidate queries only if the update is from another user.
           // For the current user, it is already handled locally on API success.
           if (!data?.senderId || isOther) {
-            queryClient.invalidateQueries({ queryKey: queryKeys.appointments.all(currentTenantId) });
+            queryClient.invalidateQueries({
+              queryKey: queryKeys.appointments.all(currentTenantId),
+            });
             if (isOther && apptBranchId === currentBranchId) {
-              toast.info("Lịch hẹn khách hàng vừa được cập nhật bởi một người dùng khác.");
+              toast.info(
+                "Lịch hẹn khách hàng vừa được cập nhật bởi một người dùng khác.",
+              );
             }
           }
         }
@@ -76,32 +98,50 @@ export const useWebSocketSync = () => {
       case "invoices.updated":
         const invBranchId = data?.branchId || currentBranchId;
         if (invBranchId) {
-          queryClient.invalidateQueries({ queryKey: queryKeys.invoices.all(currentTenantId, invBranchId) });
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.invoices.all(currentTenantId, invBranchId),
+          });
           if (isOtherUser && invBranchId === currentBranchId) {
-            toast.success("Một hóa đơn POS vừa được thanh toán thành công bởi người dùng khác.");
+            toast.success(
+              "Một hóa đơn POS vừa được thanh toán thành công bởi người dùng khác.",
+            );
           }
         }
         break;
 
       case "inventories.updated":
-        queryClient.invalidateQueries({ queryKey: queryKeys.inventories.all(currentTenantId) });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.inventories.all(currentTenantId),
+        });
         if (isOtherUser) {
-          toast.info("Kho hàng vừa được cập nhật số lượng hoặc sản phẩm mới bởi người dùng khác.");
+          toast.info(
+            "Kho hàng vừa được cập nhật số lượng hoặc sản phẩm mới bởi người dùng khác.",
+          );
         }
         break;
 
       case "services.updated":
-        queryClient.invalidateQueries({ queryKey: queryKeys.services.all(currentTenantId) });
-        queryClient.invalidateQueries({ queryKey: queryKeys.serviceCategories.all(currentTenantId) });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.services.all(currentTenantId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.serviceCategories.all(currentTenantId),
+        });
         if (isOtherUser) {
-          toast.info("Danh mục dịch vụ vừa được thay đổi bởi một người dùng khác.");
+          toast.info(
+            "Danh mục dịch vụ vừa được thay đổi bởi một người dùng khác.",
+          );
         }
         break;
 
       case "customers.updated":
-        queryClient.invalidateQueries({ queryKey: queryKeys.customers.all(currentTenantId) });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.customers.all(currentTenantId),
+        });
         if (isOtherUser) {
-          toast.info("Thông tin khách hàng vừa được cập nhật bởi một người dùng khác.");
+          toast.info(
+            "Thông tin khách hàng vừa được cập nhật bởi một người dùng khác.",
+          );
         }
         break;
     }

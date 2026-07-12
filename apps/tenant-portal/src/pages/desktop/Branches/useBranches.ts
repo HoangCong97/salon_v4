@@ -95,7 +95,7 @@ export function useBranches() {
       } else {
         await api.put(
           `/tenants/${currentTenantId}/branches/${selectedBranch?.id}`,
-          payload
+          payload,
         );
         toast.success("Cập nhật chi nhánh thành công!");
       }
@@ -176,7 +176,7 @@ export function useBranches() {
   const uploadFile = async (
     base64Data: string,
     category: string,
-    originalFilename?: string
+    originalFilename?: string,
   ): Promise<string> => {
     const data = await api.post<{ url: string }>(
       `/tenants/${currentTenantId}/upload`,
@@ -184,7 +184,7 @@ export function useBranches() {
         file: base64Data,
         category,
         filename: originalFilename,
-      }
+      },
     );
     return data.url;
   };
@@ -244,7 +244,7 @@ export function useBranches() {
     try {
       await api.put(
         `/tenants/${currentTenantId}/branches/${branch.id}`,
-        payload
+        payload,
       );
       toast.success("Cập nhật chi nhánh thành công!");
       await fetchBranches();
@@ -256,7 +256,7 @@ export function useBranches() {
 
   const handleUploadBranchBanner = (
     branch: Branch,
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -276,7 +276,7 @@ export function useBranches() {
 
   const handleUploadBranchLogo = (
     branch: Branch,
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;

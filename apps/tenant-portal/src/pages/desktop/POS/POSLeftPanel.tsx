@@ -12,10 +12,10 @@ export const getEmployeeColor = (id: string, activeStaff?: any[]) => {
     { color: "#7c3aed" }, // Violet 600
     { color: "#e11d48" }, // Rose 600
     { color: "#ea580c" }, // Orange 600
-    { color: "#d97706" }  // Amber 600
+    { color: "#d97706" }, // Amber 600
   ];
   if (activeStaff && activeStaff.length > 0) {
-    const idx = activeStaff.findIndex(s => s.id === id);
+    const idx = activeStaff.findIndex((s) => s.id === id);
     if (idx !== -1) {
       return colors[idx % colors.length];
     }
@@ -30,17 +30,70 @@ export const getEmployeeColor = (id: string, activeStaff?: any[]) => {
 
 const getServiceCategoryColor = (categoryName: string, colorName?: string) => {
   if (colorName) {
-    const presets: Record<string, { bg: string; border: string; text: string; labelBg: string }> = {
-      blue: { bg: "hsl(210, 100%, 96%)", border: "hsl(210, 100%, 90%)", text: "hsl(210, 100%, 45%)", labelBg: "hsl(210, 100%, 96%)" },
-      green: { bg: "hsl(142, 70%, 95%)", border: "hsl(142, 70%, 88%)", text: "hsl(142, 72%, 29%)", labelBg: "hsl(142, 70%, 95%)" },
-      orange: { bg: "hsl(30, 100%, 95%)", border: "hsl(30, 100%, 90%)", text: "hsl(30, 100%, 40%)", labelBg: "hsl(30, 100%, 95%)" },
-      red: { bg: "hsl(0, 100%, 96%)", border: "hsl(0, 100%, 90%)", text: "hsl(0, 100%, 45%)", labelBg: "hsl(0, 100%, 96%)" },
-      sky: { bg: "hsl(193, 90%, 95%)", border: "hsl(193, 90%, 88%)", text: "hsl(193, 90%, 35%)", labelBg: "hsl(193, 90%, 95%)" },
-      purple: { bg: "hsl(270, 80%, 96%)", border: "hsl(270, 80%, 90%)", text: "hsl(270, 80%, 45%)", labelBg: "hsl(270, 80%, 96%)" },
-      pink: { bg: "hsl(330, 80%, 96%)", border: "hsl(330, 80%, 90%)", text: "hsl(330, 80%, 45%)", labelBg: "hsl(330, 80%, 96%)" },
-      indigo: { bg: "hsl(235, 80%, 96%)", border: "hsl(235, 80%, 90%)", text: "hsl(235, 80%, 45%)", labelBg: "hsl(235, 80%, 96%)" },
-      lime: { bg: "hsl(80, 80%, 94%)", border: "hsl(80, 80%, 85%)", text: "hsl(80, 80%, 30%)", labelBg: "hsl(80, 80%, 94%)" },
-      teal: { bg: "hsl(170, 80%, 94%)", border: "hsl(170, 80%, 85%)", text: "hsl(170, 80%, 30%)", labelBg: "hsl(170, 80%, 94%)" },
+    const presets: Record<
+      string,
+      { bg: string; border: string; text: string; labelBg: string }
+    > = {
+      blue: {
+        bg: "hsl(210, 100%, 96%)",
+        border: "hsl(210, 100%, 90%)",
+        text: "hsl(210, 100%, 45%)",
+        labelBg: "hsl(210, 100%, 96%)",
+      },
+      green: {
+        bg: "hsl(142, 70%, 95%)",
+        border: "hsl(142, 70%, 88%)",
+        text: "hsl(142, 72%, 29%)",
+        labelBg: "hsl(142, 70%, 95%)",
+      },
+      orange: {
+        bg: "hsl(30, 100%, 95%)",
+        border: "hsl(30, 100%, 90%)",
+        text: "hsl(30, 100%, 40%)",
+        labelBg: "hsl(30, 100%, 95%)",
+      },
+      red: {
+        bg: "hsl(0, 100%, 96%)",
+        border: "hsl(0, 100%, 90%)",
+        text: "hsl(0, 100%, 45%)",
+        labelBg: "hsl(0, 100%, 96%)",
+      },
+      sky: {
+        bg: "hsl(193, 90%, 95%)",
+        border: "hsl(193, 90%, 88%)",
+        text: "hsl(193, 90%, 35%)",
+        labelBg: "hsl(193, 90%, 95%)",
+      },
+      purple: {
+        bg: "hsl(270, 80%, 96%)",
+        border: "hsl(270, 80%, 90%)",
+        text: "hsl(270, 80%, 45%)",
+        labelBg: "hsl(270, 80%, 96%)",
+      },
+      pink: {
+        bg: "hsl(330, 80%, 96%)",
+        border: "hsl(330, 80%, 90%)",
+        text: "hsl(330, 80%, 45%)",
+        labelBg: "hsl(330, 80%, 96%)",
+      },
+      indigo: {
+        bg: "hsl(235, 80%, 96%)",
+        border: "hsl(235, 80%, 90%)",
+        text: "hsl(235, 80%, 45%)",
+        labelBg: "hsl(235, 80%, 96%)",
+      },
+      lime: {
+        bg: "hsl(80, 80%, 94%)",
+        border: "hsl(80, 80%, 85%)",
+        text: "hsl(80, 80%, 30%)",
+        labelBg: "hsl(80, 80%, 94%)",
+      },
+      teal: {
+        bg: "hsl(170, 80%, 94%)",
+        border: "hsl(170, 80%, 85%)",
+        text: "hsl(170, 80%, 30%)",
+        labelBg: "hsl(170, 80%, 94%)",
+      },
     };
     const c = colorName.toLowerCase();
     if (presets[c]) return presets[c];
@@ -48,15 +101,39 @@ const getServiceCategoryColor = (categoryName: string, colorName?: string) => {
 
   const name = (categoryName || "").toLowerCase();
   if (name.includes("hair") || name.includes("tóc")) {
-    return { bg: "#f0f7ff", border: "#bae6fd", text: "#0369a1", labelBg: "#e0f2fe" }; // Light Blue
+    return {
+      bg: "#f0f7ff",
+      border: "#bae6fd",
+      text: "#0369a1",
+      labelBg: "#e0f2fe",
+    }; // Light Blue
   }
-  if (name.includes("spa") || name.includes("gội") || name.includes("massage")) {
-    return { bg: "#f0fdf4", border: "#bbf7d0", text: "#15803d", labelBg: "#dcfce7" }; // Light Green
+  if (
+    name.includes("spa") ||
+    name.includes("gội") ||
+    name.includes("massage")
+  ) {
+    return {
+      bg: "#f0fdf4",
+      border: "#bbf7d0",
+      text: "#15803d",
+      labelBg: "#dcfce7",
+    }; // Light Green
   }
   if (name.includes("nail") || name.includes("móng") || name.includes("art")) {
-    return { bg: "#fff5f5", border: "#fed7d7", text: "#c53030", labelBg: "#fff5f5" }; // Light Rose
+    return {
+      bg: "#fff5f5",
+      border: "#fed7d7",
+      text: "#c53030",
+      labelBg: "#fff5f5",
+    }; // Light Rose
   }
-  return { bg: "#fafaf9", border: "#e7e5e4", text: "#57534e", labelBg: "#f5f5f4" };
+  return {
+    bg: "#fafaf9",
+    border: "#e7e5e4",
+    text: "#57534e",
+    labelBg: "#f5f5f4",
+  };
 };
 
 interface POSLeftPanelProps {
@@ -77,7 +154,10 @@ interface POSLeftPanelProps {
   flashStaff?: boolean;
   pinnedItemIds: string[];
   togglePinItem: (itemId: string) => void;
-  reorderItems: (type: "SERVICE" | "PRODUCT" | "PACKAGE", orderedIds: string[]) => void;
+  reorderItems: (
+    type: "SERVICE" | "PRODUCT" | "PACKAGE",
+    orderedIds: string[],
+  ) => void;
 }
 
 export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
@@ -105,51 +185,68 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
   const [isSortingPackages, setIsSortingPackages] = useState(false);
 
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [draggedType, setDraggedType] = useState<"SERVICE" | "PRODUCT" | "PACKAGE" | null>(null);
+  const [draggedType, setDraggedType] = useState<
+    "SERVICE" | "PRODUCT" | "PACKAGE" | null
+  >(null);
 
   const handleDrop = (
     type: "SERVICE" | "PRODUCT" | "PACKAGE",
     targetIndex: number,
-    itemsList: any[]
+    itemsList: any[],
   ) => {
-    if (draggedIndex === null || draggedType !== type || draggedIndex === targetIndex) return;
+    if (
+      draggedIndex === null ||
+      draggedType !== type ||
+      draggedIndex === targetIndex
+    )
+      return;
 
     const listCopy = [...itemsList];
     const [draggedItem] = listCopy.splice(draggedIndex, 1);
     listCopy.splice(targetIndex, 0, draggedItem);
 
-    const newOrderIds = listCopy.map(item => item.id);
+    const newOrderIds = listCopy.map((item) => item.id);
     reorderItems(type, newOrderIds);
     setDraggedIndex(null);
     setDraggedType(null);
   };
   // Helper UI: Render active cart assignment badges on item card
   const renderItemCartBadges = (itemId: string) => {
-    const assignments = cart.filter(c => c.itemId === itemId);
+    const assignments = cart.filter((c) => c.itemId === itemId);
     if (assignments.length === 0) return null;
 
     // Group assignments by staffId and sum quantities
     const groupedAssignments: { staffId: string; quantity: number }[] = [];
     assignments.forEach((asg) => {
-      const existing = groupedAssignments.find(x => x.staffId === asg.staffId);
+      const existing = groupedAssignments.find(
+        (x) => x.staffId === asg.staffId,
+      );
       if (existing) {
         existing.quantity += asg.quantity;
       } else {
-        groupedAssignments.push({ staffId: asg.staffId, quantity: asg.quantity });
+        groupedAssignments.push({
+          staffId: asg.staffId,
+          quantity: asg.quantity,
+        });
       }
     });
 
     return (
       <div style={{ display: "flex", gap: "4px" }}>
         {groupedAssignments.map((ga) => {
-          const staffMember = activeStaff.find(s => s.id === ga.staffId);
+          const staffMember = activeStaff.find((s) => s.id === ga.staffId);
           const empColor = getEmployeeColor(ga.staffId, activeStaff);
-          const staffName = staffMember ? staffMember.name.split("(")[0].trim() : "Nhân viên";
+          const staffName = staffMember
+            ? staffMember.name.split("(")[0].trim()
+            : "Nhân viên";
           return (
             <span
               key={ga.staffId}
               title={`${staffName}: ${ga.quantity}`}
-              onContextMenu={(e) => { e.preventDefault(); removeFromCart(itemId); }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                removeFromCart(itemId);
+              }}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -174,14 +271,21 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px", height: "100%", overflow: "hidden" }}>
-
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "16px",
+        height: "100%",
+        overflow: "hidden",
+      }}
+    >
       {/* Top Panel: Active Staff Members */}
       <div
         className={`card ${flashStaff ? "flash-active" : ""}`}
         style={{
           padding: "16px",
-          transition: "all 0.2s"
+          transition: "all 0.2s",
         }}
       >
         <style>{`
@@ -202,8 +306,19 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
             opacity: 1;
           }
         `}</style>
-        <h4 style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
-          <Users size={16} /> NHÂN VIÊN CHI NHÁNH (Có thể sử dụng hàng phím số để chọn)
+        <h4
+          style={{
+            fontSize: "13px",
+            fontWeight: "700",
+            color: "var(--text-secondary)",
+            marginBottom: "12px",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+          }}
+        >
+          <Users size={16} /> NHÂN VIÊN CHI NHÁNH (Có thể sử dụng hàng phím số
+          để chọn)
         </h4>
         <div
           className={styles.thinScrollbar}
@@ -214,7 +329,7 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
             height: "48px",
             alignItems: "center",
             boxSizing: "border-box",
-            paddingBottom: "4px"
+            paddingBottom: "4px",
           }}
           onWheel={(e) => {
             const container = e.currentTarget;
@@ -239,16 +354,21 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
                   height: "38px",
                   boxSizing: "border-box",
                   borderRadius: "var(--radius-sm)",
-                  border: isSelected ? `2px solid ${empColor.color}` : `2px solid ${empColor.color}`,
+                  border: isSelected
+                    ? `2px solid ${empColor.color}`
+                    : `2px solid ${empColor.color}`,
                   background: isSelected ? empColor.color : "white",
                   backgroundClip: "padding-box",
                   color: isSelected ? "white" : empColor.color,
                   fontWeight: "600",
                   fontSize: "13px",
                   cursor: "pointer",
-                  transition: "background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s",
-                  boxShadow: isSelected ? "0 4px 12px rgba(0, 0, 0, 0.12)" : "none",
-                  outline: "none"
+                  transition:
+                    "background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s",
+                  boxShadow: isSelected
+                    ? "0 4px 12px rgba(0, 0, 0, 0.12)"
+                    : "none",
+                  outline: "none",
                 }}
               >
                 {s.name.split("(")[0]}
@@ -260,23 +380,53 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
 
       {/* Middle Panel: Shrunk search box + all category options on the SAME ROW */}
       <div className="card" style={{ padding: "16px" }}>
-        <div style={{ display: "flex", gap: "12px", alignItems: "center", width: "100%", justifyContent: "space-between", flexWrap: "nowrap" }}>
-
+        <div
+          style={{
+            display: "flex",
+            gap: "12px",
+            alignItems: "center",
+            width: "100%",
+            justifyContent: "space-between",
+            flexWrap: "nowrap",
+          }}
+        >
           {/* Shrunk Search Box */}
           <div style={{ position: "relative", width: "180px", flexShrink: 0 }}>
-            <Search size={14} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+            <Search
+              size={14}
+              style={{
+                position: "absolute",
+                left: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "var(--text-muted)",
+              }}
+            />
             <input
               type="text"
               className="form-input"
               placeholder="Tìm kiếm nhanh..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              style={{ paddingLeft: "30px", width: "100%", height: "36px", fontSize: "12.5px" }}
+              style={{
+                paddingLeft: "30px",
+                width: "100%",
+                height: "36px",
+                fontSize: "12.5px",
+              }}
             />
           </div>
 
           {/* Category Buttons including ALL service categories */}
-          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", justifyContent: "flex-end", flexGrow: 1 }}>
+          <div
+            style={{
+              display: "flex",
+              gap: "6px",
+              flexWrap: "wrap",
+              justifyContent: "flex-end",
+              flexGrow: 1,
+            }}
+          >
             <button
               type="button"
               onClick={() => setSelectedCategory("All")}
@@ -286,12 +436,17 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
                 fontSize: "12.5px",
                 fontWeight: "600",
                 borderRadius: "var(--radius-full)",
-                border: selectedCategory === "All" ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
-                background: selectedCategory === "All" ? "var(--color-primary)" : "white",
-                color: selectedCategory === "All" ? "white" : "var(--text-primary)",
+                border:
+                  selectedCategory === "All"
+                    ? "1px solid var(--color-primary)"
+                    : "1px solid var(--border-color)",
+                background:
+                  selectedCategory === "All" ? "var(--color-primary)" : "white",
+                color:
+                  selectedCategory === "All" ? "white" : "var(--text-primary)",
                 cursor: "pointer",
                 transition: "all 0.15s",
-                whiteSpace: "nowrap"
+                whiteSpace: "nowrap",
               }}
             >
               Tất cả
@@ -312,12 +467,14 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
                     fontSize: "12.5px",
                     fontWeight: "600",
                     borderRadius: "var(--radius-full)",
-                    border: isActive ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
+                    border: isActive
+                      ? "1px solid var(--color-primary)"
+                      : "1px solid var(--border-color)",
                     background: isActive ? "var(--color-primary)" : "white",
                     color: isActive ? "white" : "var(--text-primary)",
                     cursor: "pointer",
                     transition: "all 0.15s",
-                    whiteSpace: "nowrap"
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {catName}
@@ -335,12 +492,21 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
                 fontSize: "12.5px",
                 fontWeight: "600",
                 borderRadius: "var(--radius-full)",
-                border: selectedCategory === "Product" ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
-                background: selectedCategory === "Product" ? "var(--color-primary)" : "white",
-                color: selectedCategory === "Product" ? "white" : "var(--text-primary)",
+                border:
+                  selectedCategory === "Product"
+                    ? "1px solid var(--color-primary)"
+                    : "1px solid var(--border-color)",
+                background:
+                  selectedCategory === "Product"
+                    ? "var(--color-primary)"
+                    : "white",
+                color:
+                  selectedCategory === "Product"
+                    ? "white"
+                    : "var(--text-primary)",
                 cursor: "pointer",
                 transition: "all 0.15s",
-                whiteSpace: "nowrap"
+                whiteSpace: "nowrap",
               }}
             >
               Sản phẩm
@@ -356,12 +522,21 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
                 fontSize: "12.5px",
                 fontWeight: "600",
                 borderRadius: "var(--radius-full)",
-                border: selectedCategory === "Package" ? "1px solid var(--color-primary)" : "1px solid var(--border-color)",
-                background: selectedCategory === "Package" ? "var(--color-primary)" : "white",
-                color: selectedCategory === "Package" ? "white" : "var(--text-primary)",
+                border:
+                  selectedCategory === "Package"
+                    ? "1px solid var(--color-primary)"
+                    : "1px solid var(--border-color)",
+                background:
+                  selectedCategory === "Package"
+                    ? "var(--color-primary)"
+                    : "white",
+                color:
+                  selectedCategory === "Package"
+                    ? "white"
+                    : "var(--text-primary)",
                 cursor: "pointer",
                 transition: "all 0.15s",
-                whiteSpace: "nowrap"
+                whiteSpace: "nowrap",
               }}
             >
               Gói dịch vụ
@@ -371,368 +546,629 @@ export const POSLeftPanel: React.FC<POSLeftPanelProps> = ({
       </div>
 
       {/* Main Items Listing: Services, Products, Packages */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "24px", overflowY: "auto", flex: 1, paddingRight: "8px" }}>
-
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "24px",
+          overflowY: "auto",
+          flex: 1,
+          paddingRight: "8px",
+        }}
+      >
         {/* 1. SERVICES SECTION */}
-        {(selectedCategory === "All" || selectedCategory.startsWith("Service:")) && filteredServices.length > 0 && (
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px", justifyContent: "space-between", width: "100%" }}>
-              <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "var(--color-primary)", padding: "4px 10px", borderRadius: "6px", background: "var(--color-primary-light)" }}>
-                Dịch vụ Salon
-              </span>
-              <div style={{ flexGrow: 1, height: "1px", background: "linear-gradient(to right, var(--color-primary-light), transparent)" }}></div>
-              {isSortingServices && (
-                <span style={{ fontSize: "11px", color: "var(--text-muted)", fontStyle: "italic", marginRight: "4px" }}>
-                  Kéo thả để sắp xếp
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={() => setIsSortingServices(!isSortingServices)}
-                className={`btn ${isSortingServices ? "btn-primary" : "btn-secondary"}`}
-                style={{ padding: "4px 10px", fontSize: "11px", height: "26px", fontWeight: "600", borderRadius: "4px" }}
+        {(selectedCategory === "All" ||
+          selectedCategory.startsWith("Service:")) &&
+          filteredServices.length > 0 && (
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  marginBottom: "12px",
+                  justifyContent: "space-between",
+                  width: "100%",
+                }}
               >
-                {isSortingServices ? "Xong" : "Sắp xếp"}
-              </button>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "12px" }}>
-              {filteredServices.map((item, index) => {
-                const catName = item.category?.name || "Dịch vụ";
-                const catColor = getServiceCategoryColor(catName, item.category?.color);
-
-                // Determine filter behavior
-                if (selectedCategory !== "All" && selectedCategory !== `Service:${catName}`) {
-                  return null;
-                }
-
-                return (
-                  <div
-                    key={item.id}
-                    className="card item-card"
-                    draggable={isSortingServices}
-                    onDragStart={(e) => {
-                      setDraggedIndex(index);
-                      setDraggedType("SERVICE");
-                      e.dataTransfer.effectAllowed = "move";
-                    }}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                    }}
-                    onDrop={() => {
-                      handleDrop("SERVICE", index, filteredServices);
-                    }}
-                    onDragEnd={() => {
-                      setDraggedIndex(null);
-                      setDraggedType(null);
-                    }}
-                    onClick={() => {
-                      if (isSortingServices) return;
-                      addToCart(item, "SERVICE");
-                    }}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      removeFromCart(item.id);
-                    }}
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: "700",
+                    textTransform: "uppercase",
+                    letterSpacing: "1px",
+                    color: "var(--color-primary)",
+                    padding: "4px 10px",
+                    borderRadius: "6px",
+                    background: "var(--color-primary-light)",
+                  }}
+                >
+                  Dịch vụ Salon
+                </span>
+                <div
+                  style={{
+                    flexGrow: 1,
+                    height: "1px",
+                    background:
+                      "linear-gradient(to right, var(--color-primary-light), transparent)",
+                  }}
+                ></div>
+                {isSortingServices && (
+                  <span
                     style={{
-                      position: "relative",
-                      padding: "12px 14px",
-                      background: "transparent",
-                      border: `1px solid ${catColor.text}`,
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between",
-                      minHeight: "80px",
-                      cursor: isSortingServices ? "move" : "pointer",
-                      transition: "transform 0.15s, box-shadow 0.15s",
-                      overflow: "hidden",
-                      opacity: (draggedType === "SERVICE" && draggedIndex === index) ? 0.5 : 1
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-2px)";
-                      e.currentTarget.style.boxShadow = "var(--shadow-md)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "none";
-                      e.currentTarget.style.boxShadow = "none";
+                      fontSize: "11px",
+                      color: "var(--text-muted)",
+                      fontStyle: "italic",
+                      marginRight: "4px",
                     }}
                   >
-                    {/* Absolute Top-Right Badge Corner */}
-                    <div style={{ position: "absolute", top: "4px", right: "4px", display: "flex", gap: "4px", zIndex: 10 }}>
-                      {isSortingServices ? (
-                        <GripVertical size={16} style={{ color: "var(--text-muted)", cursor: "move" }} />
-                      ) : (
-                        renderItemCartBadges(item.id)
-                      )}
-                    </div>
+                    Kéo thả để sắp xếp
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsSortingServices(!isSortingServices)}
+                  className={`btn ${isSortingServices ? "btn-primary" : "btn-secondary"}`}
+                  style={{
+                    padding: "4px 10px",
+                    fontSize: "11px",
+                    height: "26px",
+                    fontWeight: "600",
+                    borderRadius: "4px",
+                  }}
+                >
+                  {isSortingServices ? "Xong" : "Sắp xếp"}
+                </button>
+              </div>
 
-                    <div>
-                      <h4
-                        title={item.name}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+                  gap: "12px",
+                }}
+              >
+                {filteredServices.map((item, index) => {
+                  const catName = item.category?.name || "Dịch vụ";
+                  const catColor = getServiceCategoryColor(
+                    catName,
+                    item.category?.color,
+                  );
+
+                  // Determine filter behavior
+                  if (
+                    selectedCategory !== "All" &&
+                    selectedCategory !== `Service:${catName}`
+                  ) {
+                    return null;
+                  }
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="card item-card"
+                      draggable={isSortingServices}
+                      onDragStart={(e) => {
+                        setDraggedIndex(index);
+                        setDraggedType("SERVICE");
+                        e.dataTransfer.effectAllowed = "move";
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                      }}
+                      onDrop={() => {
+                        handleDrop("SERVICE", index, filteredServices);
+                      }}
+                      onDragEnd={() => {
+                        setDraggedIndex(null);
+                        setDraggedType(null);
+                      }}
+                      onClick={() => {
+                        if (isSortingServices) return;
+                        addToCart(item, "SERVICE");
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        removeFromCart(item.id);
+                      }}
+                      style={{
+                        position: "relative",
+                        padding: "12px 14px",
+                        background: "transparent",
+                        border: `1px solid ${catColor.text}`,
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        minHeight: "80px",
+                        cursor: isSortingServices ? "move" : "pointer",
+                        transition: "transform 0.15s, box-shadow 0.15s",
+                        overflow: "hidden",
+                        opacity:
+                          draggedType === "SERVICE" && draggedIndex === index
+                            ? 0.5
+                            : 1,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                        e.currentTarget.style.boxShadow = "var(--shadow-md)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "none";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    >
+                      {/* Absolute Top-Right Badge Corner */}
+                      <div
                         style={{
-                          fontWeight: "700",
-                          fontSize: "13.5px",
-                          color: catColor.text,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          width: "100%",
-                          marginBottom: "4px"
+                          position: "absolute",
+                          top: "4px",
+                          right: "4px",
+                          display: "flex",
+                          gap: "4px",
+                          zIndex: 10,
                         }}
                       >
-                        {item.name}
-                      </h4>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto" }}>
-                      <span style={{ fontWeight: "500", fontSize: "14px" }}>
-                        {formatCurrencyVND(item.price)}
-                      </span>
-                      {item.duration && (
-                        <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>
-                          ⏱️ {item.duration}p
+                        {isSortingServices ? (
+                          <GripVertical
+                            size={16}
+                            style={{
+                              color: "var(--text-muted)",
+                              cursor: "move",
+                            }}
+                          />
+                        ) : (
+                          renderItemCartBadges(item.id)
+                        )}
+                      </div>
+
+                      <div>
+                        <h4
+                          title={item.name}
+                          style={{
+                            fontWeight: "700",
+                            fontSize: "13.5px",
+                            color: catColor.text,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            width: "100%",
+                            marginBottom: "4px",
+                          }}
+                        >
+                          {item.name}
+                        </h4>
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginTop: "auto",
+                        }}
+                      >
+                        <span style={{ fontWeight: "500", fontSize: "14px" }}>
+                          {formatCurrencyVND(item.price)}
                         </span>
-                      )}
+                        {item.duration && (
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              color: "var(--text-secondary)",
+                            }}
+                          >
+                            ⏱️ {item.duration}p
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* 2. PRODUCTS SECTION (Wood brown layout) */}
         {/* 2. PRODUCTS SECTION (Wood brown layout) */}
         {/* 2. PRODUCTS SECTION (Wood brown layout) */}
-        {(selectedCategory === "All" || selectedCategory === "Product") && filteredProducts.length > 0 && (
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px", justifyContent: "space-between", width: "100%" }}>
-              <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#8a5a22", padding: "4px 10px", borderRadius: "6px", background: "#fcf8f2" }}>
-                Sản phẩm
-              </span>
-              <div style={{ flexGrow: 1, height: "1px", background: "linear-gradient(to right, #ebdcc5, transparent)" }}></div>
-              {isSortingProducts && (
-                <span style={{ fontSize: "11px", color: "var(--text-muted)", fontStyle: "italic", marginRight: "4px" }}>
-                  Kéo thả để sắp xếp
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={() => setIsSortingProducts(!isSortingProducts)}
-                className={`btn ${isSortingProducts ? "btn-primary" : "btn-secondary"}`}
-                style={{ padding: "4px 10px", fontSize: "11px", height: "26px", fontWeight: "600", borderRadius: "4px" }}
+        {(selectedCategory === "All" || selectedCategory === "Product") &&
+          filteredProducts.length > 0 && (
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  marginBottom: "12px",
+                  justifyContent: "space-between",
+                  width: "100%",
+                }}
               >
-                {isSortingProducts ? "Xong" : "Sắp xếp"}
-              </button>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "12px" }}>
-              {filteredProducts.map((item, index) => {
-                return (
-                  <div
-                    key={item.id}
-                    className="card item-card"
-                    draggable={isSortingProducts}
-                    onDragStart={(e) => {
-                      setDraggedIndex(index);
-                      setDraggedType("PRODUCT");
-                      e.dataTransfer.effectAllowed = "move";
-                    }}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={() => handleDrop("PRODUCT", index, filteredProducts)}
-                    onDragEnd={() => {
-                      setDraggedIndex(null);
-                      setDraggedType(null);
-                    }}
-                    onClick={() => {
-                      if (isSortingProducts) return;
-                      addToCart(item, "PRODUCT");
-                    }}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      removeFromCart(item.id);
-                    }}
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: "700",
+                    textTransform: "uppercase",
+                    letterSpacing: "1px",
+                    color: "#8a5a22",
+                    padding: "4px 10px",
+                    borderRadius: "6px",
+                    background: "#fcf8f2",
+                  }}
+                >
+                  Sản phẩm
+                </span>
+                <div
+                  style={{
+                    flexGrow: 1,
+                    height: "1px",
+                    background:
+                      "linear-gradient(to right, #ebdcc5, transparent)",
+                  }}
+                ></div>
+                {isSortingProducts && (
+                  <span
                     style={{
-                      position: "relative",
-                      padding: "12px 14px",
-                      background: "transparent",
-                      border: "1px solid #8a5a22",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between",
-                      minHeight: "80px",
-                      cursor: isSortingProducts ? "move" : "pointer",
-                      transition: "transform 0.15s, box-shadow 0.15s",
-                      overflow: "hidden",
-                      opacity: (draggedType === "PRODUCT" && draggedIndex === index) ? 0.5 : 1
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-2px)";
-                      e.currentTarget.style.boxShadow = "var(--shadow-md)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "none";
-                      e.currentTarget.style.boxShadow = "none";
+                      fontSize: "11px",
+                      color: "var(--text-muted)",
+                      fontStyle: "italic",
+                      marginRight: "4px",
                     }}
                   >
-                    {/* Absolute Top-Right Badge Corner */}
-                    <div style={{ position: "absolute", top: "4px", right: "4px", display: "flex", gap: "4px", zIndex: 10 }}>
-                      {isSortingProducts ? (
-                        <GripVertical size={16} style={{ color: "var(--text-muted)", cursor: "move" }} />
-                      ) : (
-                        renderItemCartBadges(item.id)
-                      )}
-                    </div>
+                    Kéo thả để sắp xếp
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsSortingProducts(!isSortingProducts)}
+                  className={`btn ${isSortingProducts ? "btn-primary" : "btn-secondary"}`}
+                  style={{
+                    padding: "4px 10px",
+                    fontSize: "11px",
+                    height: "26px",
+                    fontWeight: "600",
+                    borderRadius: "4px",
+                  }}
+                >
+                  {isSortingProducts ? "Xong" : "Sắp xếp"}
+                </button>
+              </div>
 
-                    <div>
-                      <h4
-                        title={item.name}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+                  gap: "12px",
+                }}
+              >
+                {filteredProducts.map((item, index) => {
+                  return (
+                    <div
+                      key={item.id}
+                      className="card item-card"
+                      draggable={isSortingProducts}
+                      onDragStart={(e) => {
+                        setDraggedIndex(index);
+                        setDraggedType("PRODUCT");
+                        e.dataTransfer.effectAllowed = "move";
+                      }}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() =>
+                        handleDrop("PRODUCT", index, filteredProducts)
+                      }
+                      onDragEnd={() => {
+                        setDraggedIndex(null);
+                        setDraggedType(null);
+                      }}
+                      onClick={() => {
+                        if (isSortingProducts) return;
+                        addToCart(item, "PRODUCT");
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        removeFromCart(item.id);
+                      }}
+                      style={{
+                        position: "relative",
+                        padding: "12px 14px",
+                        background: "transparent",
+                        border: "1px solid #8a5a22",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        minHeight: "80px",
+                        cursor: isSortingProducts ? "move" : "pointer",
+                        transition: "transform 0.15s, box-shadow 0.15s",
+                        overflow: "hidden",
+                        opacity:
+                          draggedType === "PRODUCT" && draggedIndex === index
+                            ? 0.5
+                            : 1,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                        e.currentTarget.style.boxShadow = "var(--shadow-md)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "none";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    >
+                      {/* Absolute Top-Right Badge Corner */}
+                      <div
                         style={{
-                          fontWeight: "700",
-                          fontSize: "13.5px",
-                          color: "#8a5a22",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          width: "100%",
-                          paddingRight: "28px",
-                          marginBottom: "4px"
+                          position: "absolute",
+                          top: "4px",
+                          right: "4px",
+                          display: "flex",
+                          gap: "4px",
+                          zIndex: 10,
                         }}
                       >
-                        {item.name}
-                      </h4>
+                        {isSortingProducts ? (
+                          <GripVertical
+                            size={16}
+                            style={{
+                              color: "var(--text-muted)",
+                              cursor: "move",
+                            }}
+                          />
+                        ) : (
+                          renderItemCartBadges(item.id)
+                        )}
+                      </div>
+
+                      <div>
+                        <h4
+                          title={item.name}
+                          style={{
+                            fontWeight: "700",
+                            fontSize: "13.5px",
+                            color: "#8a5a22",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            width: "100%",
+                            paddingRight: "28px",
+                            marginBottom: "4px",
+                          }}
+                        >
+                          {item.name}
+                        </h4>
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginTop: "auto",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontWeight: "500",
+                            fontSize: "14px",
+                            color: "black",
+                          }}
+                        >
+                          {formatCurrencyVND(item.sellPrice)}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            color: "var(--text-secondary)",
+                          }}
+                        >
+                          Kho: {item.quantity}
+                        </span>
+                      </div>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto" }}>
-                      <span style={{ fontWeight: "500", fontSize: "14px", color: "black" }}>
-                        {formatCurrencyVND(item.sellPrice)}
-                      </span>
-                      <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>
-                        Kho: {item.quantity}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* 3. PACKAGES SECTION (Purple layout) */}
-        {(selectedCategory === "All" || selectedCategory === "Package") && filteredPackages.length > 0 && (
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px", justifyContent: "space-between", width: "100%" }}>
-              <span style={{ fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "1px", color: "#7e22ce", padding: "4px 10px", borderRadius: "6px", background: "#faf0fc" }}>
-                Gói dịch vụ
-              </span>
-              <div style={{ flexGrow: 1, height: "1px", background: "linear-gradient(to right, #eed0fc, transparent)" }}></div>
-              {isSortingPackages && (
-                <span style={{ fontSize: "11px", color: "var(--text-muted)", fontStyle: "italic", marginRight: "4px" }}>
-                  Kéo thả để sắp xếp
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={() => setIsSortingPackages(!isSortingPackages)}
-                className={`btn ${isSortingPackages ? "btn-primary" : "btn-secondary"}`}
-                style={{ padding: "4px 10px", fontSize: "11px", height: "26px", fontWeight: "600", borderRadius: "4px" }}
+        {(selectedCategory === "All" || selectedCategory === "Package") &&
+          filteredPackages.length > 0 && (
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  marginBottom: "12px",
+                  justifyContent: "space-between",
+                  width: "100%",
+                }}
               >
-                {isSortingPackages ? "Xong" : "Sắp xếp"}
-              </button>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "12px" }}>
-              {filteredPackages.map((item, index) => {
-                return (
-                  <div
-                    key={item.id}
-                    className="card item-card"
-                    draggable={isSortingPackages}
-                    onDragStart={(e) => {
-                      setDraggedIndex(index);
-                      setDraggedType("PACKAGE");
-                      e.dataTransfer.effectAllowed = "move";
-                    }}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={() => handleDrop("PACKAGE", index, filteredPackages)}
-                    onDragEnd={() => {
-                      setDraggedIndex(null);
-                      setDraggedType(null);
-                    }}
-                    onClick={() => {
-                      if (isSortingPackages) return;
-                      addToCart(item, "PACKAGE");
-                    }}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      removeFromCart(item.id);
-                    }}
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: "700",
+                    textTransform: "uppercase",
+                    letterSpacing: "1px",
+                    color: "#7e22ce",
+                    padding: "4px 10px",
+                    borderRadius: "6px",
+                    background: "#faf0fc",
+                  }}
+                >
+                  Gói dịch vụ
+                </span>
+                <div
+                  style={{
+                    flexGrow: 1,
+                    height: "1px",
+                    background:
+                      "linear-gradient(to right, #eed0fc, transparent)",
+                  }}
+                ></div>
+                {isSortingPackages && (
+                  <span
                     style={{
-                      position: "relative",
-                      padding: "12px 14px",
-                      background: "transparent",
-                      border: "1px solid #6b21a8",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between",
-                      minHeight: "80px",
-                      cursor: isSortingPackages ? "move" : "pointer",
-                      transition: "transform 0.15s, box-shadow 0.15s",
-                      overflow: "hidden",
-                      opacity: (draggedType === "PACKAGE" && draggedIndex === index) ? 0.5 : 1
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-2px)";
-                      e.currentTarget.style.boxShadow = "var(--shadow-md)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "none";
-                      e.currentTarget.style.boxShadow = "none";
+                      fontSize: "11px",
+                      color: "var(--text-muted)",
+                      fontStyle: "italic",
+                      marginRight: "4px",
                     }}
                   >
-                    {/* Absolute Top-Right Badge Corner */}
-                    <div style={{ position: "absolute", top: "4px", right: "4px", display: "flex", gap: "4px", zIndex: 10 }}>
-                      {isSortingPackages ? (
-                        <GripVertical size={16} style={{ color: "var(--text-muted)", cursor: "move" }} />
-                      ) : (
-                        renderItemCartBadges(item.id)
-                      )}
-                    </div>
+                    Kéo thả để sắp xếp
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsSortingPackages(!isSortingPackages)}
+                  className={`btn ${isSortingPackages ? "btn-primary" : "btn-secondary"}`}
+                  style={{
+                    padding: "4px 10px",
+                    fontSize: "11px",
+                    height: "26px",
+                    fontWeight: "600",
+                    borderRadius: "4px",
+                  }}
+                >
+                  {isSortingPackages ? "Xong" : "Sắp xếp"}
+                </button>
+              </div>
 
-                    <div>
-                      <h4
-                        title={item.name}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+                  gap: "12px",
+                }}
+              >
+                {filteredPackages.map((item, index) => {
+                  return (
+                    <div
+                      key={item.id}
+                      className="card item-card"
+                      draggable={isSortingPackages}
+                      onDragStart={(e) => {
+                        setDraggedIndex(index);
+                        setDraggedType("PACKAGE");
+                        e.dataTransfer.effectAllowed = "move";
+                      }}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() =>
+                        handleDrop("PACKAGE", index, filteredPackages)
+                      }
+                      onDragEnd={() => {
+                        setDraggedIndex(null);
+                        setDraggedType(null);
+                      }}
+                      onClick={() => {
+                        if (isSortingPackages) return;
+                        addToCart(item, "PACKAGE");
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        removeFromCart(item.id);
+                      }}
+                      style={{
+                        position: "relative",
+                        padding: "12px 14px",
+                        background: "transparent",
+                        border: "1px solid #6b21a8",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        minHeight: "80px",
+                        cursor: isSortingPackages ? "move" : "pointer",
+                        transition: "transform 0.15s, box-shadow 0.15s",
+                        overflow: "hidden",
+                        opacity:
+                          draggedType === "PACKAGE" && draggedIndex === index
+                            ? 0.5
+                            : 1,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "translateY(-2px)";
+                        e.currentTarget.style.boxShadow = "var(--shadow-md)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "none";
+                        e.currentTarget.style.boxShadow = "none";
+                      }}
+                    >
+                      {/* Absolute Top-Right Badge Corner */}
+                      <div
                         style={{
-                          fontWeight: "700",
-                          fontSize: "13.5px",
-                          color: "#6b21a8",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          width: "100%",
-                          paddingRight: "28px",
-                          marginBottom: "4px"
+                          position: "absolute",
+                          top: "4px",
+                          right: "4px",
+                          display: "flex",
+                          gap: "4px",
+                          zIndex: 10,
                         }}
                       >
-                        {item.name}
-                      </h4>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto" }}>
-                      <span style={{ fontWeight: "500", fontSize: "14px", color: "black" }}>
-                        {formatCurrencyVND(item.price)}
-                      </span>
-                      {item.duration && (
-                        <span style={{ fontSize: "11px", color: "var(--text-secondary)" }}>
-                          ⏱️ {item.duration}p
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
+                        {isSortingPackages ? (
+                          <GripVertical
+                            size={16}
+                            style={{
+                              color: "var(--text-muted)",
+                              cursor: "move",
+                            }}
+                          />
+                        ) : (
+                          renderItemCartBadges(item.id)
+                        )}
+                      </div>
 
+                      <div>
+                        <h4
+                          title={item.name}
+                          style={{
+                            fontWeight: "700",
+                            fontSize: "13.5px",
+                            color: "#6b21a8",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            width: "100%",
+                            paddingRight: "28px",
+                            marginBottom: "4px",
+                          }}
+                        >
+                          {item.name}
+                        </h4>
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginTop: "auto",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontWeight: "500",
+                            fontSize: "14px",
+                            color: "black",
+                          }}
+                        >
+                          {formatCurrencyVND(item.price)}
+                        </span>
+                        {item.duration && (
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              color: "var(--text-secondary)",
+                            }}
+                          >
+                            ⏱️ {item.duration}p
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+      </div>
     </div>
   );
 };

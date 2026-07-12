@@ -13,7 +13,7 @@ export default function Header() {
       message: "Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?",
       type: "warning",
       confirmText: "Đăng xuất",
-      cancelText: "Hủy bỏ"
+      cancelText: "Hủy bỏ",
     });
     if (ok) {
       logout();
@@ -44,23 +44,54 @@ export default function Header() {
       }}
     >
       <div style={{ display: "flex", flexDirection: "column" }}>
-        <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: "600", textTransform: "uppercase" }}>
+        <span
+          style={{
+            fontSize: "11px",
+            color: "var(--text-secondary)",
+            fontWeight: "600",
+            textTransform: "uppercase",
+          }}
+        >
           {currentBranch ? currentBranch.name : "Salon App"}
         </span>
-        <span style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
+        <span
+          style={{
+            fontSize: "12px",
+            color: "var(--text-muted)",
+            marginTop: "2px",
+          }}
+        >
           {todayStr}
         </span>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
         <div style={{ textAlign: "right" }}>
-          <div style={{ fontWeight: "600", fontSize: "13px" }}>Chào, {user?.name.split(" ").pop()}</div>
-          <div style={{ fontSize: "10px", color: "var(--text-secondary)", fontWeight: "500" }}>{user?.role}</div>
+          <div style={{ fontWeight: "600", fontSize: "13px" }}>
+            Chào, {user?.name.split(" ").pop()}
+          </div>
+          <div
+            style={{
+              fontSize: "10px",
+              color: "var(--text-secondary)",
+              fontWeight: "500",
+            }}
+          >
+            {user?.role}
+          </div>
         </div>
         <img
-          src={user?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"}
+          src={
+            user?.avatar ||
+            "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
+          }
           alt={user?.name}
-          style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover" }}
+          style={{
+            width: "32px",
+            height: "32px",
+            borderRadius: "50%",
+            objectFit: "cover",
+          }}
         />
         <button
           onClick={handleLogout}
@@ -75,10 +106,14 @@ export default function Header() {
             justifyContent: "center",
             padding: "8px",
             borderRadius: "50%",
-            transition: "background 0.2s"
+            transition: "background 0.2s",
           }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(239, 68, 68, 0.1)"}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.backgroundColor = "rgba(239, 68, 68, 0.1)")
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.backgroundColor = "transparent")
+          }
         >
           <LogOut size={18} />
         </button>

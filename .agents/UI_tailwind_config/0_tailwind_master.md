@@ -30,16 +30,17 @@ Tailwind Config
 Tailwind Default
 
 # Cấu trúc tailwind.config.ts AI nên sinh
+
 tailwind.config.ts
 theme
 └── extend
-    ├── colors
-    ├── spacing
-    ├── fontSize
-    ├── borderRadius
-    ├── boxShadow
-    ├── animation
-    ├── keyframes
-    ├── screens
-    ├── container
-    └── fontFamily
+├── colors
+├── spacing
+├── fontSize
+├── borderRadius
+├── boxShadow
+├── animation
+├── keyframes
+├── screens
+├── container
+└── fontFamily

@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, Headers, HttpStatus, HttpException } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  Headers,
+  HttpStatus,
+  HttpException,
+} from "@nestjs/common";
 import { prisma } from "@salon/database";
 import { NotificationGateway } from "./notification.gateway";
 
@@ -10,40 +23,40 @@ export class ServiceController {
   @Get()
   async getServices(
     @Param("tenantId") tenantId: string,
-    @Query("branchId") branchId?: string
+    @Query("branchId") branchId?: string,
   ) {
     try {
       const whereClause: any = {
         tenantId,
-        deletedAt: null
+        deletedAt: null,
       };
 
       if (branchId) {
         whereClause.OR = [
           { branchId: branchId },
-          { branchId: null } // Include tenant-wide global services too
+          { branchId: null }, // Include tenant-wide global services too
         ];
       }
 
       const services = await prisma.service.findMany({
         where: whereClause,
         include: {
-          category: true
+          category: true,
         },
         orderBy: {
-          createdAt: "desc"
-        }
+          createdAt: "desc",
+        },
       });
 
       return services.map((s) => ({
         ...s,
         discountPrice: Number(s.price) - Number(s.discountAmount || 0),
-        commission: s.commission !== null ? Number(s.commission) : null
+        commission: s.commission !== null ? Number(s.commission) : null,
       }));
     } catch (error) {
       throw new HttpException(
         `Failed to fetch services: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -52,19 +65,16 @@ export class ServiceController {
   @Get("packages")
   async getPackages(
     @Param("tenantId") tenantId: string,
-    @Query("branchId") branchId?: string
+    @Query("branchId") branchId?: string,
   ) {
     try {
       const whereClause: any = {
         tenantId,
-        deletedAt: null
+        deletedAt: null,
       };
 
       if (branchId) {
-        whereClause.OR = [
-          { branchId: branchId },
-          { branchId: null }
-        ];
+        whereClause.OR = [{ branchId: branchId }, { branchId: null }];
       }
 
       const packages = await prisma.servicePackage.findMany({
@@ -72,13 +82,13 @@ export class ServiceController {
         include: {
           details: {
             include: {
-              service: true
-            }
-          }
+              service: true,
+            },
+          },
         },
         orderBy: {
-          createdAt: "desc"
-        }
+          createdAt: "desc",
+        },
       });
 
       return packages.map((pkg) => ({
@@ -86,16 +96,20 @@ export class ServiceController {
         discountPrice: Number(pkg.price) - Number(pkg.discountAmount || 0),
         details: pkg.details.map((detail) => ({
           ...detail,
-          service: detail.service ? {
-            ...detail.service,
-            discountPrice: Number(detail.service.price) - Number(detail.service.discountAmount || 0)
-          } : null
-        }))
+          service: detail.service
+            ? {
+                ...detail.service,
+                discountPrice:
+                  Number(detail.service.price) -
+                  Number(detail.service.discountAmount || 0),
+              }
+            : null,
+        })),
       }));
     } catch (error) {
       throw new HttpException(
         `Failed to fetch service packages: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -105,7 +119,8 @@ export class ServiceController {
   async createService(
     @Param("tenantId") tenantId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: {
+    @Body()
+    body: {
       name: string;
       serviceCategory?: string;
       categoryId?: string;
@@ -117,15 +132,22 @@ export class ServiceController {
       branchId?: string;
       additionalPrices?: number[];
       commission?: number;
-    }
+    },
   ) {
     try {
       if (!body.name) {
-        throw new HttpException("Service name is required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Service name is required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const price = body.price || 0;
-      const discountAmount = body.discountAmount ?? (body.discountPrice !== undefined && body.discountPrice !== null ? (price - body.discountPrice) : 0);
+      const discountAmount =
+        body.discountAmount ??
+        (body.discountPrice !== undefined && body.discountPrice !== null
+          ? price - body.discountPrice
+          : 0);
 
       const created = await prisma.service.create({
         data: {
@@ -136,27 +158,36 @@ export class ServiceController {
           categoryId: body.categoryId || null,
           price: price,
           discountAmount: discountAmount,
-          additionalPrices: body.additionalPrices ? body.additionalPrices.map(Number) : [],
+          additionalPrices: body.additionalPrices
+            ? body.additionalPrices.map(Number)
+            : [],
           duration: body.duration || null,
           imageUrl: body.imageUrl || null,
-          commission: body.commission !== undefined && body.commission !== null ? body.commission : null
+          commission:
+            body.commission !== undefined && body.commission !== null
+              ? body.commission
+              : null,
         },
         include: {
-          category: true
-        }
+          category: true,
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", { branchId: created.branchId, senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", {
+        branchId: created.branchId,
+        senderId,
+      });
 
       return {
         ...created,
-        discountPrice: Number(created.price) - Number(created.discountAmount || 0)
+        discountPrice:
+          Number(created.price) - Number(created.discountAmount || 0),
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to create service: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -167,7 +198,8 @@ export class ServiceController {
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: {
+    @Body()
+    body: {
       name: string;
       serviceCategory?: string;
       categoryId?: string;
@@ -180,16 +212,19 @@ export class ServiceController {
       additionalPrices?: number[];
       isActive?: boolean;
       commission?: number;
-    }
+    },
   ) {
     try {
       if (!body.name) {
-        throw new HttpException("Service name is required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Service name is required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       // Ensure service exists and belongs to tenant
       const existing = await prisma.service.findFirst({
-        where: { id, tenantId, deletedAt: null }
+        where: { id, tenantId, deletedAt: null },
       });
 
       if (!existing) {
@@ -197,7 +232,11 @@ export class ServiceController {
       }
 
       const price = body.price || 0;
-      const discountAmount = body.discountAmount ?? (body.discountPrice !== undefined && body.discountPrice !== null ? (price - body.discountPrice) : 0);
+      const discountAmount =
+        body.discountAmount ??
+        (body.discountPrice !== undefined && body.discountPrice !== null
+          ? price - body.discountPrice
+          : 0);
 
       const updated = await prisma.service.update({
         where: { id },
@@ -208,29 +247,40 @@ export class ServiceController {
           categoryId: body.categoryId ?? null,
           price: price,
           discountAmount: discountAmount,
-          additionalPrices: body.additionalPrices ? body.additionalPrices.map(Number) : undefined,
+          additionalPrices: body.additionalPrices
+            ? body.additionalPrices.map(Number)
+            : undefined,
           duration: body.duration || null,
           imageUrl: body.imageUrl ?? null,
           isActive: body.isActive !== undefined ? body.isActive : undefined,
-          commission: body.commission !== undefined ? (body.commission !== null ? body.commission : null) : undefined,
-          updatedAt: new Date()
+          commission:
+            body.commission !== undefined
+              ? body.commission !== null
+                ? body.commission
+                : null
+              : undefined,
+          updatedAt: new Date(),
         },
         include: {
-          category: true
-        }
+          category: true,
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", { branchId: updated.branchId, senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", {
+        branchId: updated.branchId,
+        senderId,
+      });
 
       return {
         ...updated,
-        discountPrice: Number(updated.price) - Number(updated.discountAmount || 0)
+        discountPrice:
+          Number(updated.price) - Number(updated.discountAmount || 0),
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to update service: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -240,11 +290,11 @@ export class ServiceController {
   async toggleServiceActive(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
-    @Headers("x-user-id") senderId: string
+    @Headers("x-user-id") senderId: string,
   ) {
     try {
       const existing = await prisma.service.findFirst({
-        where: { id, tenantId, deletedAt: null }
+        where: { id, tenantId, deletedAt: null },
       });
 
       if (!existing) {
@@ -255,24 +305,28 @@ export class ServiceController {
         where: { id },
         data: {
           isActive: !existing.isActive,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         include: {
-          category: true
-        }
+          category: true,
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", { branchId: updated.branchId, senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", {
+        branchId: updated.branchId,
+        senderId,
+      });
 
       return {
         ...updated,
-        discountPrice: Number(updated.price) - Number(updated.discountAmount || 0)
+        discountPrice:
+          Number(updated.price) - Number(updated.discountAmount || 0),
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to toggle service status: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -282,33 +336,39 @@ export class ServiceController {
   async deleteService(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
-    @Headers("x-user-id") senderId: string
+    @Headers("x-user-id") senderId: string,
   ) {
     try {
       // Ensure service exists and belongs to tenant
       const existing = await prisma.service.findFirst({
-        where: { id, tenantId, deletedAt: null }
+        where: { id, tenantId, deletedAt: null },
       });
 
       if (!existing) {
-        throw new HttpException("Service not found or already deleted", HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          "Service not found or already deleted",
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       await prisma.service.update({
         where: { id },
         data: {
-          deletedAt: new Date()
-        }
+          deletedAt: new Date(),
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", { branchId: existing.branchId, senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "services.updated", {
+        branchId: existing.branchId,
+        senderId,
+      });
 
       return { success: true, message: "Service deleted successfully" };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to delete service: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

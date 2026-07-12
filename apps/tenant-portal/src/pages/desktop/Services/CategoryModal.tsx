@@ -34,7 +34,9 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
 }) => {
   const confirm = useConfirm();
   const toast = useToast();
-  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
+    null,
+  );
   const [categoryName, setCategoryName] = useState("");
   const [categoryColor, setCategoryColor] = useState("blue");
   const [categoryCommission, setCategoryCommission] = useState<number>(0);
@@ -57,9 +59,22 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
       let savedCat;
       const isNew = editingCategoryId === "new";
       if (editingCategoryId && !isNew) {
-        savedCat = await api.put<{ id: string; name: string; color: string; defaultCommission: number }>(`/tenants/${currentTenantId}/service-categories/${editingCategoryId}`, payload);
+        savedCat = await api.put<{
+          id: string;
+          name: string;
+          color: string;
+          defaultCommission: number;
+        }>(
+          `/tenants/${currentTenantId}/service-categories/${editingCategoryId}`,
+          payload,
+        );
       } else {
-        savedCat = await api.post<{ id: string; name: string; color: string; defaultCommission: number }>(`/tenants/${currentTenantId}/service-categories`, payload);
+        savedCat = await api.post<{
+          id: string;
+          name: string;
+          color: string;
+          defaultCommission: number;
+        }>(`/tenants/${currentTenantId}/service-categories`, payload);
       }
 
       toast.success("Lưu phân loại thành công!");
@@ -84,7 +99,8 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
     if (
       !(await confirm({
         title: "Xóa phân loại",
-        message: "Bạn có chắc chắn muốn xóa phân loại này? Các dịch vụ thuộc phân loại này sẽ không còn phân loại.",
+        message:
+          "Bạn có chắc chắn muốn xóa phân loại này? Các dịch vụ thuộc phân loại này sẽ không còn phân loại.",
         type: "danger",
         confirmText: "Xóa",
       }))
@@ -92,7 +108,9 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
       return;
 
     try {
-      await api.delete(`/tenants/${currentTenantId}/service-categories/${catId}`);
+      await api.delete(
+        `/tenants/${currentTenantId}/service-categories/${catId}`,
+      );
       toast.success("Đã xóa phân loại thành công!");
       await fetchCategories();
       await fetchServices();
@@ -109,20 +127,26 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
   };
 
   const handleBulkApplyCommission = async () => {
-    if (!editingCategoryId || editingCategoryId === "new" || !currentTenantId) return;
+    if (!editingCategoryId || editingCategoryId === "new" || !currentTenantId)
+      return;
 
     setIsApplyingBulk(true);
     try {
-      await api.put(`/tenants/${currentTenantId}/service-categories/${editingCategoryId}`, {
-        name: categoryName,
-        color: categoryColor,
-        defaultCommission: categoryCommission,
-        bulkApplyCommission: true,
-      });
+      await api.put(
+        `/tenants/${currentTenantId}/service-categories/${editingCategoryId}`,
+        {
+          name: categoryName,
+          color: categoryColor,
+          defaultCommission: categoryCommission,
+          bulkApplyCommission: true,
+        },
+      );
 
       await fetchCategories();
       await fetchServices();
-      toast.success(`Đã áp dụng hoa hồng mặc định ${categoryCommission}% cho tất cả dịch vụ thuộc phân loại này.`);
+      toast.success(
+        `Đã áp dụng hoa hồng mặc định ${categoryCommission}% cho tất cả dịch vụ thuộc phân loại này.`,
+      );
     } catch (err: any) {
       toast.error(err.message || "Lỗi khi áp dụng hoa hồng");
     } finally {
@@ -145,28 +169,69 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
 
   return (
     <div className={styles.modalOverlay}>
-      <div className={`card animate-fade-in ${styles.modalCard}`} style={{ maxWidth: "760px", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: "24px" }}>
-        <button
-          className={styles.closeBtn}
-          onClick={onClose}
-        >
+      <div
+        className={`card animate-fade-in ${styles.modalCard}`}
+        style={{
+          maxWidth: "760px",
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
+          padding: "24px",
+        }}
+      >
+        <button className={styles.closeBtn} onClick={onClose}>
           <X size={20} />
         </button>
-        <h2 style={{ fontSize: "18px", fontWeight: "700", marginBottom: "20px" }}>Quản lý phân loại</h2>
+        <h2
+          style={{ fontSize: "18px", fontWeight: "700", marginBottom: "20px" }}
+        >
+          Quản lý phân loại
+        </h2>
 
         <div className={styles.categoryGrid}>
           {/* Left Side: Category List */}
-          <div className={styles.viewContainer} style={{ gap: "12px", borderRight: "1px solid hsl(210, 40%, 90%)", paddingRight: "24px", height: "100%", minHeight: 0 }}>
-            <h3 style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-secondary)" }}>Danh sách phân loại</h3>
+          <div
+            className={styles.viewContainer}
+            style={{
+              gap: "12px",
+              borderRight: "1px solid hsl(210, 40%, 90%)",
+              paddingRight: "24px",
+              height: "100%",
+              minHeight: 0,
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "14px",
+                fontWeight: "600",
+                color: "var(--text-secondary)",
+              }}
+            >
+              Danh sách phân loại
+            </h3>
 
             {categoriesLoading ? (
-              <div className={styles.loadingWrapper} style={{ padding: "40px 0" }}>
-                <Loader2 className="animate-spin" size={24} style={{ color: "var(--color-primary)" }} />
+              <div
+                className={styles.loadingWrapper}
+                style={{ padding: "40px 0" }}
+              >
+                <Loader2
+                  className="animate-spin"
+                  size={24}
+                  style={{ color: "var(--color-primary)" }}
+                />
               </div>
             ) : (
               <div className={styles.categoryListBody}>
                 {categories.length === 0 && (
-                  <p style={{ color: "var(--text-muted)", fontSize: "13px", fontStyle: "italic", marginBottom: "8px" }}>
+                  <p
+                    style={{
+                      color: "var(--text-muted)",
+                      fontSize: "13px",
+                      fontStyle: "italic",
+                      marginBottom: "8px",
+                    }}
+                  >
                     Chưa có phân loại nào.
                   </p>
                 )}
@@ -187,12 +252,31 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                       }}
                       className={`${styles.categoryItem} ${isEditing ? styles.categoryItemActive : ""}`}
                     >
-                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                        <span className="badge" style={{ ...getColorStyle(cat.color), width: "fit-content", textTransform: "none" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "4px",
+                        }}
+                      >
+                        <span
+                          className="badge"
+                          style={{
+                            ...getColorStyle(cat.color),
+                            width: "fit-content",
+                            textTransform: "none",
+                          }}
+                        >
                           {cat.name}
                         </span>
-                        <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>
-                          Hoa hồng mặc định: <strong>{cat.defaultCommission}%</strong>
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            color: "var(--text-muted)",
+                          }}
+                        >
+                          Hoa hồng mặc định:{" "}
+                          <strong>{cat.defaultCommission}%</strong>
                         </span>
                       </div>
                       <div className={styles.categoryItemActions}>
@@ -229,9 +313,15 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                     justifyContent: "center",
                     gap: "6px",
                     padding: "10px 12px",
-                    backgroundColor: editingCategoryId === "new" ? "hsl(210, 100%, 98%)" : "transparent",
+                    backgroundColor:
+                      editingCategoryId === "new"
+                        ? "hsl(210, 100%, 98%)"
+                        : "transparent",
                     borderRadius: "var(--radius-sm)",
-                    border: editingCategoryId === "new" ? "1px solid var(--color-primary)" : "1px dashed hsl(210, 40%, 80%)",
+                    border:
+                      editingCategoryId === "new"
+                        ? "1px solid var(--color-primary)"
+                        : "1px dashed hsl(210, 40%, 80%)",
                     color: "var(--color-primary)",
                     cursor: "pointer",
                     fontWeight: "600",
@@ -249,32 +339,70 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
 
           {/* Right Side: Form (Add or Edit) / Placeholder */}
           {!editingCategoryId ? (
-            <div style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "32px 16px",
-              textAlign: "center",
-              color: "var(--text-muted)",
-              height: "100%",
-              minHeight: "280px",
-              backgroundColor: "hsl(210, 40%, 99%)",
-              borderRadius: "var(--radius-sm)",
-              border: "1px dashed hsl(210, 40%, 88%)",
-            }}>
-              <Layers size={40} style={{ color: "hsl(210, 30%, 80%)", marginBottom: "12px" }} />
-              <h4 style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-secondary)", marginBottom: "6px" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "32px 16px",
+                textAlign: "center",
+                color: "var(--text-muted)",
+                height: "100%",
+                minHeight: "280px",
+                backgroundColor: "hsl(210, 40%, 99%)",
+                borderRadius: "var(--radius-sm)",
+                border: "1px dashed hsl(210, 40%, 88%)",
+              }}
+            >
+              <Layers
+                size={40}
+                style={{ color: "hsl(210, 30%, 80%)", marginBottom: "12px" }}
+              />
+              <h4
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: "var(--text-secondary)",
+                  marginBottom: "6px",
+                }}
+              >
                 Chi tiết phân loại
               </h4>
-              <p style={{ fontSize: "12px", color: "var(--text-muted)", maxWidth: "240px", lineHeight: "1.5" }}>
-                Chọn một phân loại từ danh sách hoặc nhấn tạo mới để chỉnh sửa thông tin.
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: "var(--text-muted)",
+                  maxWidth: "240px",
+                  lineHeight: "1.5",
+                }}
+              >
+                Chọn một phân loại từ danh sách hoặc nhấn tạo mới để chỉnh sửa
+                thông tin.
               </p>
             </div>
           ) : (
-            <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "16px", height: "100%", overflowY: "auto", paddingRight: "4px" }}>
-              <h3 style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-secondary)" }}>
-                {editingCategoryId === "new" ? "Thêm phân loại mới" : "Chỉnh sửa phân loại"}
+            <div
+              className="animate-fade-in"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+                height: "100%",
+                overflowY: "auto",
+                paddingRight: "4px",
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  color: "var(--text-secondary)",
+                }}
+              >
+                {editingCategoryId === "new"
+                  ? "Thêm phân loại mới"
+                  : "Chỉnh sửa phân loại"}
               </h3>
 
               <div className="form-group">
@@ -291,9 +419,17 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
 
               <div className="form-group">
                 <label className="form-label">Hoa hồng thợ mặc định (%)</label>
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                <div
+                  style={{ display: "flex", gap: "8px", alignItems: "center" }}
+                >
                   <div style={{ flex: 1 }}>
-                    <CustomNumberInput min={0} max={100} step={1} value={categoryCommission} onChange={setCategoryCommission} />
+                    <CustomNumberInput
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={categoryCommission}
+                      onChange={setCategoryCommission}
+                    />
                   </div>
                   <Button
                     type="button"
@@ -306,7 +442,11 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                       height: "38px",
                       whiteSpace: "nowrap",
                     }}
-                    title={editingCategoryId && editingCategoryId !== "new" ? "Áp dụng mức hoa hồng này cho tất cả dịch vụ thuộc phân loại này" : "Hãy chọn một phân loại để áp dụng hàng loạt"}
+                    title={
+                      editingCategoryId && editingCategoryId !== "new"
+                        ? "Áp dụng mức hoa hồng này cho tất cả dịch vụ thuộc phân loại này"
+                        : "Hãy chọn một phân loại để áp dụng hàng loạt"
+                    }
                   >
                     Áp dụng hàng loạt
                   </Button>
@@ -315,7 +455,13 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
 
               <div className="form-group">
                 <label className="form-label">Màu sắc đại diện *</label>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(2, 1fr)",
+                    gap: "8px",
+                  }}
+                >
                   {COLOR_PRESETS.map((colorObj) => {
                     const isActive = categoryColor === colorObj.value;
                     return (
@@ -326,8 +472,12 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                         style={{
                           padding: "8px 6px",
                           borderRadius: "var(--radius-sm)",
-                          border: isActive ? `1px solid var(--color-primary)` : "1px solid hsl(210, 40%, 88%)",
-                          boxShadow: isActive ? "inset 0 0 0 1px var(--color-primary)" : "none",
+                          border: isActive
+                            ? `1px solid var(--color-primary)`
+                            : "1px solid hsl(210, 40%, 88%)",
+                          boxShadow: isActive
+                            ? "inset 0 0 0 1px var(--color-primary)"
+                            : "none",
                           backgroundColor: colorObj.bg,
                           color: colorObj.text,
                           cursor: "pointer",
@@ -346,7 +496,16 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                 </div>
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "auto", paddingTop: "12px", borderTop: "1px solid hsl(210, 40%, 92%)" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "10px",
+                  marginTop: "auto",
+                  paddingTop: "12px",
+                  borderTop: "1px solid hsl(210, 40%, 92%)",
+                }}
+              >
                 <Button
                   type="button"
                   variant="secondary"
@@ -362,7 +521,9 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                   disabled={!isChanged || !categoryName.trim()}
                   loading={isSaving}
                 >
-                  {editingCategoryId === "new" ? "Lưu phân loại" : "Lưu thay đổi"}
+                  {editingCategoryId === "new"
+                    ? "Lưu phân loại"
+                    : "Lưu thay đổi"}
                 </Button>
               </div>
             </div>

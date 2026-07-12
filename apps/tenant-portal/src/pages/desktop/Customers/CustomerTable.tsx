@@ -12,11 +12,21 @@ import styles from "./Customers.module.css";
 interface CustomerTableProps {
   filteredCustomers: Customer[];
   inlineEdits: Record<string, Partial<Customer>>;
-  handleInlineChange: (customerId: string, field: keyof Customer, value: string | number | undefined | null) => void;
-  handleAutoSave: (customerId: string, updatedFields: Partial<Customer>) => Promise<void>;
+  handleInlineChange: (
+    customerId: string,
+    field: keyof Customer,
+    value: string | number | undefined | null,
+  ) => void;
+  handleAutoSave: (
+    customerId: string,
+    updatedFields: Partial<Customer>,
+  ) => Promise<void>;
   handleOpenEditModal: (customer: Customer) => void;
   handleDelete: (id: string) => Promise<void>;
-  getInlineValue: (customer: Customer, field: keyof Customer) => string | number | undefined | null;
+  getInlineValue: (
+    customer: Customer,
+    field: keyof Customer,
+  ) => string | number | undefined | null;
 }
 
 export const CustomerTable: React.FC<CustomerTableProps> = ({
@@ -47,11 +57,21 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
         <thead>
           <tr>
             <th className={styles.thDefault}>Họ tên</th>
-            <th className={`${styles.thDefault} ${styles.thPhone}`}>Số điện thoại</th>
+            <th className={`${styles.thDefault} ${styles.thPhone}`}>
+              Số điện thoại
+            </th>
             <th className={`${styles.thDefault} ${styles.thEmail}`}>Email</th>
-            <th className={`${styles.thDefault} ${styles.thScore}`}>Điểm uy tín</th>
-            <th className={`${styles.thDefault} ${styles.thCreated}`}>Ngày tham gia</th>
-            {canManage && <th className={`${styles.thDefault} ${styles.thActions}`}>Thao tác</th>}
+            <th className={`${styles.thDefault} ${styles.thScore}`}>
+              Điểm uy tín
+            </th>
+            <th className={`${styles.thDefault} ${styles.thCreated}`}>
+              Ngày tham gia
+            </th>
+            {canManage && (
+              <th className={`${styles.thDefault} ${styles.thActions}`}>
+                Thao tác
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -63,7 +83,8 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
             </tr>
           ) : (
             filteredCustomers.map((customer) => {
-              const currentScore = getInlineValue(customer, "credibilityScore") ?? 100;
+              const currentScore =
+                getInlineValue(customer, "credibilityScore") ?? 100;
 
               // Helper to style credibility score colors based on value
               const getScoreColor = (score: number) => {
@@ -77,26 +98,48 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
                   <td className={styles.tdDefault}>
                     <ExcelInput
                       value={(getInlineValue(customer, "name") as string) || ""}
-                      onChange={(val) => handleInlineChange(customer.id, "name", val)}
-                      onBlur={() => handleAutoSave(customer.id, { name: getInlineValue(customer, "name") as string })}
+                      onChange={(val) =>
+                        handleInlineChange(customer.id, "name", val)
+                      }
+                      onBlur={() =>
+                        handleAutoSave(customer.id, {
+                          name: getInlineValue(customer, "name") as string,
+                        })
+                      }
                       fontWeight="600"
                       disabled={!canManage}
                     />
                   </td>
                   <td className={styles.tdDefault}>
                     <ExcelInput
-                      value={(getInlineValue(customer, "phone") as string) || ""}
-                      onChange={(val) => handleInlineChange(customer.id, "phone", val)}
-                      onBlur={() => handleAutoSave(customer.id, { phone: getInlineValue(customer, "phone") as string })}
+                      value={
+                        (getInlineValue(customer, "phone") as string) || ""
+                      }
+                      onChange={(val) =>
+                        handleInlineChange(customer.id, "phone", val)
+                      }
+                      onBlur={() =>
+                        handleAutoSave(customer.id, {
+                          phone: getInlineValue(customer, "phone") as string,
+                        })
+                      }
                       textAlign="center"
                       disabled={!canManage}
                     />
                   </td>
                   <td className={styles.tdDefault}>
                     <ExcelInput
-                      value={(getInlineValue(customer, "email") as string) || ""}
-                      onChange={(val) => handleInlineChange(customer.id, "email", val)}
-                      onBlur={() => handleAutoSave(customer.id, { email: getInlineValue(customer, "email") as string })}
+                      value={
+                        (getInlineValue(customer, "email") as string) || ""
+                      }
+                      onChange={(val) =>
+                        handleInlineChange(customer.id, "email", val)
+                      }
+                      onBlur={() =>
+                        handleAutoSave(customer.id, {
+                          email: getInlineValue(customer, "email") as string,
+                        })
+                      }
                       textAlign="center"
                       disabled={!canManage}
                     />
@@ -105,8 +148,21 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
                     <ExcelInput
                       type="number"
                       value={currentScore}
-                      onChange={(val) => handleInlineChange(customer.id, "credibilityScore", parseInt(val) || 0)}
-                      onBlur={() => handleAutoSave(customer.id, { credibilityScore: getInlineValue(customer, "credibilityScore") as number })}
+                      onChange={(val) =>
+                        handleInlineChange(
+                          customer.id,
+                          "credibilityScore",
+                          parseInt(val) || 0,
+                        )
+                      }
+                      onBlur={() =>
+                        handleAutoSave(customer.id, {
+                          credibilityScore: getInlineValue(
+                            customer,
+                            "credibilityScore",
+                          ) as number,
+                        })
+                      }
                       textAlign="center"
                       textColor={getScoreColor(Number(currentScore))}
                       fontWeight="700"
@@ -114,7 +170,9 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
                       disabled={!canManage}
                     />
                   </td>
-                  <td className={`${styles.tdDefault} ${styles.tdCenteredText}`}>
+                  <td
+                    className={`${styles.tdDefault} ${styles.tdCenteredText}`}
+                  >
                     {formatDateDMY(customer.createdAt)}
                   </td>
                   {canManage && (
@@ -148,4 +206,3 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     </div>
   );
 };
-

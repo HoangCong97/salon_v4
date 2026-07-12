@@ -1,4 +1,11 @@
-import { Module, NestModule, MiddlewareConsumer, RequestMethod, HttpStatus, HttpException } from "@nestjs/common";
+import {
+  Module,
+  NestModule,
+  MiddlewareConsumer,
+  RequestMethod,
+  HttpStatus,
+  HttpException,
+} from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { SuperAdminController } from "./super-admin.controller";
@@ -24,7 +31,7 @@ import { Request, Response, NextFunction } from "express";
 @Module({
   imports: [ImportEngineModule, NotificationModule],
   controllers: [
-    AppController, 
+    AppController,
     SuperAdminController,
     BranchController,
     ServiceController,
@@ -40,9 +47,9 @@ import { Request, Response, NextFunction } from "express";
     BookingController,
     PayrollController,
     CustomerPortalController,
-    DashboardController
+    DashboardController,
   ],
-  providers: [AppService]
+  providers: [AppService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
@@ -60,7 +67,7 @@ export class AppModule implements NestModule {
         ) {
           throw new HttpException(
             "Tài khoản đang bị tạm ngưng, không được phép thực hiện thao tác này.",
-            HttpStatus.FORBIDDEN
+            HttpStatus.FORBIDDEN,
           );
         }
         next();
@@ -68,5 +75,3 @@ export class AppModule implements NestModule {
       .forRoutes({ path: "*", method: RequestMethod.ALL });
   }
 }
-
-

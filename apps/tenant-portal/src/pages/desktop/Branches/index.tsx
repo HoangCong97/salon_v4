@@ -63,7 +63,11 @@ export default function Branches() {
       {/* Main Content Area */}
       {loading ? (
         <div className={styles.loadingWrapper}>
-          <Loader2 className="animate-spin" size={32} style={{ color: "var(--color-primary)" }} />
+          <Loader2
+            className="animate-spin"
+            size={32}
+            style={{ color: "var(--color-primary)" }}
+          />
         </div>
       ) : error ? (
         <div className={`card ${styles.errorCard}`}>
@@ -73,7 +77,9 @@ export default function Branches() {
         <div className={`card ${styles.emptyCard}`}>
           <Building2 size={48} className={styles.emptyIcon} />
           <h3 className={styles.emptyTitle}>Chưa có chi nhánh nào</h3>
-          <p className={styles.emptyDesc}>Hãy bắt đầu thêm chi nhánh đầu tiên của bạn.</p>
+          <p className={styles.emptyDesc}>
+            Hãy bắt đầu thêm chi nhánh đầu tiên của bạn.
+          </p>
           <button className="btn btn-primary" onClick={handleOpenCreateModal}>
             <Plus size={18} /> Thêm chi nhánh
           </button>
@@ -116,4 +122,3 @@ export default function Branches() {
     </div>
   );
 }
-

@@ -3,7 +3,7 @@
  * ---
  * Hệ thống thông báo dạng Toast tự build (không dùng thư viện bên ngoài).
  * Sử dụng CSS variables từ theme.css để đảm bảo đồng bộ design system.
- * 
+ *
  * Features:
  * - 4 loại: success, error, warning, info
  * - Auto-dismiss (success: 4s, error: 6s, warning: 5s, info: 4s)
@@ -12,7 +12,7 @@
  * - Progress bar countdown
  * - Nút X để đóng sớm
  * - Pause on hover
- * 
+ *
  * Usage:
  *   const toast = useToast();
  *   toast.success("Thao tác thành công!");
@@ -134,7 +134,9 @@ const ToastItem: React.FC<{
     >
       <div className="toast-icon">{ICON_MAP[toast.type]}</div>
       <div className="toast-content">
-        <div className="toast-title">{toast.title || TITLE_MAP[toast.type]}</div>
+        <div className="toast-title">
+          {toast.title || TITLE_MAP[toast.type]}
+        </div>
         <div className="toast-message">{toast.message}</div>
       </div>
       <button
@@ -161,7 +163,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
       const duration = DURATION_MAP[type];
 
       setToasts((prev) => {
-        const next = [...prev, { id, type, message, title, duration, createdAt: Date.now() }];
+        const next = [
+          ...prev,
+          { id, type, message, title, duration, createdAt: Date.now() },
+        ];
         // Giữ max 5 toast, xóa cũ nhất nếu vượt quá
         if (next.length > MAX_VISIBLE_TOASTS) {
           return next.slice(next.length - MAX_VISIBLE_TOASTS);
@@ -169,7 +174,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
         return next;
       });
     },
-    []
+    [],
   );
 
   const removeToast = useCallback((id: string) => {
@@ -178,12 +183,16 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const contextValue = useCallback(
     () => ({
-      success: (message: string, title?: string) => addToast("success", message, title),
-      error: (message: string, title?: string) => addToast("error", message, title),
-      warning: (message: string, title?: string) => addToast("warning", message, title),
-      info: (message: string, title?: string) => addToast("info", message, title),
+      success: (message: string, title?: string) =>
+        addToast("success", message, title),
+      error: (message: string, title?: string) =>
+        addToast("error", message, title),
+      warning: (message: string, title?: string) =>
+        addToast("warning", message, title),
+      info: (message: string, title?: string) =>
+        addToast("info", message, title),
     }),
-    [addToast]
+    [addToast],
   );
 
   // Memoize context value to prevent unnecessary re-renders

@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Param, Query, HttpStatus, HttpException } from "@nestjs/common";
+import {
+  Controller,
+  Post,
+  Body,
+  Param,
+  Query,
+  HttpStatus,
+  HttpException,
+} from "@nestjs/common";
 import { ImportEngineService } from "./import-engine.service";
 import { NotificationGateway } from "../notification.gateway";
 
@@ -6,7 +14,7 @@ import { NotificationGateway } from "../notification.gateway";
 export class ImportEngineController {
   constructor(
     private readonly importEngineService: ImportEngineService,
-    private readonly notificationGateway: NotificationGateway
+    private readonly notificationGateway: NotificationGateway,
   ) {}
 
   /**
@@ -15,24 +23,37 @@ export class ImportEngineController {
    */
   @Post("analyze")
   async analyzeHeaders(
-    @Body() body: {
+    @Body()
+    body: {
       fileHeaders: string[];
       sampleRows: any[][];
-      targetSchema: Array<{ field: string; label: string; type: string; required: boolean; description?: string }>;
-    }
+      targetSchema: Array<{
+        field: string;
+        label: string;
+        type: string;
+        required: boolean;
+        description?: string;
+      }>;
+    },
   ) {
     const { fileHeaders, sampleRows, targetSchema } = body;
     if (!fileHeaders || !Array.isArray(fileHeaders)) {
-      throw new HttpException("fileHeaders must be an array of strings", HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        "fileHeaders must be an array of strings",
+        HttpStatus.BAD_REQUEST,
+      );
     }
     if (!targetSchema || !Array.isArray(targetSchema)) {
-      throw new HttpException("targetSchema must be an array of objects", HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        "targetSchema must be an array of objects",
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     return await this.importEngineService.analyzeMapping(
       fileHeaders,
       sampleRows || [],
-      targetSchema
+      targetSchema,
     );
   }
 
@@ -45,27 +66,40 @@ export class ImportEngineController {
     @Query("tenantId") tenantId: string,
     @Query("branchId") branchId: string | null,
     @Param("entity") entity: string,
-    @Body() body: {
+    @Body()
+    body: {
       rawData: any[];
       mappings: Record<string, string>; // File header -> Target field name
       defaultValues?: Record<string, any>;
-    }
+    },
   ) {
     const { rawData, mappings, defaultValues } = body;
 
     if (!tenantId) {
-      throw new HttpException("tenantId query parameter is required", HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        "tenantId query parameter is required",
+        HttpStatus.BAD_REQUEST,
+      );
     }
     if (!rawData || !Array.isArray(rawData)) {
-      throw new HttpException("rawData must be an array of objects", HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        "rawData must be an array of objects",
+        HttpStatus.BAD_REQUEST,
+      );
     }
     if (!mappings) {
-      throw new HttpException("mappings object is required", HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        "mappings object is required",
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const strategy = this.importEngineService.getStrategy(entity);
     if (!strategy) {
-      throw new HttpException(`Entity type "${entity}" is not supported for import.`, HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        `Entity type "${entity}" is not supported for import.`,
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     // 1. Transform raw file data using the mappings and default values
@@ -91,7 +125,11 @@ export class ImportEngineController {
 
     // 2. Delegate data saving to the strategy and broadcast updates
     try {
-      const result = await strategy.execute(tenantId, branchId || null, transformedData);
+      const result = await strategy.execute(
+        tenantId,
+        branchId || null,
+        transformedData,
+      );
 
       if (result && result.importedCount > 0) {
         let event = "";
@@ -113,7 +151,7 @@ export class ImportEngineController {
     } catch (err: any) {
       throw new HttpException(
         `Import execution failed: ${err.message || err}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

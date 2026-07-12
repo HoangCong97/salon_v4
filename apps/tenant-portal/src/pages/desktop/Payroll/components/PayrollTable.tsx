@@ -1,6 +1,9 @@
 import React from "react";
 
-import { ExcelInput, ExcelRow } from "../../../../components/desktop/TableComponents";
+import {
+  ExcelInput,
+  ExcelRow,
+} from "../../../../components/desktop/TableComponents";
 
 import { PayrollMember } from "../types";
 
@@ -9,8 +12,15 @@ import styles from "../Payroll.module.css";
 interface PayrollTableProps {
   filteredPayrolls: PayrollMember[];
   getInlineValue: (item: PayrollMember, field: keyof PayrollMember) => any;
-  handleNumericChange: (payrollId: string, field: keyof PayrollMember, valStr: string) => void;
-  handleAutoSave: (payrollId: string, updatedFields: Partial<PayrollMember>) => Promise<void>;
+  handleNumericChange: (
+    payrollId: string,
+    field: keyof PayrollMember,
+    valStr: string,
+  ) => void;
+  handleAutoSave: (
+    payrollId: string,
+    updatedFields: Partial<PayrollMember>,
+  ) => Promise<void>;
   formatMoney: (val: number | string | undefined | null) => string;
   getInitials: (name: string) => string;
   canManage: boolean;
@@ -34,28 +44,55 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
           <thead>
             <tr>
               <th style={{ width: "200px" }}>Nhân viên</th>
-              <th style={{ width: "130px", textAlign: "right" }}>Lương cơ bản</th>
+              <th style={{ width: "130px", textAlign: "right" }}>
+                Lương cơ bản
+              </th>
               <th style={{ width: "120px", textAlign: "right" }}>Phụ cấp</th>
               <th style={{ width: "120px", textAlign: "right" }}>Hoa hồng</th>
               <th style={{ width: "120px", textAlign: "right" }}>Tiền Tip</th>
               <th style={{ width: "120px", textAlign: "right" }}>Khấu trừ</th>
-              <th style={{ width: "140px", textAlign: "right", fontWeight: "bold" }}>Thực nhận</th>
-              <th style={{ width: "140px", textAlign: "center" }}>Trạng thái</th>
+              <th
+                style={{
+                  width: "140px",
+                  textAlign: "right",
+                  fontWeight: "bold",
+                }}
+              >
+                Thực nhận
+              </th>
+              <th style={{ width: "140px", textAlign: "center" }}>
+                Trạng thái
+              </th>
               <th style={{ width: "140px" }}>Ngày chi trả</th>
-              {canManage && <th style={{ width: "120px", textAlign: "center" }}>Thao tác</th>}
+              {canManage && (
+                <th style={{ width: "120px", textAlign: "center" }}>
+                  Thao tác
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
             {filteredPayrolls.map((item) => {
               const isPaid = getInlineValue(item, "status") === "PAID";
-              const inlineAllowance = getInlineValue(item, "allowance") as number;
+              const inlineAllowance = getInlineValue(
+                item,
+                "allowance",
+              ) as number;
               const inlineTip = getInlineValue(item, "tipAmount") as number;
-              const inlineDeduction = getInlineValue(item, "deductionAmount") as number;
+              const inlineDeduction = getInlineValue(
+                item,
+                "deductionAmount",
+              ) as number;
 
               // Calculate finalSalary dynamically based on inline values
               const baseVal = Number(getInlineValue(item, "baseSalary"));
               const commVal = Number(getInlineValue(item, "commissionAmount"));
-              const finalVal = baseVal + inlineAllowance + commVal + inlineTip - inlineDeduction;
+              const finalVal =
+                baseVal +
+                inlineAllowance +
+                commVal +
+                inlineTip -
+                inlineDeduction;
               const displayFinal = finalVal > 0 ? finalVal : 0;
 
               return (
@@ -90,7 +127,10 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
                   {/* Base Salary */}
                   <td className={styles.tdRight}>
                     <div className={styles.moneyText}>
-                      {formatMoney(getInlineValue(item, "baseSalary") as number)}đ
+                      {formatMoney(
+                        getInlineValue(item, "baseSalary") as number,
+                      )}
+                      đ
                     </div>
                   </td>
 
@@ -98,8 +138,12 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
                   <td className={styles.td}>
                     <ExcelInput
                       value={formatMoney(inlineAllowance)}
-                      onChange={(val: string) => handleNumericChange(item.id, "allowance", val)}
-                      onBlur={() => handleAutoSave(item.id, { allowance: inlineAllowance })}
+                      onChange={(val: string) =>
+                        handleNumericChange(item.id, "allowance", val)
+                      }
+                      onBlur={() =>
+                        handleAutoSave(item.id, { allowance: inlineAllowance })
+                      }
                       textAlign="right"
                       fontWeight="500"
                       unit="đ"
@@ -109,8 +153,14 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
 
                   {/* Commissions */}
                   <td className={styles.tdRight}>
-                    <div className={`${styles.moneyText} ${styles.moneyPrimary}`}>
-                      +{formatMoney(getInlineValue(item, "commissionAmount") as number)}đ
+                    <div
+                      className={`${styles.moneyText} ${styles.moneyPrimary}`}
+                    >
+                      +
+                      {formatMoney(
+                        getInlineValue(item, "commissionAmount") as number,
+                      )}
+                      đ
                     </div>
                   </td>
 
@@ -118,8 +168,12 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
                   <td className={styles.td}>
                     <ExcelInput
                       value={formatMoney(inlineTip)}
-                      onChange={(val: string) => handleNumericChange(item.id, "tipAmount", val)}
-                      onBlur={() => handleAutoSave(item.id, { tipAmount: inlineTip })}
+                      onChange={(val: string) =>
+                        handleNumericChange(item.id, "tipAmount", val)
+                      }
+                      onBlur={() =>
+                        handleAutoSave(item.id, { tipAmount: inlineTip })
+                      }
                       textAlign="right"
                       fontWeight="500"
                       unit="đ"
@@ -131,8 +185,14 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
                   <td className={styles.td}>
                     <ExcelInput
                       value={formatMoney(inlineDeduction)}
-                      onChange={(val: string) => handleNumericChange(item.id, "deductionAmount", val)}
-                      onBlur={() => handleAutoSave(item.id, { deductionAmount: inlineDeduction })}
+                      onChange={(val: string) =>
+                        handleNumericChange(item.id, "deductionAmount", val)
+                      }
+                      onBlur={() =>
+                        handleAutoSave(item.id, {
+                          deductionAmount: inlineDeduction,
+                        })
+                      }
                       textAlign="right"
                       fontWeight="500"
                       unit="đ"
@@ -143,7 +203,15 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
 
                   {/* Final Salary */}
                   <td className={styles.tdRight}>
-                    <div className={`${styles.moneyText} ${styles.moneyTextBold}`} style={{ color: displayFinal > 0 ? "var(--color-success)" : "var(--text-primary)" }}>
+                    <div
+                      className={`${styles.moneyText} ${styles.moneyTextBold}`}
+                      style={{
+                        color:
+                          displayFinal > 0
+                            ? "var(--color-success)"
+                            : "var(--text-primary)",
+                      }}
+                    >
                       {formatMoney(displayFinal)}đ
                     </div>
                   </td>
@@ -159,7 +227,9 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
 
                   {/* Paid date */}
                   <td className={styles.payDateTd}>
-                    {item.paidAt ? new Date(item.paidAt).toLocaleDateString("vi-VN") : "---"}
+                    {item.paidAt
+                      ? new Date(item.paidAt).toLocaleDateString("vi-VN")
+                      : "---"}
                   </td>
 
                   {/* Actions */}
@@ -173,7 +243,13 @@ export const PayrollTable: React.FC<PayrollTableProps> = ({
                           Trả lương
                         </button>
                       ) : (
-                        <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: "500" }}>
+                        <span
+                          style={{
+                            fontSize: "11px",
+                            color: "var(--text-muted)",
+                            fontWeight: "500",
+                          }}
+                        >
                           Khóa chỉnh sửa
                         </span>
                       )}

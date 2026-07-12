@@ -2,9 +2,17 @@ import React, { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../store/useAuthStore";
 import { Tooltip } from "../../components/desktop/ui/Tooltip";
-import { 
-  CalendarRange, ChevronLeft, ChevronRight, Save, 
-  Copy, Loader2, Info, Check, CalendarDays, RefreshCw 
+import {
+  CalendarRange,
+  ChevronLeft,
+  ChevronRight,
+  Save,
+  Copy,
+  Loader2,
+  Info,
+  Check,
+  CalendarDays,
+  RefreshCw,
 } from "lucide-react";
 import { useConfirm } from "../../components/desktop/ConfirmDialog";
 import { useToast } from "../../components/desktop/ToastProvider";
@@ -56,7 +64,9 @@ export default function Shifts() {
   const [copying, setCopying] = useState(false);
 
   // Local grid edits state: staffId -> workDate -> LocalShift
-  const [gridEdits, setGridEdits] = useState<Record<string, Record<string, LocalShift>>>({});
+  const [gridEdits, setGridEdits] = useState<
+    Record<string, Record<string, LocalShift>>
+  >({});
 
   // 1. DATES CALCULATION HELPER
   const getWeekDates = (monday: Date) => {
@@ -81,22 +91,48 @@ export default function Shifts() {
   };
 
   const formatDisplayDay = (d: Date): string => {
-    const days = ["Chủ Nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+    const days = [
+      "Chủ Nhật",
+      "Thứ 2",
+      "Thứ 3",
+      "Thứ 4",
+      "Thứ 5",
+      "Thứ 6",
+      "Thứ 7",
+    ];
     const dayName = days[d.getDay()];
-    const datePart = String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0");
+    const datePart =
+      String(d.getDate()).padStart(2, "0") +
+      "/" +
+      String(d.getMonth() + 1).padStart(2, "0");
     return `${dayName} (${datePart})`;
   };
 
   // 2. FETCH DATA with useQuery
   const { data: staffData, isLoading: staffLoading } = useQuery<Staff[]>({
     queryKey: queryKeys.shifts.staff(currentTenantId!, currentBranchId!),
-    queryFn: () => api.get(`/tenants/${currentTenantId}/branches/${currentBranchId}/shifts/staff`),
+    queryFn: () =>
+      api.get(
+        `/tenants/${currentTenantId}/branches/${currentBranchId}/shifts/staff`,
+      ),
     enabled: !!currentTenantId && !!currentBranchId,
   });
 
-  const { data: shiftsData, isLoading: shiftsLoading, error: shiftsError } = useQuery<ShiftData[]>({
-    queryKey: queryKeys.shifts.list(currentTenantId!, currentBranchId!, startDateStr, endDateStr),
-    queryFn: () => api.get(`/tenants/${currentTenantId}/branches/${currentBranchId}/shifts?startDate=${startDateStr}&endDate=${endDateStr}`),
+  const {
+    data: shiftsData,
+    isLoading: shiftsLoading,
+    error: shiftsError,
+  } = useQuery<ShiftData[]>({
+    queryKey: queryKeys.shifts.list(
+      currentTenantId!,
+      currentBranchId!,
+      startDateStr,
+      endDateStr,
+    ),
+    queryFn: () =>
+      api.get(
+        `/tenants/${currentTenantId}/branches/${currentBranchId}/shifts?startDate=${startDateStr}&endDate=${endDateStr}`,
+      ),
     enabled: !!currentTenantId && !!currentBranchId,
   });
 
@@ -109,13 +145,23 @@ export default function Shifts() {
   const fetchStaffAndShifts = useCallback(async () => {
     setGridEdits({});
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: queryKeys.shifts.staff(currentTenantId!, currentBranchId!) }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.shifts.list(currentTenantId!, currentBranchId!, startDateStr, endDateStr) }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.shifts.staff(currentTenantId!, currentBranchId!),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.shifts.list(
+          currentTenantId!,
+          currentBranchId!,
+          startDateStr,
+          endDateStr,
+        ),
+      }),
     ]);
   }, [queryClient, currentTenantId, currentBranchId, startDateStr, endDateStr]);
 
   // Get current branch name
-  const currentBranchName = branches.find(b => b.id === currentBranchId)?.name || "Chi nhánh";
+  const currentBranchName =
+    branches.find((b) => b.id === currentBranchId)?.name || "Chi nhánh";
 
   // 3. SHIFT GRID INTERACTIVE LOGIC
   const getCellShift = (staffId: string, dateStr: string): LocalShift => {
@@ -125,14 +171,16 @@ export default function Shifts() {
     }
 
     // 2. Check loaded shifts from DB
-    const dbShift = shifts.find(s => s.staffId === staffId && s.workDate === dateStr);
+    const dbShift = shifts.find(
+      (s) => s.staffId === staffId && s.workDate === dateStr,
+    );
     if (dbShift) {
       return {
         id: dbShift.id,
         shiftName: dbShift.shiftName,
         startTime: dbShift.startTime,
         endTime: dbShift.endTime,
-        isOff: dbShift.isOff
+        isOff: dbShift.isOff,
       };
     }
 
@@ -141,11 +189,15 @@ export default function Shifts() {
       shiftName: "",
       startTime: "",
       endTime: "",
-      isOff: false
+      isOff: false,
     };
   };
 
-  const handleCellSelectChange = (staffId: string, dateStr: string, selectValue: string) => {
+  const handleCellSelectChange = (
+    staffId: string,
+    dateStr: string,
+    selectValue: string,
+  ) => {
     let nextShift: LocalShift;
 
     const currentCell = getCellShift(staffId, dateStr);
@@ -156,7 +208,7 @@ export default function Shifts() {
         shiftName: "Ca Sáng",
         startTime: "08:00",
         endTime: "14:30",
-        isOff: false
+        isOff: false,
       };
     } else if (selectValue === "AFTERNOON") {
       nextShift = {
@@ -164,7 +216,7 @@ export default function Shifts() {
         shiftName: "Ca Chiều",
         startTime: "14:30",
         endTime: "21:00",
-        isOff: false
+        isOff: false,
       };
     } else if (selectValue === "FULLDAY") {
       nextShift = {
@@ -172,7 +224,7 @@ export default function Shifts() {
         shiftName: "Cả Ngày",
         startTime: "08:00",
         endTime: "21:00",
-        isOff: false
+        isOff: false,
       };
     } else if (selectValue === "OFF") {
       nextShift = {
@@ -180,7 +232,7 @@ export default function Shifts() {
         shiftName: "Nghỉ",
         startTime: "",
         endTime: "",
-        isOff: true
+        isOff: true,
       };
     } else {
       // Clear shift
@@ -189,16 +241,16 @@ export default function Shifts() {
         shiftName: "",
         startTime: "",
         endTime: "",
-        isOff: false
+        isOff: false,
       };
     }
 
-    setGridEdits(prev => ({
+    setGridEdits((prev) => ({
       ...prev,
       [staffId]: {
         ...(prev[staffId] || {}),
-        [dateStr]: nextShift
-      }
+        [dateStr]: nextShift,
+      },
     }));
   };
 
@@ -214,15 +266,35 @@ export default function Shifts() {
 
   const getSelectColorStyle = (value: string) => {
     if (value === "MORNING") {
-      return { backgroundColor: "var(--color-primary-light)", color: "var(--color-primary)", border: "none" };
+      return {
+        backgroundColor: "var(--color-primary-light)",
+        color: "var(--color-primary)",
+        border: "none",
+      };
     } else if (value === "AFTERNOON") {
-      return { backgroundColor: "var(--color-warning-light)", color: "var(--color-warning)", border: "none" };
+      return {
+        backgroundColor: "var(--color-warning-light)",
+        color: "var(--color-warning)",
+        border: "none",
+      };
     } else if (value === "FULLDAY") {
-      return { backgroundColor: "var(--color-info-light)", color: "var(--color-info)", border: "none" };
+      return {
+        backgroundColor: "var(--color-info-light)",
+        color: "var(--color-info)",
+        border: "none",
+      };
     } else if (value === "OFF") {
-      return { backgroundColor: "var(--color-danger-light)", color: "var(--color-danger)", border: "none" };
+      return {
+        backgroundColor: "var(--color-danger-light)",
+        color: "var(--color-danger)",
+        border: "none",
+      };
     }
-    return { backgroundColor: "transparent", color: "var(--text-muted)", border: "1px dashed var(--border-color)" };
+    return {
+      backgroundColor: "transparent",
+      color: "var(--text-muted)",
+      border: "1px dashed var(--border-color)",
+    };
   };
 
   // 4. ACTION SUBMISSIONS
@@ -231,9 +303,9 @@ export default function Shifts() {
 
     // Flatten gridEdits object into a save array
     const shiftsToSave: any[] = [];
-    
-    Object.keys(gridEdits).forEach(staffId => {
-      Object.keys(gridEdits[staffId]).forEach(workDate => {
+
+    Object.keys(gridEdits).forEach((staffId) => {
+      Object.keys(gridEdits[staffId]).forEach((workDate) => {
         const item = gridEdits[staffId][workDate];
         shiftsToSave.push({
           id: item.id,
@@ -242,7 +314,7 @@ export default function Shifts() {
           shiftName: item.shiftName,
           startTime: item.startTime,
           endTime: item.endTime,
-          isOff: item.isOff
+          isOff: item.isOff,
         });
       });
     });
@@ -254,7 +326,10 @@ export default function Shifts() {
 
     setSaving(true);
     try {
-      await api.post(`/tenants/${currentTenantId}/branches/${currentBranchId}/shifts/bulk`, { shifts: shiftsToSave });
+      await api.post(
+        `/tenants/${currentTenantId}/branches/${currentBranchId}/shifts/bulk`,
+        { shifts: shiftsToSave },
+      );
 
       toast.success("Lưu lịch trực tuần thành công!");
       await fetchStaffAndShifts();
@@ -271,7 +346,8 @@ export default function Shifts() {
     if (
       !(await confirm({
         title: "Sao chép lịch tuần trước",
-        message: "Bạn có chắc chắn muốn sao chép lịch trực tuần trước gán vào tuần này? Hành động này sẽ ghi đè lịch trực hiện có trong ô tương ứng.",
+        message:
+          "Bạn có chắc chắn muốn sao chép lịch trực tuần trước gán vào tuần này? Hành động này sẽ ghi đè lịch trực hiện có trong ô tương ứng.",
         type: "warning",
         confirmText: "Sao chép",
       }))
@@ -289,7 +365,9 @@ export default function Shifts() {
 
     setCopying(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/shifts?startDate=${lastWeekMondayStr}&endDate=${lastWeekSundayStr}`);
+      const res = await fetch(
+        `http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/shifts?startDate=${lastWeekMondayStr}&endDate=${lastWeekSundayStr}`,
+      );
       if (!res.ok) throw new Error();
       const lastWeekShifts: ShiftData[] = await res.json();
 
@@ -300,9 +378,11 @@ export default function Shifts() {
       }
 
       // Map last week shifts to current week dates (offsetting dates by +7 days)
-      const nextEdits: Record<string, Record<string, LocalShift>> = { ...gridEdits };
+      const nextEdits: Record<string, Record<string, LocalShift>> = {
+        ...gridEdits,
+      };
 
-      lastWeekShifts.forEach(shift => {
+      lastWeekShifts.forEach((shift) => {
         const lastWeekDate = new Date(shift.workDate + "T00:00:00.000Z");
         const currentWeekDate = new Date(lastWeekDate);
         currentWeekDate.setDate(lastWeekDate.getDate() + 7);
@@ -310,7 +390,7 @@ export default function Shifts() {
 
         // Don't copy shift ID since these are new records
         const nextCell = getCellShift(shift.staffId, currentWeekDateStr);
-        
+
         if (!nextEdits[shift.staffId]) {
           nextEdits[shift.staffId] = {};
         }
@@ -320,12 +400,14 @@ export default function Shifts() {
           shiftName: shift.shiftName,
           startTime: shift.startTime,
           endTime: shift.endTime,
-          isOff: shift.isOff
+          isOff: shift.isOff,
         };
       });
 
       setGridEdits(nextEdits);
-      toast.success("Đã sao chép lịch trực tuần trước vào bảng lưới! Hãy nhấn 'Lưu lịch trực' để đồng bộ.");
+      toast.success(
+        "Đã sao chép lịch trực tuần trước vào bảng lưới! Hãy nhấn 'Lưu lịch trực' để đồng bộ.",
+      );
     } catch (e) {
       toast.error("Lỗi khi tải lịch trực tuần trước.");
     } finally {
@@ -353,37 +435,88 @@ export default function Shifts() {
     setCurrentWeekMonday(new Date(now.setDate(diff)));
   };
 
-  const hasLocalChanges = Object.keys(gridEdits).some(staffId => 
-    Object.keys(gridEdits[staffId]).length > 0
+  const hasLocalChanges = Object.keys(gridEdits).some(
+    (staffId) => Object.keys(gridEdits[staffId]).length > 0,
   );
 
   return (
-    <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      
+    <div
+      className="animate-fade-in"
+      style={{ display: "flex", flexDirection: "column", gap: "24px" }}
+    >
       {/* Time Navigation Bar & Actions Card */}
-      <div className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 20px", flexWrap: "wrap", gap: "12px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+      <div
+        className="card"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "12px 20px",
+          flexWrap: "wrap",
+          gap: "12px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+            flexWrap: "wrap",
+          }}
+        >
           <div style={{ display: "flex", gap: "6px" }}>
-            <button className="btn btn-secondary" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={handlePrevWeek}>
+            <button
+              className="btn btn-secondary"
+              style={{ padding: "6px 12px", fontSize: "13px" }}
+              onClick={handlePrevWeek}
+            >
               <ChevronLeft size={16} /> Tuần trước
             </button>
-            <button className="btn btn-secondary" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={handleCurrentWeek}>
+            <button
+              className="btn btn-secondary"
+              style={{ padding: "6px 12px", fontSize: "13px" }}
+              onClick={handleCurrentWeek}
+            >
               Tuần này
             </button>
-            <button className="btn btn-secondary" style={{ padding: "6px 12px", fontSize: "13px" }} onClick={handleNextWeek}>
+            <button
+              className="btn btn-secondary"
+              style={{ padding: "6px 12px", fontSize: "13px" }}
+              onClick={handleNextWeek}
+            >
               Tuần sau <ChevronRight size={16} />
             </button>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600", fontSize: "14px", color: "var(--color-primary)" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontWeight: "600",
+              fontSize: "14px",
+              color: "var(--color-primary)",
+            }}
+          >
             <CalendarDays size={18} />
             <span>
-              {weekDates[0].getDate()}/{weekDates[0].getMonth() + 1} - {weekDates[6].getDate()}/{weekDates[6].getMonth() + 1}/{weekDates[6].getFullYear()}
+              {weekDates[0].getDate()}/{weekDates[0].getMonth() + 1} -{" "}
+              {weekDates[6].getDate()}/{weekDates[6].getMonth() + 1}/
+              {weekDates[6].getFullYear()}
             </span>
           </div>
 
           {hasLocalChanges && (
-            <span style={{ fontSize: "12px", color: "var(--color-warning)", fontWeight: "600", display: "flex", alignItems: "center", gap: "4px" }}>
+            <span
+              style={{
+                fontSize: "12px",
+                color: "var(--color-warning)",
+                fontWeight: "600",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+            >
               <Info size={14} /> Có lịch chưa lưu
             </span>
           )}
@@ -391,9 +524,12 @@ export default function Shifts() {
 
         {/* Action Controls */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Tooltip content="Sao chép toàn bộ lịch trực tuần trước sang tuần này" position="top">
-            <button 
-              className="btn btn-secondary" 
+          <Tooltip
+            content="Sao chép toàn bộ lịch trực tuần trước sang tuần này"
+            position="top"
+          >
+            <button
+              className="btn btn-secondary"
               onClick={handleCopyLastWeek}
               disabled={loading || saving}
               style={{ padding: "8px 12px", fontSize: "13px" }}
@@ -401,9 +537,9 @@ export default function Shifts() {
               <Copy size={15} /> Sao chép tuần trước
             </button>
           </Tooltip>
-          
-          <button 
-            className="btn btn-primary" 
+
+          <button
+            className="btn btn-primary"
             onClick={handleSaveShifts}
             disabled={saving || loading || !hasLocalChanges}
             style={{ minWidth: "130px", padding: "8px 12px", fontSize: "13px" }}
@@ -423,44 +559,101 @@ export default function Shifts() {
 
       {/* Main Grid Table */}
       {loading ? (
-        <div style={{ display: "flex", justifyContent: "center", padding: "80px 0" }}>
-          <Loader2 className="animate-spin" size={32} style={{ color: "var(--color-primary)" }} />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            padding: "80px 0",
+          }}
+        >
+          <Loader2
+            className="animate-spin"
+            size={32}
+            style={{ color: "var(--color-primary)" }}
+          />
         </div>
       ) : error ? (
-        <div className="card" style={{ borderLeft: "4px solid var(--color-danger)", background: "var(--color-danger-light)" }}>
-          <p style={{ color: "var(--color-danger)", fontWeight: "500" }}>{error}</p>
+        <div
+          className="card"
+          style={{
+            borderLeft: "4px solid var(--color-danger)",
+            background: "var(--color-danger-light)",
+          }}
+        >
+          <p style={{ color: "var(--color-danger)", fontWeight: "500" }}>
+            {error}
+          </p>
         </div>
       ) : staff.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", padding: "50px 20px" }}>
-          <Info size={40} style={{ color: "var(--text-muted)", marginBottom: "12px", marginInline: "auto" }} />
-          <h3 style={{ fontSize: "15px", fontWeight: "600", marginBottom: "4px" }}>Chưa có nhân viên hoạt động tại chi nhánh này</h3>
+        <div
+          className="card"
+          style={{ textAlign: "center", padding: "50px 20px" }}
+        >
+          <Info
+            size={40}
+            style={{
+              color: "var(--text-muted)",
+              marginBottom: "12px",
+              marginInline: "auto",
+            }}
+          />
+          <h3
+            style={{ fontSize: "15px", fontWeight: "600", marginBottom: "4px" }}
+          >
+            Chưa có nhân viên hoạt động tại chi nhánh này
+          </h3>
           <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>
-            Vui lòng vào trang <strong>Nhân sự</strong> để gán nhân viên vào chi nhánh <strong>{currentBranchName}</strong> trước.
+            Vui lòng vào trang <strong>Nhân sự</strong> để gán nhân viên vào chi
+            nhánh <strong>{currentBranchName}</strong> trước.
           </p>
         </div>
       ) : (
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-          <div className="data-table-container" style={{ border: "none", boxShadow: "none", borderRadius: 0 }}>
+          <div
+            className="data-table-container"
+            style={{ border: "none", boxShadow: "none", borderRadius: 0 }}
+          >
             <table className="data-table" style={{ tableLayout: "fixed" }}>
               <thead>
                 <tr>
-                  <th style={{ padding: "12px 16px", fontSize: "13px", width: "180px", borderRight: "1px solid var(--border-color)" }}>
+                  <th
+                    style={{
+                      padding: "12px 16px",
+                      fontSize: "13px",
+                      width: "180px",
+                      borderRight: "1px solid var(--border-color)",
+                    }}
+                  >
                     Nhân viên
                   </th>
                   {weekDates.map((date, idx) => (
-                    <th 
-                      key={idx} 
-                      style={{ 
-                        padding: "12px 10px", 
-                        fontSize: "13px", 
+                    <th
+                      key={idx}
+                      style={{
+                        padding: "12px 10px",
+                        fontSize: "13px",
                         textAlign: "center",
-                        backgroundColor: formatDateStr(new Date()) === formatDateStr(date) ? "var(--color-primary-light)" : "inherit",
-                        color: formatDateStr(new Date()) === formatDateStr(date) ? "var(--color-primary)" : "var(--text-secondary)"
+                        backgroundColor:
+                          formatDateStr(new Date()) === formatDateStr(date)
+                            ? "var(--color-primary-light)"
+                            : "inherit",
+                        color:
+                          formatDateStr(new Date()) === formatDateStr(date)
+                            ? "var(--color-primary)"
+                            : "var(--text-secondary)",
                       }}
                     >
                       {formatDisplayDay(date)}
                       {formatDateStr(new Date()) === formatDateStr(date) && (
-                        <span style={{ display: "block", fontSize: "9px", fontWeight: "bold" }}>(Hôm nay)</span>
+                        <span
+                          style={{
+                            display: "block",
+                            fontSize: "9px",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          (Hôm nay)
+                        </span>
                       )}
                     </th>
                   ))}
@@ -470,19 +663,25 @@ export default function Shifts() {
                 {staff.map((employee) => (
                   <tr key={employee.id}>
                     {/* Employee info */}
-                    <td 
-                      style={{ 
-                        padding: "10px 16px", 
-                        verticalAlign: "middle", 
+                    <td
+                      style={{
+                        padding: "10px 16px",
+                        verticalAlign: "middle",
                         fontWeight: "600",
                         borderRight: "1px solid var(--border-color)",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
-                        textOverflow: "ellipsis"
+                        textOverflow: "ellipsis",
                       }}
                     >
                       <span style={{ display: "block" }}>{employee.name}</span>
-                      <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: "400" }}>
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          color: "var(--text-secondary)",
+                          fontWeight: "400",
+                        }}
+                      >
                         {employee.role}
                       </span>
                     </td>
@@ -494,18 +693,24 @@ export default function Shifts() {
                       const selectVal = getSelectValue(currentCell);
 
                       return (
-                        <td 
-                          key={idx} 
-                          style={{ 
-                            padding: "3px 4px", 
-                            verticalAlign: "middle", 
+                        <td
+                          key={idx}
+                          style={{
+                            padding: "3px 4px",
+                            verticalAlign: "middle",
                             height: "44px",
-                            textAlign: "center"
+                            textAlign: "center",
                           }}
                         >
                           <select
                             value={selectVal}
-                            onChange={(e) => handleCellSelectChange(employee.id, dateStr, e.target.value)}
+                            onChange={(e) =>
+                              handleCellSelectChange(
+                                employee.id,
+                                dateStr,
+                                e.target.value,
+                              )
+                            }
                             style={{
                               ...getSelectColorStyle(selectVal),
                               width: "100%",
@@ -515,15 +720,40 @@ export default function Shifts() {
                               fontWeight: "700",
                               cursor: "pointer",
                               borderRadius: "6px",
-                              textAlign: "center"
+                              textAlign: "center",
                             }}
                             className="excel-select"
                           >
-                            <option value="" style={{ color: "var(--text-primary)" }}>-- Trống --</option>
-                            <option value="MORNING" style={{ color: "var(--text-primary)" }}>Ca Sáng (08h-14h30)</option>
-                            <option value="AFTERNOON" style={{ color: "var(--text-primary)" }}>Ca Chiều (14h30-21h)</option>
-                            <option value="FULLDAY" style={{ color: "var(--text-primary)" }}>Cả Ngày (08h-21h)</option>
-                            <option value="OFF" style={{ color: "var(--text-primary)" }}>Nghỉ (Off)</option>
+                            <option
+                              value=""
+                              style={{ color: "var(--text-primary)" }}
+                            >
+                              -- Trống --
+                            </option>
+                            <option
+                              value="MORNING"
+                              style={{ color: "var(--text-primary)" }}
+                            >
+                              Ca Sáng (08h-14h30)
+                            </option>
+                            <option
+                              value="AFTERNOON"
+                              style={{ color: "var(--text-primary)" }}
+                            >
+                              Ca Chiều (14h30-21h)
+                            </option>
+                            <option
+                              value="FULLDAY"
+                              style={{ color: "var(--text-primary)" }}
+                            >
+                              Cả Ngày (08h-21h)
+                            </option>
+                            <option
+                              value="OFF"
+                              style={{ color: "var(--text-primary)" }}
+                            >
+                              Nghỉ (Off)
+                            </option>
                           </select>
                         </td>
                       );
@@ -537,21 +767,63 @@ export default function Shifts() {
       )}
 
       {/* Instruction alert */}
-      <div className="card" style={{ display: "flex", gap: "12px", alignItems: "flex-start", backgroundColor: "var(--color-primary-light)", border: "1px solid var(--border-focus)" }}>
-        <Info size={20} style={{ color: "var(--color-primary)", flexShrink: 0, marginTop: "2px" }} />
+      <div
+        className="card"
+        style={{
+          display: "flex",
+          gap: "12px",
+          alignItems: "flex-start",
+          backgroundColor: "var(--color-primary-light)",
+          border: "1px solid var(--border-focus)",
+        }}
+      >
+        <Info
+          size={20}
+          style={{
+            color: "var(--color-primary)",
+            flexShrink: 0,
+            marginTop: "2px",
+          }}
+        />
         <div>
-          <h4 style={{ fontSize: "14px", fontWeight: "600", color: "var(--color-primary)" }}>
+          <h4
+            style={{
+              fontSize: "14px",
+              fontWeight: "600",
+              color: "var(--color-primary)",
+            }}
+          >
             Hướng dẫn xếp ca trực:
           </h4>
-          <ul style={{ fontSize: "13px", color: "var(--text-primary)", marginTop: "6px", display: "flex", flexDirection: "column", gap: "4px", paddingLeft: "16px" }}>
-            <li>Lưới hiển thị toàn bộ nhân sự được gán quyền tại chi nhánh được chọn trên thanh tiêu đề chính.</li>
-            <li>Chọn ca trực tương ứng từ dropdown trong từng ô của ngày làm việc.</li>
-            <li>Bấm <strong>Sao chép tuần trước</strong> để nhanh chóng copy ca trực của tuần trước đó làm ca trực tuần hiện tại.</li>
-            <li>Sau khi xếp lịch xong, click <strong>Lưu lịch trực</strong> để áp dụng lịch làm việc chính thức.</li>
+          <ul
+            style={{
+              fontSize: "13px",
+              color: "var(--text-primary)",
+              marginTop: "6px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "4px",
+              paddingLeft: "16px",
+            }}
+          >
+            <li>
+              Lưới hiển thị toàn bộ nhân sự được gán quyền tại chi nhánh được
+              chọn trên thanh tiêu đề chính.
+            </li>
+            <li>
+              Chọn ca trực tương ứng từ dropdown trong từng ô của ngày làm việc.
+            </li>
+            <li>
+              Bấm <strong>Sao chép tuần trước</strong> để nhanh chóng copy ca
+              trực của tuần trước đó làm ca trực tuần hiện tại.
+            </li>
+            <li>
+              Sau khi xếp lịch xong, click <strong>Lưu lịch trực</strong> để áp
+              dụng lịch làm việc chính thức.
+            </li>
           </ul>
         </div>
       </div>
-
     </div>
   );
 }

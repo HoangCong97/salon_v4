@@ -6,11 +6,13 @@ import { Bell, LogOut } from "lucide-react";
 import { useConfirm } from "../../components/desktop/ConfirmDialog";
 
 export default function Topbar() {
-  const { user, branches, currentBranchId, setBranch, setRole, logout } = useAuthStore();
+  const { user, branches, currentBranchId, setBranch, setRole, logout } =
+    useAuthStore();
   const location = useLocation();
   const confirm = useConfirm();
 
-  const storedUserStr = localStorage.getItem("user") || sessionStorage.getItem("user");
+  const storedUserStr =
+    localStorage.getItem("user") || sessionStorage.getItem("user");
   const originalUser = storedUserStr ? JSON.parse(storedUserStr) : null;
   const isOriginalAdmin = originalUser?.role === "ADMIN";
 
@@ -20,7 +22,7 @@ export default function Topbar() {
       message: "Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?",
       type: "warning",
       confirmText: "Đăng xuất",
-      cancelText: "Hủy bỏ"
+      cancelText: "Hủy bỏ",
     });
     if (ok) {
       logout();
@@ -67,67 +69,79 @@ export default function Topbar() {
       case "/":
         return {
           title: "Tổng quan chi nhánh",
-          description: "Xem hiệu suất bán hàng, lượt đặt lịch hẹn và hoạt động trong ngày."
+          description:
+            "Xem hiệu suất bán hàng, lượt đặt lịch hẹn và hoạt động trong ngày.",
         };
       case "/pos":
         return {
           title: "Bán hàng POS",
-          description: "Ghi nhận hóa đơn nhanh, thanh toán và tính hoa hồng thợ tại quầy."
+          description:
+            "Ghi nhận hóa đơn nhanh, thanh toán và tính hoa hồng thợ tại quầy.",
         };
       case "/branches":
         return {
           title: "Cơ sở & Chi nhánh",
-          description: "Quản lý mạng lưới chi nhánh, cửa hàng trực thuộc chuỗi salon."
+          description:
+            "Quản lý mạng lưới chi nhánh, cửa hàng trực thuộc chuỗi salon.",
         };
       case "/customers":
         return {
           title: "Quản lý khách hàng",
-          description: "Danh sách và hồ sơ khách hàng thành viên của salon."
+          description: "Danh sách và hồ sơ khách hàng thành viên của salon.",
         };
       case "/services":
         return {
           title: "Danh mục dịch vụ",
-          description: "Thiết lập dịch vụ lẻ, combo đa dịch vụ, định giá và thời gian thực hiện."
+          description:
+            "Thiết lập dịch vụ lẻ, combo đa dịch vụ, định giá và thời gian thực hiện.",
         };
       case "/inventories":
         return {
           title: "Quản lý kho hàng",
-          description: "Nhập/Xuất kho hàng, quản lý giá vốn, giá bán lẻ và mức cảnh báo sản phẩm sắp hết."
+          description:
+            "Nhập/Xuất kho hàng, quản lý giá vốn, giá bán lẻ và mức cảnh báo sản phẩm sắp hết.",
         };
       case "/staff":
         return {
           title: "Quản lý nhân viên chi nhánh",
-          description: "Quản lý thông tin, phân quyền chức vụ và điều hành hoạt động của nhân viên."
+          description:
+            "Quản lý thông tin, phân quyền chức vụ và điều hành hoạt động của nhân viên.",
         };
       case "/reports":
         return {
           title: "Báo cáo doanh thu & Hiệu suất",
-          description: "Phân tích xu hướng tài chính và giám sát hoạt động kinh doanh của chi nhánh."
+          description:
+            "Phân tích xu hướng tài chính và giám sát hoạt động kinh doanh của chi nhánh.",
         };
       case "/invoices":
         return {
           title: "Lịch sử hoá đơn",
-          description: "Thống kê doanh số theo ca, lọc danh sách hóa đơn theo ngày, thợ gán lượt, khách hàng và nguồn đơn."
+          description:
+            "Thống kê doanh số theo ca, lọc danh sách hóa đơn theo ngày, thợ gán lượt, khách hàng và nguồn đơn.",
         };
       case "/payroll":
         return {
           title: "Bảng lương nhân viên",
-          description: "Quản lý chi trả lương, phụ cấp, hoa hồng và khấu trừ tạm ứng hàng tháng."
+          description:
+            "Quản lý chi trả lương, phụ cấp, hoa hồng và khấu trừ tạm ứng hàng tháng.",
         };
       case "/shifts":
         return {
           title: "Lịch ca trực tuần nhân viên",
-          description: "Xếp ca trực tuần cho nhân sự và điều hành lịch trực chi nhánh."
+          description:
+            "Xếp ca trực tuần cho nhân sự và điều hành lịch trực chi nhánh.",
         };
       case "/attendance":
         return {
           title: "Lịch điểm danh & Ứng tiền",
-          description: "Thống kê những ngày làm việc bất thường (vắng, muộn) và các phiếu tạm ứng lương."
+          description:
+            "Thống kê những ngày làm việc bất thường (vắng, muộn) và các phiếu tạm ứng lương.",
         };
       default:
         return {
           title: "Hệ thống Quản lý Salon",
-          description: "Bảng cấu hình và điều hành hoạt động salon chuyên nghiệp."
+          description:
+            "Bảng cấu hình và điều hành hoạt động salon chuyên nghiệp.",
         };
     }
   };
@@ -148,11 +162,39 @@ export default function Topbar() {
       }}
     >
       {/* Title and Description */}
-      <div style={{ display: "flex", flexDirection: "column", flexShrink: 1, minWidth: 0, paddingRight: "16px" }}>
-        <h1 style={{ fontSize: "16px", fontWeight: "700", margin: 0, color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          flexShrink: 1,
+          minWidth: 0,
+          paddingRight: "16px",
+        }}
+      >
+        <h1
+          style={{
+            fontSize: "16px",
+            fontWeight: "700",
+            margin: 0,
+            color: "var(--text-primary)",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
           {headerInfo.title}
         </h1>
-        <p style={{ fontSize: "11px", color: "var(--text-secondary)", margin: 0, marginTop: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <p
+          style={{
+            fontSize: "11px",
+            color: "var(--text-secondary)",
+            margin: 0,
+            marginTop: "2px",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
           {headerInfo.description}
         </p>
       </div>
@@ -161,7 +203,16 @@ export default function Topbar() {
       <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
         {/* Branch Selector */}
         {branches && branches.length > 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "hsl(210, 40%, 96%)", padding: "6px 12px", borderRadius: "var(--radius-sm)" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              background: "hsl(210, 40%, 96%)",
+              padding: "6px 12px",
+              borderRadius: "var(--radius-sm)",
+            }}
+          >
             <span style={{ fontSize: "14px" }}>🏢 Chi nhánh:</span>
             <select
               value={currentBranchId || ""}
@@ -177,7 +228,11 @@ export default function Topbar() {
               }}
             >
               {branches.map((b) => (
-                <option key={b.id} value={b.id} style={{ color: "var(--text-primary)", background: "white" }}>
+                <option
+                  key={b.id}
+                  value={b.id}
+                  style={{ color: "var(--text-primary)", background: "white" }}
+                >
                   {b.name}
                 </option>
               ))}
@@ -187,8 +242,25 @@ export default function Topbar() {
 
         {/* Test Tool: Role Switcher */}
         {isOriginalAdmin && (
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "hsl(210, 40%, 96%)", padding: "6px 12px", borderRadius: "var(--radius-sm)" }}>
-            <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)" }}>Test Role:</span>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              background: "hsl(210, 40%, 96%)",
+              padding: "6px 12px",
+              borderRadius: "var(--radius-sm)",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: "600",
+                color: "var(--text-secondary)",
+              }}
+            >
+              Test Role:
+            </span>
             <select
               value={user.role}
               onChange={(e) => setRole(e.target.value as any)}
@@ -257,22 +329,44 @@ export default function Topbar() {
             className="sync-indicator-dot"
             style={{
               backgroundColor: syncColor,
-              boxShadow: `0 0 8px ${syncGlow}`
+              boxShadow: `0 0 8px ${syncGlow}`,
             }}
           />
-          <div className="sync-tooltip">
-            {syncTooltip}
-          </div>
+          <div className="sync-tooltip">{syncTooltip}</div>
         </div>
 
         {/* MOCK notification button */}
-        <button style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", position: "relative" }}>
+        <button
+          style={{
+            background: "none",
+            border: "none",
+            fontSize: "20px",
+            cursor: "pointer",
+            position: "relative",
+          }}
+        >
           <Bell size={20} />
-          <span style={{ position: "absolute", top: "-2px", right: "-2px", width: "8px", height: "8px", background: "var(--color-danger)", borderRadius: "50%" }}></span>
+          <span
+            style={{
+              position: "absolute",
+              top: "-2px",
+              right: "-2px",
+              width: "8px",
+              height: "8px",
+              background: "var(--color-danger)",
+              borderRadius: "50%",
+            }}
+          ></span>
         </button>
 
         {/* Divider */}
-        <div style={{ width: "1px", height: "24px", background: "var(--border-color)" }}></div>
+        <div
+          style={{
+            width: "1px",
+            height: "24px",
+            background: "var(--border-color)",
+          }}
+        ></div>
 
         {/* User Info & Logout */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -280,11 +374,26 @@ export default function Topbar() {
             <img
               src={user.avatar}
               alt={user.name}
-              style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover" }}
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                objectFit: "cover",
+              }}
             />
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <span style={{ fontWeight: "600", fontSize: "14px" }}>{user.name}</span>
-              <span style={{ fontSize: "11px", color: "var(--text-secondary)", fontWeight: "500" }}>{user.role}</span>
+              <span style={{ fontWeight: "600", fontSize: "14px" }}>
+                {user.name}
+              </span>
+              <span
+                style={{
+                  fontSize: "11px",
+                  color: "var(--text-secondary)",
+                  fontWeight: "500",
+                }}
+              >
+                {user.role}
+              </span>
             </div>
           </div>
           <button
@@ -300,10 +409,14 @@ export default function Topbar() {
               justifyContent: "center",
               padding: "8px",
               borderRadius: "50%",
-              transition: "background 0.2s"
+              transition: "background 0.2s",
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(239, 68, 68, 0.1)"}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor = "rgba(239, 68, 68, 0.1)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor = "transparent")
+            }
           >
             <LogOut size={18} />
           </button>

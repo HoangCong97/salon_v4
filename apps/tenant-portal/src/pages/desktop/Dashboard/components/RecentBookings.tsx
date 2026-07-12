@@ -30,7 +30,13 @@ export function RecentBookings({ bookings }: RecentBookingsProps) {
       <h3 className="card-title">Hoạt động đặt lịch gần đây</h3>
       <div className="data-table-container">
         {bookings.length === 0 ? (
-          <div style={{ textAlign: "center", color: "var(--text-muted)", padding: "40px" }}>
+          <div
+            style={{
+              textAlign: "center",
+              color: "var(--text-muted)",
+              padding: "40px",
+            }}
+          >
             Không có lịch hẹn nào được ghi nhận gần đây.
           </div>
         ) : (
@@ -47,7 +53,9 @@ export function RecentBookings({ bookings }: RecentBookingsProps) {
             <tbody>
               {bookings.map((b) => (
                 <tr key={b.id}>
-                  <td><strong>{b.customerName}</strong></td>
+                  <td>
+                    <strong>{b.customerName}</strong>
+                  </td>
                   <td>{b.service}</td>
                   <td>{b.staff}</td>
                   <td>{b.time}</td>
@@ -61,5 +69,3 @@ export function RecentBookings({ bookings }: RecentBookingsProps) {
     </div>
   );
 }
-
-

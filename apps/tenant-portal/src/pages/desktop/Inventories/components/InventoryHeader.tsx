@@ -53,7 +53,9 @@ export const InventoryHeader: React.FC<InventoryHeaderProps> = ({
           />
           <span
             className={styles.toggleText}
-            style={{ color: showLowStockOnly ? "var(--color-danger)" : "inherit" }}
+            style={{
+              color: showLowStockOnly ? "var(--color-danger)" : "inherit",
+            }}
           >
             {showLowStockOnly && <AlertTriangle size={16} />}
             Sản phẩm sắp hết hàng (&lt; 5)
@@ -62,10 +64,15 @@ export const InventoryHeader: React.FC<InventoryHeaderProps> = ({
       </div>
 
       {/* Right side: Actions */}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-        {canManage && (
-          <ImportButton onClick={onOpenImportModal} />
-        )}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          flexWrap: "wrap",
+        }}
+      >
+        {canManage && <ImportButton onClick={onOpenImportModal} />}
 
         <ExportButton
           data={filteredItems}
@@ -85,4 +92,3 @@ export const InventoryHeader: React.FC<InventoryHeaderProps> = ({
     </div>
   );
 };
-

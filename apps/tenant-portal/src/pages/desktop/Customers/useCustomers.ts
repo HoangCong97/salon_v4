@@ -41,7 +41,9 @@ export function useCustomers() {
   // Customer Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>("create");
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(
+    null,
+  );
 
   // Import Modal State
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -86,7 +88,7 @@ export function useCustomers() {
         description: "Điểm số uy tín (0-100)",
       },
     ],
-    []
+    [],
   );
 
   // Export Columns Mapping for Customers
@@ -98,24 +100,28 @@ export function useCustomers() {
       {
         key: "credibilityScore",
         header: "Điểm uy tín",
-        transform: (val) => (val !== null && val !== undefined ? Number(val) : 100),
+        transform: (val) =>
+          val !== null && val !== undefined ? Number(val) : 100,
       },
       {
         key: "createdAt",
         header: "Ngày tham gia",
-        transform: (val) => (val ? new Date(val as string).toLocaleDateString("vi-VN") : ""),
+        transform: (val) =>
+          val ? new Date(val as string).toLocaleDateString("vi-VN") : "",
       },
     ],
-    []
+    [],
   );
 
   // Inline editing helper states & functions
-  const [inlineEdits, setInlineEdits] = useState<Record<string, Partial<Customer>>>({});
+  const [inlineEdits, setInlineEdits] = useState<
+    Record<string, Partial<Customer>>
+  >({});
 
   const handleInlineChange = (
     customerId: string,
     field: keyof Customer,
-    value: string | number | undefined | null
+    value: string | number | undefined | null,
   ) => {
     setInlineEdits((prev) => ({
       ...prev,
@@ -127,7 +133,10 @@ export function useCustomers() {
   };
 
   const getInlineValue = (customer: Customer, field: keyof Customer) => {
-    if (inlineEdits[customer.id] && inlineEdits[customer.id][field] !== undefined) {
+    if (
+      inlineEdits[customer.id] &&
+      inlineEdits[customer.id][field] !== undefined
+    ) {
       return inlineEdits[customer.id][field];
     }
     return customer[field];
@@ -139,10 +148,13 @@ export function useCustomers() {
         queryKey: queryKeys.customers.all(currentTenantId!),
       });
     },
-    [queryClient, currentTenantId]
+    [queryClient, currentTenantId],
   );
 
-  const handleAutoSave = async (customerId: string, updatedFields: Partial<Customer>) => {
+  const handleAutoSave = async (
+    customerId: string,
+    updatedFields: Partial<Customer>,
+  ) => {
     const originalCustomer = customers.find((c) => c.id === customerId);
     if (!originalCustomer) return;
 
@@ -175,7 +187,10 @@ export function useCustomers() {
     };
 
     try {
-      await api.put(`/tenants/${currentTenantId}/customers/${customerId}`, payload);
+      await api.put(
+        `/tenants/${currentTenantId}/customers/${customerId}`,
+        payload,
+      );
 
       setInlineEdits((prev) => {
         const copy = { ...prev };
@@ -231,7 +246,8 @@ export function useCustomers() {
       const matchSearch =
         cust.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (cust.phone && cust.phone.includes(searchTerm)) ||
-        (cust.email && cust.email.toLowerCase().includes(searchTerm.toLowerCase()));
+        (cust.email &&
+          cust.email.toLowerCase().includes(searchTerm.toLowerCase()));
       return matchSearch;
     });
   }, [customers, searchTerm]);

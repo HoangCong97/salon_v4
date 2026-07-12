@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import { AlertTriangle, Info, HelpCircle, X } from "lucide-react";
 
 interface ConfirmOptions {
@@ -9,7 +15,9 @@ interface ConfirmOptions {
   type?: "warning" | "danger" | "info";
 }
 
-type ConfirmFunction = (optionsOrMessage: string | ConfirmOptions) => Promise<boolean>;
+type ConfirmFunction = (
+  optionsOrMessage: string | ConfirmOptions,
+) => Promise<boolean>;
 
 const ConfirmContext = createContext<ConfirmFunction | null>(null);
 
@@ -21,7 +29,9 @@ export const useConfirm = () => {
   return context;
 };
 
-export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [state, setState] = useState<{
     isOpen: boolean;
     options: ConfirmOptions;
@@ -30,7 +40,9 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const confirm = (optionsOrMessage: string | ConfirmOptions) => {
     const options: ConfirmOptions =
-      typeof optionsOrMessage === "string" ? { message: optionsOrMessage } : optionsOrMessage;
+      typeof optionsOrMessage === "string"
+        ? { message: optionsOrMessage }
+        : optionsOrMessage;
 
     return new Promise<boolean>((resolve) => {
       setState({
@@ -52,7 +64,7 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     if (state?.isOpen) {
       document.body.style.overflow = "hidden";
-      
+
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === "Escape") {
           handleClose(false);
@@ -62,7 +74,7 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
           handleClose(true);
         }
       };
-      
+
       window.addEventListener("keydown", handleKeyDown);
       return () => {
         document.body.style.overflow = "";
@@ -80,7 +92,10 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [state?.isOpen]);
 
-  const { isOpen, options } = state || { isOpen: false, options: {} as ConfirmOptions };
+  const { isOpen, options } = state || {
+    isOpen: false,
+    options: {} as ConfirmOptions,
+  };
   const {
     title = "Xác nhận",
     message = "",
@@ -138,7 +153,7 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
   return (
     <ConfirmContext.Provider value={confirm}>
       {children}
-      
+
       {/* Portaled Custom Dialog */}
       {isOpen && (
         <div
@@ -176,7 +191,8 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
               right: 0,
               bottom: 0,
               background: "rgba(15, 23, 42, 0.35)",
-              animation: "confirm-backdrop-fade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+              animation:
+                "confirm-backdrop-fade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards",
               zIndex: -1,
             }}
           />
@@ -186,7 +202,8 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
             style={{
               background: "rgba(255, 255, 255, 0.98)",
               border: "1px solid rgba(15, 23, 42, 0.08)",
-              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02)",
+              boxShadow:
+                "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02)",
               borderRadius: "16px",
               width: "100%",
               maxWidth: "420px",
@@ -195,7 +212,8 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
               flexDirection: "column",
               gap: "20px",
               position: "relative",
-              animation: "confirm-modal-scale 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+              animation:
+                "confirm-modal-scale 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards",
               fontFamily: "var(--font-family, system-ui, sans-serif)",
             }}
           >
@@ -230,15 +248,22 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
             </button>
 
             {/* Content Row */}
-            <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginTop: "4px" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "16px",
+                alignItems: "flex-start",
+                marginTop: "4px",
+              }}
+            >
               <div
                 style={{
                   background:
                     type === "danger"
                       ? "#fee2e2"
                       : type === "info"
-                      ? "#dbeafe"
-                      : "#fef3c7",
+                        ? "#dbeafe"
+                        : "#fef3c7",
                   padding: "10px",
                   borderRadius: "12px",
                   display: "flex",
@@ -249,7 +274,14 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
               >
                 {getIcon()}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px", flexGrow: 1 }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                  flexGrow: 1,
+                }}
+              >
                 <h3
                   style={{
                     margin: 0,
@@ -274,7 +306,14 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
             </div>
 
             {/* Action Buttons */}
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "8px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "12px",
+                marginTop: "8px",
+              }}
+            >
               <button
                 onClick={() => handleClose(false)}
                 style={{
@@ -305,11 +344,13 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 style={getConfirmButtonStyles()}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = "0 6px 16px rgba(0, 0, 0, 0.15)";
+                  e.currentTarget.style.boxShadow =
+                    "0 6px 16px rgba(0, 0, 0, 0.15)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.1)";
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 12px rgba(0, 0, 0, 0.1)";
                 }}
               >
                 {confirmText}

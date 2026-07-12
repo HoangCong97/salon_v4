@@ -1,5 +1,13 @@
 import React from "react";
-import { Eye, DollarSign, CreditCard, Globe, Store, Edit2, Trash2 } from "lucide-react";
+import {
+  Eye,
+  DollarSign,
+  CreditCard,
+  Globe,
+  Store,
+  Edit2,
+  Trash2,
+} from "lucide-react";
 import { formatCurrencyVND } from "@salon/shared-utils";
 
 import { Tooltip } from "../../../components/desktop/ui/Tooltip";
@@ -31,7 +39,6 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
   canEdit = false,
   canDelete = false,
 }) => {
-
   const formatTimeHHMM = (dateStr: string) => {
     const date = new Date(dateStr);
     const hours = String(date.getHours()).padStart(2, "0");
@@ -49,10 +56,14 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
 
   const renderStaffAvatars = (items: Invoice["items"]) => {
     const staffIds = Array.from(
-      new Set(items?.map((item) => item.staffId || item.stylist?.id).filter(Boolean))
+      new Set(
+        items?.map((item) => item.staffId || item.stylist?.id).filter(Boolean),
+      ),
     );
     if (staffIds.length === 0) {
-      return <span style={{ color: "var(--text-muted)", fontSize: "11px" }}>-</span>;
+      return (
+        <span style={{ color: "var(--text-muted)", fontSize: "11px" }}>-</span>
+      );
     }
 
     const maxAvatars = 3;
@@ -97,9 +108,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
         })}
         {extraCount > 0 && (
           <Tooltip content={`Và ${extraCount} nhân viên thực hiện khác`}>
-            <div className={styles.avatarExtra}>
-              +{extraCount}
-            </div>
+            <div className={styles.avatarExtra}>+{extraCount}</div>
           </Tooltip>
         )}
       </div>
@@ -134,26 +143,41 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             </tr>
           ) : (
             invoices.map((inv) => {
-              const customerObj = customers.find((c) => c.id === inv.customerId);
-              const customerName = customerObj ? customerObj.name : (inv.customer?.name || "Khách vãng lai");
+              const customerObj = customers.find(
+                (c) => c.id === inv.customerId,
+              );
+              const customerName = customerObj
+                ? customerObj.name
+                : inv.customer?.name || "Khách vãng lai";
 
-              const uniqueStaffNames = Array.from(
-                new Set(
-                  inv.items
-                    ?.map((item) => {
-                      const sId = item.staffId || item.stylist?.id;
-                      const sObj = activeStaff.find((s) => s.id === sId);
-                      return sObj ? sObj.name.split("(")[0].trim() : null;
-                    })
-                    .filter(Boolean)
-                )
-              ).join(", ") || "Không gán";
+              const uniqueStaffNames =
+                Array.from(
+                  new Set(
+                    inv.items
+                      ?.map((item) => {
+                        const sId = item.staffId || item.stylist?.id;
+                        const sObj = activeStaff.find((s) => s.id === sId);
+                        return sObj ? sObj.name.split("(")[0].trim() : null;
+                      })
+                      .filter(Boolean),
+                  ),
+                ).join(", ") || "Không gán";
 
-              const serviceDetailsStr = inv.items
-                ?.map((item) => `${item.name}${item.quantity > 1 ? ` x${item.quantity}` : ""}`)
-                .join(", ") || "-";
+              const serviceDetailsStr =
+                inv.items
+                  ?.map(
+                    (item) =>
+                      `${item.name}${item.quantity > 1 ? ` x${item.quantity}` : ""}`,
+                  )
+                  .join(", ") || "-";
 
-              const totalServicePrice = inv.items?.reduce((sum, item) => sum + item.price * item.quantity, 0) || inv.totalPrice || inv.finalAmount;
+              const totalServicePrice =
+                inv.items?.reduce(
+                  (sum, item) => sum + item.price * item.quantity,
+                  0,
+                ) ||
+                inv.totalPrice ||
+                inv.finalAmount;
               const discountAmount = inv.discountAmount || 0;
 
               const currentDateStr = formatDateDMY(inv.createdAt);
@@ -173,7 +197,9 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                     className={`${styles.tableRow} ${styles.clickableRow}`}
                     onClick={() => onViewDetail(inv)}
                   >
-                    <td className={styles.tdTime}>{formatTimeHHMM(inv.createdAt)}</td>
+                    <td className={styles.tdTime}>
+                      {formatTimeHHMM(inv.createdAt)}
+                    </td>
                     <td className={styles.tdCentered}>
                       <div className={styles.avatarContainer}>
                         {renderStaffAvatars(inv.items)}
@@ -181,47 +207,77 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                     </td>
                     <td className={styles.tdStaff}>
                       <Tooltip content={uniqueStaffNames}>
-                        <div className={`${styles.textEllipsis} ${styles.widthStaff}`}>
+                        <div
+                          className={`${styles.textEllipsis} ${styles.widthStaff}`}
+                        >
                           {uniqueStaffNames}
                         </div>
                       </Tooltip>
                     </td>
                     <td className={styles.tdDetails}>
                       <Tooltip content={serviceDetailsStr}>
-                        <div className={`${styles.textEllipsis} ${styles.widthDetails}`}>
+                        <div
+                          className={`${styles.textEllipsis} ${styles.widthDetails}`}
+                        >
                           {serviceDetailsStr}
                         </div>
                       </Tooltip>
                     </td>
-                    <td className={styles.tdTotal}>{formatCurrencyVND(totalServicePrice)}</td>
-                    <td className={`${styles.tdDiscount} ${discountAmount > 0 ? "var(--color-danger)" : ""}`} style={{ fontWeight: discountAmount > 0 ? "700" : "400" }}>
-                      {discountAmount > 0 ? `-${formatCurrencyVND(discountAmount)}` : "0đ"}
+                    <td className={styles.tdTotal}>
+                      {formatCurrencyVND(totalServicePrice)}
                     </td>
-                    <td className={styles.tdFinal}>{formatCurrencyVND(inv.finalAmount)}</td>
+                    <td
+                      className={`${styles.tdDiscount} ${discountAmount > 0 ? "var(--color-danger)" : ""}`}
+                      style={{ fontWeight: discountAmount > 0 ? "700" : "400" }}
+                    >
+                      {discountAmount > 0
+                        ? `-${formatCurrencyVND(discountAmount)}`
+                        : "0đ"}
+                    </td>
+                    <td className={styles.tdFinal}>
+                      {formatCurrencyVND(inv.finalAmount)}
+                    </td>
                     <td className={styles.tdCustomer}>
                       <Tooltip content={customerName}>
-                        <div className={`${styles.textEllipsis} ${styles.widthCustomer}`}>
+                        <div
+                          className={`${styles.textEllipsis} ${styles.widthCustomer}`}
+                        >
                           {customerName}
                         </div>
                       </Tooltip>
                     </td>
                     <td className={styles.tdTransaction}>
                       <Tooltip
-                        content={`${inv.paymentMethod === "CASH" ? "Tiền mặt" : "Chuyển khoản"}, ${inv.orderSource === "BOOKING" ? "Online" : "Tại quầy"
-                          }`}
+                        content={`${inv.paymentMethod === "CASH" ? "Tiền mặt" : "Chuyển khoản"}, ${
+                          inv.orderSource === "BOOKING" ? "Online" : "Tại quầy"
+                        }`}
                       >
                         <div className={styles.transactionIcons}>
                           <span
-                            className={`${styles.txnIcon} ${inv.paymentMethod === "CASH" ? styles.txnIconCash : styles.txnIconTransfer
-                              }`}
+                            className={`${styles.txnIcon} ${
+                              inv.paymentMethod === "CASH"
+                                ? styles.txnIconCash
+                                : styles.txnIconTransfer
+                            }`}
                           >
-                            {inv.paymentMethod === "CASH" ? <DollarSign size={15} /> : <CreditCard size={15} />}
+                            {inv.paymentMethod === "CASH" ? (
+                              <DollarSign size={15} />
+                            ) : (
+                              <CreditCard size={15} />
+                            )}
                           </span>
                           <span
-                            className={`${styles.txnIcon} ${inv.orderSource === "BOOKING" ? styles.txnIconBooking : styles.txnIconWalkin
-                              }`}
+                            className={`${styles.txnIcon} ${
+                              inv.orderSource === "BOOKING"
+                                ? styles.txnIconBooking
+                                : styles.txnIconWalkin
+                            }`}
                           >
-                            {inv.orderSource === "BOOKING" ? <Globe size={15} /> : <Store size={15} />}
+                            {inv.orderSource === "BOOKING" ? (
+                              <Globe size={15} />
+                            ) : (
+                              <Store size={15} />
+                            )}
                           </span>
                         </div>
                       </Tooltip>
@@ -268,4 +324,3 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
     </div>
   );
 };
-

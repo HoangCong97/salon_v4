@@ -44,9 +44,12 @@ export const AddStaffToQueueModal: React.FC<AddStaffToQueueModalProps> = ({
     if (!staffToAddId) return;
 
     try {
-      await api.post(`/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns/add-staff`, {
-        staffId: staffToAddId
-      });
+      await api.post(
+        `/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns/add-staff`,
+        {
+          staffId: staffToAddId,
+        },
+      );
 
       onClose();
       await fetchDailyTurns();
@@ -57,11 +60,11 @@ export const AddStaffToQueueModal: React.FC<AddStaffToQueueModalProps> = ({
 
   return (
     <div className={styles.modalOverlay}>
-      <div className={`card animate-fade-in ${styles.modalCard}`} style={{ maxWidth: "420px", padding: "24px" }}>
-        <button
-          className={styles.closeButton}
-          onClick={onClose}
-        >
+      <div
+        className={`card animate-fade-in ${styles.modalCard}`}
+        style={{ maxWidth: "420px", padding: "24px" }}
+      >
+        <button className={styles.closeButton} onClick={onClose}>
           <X size={20} />
         </button>
         <h2 className={styles.modalHeader}>
@@ -69,23 +72,43 @@ export const AddStaffToQueueModal: React.FC<AddStaffToQueueModalProps> = ({
           Thêm thợ vào hàng đợi hôm nay
         </h2>
 
-        <form onSubmit={handleAddStaffToQueueSubmit} className={styles.modalForm}>
+        <form
+          onSubmit={handleAddStaffToQueueSubmit}
+          className={styles.modalForm}
+        >
           <div className={`form-group ${styles.formGroup}`}>
-            <label className="form-label">Chọn nhân viên gán chi nhánh này</label>
-            <select className="form-input" value={staffToAddId} onChange={(e) => setStaffToAddId(e.target.value)}>
+            <label className="form-label">
+              Chọn nhân viên gán chi nhánh này
+            </label>
+            <select
+              className="form-input"
+              value={staffToAddId}
+              onChange={(e) => setStaffToAddId(e.target.value)}
+            >
               {queueAddableStaff.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name} ({s.role ? s.role.name : "Thợ"})
                 </option>
               ))}
             </select>
-            <p style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "4px" }}>
-              Chỉ hiển thị các nhân sự thuộc chi nhánh hiện tại nhưng chưa có mặt trong hàng đợi.
+            <p
+              style={{
+                fontSize: "11px",
+                color: "var(--text-secondary)",
+                marginTop: "4px",
+              }}
+            >
+              Chỉ hiển thị các nhân sự thuộc chi nhánh hiện tại nhưng chưa có
+              mặt trong hàng đợi.
             </p>
           </div>
 
           <div className={styles.modalFooter}>
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onClose}
+            >
               Hủy
             </button>
             <button type="submit" className="btn btn-primary">

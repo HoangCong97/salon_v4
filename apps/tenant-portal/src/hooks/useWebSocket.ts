@@ -19,13 +19,13 @@ class WebSocketService {
     const isHttps = window.location.protocol === "https:";
     const protocol = isHttps ? "wss:" : "ws:";
     const host = window.location.hostname || "localhost";
-    
+
     // In development mode (Vite), backend api runs on port 3000.
     // In production mode, WebSocket server is hosted on the same port as the client webpage.
     const isDev = import.meta.env.DEV;
     const port = isDev ? "3000" : window.location.port;
     const hostWithPort = port ? `${host}:${port}` : host;
-    
+
     return `${protocol}//${hostWithPort}`;
   }
 
@@ -39,7 +39,12 @@ class WebSocketService {
   public updateTenant(tenantId: string | null) {
     const baseUrl = this.getDefaultWsUrl();
     const newUrl = tenantId ? `${baseUrl}?tenantId=${tenantId}` : baseUrl;
-    if (this.url === newUrl && this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+    if (
+      this.url === newUrl &&
+      this.ws &&
+      (this.ws.readyState === WebSocket.OPEN ||
+        this.ws.readyState === WebSocket.CONNECTING)
+    ) {
       return; // No need to reconnect
     }
 
@@ -117,7 +122,7 @@ class WebSocketService {
 
 /**
  * Custom React hook to subscribe to real-time WebSocket events.
- * 
+ *
  * @param onMessage Optional callback function called when a message is received
  */
 export const useWebSocket = (onMessage?: MessageCallback) => {
@@ -132,14 +137,14 @@ export const useWebSocket = (onMessage?: MessageCallback) => {
 
   useEffect(() => {
     if (!onMessageRef.current) return;
-    
+
     const wsService = WebSocketService.getInstance();
     const unsubscribe = wsService.subscribe((event, data) => {
       if (onMessageRef.current) {
         onMessageRef.current(event, data);
       }
     });
-    
+
     return unsubscribe;
   }, []);
 };

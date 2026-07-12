@@ -64,7 +64,10 @@ export const AttendanceModal: React.FC<AttendanceModalProps> = ({
           <h2 className={styles.modalTitle}>
             <CalendarDays size={18} style={{ color: "var(--color-primary)" }} />
             <span>
-              {modalMode === "create" ? "Ghi chép phát sinh ngày" : "Chỉnh sửa ghi chép ngày"} {selectedDateStr}
+              {modalMode === "create"
+                ? "Ghi chép phát sinh ngày"
+                : "Chỉnh sửa ghi chép ngày"}{" "}
+              {selectedDateStr}
             </span>
           </h2>
           <button onClick={onClose} className={styles.modalCloseBtn}>
@@ -105,8 +108,10 @@ export const AttendanceModal: React.FC<AttendanceModalProps> = ({
               disabled={modalMode === "edit"}
             >
               <option value="">-- Chọn nhân viên --</option>
-              {staffList.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
+              {staffList.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
               ))}
             </select>
           </div>
@@ -130,15 +135,20 @@ export const AttendanceModal: React.FC<AttendanceModalProps> = ({
                 </select>
               </div>
 
-              {(formWorkStatus === "LATE" || formWorkStatus === "EARLY_OUT") && (
+              {(formWorkStatus === "LATE" ||
+                formWorkStatus === "EARLY_OUT") && (
                 <div className="form-group">
                   <label className="form-label">
-                    {formWorkStatus === "LATE" ? "Số phút đi muộn (phút)" : "Số phút về sớm (phút)"}
+                    {formWorkStatus === "LATE"
+                      ? "Số phút đi muộn (phút)"
+                      : "Số phút về sớm (phút)"}
                   </label>
                   <input
                     type="number"
                     value={formLateMinutes}
-                    onChange={(e) => setFormLateMinutes(parseInt(e.target.value, 10) || 0)}
+                    onChange={(e) =>
+                      setFormLateMinutes(parseInt(e.target.value, 10) || 0)
+                    }
                     className="form-input"
                     min="1"
                     required
@@ -156,7 +166,8 @@ export const AttendanceModal: React.FC<AttendanceModalProps> = ({
                 <PriceInputWithSuggestion
                   value={formatNumber(formAdvanceAmount)}
                   onChange={(val: string) => {
-                    const numericVal = parseInt(val.replace(/\D/g, ""), 10) || 0;
+                    const numericVal =
+                      parseInt(val.replace(/\D/g, ""), 10) || 0;
                     setFormAdvanceAmount(numericVal);
                   }}
                   required
@@ -193,7 +204,9 @@ export const AttendanceModal: React.FC<AttendanceModalProps> = ({
           </div>
 
           {/* Actions Footer */}
-          <div className={`${styles.modalFooter} ${modalMode === "edit" ? styles.modalFooterEdit : styles.modalFooterCreate}`}>
+          <div
+            className={`${styles.modalFooter} ${modalMode === "edit" ? styles.modalFooterEdit : styles.modalFooterCreate}`}
+          >
             {modalMode === "edit" && (
               <button
                 type="button"
@@ -226,4 +239,3 @@ export const AttendanceModal: React.FC<AttendanceModalProps> = ({
     </div>
   );
 };
-

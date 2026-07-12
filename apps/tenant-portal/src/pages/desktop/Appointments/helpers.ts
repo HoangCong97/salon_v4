@@ -11,15 +11,18 @@ export const toLocalDateStr = (d: Date) => {
 export const todayStr = () => toLocalDateStr(new Date());
 
 export function hashColor(s: string) {
-  let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
   return `hsl(${Math.abs(h) % 360},60%,50%)`;
 }
 export function hashBg(s: string) {
-  let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
   return `hsl(${Math.abs(h) % 360},60%,96%)`;
 }
 export function hashBorder(s: string) {
-  let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
   return `hsl(${Math.abs(h) % 360},60%,78%)`;
 }
 
@@ -41,18 +44,32 @@ export function addMinutes(time: string, mins: number): string {
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 export function fmtCurrency(v: number) {
-  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(v);
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(v);
 }
 export function getInitials(name: string) {
-  return name.split(" ").slice(-2).map(w => w[0]).join("").toUpperCase();
+  return name
+    .split(" ")
+    .slice(-2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
 }
 export function fmtDateVN(d: string) {
   return new Date(d + "T00:00:00").toLocaleDateString("vi-VN", {
-    weekday: "long", day: "2-digit", month: "2-digit", year: "numeric",
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
   });
 }
 
-export function getClosestTimeOption(startHour: number, endHour: number): string {
+export function getClosestTimeOption(
+  startHour: number,
+  endHour: number,
+): string {
   const now = new Date();
   const nowMins = now.getHours() * 60 + now.getMinutes();
   let closestOpt = `${String(startHour).padStart(2, "0")}:00`;
@@ -62,7 +79,7 @@ export function getClosestTimeOption(startHour: number, endHour: number): string
       `${String(h).padStart(2, "0")}:00`,
       `${String(h).padStart(2, "0")}:15`,
       `${String(h).padStart(2, "0")}:30`,
-      `${String(h).padStart(2, "0")}:45`
+      `${String(h).padStart(2, "0")}:45`,
     ];
     for (const opt of opts) {
       const [oh, om] = opt.split(":").map(Number);
@@ -76,5 +93,3 @@ export function getClosestTimeOption(startHour: number, endHour: number): string
   }
   return closestOpt;
 }
-
-

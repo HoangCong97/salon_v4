@@ -82,7 +82,7 @@ class WebSocketService {
 
 /**
  * Custom React hook to subscribe to real-time WebSocket events.
- * 
+ *
  * @param onMessage Optional callback function called when a message is received
  */
 export const useWebSocket = (onMessage?: MessageCallback) => {
@@ -91,14 +91,14 @@ export const useWebSocket = (onMessage?: MessageCallback) => {
 
   useEffect(() => {
     if (!onMessageRef.current) return;
-    
+
     const wsService = WebSocketService.getInstance();
     const unsubscribe = wsService.subscribe((event, data) => {
       if (onMessageRef.current) {
         onMessageRef.current(event, data);
       }
     });
-    
+
     return unsubscribe;
   }, []);
 };

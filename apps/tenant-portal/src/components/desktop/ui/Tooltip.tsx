@@ -138,7 +138,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
               <div className={arrowClass} />
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );

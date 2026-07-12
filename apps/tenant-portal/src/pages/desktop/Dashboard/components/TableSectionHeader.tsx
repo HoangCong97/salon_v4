@@ -8,7 +8,9 @@ interface TableSectionHeaderProps {
 export function TableSectionHeader({ title }: TableSectionHeaderProps) {
   return (
     <div className={styles.tableSectionHeader}>
-      <h3 className="card-title" style={{ margin: 0 }}>{title}</h3>
+      <h3 className="card-title" style={{ margin: 0 }}>
+        {title}
+      </h3>
     </div>
   );
 }

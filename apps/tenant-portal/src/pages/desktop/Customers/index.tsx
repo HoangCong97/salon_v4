@@ -52,7 +52,15 @@ export default function Customers() {
       <div className="table-panel">
         {/* Filters bar */}
         <div className={styles.filtersBar}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", flexGrow: 1 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              flexWrap: "wrap",
+              flexGrow: 1,
+            }}
+          >
             {/* Search box */}
             <div className={styles.searchWrapper}>
               <Search size={16} className={styles.searchIcon} />
@@ -155,4 +163,3 @@ export default function Customers() {
     </div>
   );
 }
-

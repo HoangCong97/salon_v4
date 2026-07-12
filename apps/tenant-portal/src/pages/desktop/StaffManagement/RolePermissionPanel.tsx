@@ -67,7 +67,12 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
         <div className={styles.roleItemsContainer}>
           {roles.map((role) => {
             const isSelected = selectedRoleId === role.id;
-            const isBuiltin = ["ADMIN", "MANAGER", "CASHIER", "EMPLOYEE"].includes(role.name.toUpperCase());
+            const isBuiltin = [
+              "ADMIN",
+              "MANAGER",
+              "CASHIER",
+              "EMPLOYEE",
+            ].includes(role.name.toUpperCase());
             return (
               <div
                 key={role.id}
@@ -75,16 +80,23 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
                 className={`${styles.roleItem} ${isSelected ? styles.roleItemActive : ""}`}
               >
                 <div className={styles.roleItemTextWrapper}>
-                  <span className={`${styles.roleItemName} ${isSelected ? styles.roleItemNameActive : ""}`}>
+                  <span
+                    className={`${styles.roleItemName} ${isSelected ? styles.roleItemNameActive : ""}`}
+                  >
                     {role.name}
                   </span>
                   {role.description && (
-                    <span className={styles.roleItemDesc}>{role.description}</span>
+                    <span className={styles.roleItemDesc}>
+                      {role.description}
+                    </span>
                   )}
                 </div>
 
                 {isSelected && !isBuiltin && canManage && (
-                  <div className={styles.roleItemActions} onClick={(e) => e.stopPropagation()}>
+                  <div
+                    className={styles.roleItemActions}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <button
                       onClick={() => handleOpenRoleModal("edit")}
                       className={styles.roleItemBtn}
@@ -113,10 +125,13 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
           <div>
             <h3 className={styles.permissionsTitle}>
               Thiết lập phân quyền chức vụ:{" "}
-              <span style={{ color: "var(--color-primary)" }}>{activeRole?.name || "Chức vụ"}</span>
+              <span style={{ color: "var(--color-primary)" }}>
+                {activeRole?.name || "Chức vụ"}
+              </span>
             </h3>
             <p className={styles.roleItemDesc} style={{ marginTop: "2px" }}>
-              {activeRole?.description || "Gán và cấu hình các quyền hạn nghiệp vụ cho chức vụ."}
+              {activeRole?.description ||
+                "Gán và cấu hình các quyền hạn nghiệp vụ cho chức vụ."}
             </p>
           </div>
 
@@ -140,12 +155,17 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
 
         {permissionsLoading ? (
           <div className={styles.loadingWrapper} style={{ flexGrow: 1 }}>
-            <Loader2 className="animate-spin" size={28} style={{ color: "var(--color-primary)" }} />
+            <Loader2
+              className="animate-spin"
+              size={28}
+              style={{ color: "var(--color-primary)" }}
+            />
           </div>
         ) : (
           <div className={styles.permissionsScrollBody}>
             {Object.keys(groupedPermissions).map((group) => {
-              const isSystemAdminRole = activeRole?.name.toUpperCase() === "ADMIN";
+              const isSystemAdminRole =
+                activeRole?.name.toUpperCase() === "ADMIN";
               return (
                 <div key={group} className={styles.permissionSection}>
                   <h4 className={styles.permissionSectionTitle}>
@@ -153,29 +173,46 @@ export const RolePermissionPanel: React.FC<RolePermissionPanelProps> = ({
                   </h4>
                   <div className={styles.permissionSectionGrid}>
                     {groupedPermissions[group].map((perm) => {
-                      const isChecked = isSystemAdminRole || assignedPermissionIds.includes(perm.id);
+                      const isChecked =
+                        isSystemAdminRole ||
+                        assignedPermissionIds.includes(perm.id);
                       return (
                         <label
                           key={perm.id}
                           className={`${styles.permissionCard} ${isChecked ? styles.permissionCardActive : ""}`}
                           style={{
-                            cursor: (isSystemAdminRole || !canManage) ? "not-allowed" : "pointer",
+                            cursor:
+                              isSystemAdminRole || !canManage
+                                ? "not-allowed"
+                                : "pointer",
                           }}
                         >
                           <input
                             type="checkbox"
                             checked={isChecked}
                             disabled={isSystemAdminRole || !canManage}
-                            onChange={() => canManage && handlePermissionCheckboxChange(perm.id)}
+                            onChange={() =>
+                              canManage &&
+                              handlePermissionCheckboxChange(perm.id)
+                            }
                             className={styles.permissionCheckbox}
                             style={{ width: "16px", height: "16px" }}
                           />
                           <div className={styles.permissionTextWrapper}>
-                            <span className={styles.permissionName}>{perm.name}</span>
+                            <span className={styles.permissionName}>
+                              {perm.name}
+                            </span>
                             <span className={styles.permissionDesc}>
                               {perm.description || "Chưa có mô tả chi tiết."}
                             </span>
-                            <code style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "2px", display: "inline-block" }}>
+                            <code
+                              style={{
+                                fontSize: "10px",
+                                color: "var(--text-muted)",
+                                marginTop: "2px",
+                                display: "inline-block",
+                              }}
+                            >
                               {perm.slug}
                             </code>
                           </div>

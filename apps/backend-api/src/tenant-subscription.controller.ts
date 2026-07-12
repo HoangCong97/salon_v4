@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Put, Body, Param, HttpStatus, HttpException } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Param,
+  HttpStatus,
+  HttpException,
+} from "@nestjs/common";
 import { prisma } from "@salon/database";
 import * as fs from "fs";
 import * as path from "path";
@@ -15,7 +24,7 @@ export class TenantSubscriptionController {
     try {
       const tenant = await prisma.tenant.findUnique({
         where: { id: tenantId },
-        include: { plan: true }
+        include: { plan: true },
       });
 
       if (!tenant) {
@@ -25,11 +34,11 @@ export class TenantSubscriptionController {
       // Count active branches and staff (users) for this tenant
       const [currentBranchesCount, currentStaffCount] = await Promise.all([
         prisma.branch.count({
-          where: { tenantId, deletedAt: null }
+          where: { tenantId, deletedAt: null },
         }),
         prisma.user.count({
-          where: { tenantId, deletedAt: null }
-        })
+          where: { tenantId, deletedAt: null },
+        }),
       ]);
 
       // Calculate status based on planExpiresAt date (safety fallback)
@@ -45,25 +54,31 @@ export class TenantSubscriptionController {
         planName: tenant.plan ? tenant.plan.name : "Dùng Thử (Free Trial)",
         planCode: tenant.plan ? tenant.plan.code : "FREE",
         planPrice: tenant.plan ? Number(tenant.plan.price) : 0,
-        planStartedAt: tenant.planStartedAt ? tenant.planStartedAt.toISOString() : null,
-        planExpiresAt: tenant.planExpiresAt ? tenant.planExpiresAt.toISOString() : null,
+        planStartedAt: tenant.planStartedAt
+          ? tenant.planStartedAt.toISOString()
+          : null,
+        planExpiresAt: tenant.planExpiresAt
+          ? tenant.planExpiresAt.toISOString()
+          : null,
         planStatus,
         maxBranches: tenant.plan ? tenant.plan.maxBranches : 1,
         maxStaff: tenant.plan ? tenant.plan.maxStaff : 5,
         currentBranchesCount,
         currentStaffCount,
-        features: tenant.plan ? tenant.plan.features : [
-          "Đặt lịch trực tuyến cơ bản",
-          "Báo cáo doanh thu ngày",
-          "Phân quyền Nhân viên/Khách hàng",
-          "Thời hạn: 14 ngày"
-        ]
+        features: tenant.plan
+          ? tenant.plan.features
+          : [
+              "Đặt lịch trực tuyến cơ bản",
+              "Báo cáo doanh thu ngày",
+              "Phân quyền Nhân viên/Khách hàng",
+              "Thời hạn: 14 ngày",
+            ],
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to fetch subscription: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -74,16 +89,16 @@ export class TenantSubscriptionController {
     try {
       const plans = await prisma.saasPlan.findMany({
         where: { deletedAt: null },
-        orderBy: { price: "asc" }
+        orderBy: { price: "asc" },
       });
-      return plans.map(p => ({
+      return plans.map((p) => ({
         ...p,
-        price: Number(p.price)
+        price: Number(p.price),
       }));
     } catch (error) {
       throw new HttpException(
         `Failed to fetch plans: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -92,16 +107,19 @@ export class TenantSubscriptionController {
   @Post(":tenantId/buy-plan")
   async buyPlan(
     @Param("tenantId") tenantId: string,
-    @Body() body: { planCode: string }
+    @Body() body: { planCode: string },
   ) {
     try {
       const { planCode } = body;
       if (!planCode) {
-        throw new HttpException("Plan code is required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Plan code is required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const tenant = await prisma.tenant.findUnique({
-        where: { id: tenantId }
+        where: { id: tenantId },
       });
 
       if (!tenant) {
@@ -109,7 +127,7 @@ export class TenantSubscriptionController {
       }
 
       const plan = await prisma.saasPlan.findFirst({
-        where: { code: planCode.toUpperCase(), deletedAt: null }
+        where: { code: planCode.toUpperCase(), deletedAt: null },
       });
 
       if (!plan) {
@@ -128,11 +146,11 @@ export class TenantSubscriptionController {
           amount: plan.price,
           paymentMethod: "Chuyển khoản ngân hàng",
           paymentStatus: "PENDING",
-          invoiceNumber
+          invoiceNumber,
         },
         include: {
-          plan: true
-        }
+          plan: true,
+        },
       });
 
       // Emit WebSocket event to internal admin dashboard
@@ -144,7 +162,7 @@ export class TenantSubscriptionController {
         planName: plan.name,
         planCode: plan.code,
         amount: Number(invoice.amount),
-        createdAt: invoice.createdAt.toISOString()
+        createdAt: invoice.createdAt.toISOString(),
       });
 
       return {
@@ -155,13 +173,13 @@ export class TenantSubscriptionController {
         paymentMethod: invoice.paymentMethod,
         planName: plan.name,
         planCode: plan.code,
-        createdAt: invoice.createdAt.toISOString()
+        createdAt: invoice.createdAt.toISOString(),
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to create purchase invoice: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -171,7 +189,7 @@ export class TenantSubscriptionController {
   async getTenant(@Param("tenantId") tenantId: string) {
     try {
       const tenant = await prisma.tenant.findUnique({
-        where: { id: tenantId }
+        where: { id: tenantId },
       });
 
       if (!tenant) {
@@ -183,7 +201,7 @@ export class TenantSubscriptionController {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to fetch tenant: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -192,7 +210,8 @@ export class TenantSubscriptionController {
   @Put(":tenantId")
   async updateTenant(
     @Param("tenantId") tenantId: string,
-    @Body() body: {
+    @Body()
+    body: {
       name: string;
       email?: string;
       phone?: string;
@@ -206,15 +225,18 @@ export class TenantSubscriptionController {
       instagramUrl?: string;
       tiktokUrl?: string;
       websiteUrl?: string;
-    }
+    },
   ) {
     try {
       if (!body.name) {
-        throw new HttpException("Tenant name is required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Tenant name is required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const existing = await prisma.tenant.findUnique({
-        where: { id: tenantId }
+        where: { id: tenantId },
       });
 
       if (!existing) {
@@ -224,7 +246,10 @@ export class TenantSubscriptionController {
       if (body.logoUrl !== undefined && body.logoUrl !== existing.logoUrl) {
         await deleteOldFile(existing.logoUrl);
       }
-      if (body.bannerUrl !== undefined && body.bannerUrl !== existing.bannerUrl) {
+      if (
+        body.bannerUrl !== undefined &&
+        body.bannerUrl !== existing.bannerUrl
+      ) {
         await deleteOldFile(existing.bannerUrl);
       }
 
@@ -244,14 +269,14 @@ export class TenantSubscriptionController {
           instagramUrl: body.instagramUrl ?? null,
           tiktokUrl: body.tiktokUrl ?? null,
           websiteUrl: body.websiteUrl ?? null,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to update tenant: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -260,11 +285,14 @@ export class TenantSubscriptionController {
   @Post(":tenantId/upload")
   async uploadFile(
     @Param("tenantId") tenantId: string,
-    @Body() body: { file: string; category: string; filename?: string }
+    @Body() body: { file: string; category: string; filename?: string },
   ) {
     try {
       if (!body.file) {
-        throw new HttpException("File data is required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "File data is required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
       if (!body.category) {
         throw new HttpException("Category is required", HttpStatus.BAD_REQUEST);
@@ -275,7 +303,7 @@ export class TenantSubscriptionController {
       let extension = "png";
       let contentType = "image/png";
       const matches = body.file.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-      
+
       if (matches && matches.length === 3) {
         contentType = matches[1];
         extension = matches[1].split("/")[1] || "png";
@@ -296,7 +324,8 @@ export class TenantSubscriptionController {
       const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
       let baseName = "file";
       if (body.filename) {
-        baseName = path.basename(body.filename, path.extname(body.filename))
+        baseName = path
+          .basename(body.filename, path.extname(body.filename))
           .toLowerCase()
           .replace(/[^a-z0-9]/g, "-");
       }
@@ -305,19 +334,22 @@ export class TenantSubscriptionController {
       // Check if Supabase Storage is configured
       const supabaseUrl = process.env.SUPABASE_URL;
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      const bucketName = process.env.DATABASE_BUCKET_NAME || "saas-salon-images";
-      
-      const useSupabase = 
-        supabaseUrl && 
-        supabaseKey && 
-        supabaseKey !== "PLACEHOLDER_CHANGE_ME" && 
+      const bucketName =
+        process.env.DATABASE_BUCKET_NAME || "saas-salon-images";
+
+      const useSupabase =
+        supabaseUrl &&
+        supabaseKey &&
+        supabaseKey !== "PLACEHOLDER_CHANGE_ME" &&
         supabaseKey !== "";
 
       if (useSupabase) {
-        console.log(`[Upload] Uploading to Supabase Storage bucket: ${bucketName}...`);
+        console.log(
+          `[Upload] Uploading to Supabase Storage bucket: ${bucketName}...`,
+        );
         const { createClient } = await import("@supabase/supabase-js");
         const supabase = createClient(supabaseUrl, supabaseKey);
-        
+
         // Build forward-slash path in the bucket (e.g. tenantId/category/filename)
         const uploadPath = `${tenantId}/${categoryFolder.replace(/\\/g, "/")}/${finalFilename}`;
 
@@ -325,25 +357,36 @@ export class TenantSubscriptionController {
           .from(bucketName)
           .upload(uploadPath, buffer, {
             contentType: contentType,
-            upsert: true
+            upsert: true,
           });
 
         if (error) {
-          console.error("[Upload] Supabase upload failed, falling back to disk:", error.message);
+          console.error(
+            "[Upload] Supabase upload failed, falling back to disk:",
+            error.message,
+          );
           // Fallback to disk on upload error
         } else {
-          const { data: { publicUrl } } = supabase.storage
-            .from(bucketName)
-            .getPublicUrl(uploadPath);
+          const {
+            data: { publicUrl },
+          } = supabase.storage.from(bucketName).getPublicUrl(uploadPath);
 
-          console.log("[Upload] Supabase upload successful. Public URL:", publicUrl);
+          console.log(
+            "[Upload] Supabase upload successful. Public URL:",
+            publicUrl,
+          );
           return { url: publicUrl };
         }
       }
 
       // FALLBACK: Save file to local disk
       console.log("[Upload] Falling back to local disk storage.");
-      const uploadDir = path.join(process.cwd(), "uploads", tenantId, categoryFolder);
+      const uploadDir = path.join(
+        process.cwd(),
+        "uploads",
+        tenantId,
+        categoryFolder,
+      );
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
@@ -359,7 +402,7 @@ export class TenantSubscriptionController {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to upload file: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

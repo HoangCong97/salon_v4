@@ -7,7 +7,7 @@ import {
   ShieldAlert,
   ChevronLeft,
   ChevronRight,
-  Scissors
+  Scissors,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -21,14 +21,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   activePage,
   setActivePage,
   collapsed,
-  setCollapsed
+  setCollapsed,
 }) => {
   const menuItems = [
     { id: "dashboard", label: "Tổng quan", icon: LayoutDashboard },
     { id: "tenants", label: "Quản lý Tenant", icon: Store },
     { id: "subscriptions", label: "Gói Dịch Vụ", icon: CreditCard },
     { id: "settings", label: "Cấu Hình", icon: Settings },
-    { id: "logs", label: "Nhật Ký Hệ Thống", icon: ShieldAlert }
+    { id: "logs", label: "Nhật Ký Hệ Thống", icon: ShieldAlert },
   ];
 
   return (
@@ -43,7 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         height: "100%",
         transition: "width 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
         position: "relative",
-        borderRight: "1px solid rgba(255, 255, 255, 0.05)"
+        borderRight: "1px solid rgba(255, 255, 255, 0.05)",
       }}
     >
       {/* Brand Logo Header */}
@@ -57,7 +57,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
           gap: "10px",
           overflow: "hidden",
-          whiteSpace: "nowrap"
+          whiteSpace: "nowrap",
         }}
       >
         <div
@@ -69,13 +69,19 @@ const Sidebar: React.FC<SidebarProps> = ({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            flexShrink: 0
+            flexShrink: 0,
           }}
         >
           <Scissors size={20} color="white" />
         </div>
         {!collapsed && (
-          <span style={{ fontWeight: 700, fontSize: "16px", letterSpacing: "0.5px" }}>
+          <span
+            style={{
+              fontWeight: 700,
+              fontSize: "16px",
+              letterSpacing: "0.5px",
+            }}
+          >
             SALON<span style={{ color: "var(--color-primary)" }}>SaaS</span>
           </span>
         )}
@@ -88,7 +94,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           padding: "16px 8px",
           display: "flex",
           flexDirection: "column",
-          gap: "4px"
+          gap: "4px",
         }}
       >
         {menuItems.map((item) => {
@@ -106,20 +112,24 @@ const Sidebar: React.FC<SidebarProps> = ({
                 width: "100%",
                 padding: "12px 14px",
                 borderRadius: "var(--radius-sm)",
-                backgroundColor: isActive ? "var(--color-primary)" : "transparent",
+                backgroundColor: isActive
+                  ? "var(--color-primary)"
+                  : "transparent",
                 color: isActive ? "white" : "rgba(255, 255, 255, 0.7)",
                 cursor: "pointer",
                 border: "none",
                 textAlign: "left",
                 justifyContent: collapsed ? "center" : "flex-start",
                 transition: "all 0.15s ease",
-                position: "relative"
+                position: "relative",
               }}
               title={collapsed ? item.label : undefined}
             >
               <Icon size={20} style={{ flexShrink: 0 }} />
               {!collapsed && (
-                <span style={{ fontSize: "14px", fontWeight: isActive ? 600 : 500 }}>
+                <span
+                  style={{ fontSize: "14px", fontWeight: isActive ? 600 : 500 }}
+                >
                   {item.label}
                 </span>
               )}
@@ -132,7 +142,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     width: "4px",
                     height: "20px",
                     backgroundColor: "white",
-                    borderRadius: "0 var(--radius-sm) var(--radius-sm) 0"
+                    borderRadius: "0 var(--radius-sm) var(--radius-sm) 0",
                   }}
                 />
               )}
@@ -147,7 +157,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           padding: "16px",
           borderTop: "1px solid rgba(255, 255, 255, 0.05)",
           display: "flex",
-          justifyContent: collapsed ? "center" : "flex-end"
+          justifyContent: collapsed ? "center" : "flex-end",
         }}
       >
         <button
@@ -163,10 +173,15 @@ const Sidebar: React.FC<SidebarProps> = ({
             justifyContent: "center",
             cursor: "pointer",
             color: "rgba(255, 255, 255, 0.7)",
-            transition: "all 0.15s ease"
+            transition: "all 0.15s ease",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)")}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.05)")}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)")
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.backgroundColor =
+              "rgba(255, 255, 255, 0.05)")
+          }
         >
           {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </button>

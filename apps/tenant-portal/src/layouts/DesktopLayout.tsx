@@ -17,30 +17,50 @@ export default function DesktopLayout() {
     setCheckoutInvoice,
     isBuying,
     handleBuyPlan,
-    fetchSubscription
+    fetchSubscription,
   } = useAuthStore();
 
   return (
-    <div style={{ display: "flex", width: "100vw", height: "100vh", overflow: "hidden" }}>
+    <div
+      style={{
+        display: "flex",
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
+      }}
+    >
       {/* Sidebar Navigation */}
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
       {/* Main Panel */}
-      <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, overflow: "hidden", position: "relative" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          flexGrow: 1,
+          overflow: "hidden",
+          position: "relative",
+        }}
+      >
         {/* Topbar Controls */}
         <Topbar />
 
         {/* Scrollable Content Container */}
-        <div 
+        <div
           className={collapsed ? "sidebar-collapsed" : "sidebar-expanded"}
-          style={{ flexGrow: 1, overflowY: "auto", padding: "24px", background: "var(--bg-app)" }}
+          style={{
+            flexGrow: 1,
+            overflowY: "auto",
+            padding: "24px",
+            background: "var(--bg-app)",
+          }}
         >
           <Outlet />
         </div>
       </div>
 
       {/* Global Pricing Modal */}
-      <PricingModal 
+      <PricingModal
         isOpen={isPricingModalOpen}
         onClose={() => {
           setIsPricingModalOpen(false);

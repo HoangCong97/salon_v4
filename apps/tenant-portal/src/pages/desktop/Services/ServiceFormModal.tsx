@@ -2,14 +2,23 @@ import React, { useState, useEffect, useRef } from "react";
 import { X, Image as ImageIcon } from "lucide-react";
 import { formatCurrencyVND } from "@salon/shared-utils";
 
-import { PriceInputWithSuggestion, ExcelChipsInput } from "../../../components/desktop/TableComponents";
+import {
+  PriceInputWithSuggestion,
+  ExcelChipsInput,
+} from "../../../components/desktop/TableComponents";
 import { CustomNumberInput } from "./CustomNumberInput";
 
 import { useToast } from "../../../components/desktop/ToastProvider";
 
 import { api } from "../../../utils/apiClient";
 
-import { Service, ServiceCategory, getColorStyle, COLOR_PRESETS, compressAndGetBase64 } from "./types";
+import {
+  Service,
+  ServiceCategory,
+  getColorStyle,
+  COLOR_PRESETS,
+  compressAndGetBase64,
+} from "./types";
 
 import styles from "./Services.module.css";
 
@@ -53,12 +62,19 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
   const [discountDeduction, setDiscountDeduction] = useState<number>(0);
   const [dragging, setDragging] = useState(false);
 
-  const uploadFile = async (base64Data: string, category: string, originalFilename?: string): Promise<string> => {
-    const data = await api.post<{ url: string }>(`/tenants/${currentTenantId}/upload`, {
-      file: base64Data,
-      category,
-      filename: originalFilename
-    });
+  const uploadFile = async (
+    base64Data: string,
+    category: string,
+    originalFilename?: string,
+  ): Promise<string> => {
+    const data = await api.post<{ url: string }>(
+      `/tenants/${currentTenantId}/upload`,
+      {
+        file: base64Data,
+        category,
+        filename: originalFilename,
+      },
+    );
     return data.url;
   };
 
@@ -84,11 +100,15 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
           setCommissionInput(
             service.commission !== null && service.commission !== undefined
               ? Number(service.commission)
-              : (service.category ? Number(service.category.defaultCommission) : 0)
+              : service.category
+                ? Number(service.category.defaultCommission)
+                : 0,
           );
           setPriceInput(String(Number(service.price)));
 
-          const calculatedDeduction = Number(service.price) - Number(service.discountPrice ?? service.price);
+          const calculatedDeduction =
+            Number(service.price) -
+            Number(service.discountPrice ?? service.price);
           if (calculatedDeduction > 0) {
             setHasDiscount(true);
             setDiscountDeduction(calculatedDeduction);
@@ -99,7 +119,11 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
 
           setDuration(service.duration || 30);
           setImageUrl(service.imageUrl || "");
-          setAdditionalPrices(service.additionalPrices ? service.additionalPrices.map(Number) : []);
+          setAdditionalPrices(
+            service.additionalPrices
+              ? service.additionalPrices.map(Number)
+              : [],
+          );
         }
       } else {
         // Create mode defaults
@@ -121,7 +145,10 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
   // Click outside to close custom dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (catDropdownRef.current && !catDropdownRef.current.contains(event.target as Node)) {
+      if (
+        catDropdownRef.current &&
+        !catDropdownRef.current.contains(event.target as Node)
+      ) {
         setIsCatDropdownOpen(false);
       }
     }
@@ -139,9 +166,14 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
 
     const selectedCatObj = categories.find((c) => c.id === categoryId);
     const existingService = services.find(
-      (s) => s.categoryId === categoryId && s.id !== selectedServiceId && s.serviceCategory
+      (s) =>
+        s.categoryId === categoryId &&
+        s.id !== selectedServiceId &&
+        s.serviceCategory,
     );
-    let serviceCategory = existingService ? existingService.serviceCategory : "";
+    let serviceCategory = existingService
+      ? existingService.serviceCategory
+      : "";
 
     if (!serviceCategory && selectedCatObj) {
       const name = selectedCatObj.name;
@@ -166,7 +198,9 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
       return;
     }
 
-    const calculatedDiscountPrice = hasDiscount ? Math.max(0, basePrice - discountDeduction) : basePrice;
+    const calculatedDiscountPrice = hasDiscount
+      ? Math.max(0, basePrice - discountDeduction)
+      : basePrice;
     const discountAmount = hasDiscount ? discountDeduction : 0;
 
     const payload = {
@@ -187,7 +221,10 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
       if (mode === "create") {
         await api.post(`/tenants/${currentTenantId}/services`, payload);
       } else {
-        await api.put(`/tenants/${currentTenantId}/services/${selectedServiceId}`, payload);
+        await api.put(
+          `/tenants/${currentTenantId}/services/${selectedServiceId}`,
+          payload,
+        );
       }
 
       toast.success("Lưu dịch vụ thành công!");
@@ -200,18 +237,31 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
 
   return (
     <div className={styles.modalOverlay}>
-      <div className={`card animate-fade-in ${styles.modalCard}`} style={{ maxWidth: "680px", display: "flex", flexDirection: "column", gap: "16px", margin: "auto 0" }}>
-        <button
-          className={styles.closeBtn}
-          onClick={onClose}
-        >
+      <div
+        className={`card animate-fade-in ${styles.modalCard}`}
+        style={{
+          maxWidth: "680px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+          margin: "auto 0",
+        }}
+      >
+        <button className={styles.closeBtn} onClick={onClose}>
           <X size={20} />
         </button>
         <h2 className={styles.modalHeader}>
           {mode === "create" ? "Thêm dịch vụ mới" : "Chỉnh sửa dịch vụ"}
         </h2>
         <form onSubmit={handleSave} className={styles.modalForm}>
-          <div style={{ display: "grid", gridTemplateColumns: "2.5fr 2fr 1.2fr", gap: "16px", alignItems: "flex-end" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "2.5fr 2fr 1.2fr",
+              gap: "16px",
+              alignItems: "flex-end",
+            }}
+          >
             <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Tên dịch vụ *</label>
               <input
@@ -225,7 +275,11 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
             </div>
 
             {/* Custom Category Dropdown */}
-            <div ref={catDropdownRef} className={`form-group ${styles.formGroup}`} style={{ position: "relative" }}>
+            <div
+              ref={catDropdownRef}
+              className={`form-group ${styles.formGroup}`}
+              style={{ position: "relative" }}
+            >
               <label className="form-label">Phân loại *</label>
               <button
                 type="button"
@@ -245,14 +299,24 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                 {categoryId ? (
                   <span
                     className="badge"
-                    style={{ ...getColorStyle(categories.find((c) => c.id === categoryId)?.color || ""), textTransform: "none" }}
+                    style={{
+                      ...getColorStyle(
+                        categories.find((c) => c.id === categoryId)?.color ||
+                          "",
+                      ),
+                      textTransform: "none",
+                    }}
                   >
                     {categories.find((c) => c.id === categoryId)?.name}
                   </span>
                 ) : (
-                  <span style={{ color: "var(--text-muted)" }}>-- Chọn phân loại --</span>
+                  <span style={{ color: "var(--text-muted)" }}>
+                    -- Chọn phân loại --
+                  </span>
                 )}
-                <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>▼</span>
+                <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>
+                  ▼
+                </span>
               </button>
 
               {isCatDropdownOpen && (
@@ -290,10 +354,21 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                         setCommissionInput(Number(cat.defaultCommission));
                         setIsCatDropdownOpen(false);
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "hsl(210, 40%, 96%)")}
-                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor =
+                          "hsl(210, 40%, 96%)")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = "transparent")
+                      }
                     >
-                      <span className="badge" style={{ ...getColorStyle(cat.color), textTransform: "none" }}>
+                      <span
+                        className="badge"
+                        style={{
+                          ...getColorStyle(cat.color),
+                          textTransform: "none",
+                        }}
+                      >
                         {cat.name}
                       </span>
                       <button
@@ -322,7 +397,13 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                       </button>
                     </div>
                   ))}
-                  <div style={{ height: "1px", backgroundColor: "hsl(210, 40%, 92%)", margin: "4px 0" }}></div>
+                  <div
+                    style={{
+                      height: "1px",
+                      backgroundColor: "hsl(210, 40%, 92%)",
+                      margin: "4px 0",
+                    }}
+                  ></div>
                   <div
                     style={{
                       padding: "8px 10px",
@@ -343,8 +424,13 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                       setShowCategorySubForm(true);
                       setIsCatDropdownOpen(false);
                     }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "hsl(210, 40%, 96%)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor =
+                        "hsl(210, 40%, 96%)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "transparent")
+                    }
                   >
                     <span>➕ Tạo nhóm mới</span>
                   </div>
@@ -355,7 +441,13 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
             {/* Editable Default Commission */}
             <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Hoa hồng (%)</label>
-              <CustomNumberInput min={0} max={100} step={1} value={commissionInput} onChange={setCommissionInput} />
+              <CustomNumberInput
+                min={0}
+                max={100}
+                step={1}
+                value={commissionInput}
+                onChange={setCommissionInput}
+              />
             </div>
           </div>
 
@@ -373,8 +465,16 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                 marginTop: "-8px",
               }}
             >
-              <h4 style={{ fontSize: "13px", fontWeight: "700", color: "var(--text-primary)" }}>
-                {subFormMode === "create" ? "➕ Thêm phân loại mới" : "✏️ Chỉnh sửa phân loại"}
+              <h4
+                style={{
+                  fontSize: "13px",
+                  fontWeight: "700",
+                  color: "var(--text-primary)",
+                }}
+              >
+                {subFormMode === "create"
+                  ? "➕ Thêm phân loại mới"
+                  : "✏️ Chỉnh sửa phân loại"}
               </h4>
               <div className={`form-group ${styles.formGroup}`}>
                 <label className="form-label" style={{ fontSize: "11px" }}>
@@ -406,7 +506,13 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                 <label className="form-label" style={{ fontSize: "11px" }}>
                   Màu sắc đại diện *
                 </label>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "6px" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(5, 1fr)",
+                    gap: "6px",
+                  }}
+                >
                   {COLOR_PRESETS.map((colorObj) => {
                     const isActive = categoryColor === colorObj.value;
                     return (
@@ -417,8 +523,12 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                         style={{
                           padding: "6px 2px",
                           borderRadius: "var(--radius-sm)",
-                          border: isActive ? `1px solid var(--color-primary)` : "1px solid hsl(210, 40%, 88%)",
-                          boxShadow: isActive ? "inset 0 0 0 1px var(--color-primary)" : "none",
+                          border: isActive
+                            ? `1px solid var(--color-primary)`
+                            : "1px solid hsl(210, 40%, 88%)",
+                          boxShadow: isActive
+                            ? "inset 0 0 0 1px var(--color-primary)"
+                            : "none",
                           backgroundColor: colorObj.bg,
                           color: colorObj.text,
                           cursor: "pointer",
@@ -435,7 +545,14 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                   })}
                 </div>
               </div>
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", marginTop: "4px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "8px",
+                  marginTop: "4px",
+                }}
+              >
                 <button
                   type="button"
                   className="btn btn-secondary"
@@ -458,11 +575,23 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                     try {
                       let savedCat;
                       if (subFormMode === "edit" && categoryId) {
-                        savedCat = await api.put<{ id: string; defaultCommission: number }>(`/tenants/${currentTenantId}/service-categories/${categoryId}`, payload);
+                        savedCat = await api.put<{
+                          id: string;
+                          defaultCommission: number;
+                        }>(
+                          `/tenants/${currentTenantId}/service-categories/${categoryId}`,
+                          payload,
+                        );
                       } else {
-                        savedCat = await api.post<{ id: string; defaultCommission: number }>(`/tenants/${currentTenantId}/service-categories`, payload);
+                        savedCat = await api.post<{
+                          id: string;
+                          defaultCommission: number;
+                        }>(
+                          `/tenants/${currentTenantId}/service-categories`,
+                          payload,
+                        );
                       }
-                      
+
                       await fetchCategories(true);
                       if (subFormMode === "create") {
                         setCategoryId(savedCat.id);
@@ -497,7 +626,8 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                       padding: "8px 0",
                       fontSize: "12px",
                       fontWeight: duration === t ? "700" : "500",
-                      backgroundColor: duration === t ? "var(--color-primary)" : "",
+                      backgroundColor:
+                        duration === t ? "var(--color-primary)" : "",
                       color: duration === t ? "white" : "",
                     }}
                     onClick={() => setDuration(t)}
@@ -509,12 +639,24 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
             </div>
             <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Số phút thực tế</label>
-              <CustomNumberInput min={5} step={5} value={duration} onChange={setDuration} />
+              <CustomNumberInput
+                min={5}
+                step={5}
+                value={duration}
+                onChange={setDuration}
+              />
             </div>
           </div>
 
           {/* Row 3: Giá bán + Áp dụng khuyến mãi + Số tiền giảm trừ */}
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 2fr", gap: "16px", alignItems: "flex-end" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "2fr 1fr 2fr",
+              gap: "16px",
+              alignItems: "flex-end",
+            }}
+          >
             {/* Price input with custom autocompletion */}
             <div className={`form-group ${styles.formGroup}`}>
               <label className="form-label">Giá bán mặc định (VND) *</label>
@@ -539,11 +681,15 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                     height: "100%",
                     padding: 0,
                     fontSize: "13px",
-                    backgroundColor: !hasDiscount ? "hsl(210, 40%, 90%)" : "transparent",
+                    backgroundColor: !hasDiscount
+                      ? "hsl(210, 40%, 90%)"
+                      : "transparent",
                     border: "1px solid hsl(210, 40%, 85%)",
                     borderRadius: "var(--radius-sm)",
                     fontWeight: !hasDiscount ? "700" : "500",
-                    color: !hasDiscount ? "var(--text-primary)" : "var(--text-secondary)",
+                    color: !hasDiscount
+                      ? "var(--text-primary)"
+                      : "var(--text-secondary)",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
@@ -564,7 +710,9 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                     height: "100%",
                     padding: 0,
                     fontSize: "13px",
-                    backgroundColor: hasDiscount ? "var(--color-primary)" : "transparent",
+                    backgroundColor: hasDiscount
+                      ? "var(--color-primary)"
+                      : "transparent",
                     border: "1px solid hsl(210, 40%, 85%)",
                     borderRadius: "var(--radius-sm)",
                     fontWeight: hasDiscount ? "700" : "500",
@@ -590,24 +738,42 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                 disabled={!hasDiscount}
                 value={discountDeduction}
                 onChange={setDiscountDeduction}
-                placeholder={hasDiscount ? "Giảm bớt, VD: 20000" : "Tắt khuyến mãi"}
+                placeholder={
+                  hasDiscount ? "Giảm bớt, VD: 20000" : "Tắt khuyến mãi"
+                }
                 style={{
-                  backgroundColor: !hasDiscount ? "hsl(210, 40%, 96%)" : "white",
-                  color: !hasDiscount ? "var(--text-muted)" : "var(--text-primary)",
+                  backgroundColor: !hasDiscount
+                    ? "hsl(210, 40%, 96%)"
+                    : "white",
+                  color: !hasDiscount
+                    ? "var(--text-muted)"
+                    : "var(--text-primary)",
                 }}
               />
             </div>
           </div>
 
           {hasDiscount && priceInput && !priceInput.includes(",") && (
-            <div style={{ fontSize: "12px", color: "var(--color-success)", fontWeight: "600", marginTop: "-12px" }}>
-              Giá bán thực tế sau giảm: {formatCurrencyVND(Math.max(0, (parseFloat(priceInput) || 0) - discountDeduction))}
+            <div
+              style={{
+                fontSize: "12px",
+                color: "var(--color-success)",
+                fontWeight: "600",
+                marginTop: "-12px",
+              }}
+            >
+              Giá bán thực tế sau giảm:{" "}
+              {formatCurrencyVND(
+                Math.max(0, (parseFloat(priceInput) || 0) - discountDeduction),
+              )}
             </div>
           )}
 
           <div className={`form-group ${styles.formGroup}`}>
             <label className="form-label">Các giá bán khác (VND)</label>
-            <div className={`${styles.chipsInputWrapper} ${isAltPriceFocused ? styles.chipsInputWrapperFocused : ""}`}>
+            <div
+              className={`${styles.chipsInputWrapper} ${isAltPriceFocused ? styles.chipsInputWrapperFocused : ""}`}
+            >
               <ExcelChipsInput
                 values={additionalPrices}
                 onChange={setAdditionalPrices}
@@ -637,7 +803,11 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                   const file = files[0];
                   try {
                     const base64 = await compressAndGetBase64(file);
-                    const uploadedUrl = await uploadFile(base64, "items", file.name);
+                    const uploadedUrl = await uploadFile(
+                      base64,
+                      "items",
+                      file.name,
+                    );
                     setImageUrl(uploadedUrl);
                   } catch (err: any) {
                     toast.error("Lỗi nạp ảnh: " + err.message);
@@ -660,7 +830,11 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                     const file = files[0];
                     try {
                       const base64 = await compressAndGetBase64(file);
-                      const uploadedUrl = await uploadFile(base64, "items", file.name);
+                      const uploadedUrl = await uploadFile(
+                        base64,
+                        "items",
+                        file.name,
+                      );
                       setImageUrl(uploadedUrl);
                     } catch (err: any) {
                       toast.error("Lỗi nạp ảnh: " + err.message);
@@ -678,7 +852,11 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                   <button
                     type="button"
                     className="btn btn-danger"
-                    style={{ padding: "4px 10px", fontSize: "11px", cursor: "pointer" }}
+                    style={{
+                      padding: "4px 10px",
+                      fontSize: "11px",
+                      cursor: "pointer",
+                    }}
                     onClick={(e) => {
                       e.stopPropagation();
                       setImageUrl("");
@@ -689,11 +867,26 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
                 </div>
               ) : (
                 <>
-                  <ImageIcon size={32} style={{ color: "var(--text-muted)", marginBottom: "8px" }} />
-                  <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-primary)" }}>
+                  <ImageIcon
+                    size={32}
+                    style={{ color: "var(--text-muted)", marginBottom: "8px" }}
+                  />
+                  <span
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      color: "var(--text-primary)",
+                    }}
+                  >
                     Kéo thả ảnh vào đây hoặc nhấp để chọn tải lên
                   </span>
-                  <span style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "4px" }}>
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      color: "var(--text-secondary)",
+                      marginTop: "4px",
+                    }}
+                  >
                     Hỗ trợ PNG, JPG, GIF (Tự động tối ưu kích thước để lưu trữ)
                   </span>
                 </>
@@ -702,10 +895,18 @@ export const ServiceFormModal: React.FC<ServiceFormModalProps> = ({
           </div>
 
           <div className={styles.modalFooter}>
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onClose}
+            >
               Hủy
             </button>
-            <button type="submit" className="btn btn-primary" style={{ cursor: "pointer" }}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ cursor: "pointer" }}
+            >
               Lưu thay đổi
             </button>
           </div>

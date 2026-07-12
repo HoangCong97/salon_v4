@@ -4,16 +4,19 @@ import { BaseImportStrategy } from "./base-import.strategy";
 
 @Injectable()
 export class StaffImportStrategy extends BaseImportStrategy {
-  
   validate(row: any): string[] {
     const requiredFields = [
       { field: "name", label: "Tên nhân viên" },
-      { field: "loginId", label: "ID đăng nhập" }
+      { field: "loginId", label: "ID đăng nhập" },
     ];
-    
+
     const errors = this.validateRequired(row, requiredFields);
 
-    if (row.baseSalary !== undefined && row.baseSalary !== null && row.baseSalary !== "") {
+    if (
+      row.baseSalary !== undefined &&
+      row.baseSalary !== null &&
+      row.baseSalary !== ""
+    ) {
       const baseSalary = this.cleanNumber(row.baseSalary, -1);
       if (baseSalary < 0) {
         errors.push("Lương cơ bản phải là số dương hoặc bằng 0.");
@@ -26,7 +29,7 @@ export class StaffImportStrategy extends BaseImportStrategy {
   async execute(
     tenantId: string,
     branchId: string | null,
-    data: any[]
+    data: any[],
   ): Promise<{
     importedCount: number;
     failedCount: number;
@@ -39,7 +42,7 @@ export class StaffImportStrategy extends BaseImportStrategy {
     // Cache roles to speed up lookup and prevent duplicate role creation
     const roleCache = new Map<string, string>();
     const existingRoles = await prisma.role.findMany({
-      where: { tenantId, deletedAt: null }
+      where: { tenantId, deletedAt: null },
     });
     for (const role of existingRoles) {
       roleCache.set(role.name.toLowerCase().trim(), role.id);
@@ -58,13 +61,15 @@ export class StaffImportStrategy extends BaseImportStrategy {
           errors.push({
             row: rowNum,
             data: row,
-            reason: validationErrors.join(" ")
+            reason: validationErrors.join(" "),
           });
           continue;
         }
 
         const name = this.cleanString(row.name);
-        const loginId = this.cleanString(row.loginId || row.email).toLowerCase();
+        const loginId = this.cleanString(
+          row.loginId || row.email,
+        ).toLowerCase();
         const email = this.cleanString(row.email) || null;
         const phone = this.cleanString(row.phone) || null;
         const sex = this.cleanString(row.sex) || "Nam";
@@ -87,8 +92,8 @@ export class StaffImportStrategy extends BaseImportStrategy {
               data: {
                 tenantId,
                 name: roleName,
-                description: `Chức vụ tạo tự động khi import nhân sự`
-              }
+                description: `Chức vụ tạo tự động khi import nhân sự`,
+              },
             });
             roleId = newRole.id;
             roleCache.set(key, newRole.id);
@@ -100,8 +105,8 @@ export class StaffImportStrategy extends BaseImportStrategy {
           where: {
             tenantId,
             loginId,
-            deletedAt: null
-          }
+            deletedAt: null,
+          },
         });
 
         let userId: string;
@@ -121,8 +126,8 @@ export class StaffImportStrategy extends BaseImportStrategy {
               status,
               note: note || undefined,
               avatar: avatar || undefined,
-              updatedAt: new Date()
-            }
+              updatedAt: new Date(),
+            },
           });
         } else {
           // Default password to 123456
@@ -140,8 +145,8 @@ export class StaffImportStrategy extends BaseImportStrategy {
               roleId: roleId || undefined,
               status,
               note,
-              avatar
-            }
+              avatar,
+            },
           });
           userId = newUser.id;
 
@@ -150,8 +155,8 @@ export class StaffImportStrategy extends BaseImportStrategy {
             data: {
               userId: newUser.id,
               theme: "light",
-              language: "vi"
-            }
+              language: "vi",
+            },
           });
         }
 
@@ -161,16 +166,16 @@ export class StaffImportStrategy extends BaseImportStrategy {
             where: {
               userId,
               branchId,
-              deletedAt: null
-            }
+              deletedAt: null,
+            },
           });
 
           if (!existingBranchAssignment) {
             await prisma.userBranch.create({
               data: {
                 userId,
-                branchId
-              }
+                branchId,
+              },
             });
           }
         }
@@ -181,7 +186,7 @@ export class StaffImportStrategy extends BaseImportStrategy {
         errors.push({
           row: rowNum,
           data: row,
-          reason: `Lỗi hệ thống: ${err.message || err}`
+          reason: `Lỗi hệ thống: ${err.message || err}`,
         });
       }
     }
@@ -189,7 +194,7 @@ export class StaffImportStrategy extends BaseImportStrategy {
     return {
       importedCount,
       failedCount,
-      errors
+      errors,
     };
   }
 }

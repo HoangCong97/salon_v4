@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import { AlertTriangle, Info, CheckCircle2, X } from "lucide-react";
 
 interface AlertOptions {
@@ -20,18 +27,24 @@ export const useAlert = () => {
   return context;
 };
 
-export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [state, setState] = useState<{
     isOpen: boolean;
     options: AlertOptions;
     resolve: () => void;
   } | null>(null);
 
-  const alertQueueRef = useRef<{ options: AlertOptions; resolve: () => void }[]>([]);
+  const alertQueueRef = useRef<
+    { options: AlertOptions; resolve: () => void }[]
+  >([]);
 
   const alert = useCallback((optionsOrMessage: string | AlertOptions) => {
     const options: AlertOptions =
-      typeof optionsOrMessage === "string" ? { message: optionsOrMessage } : optionsOrMessage;
+      typeof optionsOrMessage === "string"
+        ? { message: optionsOrMessage }
+        : optionsOrMessage;
 
     return new Promise<void>((resolve) => {
       setState((currentState) => {
@@ -169,7 +182,10 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [state?.isOpen]);
 
-  const { isOpen, options } = state || { isOpen: false, options: {} as AlertOptions };
+  const { isOpen, options } = state || {
+    isOpen: false,
+    options: {} as AlertOptions,
+  };
   const {
     title = "Thông báo",
     message = "",
@@ -271,7 +287,8 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               right: 0,
               bottom: 0,
               background: "rgba(15, 23, 42, 0.35)",
-              animation: "alert-backdrop-fade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+              animation:
+                "alert-backdrop-fade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards",
               zIndex: -1,
             }}
           />
@@ -281,7 +298,8 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             style={{
               background: "rgba(255, 255, 255, 0.98)",
               border: "1px solid rgba(15, 23, 42, 0.08)",
-              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02)",
+              boxShadow:
+                "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02)",
               borderRadius: "16px",
               width: "100%",
               maxWidth: "420px",
@@ -290,7 +308,8 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               flexDirection: "column",
               gap: "20px",
               position: "relative",
-              animation: "alert-modal-scale 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+              animation:
+                "alert-modal-scale 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards",
               fontFamily: "var(--font-family, system-ui, sans-serif)",
             }}
           >
@@ -325,17 +344,24 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             </button>
 
             {/* Content Row */}
-            <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginTop: "4px" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "16px",
+                alignItems: "flex-start",
+                marginTop: "4px",
+              }}
+            >
               <div
                 style={{
                   background:
                     type === "danger"
                       ? "#fee2e2"
                       : type === "success"
-                      ? "#dcfce7"
-                      : type === "warning"
-                      ? "#fef3c7"
-                      : "#dbeafe",
+                        ? "#dcfce7"
+                        : type === "warning"
+                          ? "#fef3c7"
+                          : "#dbeafe",
                   padding: "10px",
                   borderRadius: "12px",
                   display: "flex",
@@ -346,7 +372,14 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               >
                 {getIcon()}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px", flexGrow: 1 }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                  flexGrow: 1,
+                }}
+              >
                 <h3
                   style={{
                     margin: 0,
@@ -371,18 +404,27 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             </div>
 
             {/* Action Buttons */}
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "8px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "12px",
+                marginTop: "8px",
+              }}
+            >
               <button
                 ref={confirmBtnRef}
                 onClick={handleClose}
                 style={getConfirmButtonStyles()}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = "0 6px 16px rgba(0, 0, 0, 0.15)";
+                  e.currentTarget.style.boxShadow =
+                    "0 6px 16px rgba(0, 0, 0, 0.15)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.1)";
+                  e.currentTarget.style.boxShadow =
+                    "0 4px 12px rgba(0, 0, 0, 0.1)";
                 }}
               >
                 {confirmText}

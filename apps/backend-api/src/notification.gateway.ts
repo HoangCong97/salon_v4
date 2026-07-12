@@ -1,9 +1,17 @@
-import { WebSocketGateway, OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, WebSocketServer } from "@nestjs/websockets";
+import {
+  WebSocketGateway,
+  OnGatewayInit,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  WebSocketServer,
+} from "@nestjs/websockets";
 import { Server, WebSocket } from "ws";
 import { IncomingMessage } from "http";
 
 @WebSocketGateway({ cors: true })
-export class NotificationGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+export class NotificationGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server!: Server;
 
@@ -33,17 +41,22 @@ export class NotificationGateway implements OnGatewayInit, OnGatewayConnection, 
       }
       this.tenantClients.get(tenantId)!.add(client);
       this.clientTenants.set(client, tenantId);
-      console.log(`🔌 Client connected to tenant: ${tenantId}. Total tenant clients: ${this.tenantClients.get(tenantId)!.size}`);
+      console.log(
+        `🔌 Client connected to tenant: ${tenantId}. Total tenant clients: ${this.tenantClients.get(tenantId)!.size}`,
+      );
     } else {
       console.log(`🔌 Client connected without tenantId.`);
     }
-    
+
     // Gửi phản hồi chào mừng
     client.send(
       JSON.stringify({
         event: "system.welcome",
-        data: { message: "Connected to Admin Notification System", time: new Date().toISOString() }
-      })
+        data: {
+          message: "Connected to Admin Notification System",
+          time: new Date().toISOString(),
+        },
+      }),
     );
   }
 
@@ -68,7 +81,10 @@ export class NotificationGateway implements OnGatewayInit, OnGatewayConnection, 
    * Phát đi thông báo tới tất cả các client thuộc 1 tenant cụ thể
    */
   broadcastToTenant(tenantId: string, event: string, data: any) {
-    console.log(`📢 Broadcasting event "${event}" to tenant "${tenantId}":`, data);
+    console.log(
+      `📢 Broadcasting event "${event}" to tenant "${tenantId}":`,
+      data,
+    );
     const clients = this.tenantClients.get(tenantId);
     if (!clients) return;
 
@@ -78,7 +94,10 @@ export class NotificationGateway implements OnGatewayInit, OnGatewayConnection, 
         try {
           client.send(payload);
         } catch (error) {
-          console.error(`Failed to send message to client in tenant ${tenantId}:`, error);
+          console.error(
+            `Failed to send message to client in tenant ${tenantId}:`,
+            error,
+          );
         }
       }
     }
@@ -90,7 +109,7 @@ export class NotificationGateway implements OnGatewayInit, OnGatewayConnection, 
   broadcast(event: string, data: any) {
     console.log(`📢 Broadcasting system-wide event: ${event}`, data);
     const payload = JSON.stringify({ event, data });
-    
+
     for (const client of this.clientTenants.keys()) {
       if (client.readyState === WebSocket.OPEN) {
         try {

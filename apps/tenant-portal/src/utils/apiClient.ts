@@ -23,12 +23,13 @@ interface ApiError extends Error {
  */
 export async function apiClient<T = any>(
   endpoint: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<T> {
   let userStatus = "";
   let userId = "";
   try {
-    const storedUser = localStorage.getItem("user") || sessionStorage.getItem("user");
+    const storedUser =
+      localStorage.getItem("user") || sessionStorage.getItem("user");
     if (storedUser) {
       const parsed = JSON.parse(storedUser);
       if (parsed && parsed.status) {
@@ -57,7 +58,7 @@ export async function apiClient<T = any>(
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}));
     const error = new Error(
-      errData.message || `API Error: ${res.status} ${res.statusText}`
+      errData.message || `API Error: ${res.status} ${res.statusText}`,
     ) as ApiError;
     error.status = res.status;
     error.data = errData;

@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { X, Loader2, Building2, Users, Check, CreditCard, Copy, CheckCircle2 } from "lucide-react";
+import {
+  X,
+  Loader2,
+  Building2,
+  Users,
+  Check,
+  CreditCard,
+  Copy,
+  CheckCircle2,
+} from "lucide-react";
 
 import { Tooltip } from "../../../../components/desktop/ui/Tooltip";
 
@@ -87,14 +96,21 @@ export function PricingModal({
                 Nâng cấp Gói thành viên Salon của bạn
               </h2>
               <p className={styles.pricingDesc}>
-                Lựa chọn gói cước phù hợp để mở rộng chi nhánh và số lượng nhân sự trực ca.
+                Lựa chọn gói cước phù hợp để mở rộng chi nhánh và số lượng nhân
+                sự trực ca.
               </p>
             </div>
 
             {plansLoading ? (
               <div className={styles.loadingWrapper}>
-                <Loader2 className="animate-spin" size={32} style={{ color: "var(--color-primary)" }} />
-                <span className={styles.pricingDesc}>Đang tải bảng giá dịch vụ...</span>
+                <Loader2
+                  className="animate-spin"
+                  size={32}
+                  style={{ color: "var(--color-primary)" }}
+                />
+                <span className={styles.pricingDesc}>
+                  Đang tải bảng giá dịch vụ...
+                </span>
               </div>
             ) : (
               <div className={styles.plansGrid}>
@@ -135,15 +151,22 @@ export function PricingModal({
 
                       {/* Plan Name & Price */}
                       <div className={styles.planHeader}>
-                        <h3 className={styles.planName} style={{ color: ui.color }}>
+                        <h3
+                          className={styles.planName}
+                          style={{ color: ui.color }}
+                        >
                           {plan.name}
                         </h3>
                         <div className={styles.planPriceContainer}>
                           <span className={styles.planPrice}>
-                            {plan.price === 0 ? "0đ" : plan.price.toLocaleString("vi-VN") + "đ"}
+                            {plan.price === 0
+                              ? "0đ"
+                              : plan.price.toLocaleString("vi-VN") + "đ"}
                           </span>
                           {plan.price > 0 && (
-                            <span className={styles.planPricePeriod}>/ tháng</span>
+                            <span className={styles.planPricePeriod}>
+                              / tháng
+                            </span>
                           )}
                         </div>
                       </div>
@@ -183,7 +206,9 @@ export function PricingModal({
                               style={{ color: ui.color }}
                               className={styles.planFeatureIcon}
                             />
-                            <span className={styles.planFeatureText}>{feature}</span>
+                            <span className={styles.planFeatureText}>
+                              {feature}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -233,9 +258,12 @@ export function PricingModal({
               <div className={styles.checkoutIconBg}>
                 <CheckCircle2 size={32} />
               </div>
-              <h2 className={styles.checkoutTitle}>Khởi tạo hóa đơn đặt mua thành công!</h2>
+              <h2 className={styles.checkoutTitle}>
+                Khởi tạo hóa đơn đặt mua thành công!
+              </h2>
               <p className={styles.checkoutDesc}>
-                Vui lòng hoàn tất thanh toán chuyển khoản ngân hàng dưới đây để hệ thống tự động kích hoạt.
+                Vui lòng hoàn tất thanh toán chuyển khoản ngân hàng dưới đây để
+                hệ thống tự động kích hoạt.
               </p>
             </div>
 
@@ -243,26 +271,41 @@ export function PricingModal({
               {/* Bank Transfer Specs */}
               <div className={styles.checkoutBankInfo}>
                 <h3 className={styles.checkoutBankTitle}>
-                  <CreditCard size={18} style={{ color: "var(--color-primary)" }} /> Thông tin tài khoản nhận
+                  <CreditCard
+                    size={18}
+                    style={{ color: "var(--color-primary)" }}
+                  />{" "}
+                  Thông tin tài khoản nhận
                 </h3>
 
                 <div className={styles.checkoutBankSpecs}>
                   <div>
-                    <span className={styles.checkoutSpecsLabel}>Ngân hàng nhận:</span>
-                    <div className={styles.checkoutSpecsValue}>Ngân hàng Công thương Việt Nam (VietinBank)</div>
+                    <span className={styles.checkoutSpecsLabel}>
+                      Ngân hàng nhận:
+                    </span>
+                    <div className={styles.checkoutSpecsValue}>
+                      Ngân hàng Công thương Việt Nam (VietinBank)
+                    </div>
                   </div>
 
                   <div>
-                    <span className={styles.checkoutSpecsLabel}>Số tài khoản:</span>
+                    <span className={styles.checkoutSpecsLabel}>
+                      Số tài khoản:
+                    </span>
                     <div className={styles.checkoutAccountNumber}>
                       1023456789
                       <Tooltip content="Sao chép số tài khoản">
                         <button
-                          onClick={() => copyToClipboard("1023456789", "account")}
+                          onClick={() =>
+                            copyToClipboard("1023456789", "account")
+                          }
                           className={styles.checkoutCopyBtn}
                         >
                           {copiedField === "account" ? (
-                            <CheckCircle2 size={16} style={{ color: "var(--color-success)" }} />
+                            <CheckCircle2
+                              size={16}
+                              style={{ color: "var(--color-success)" }}
+                            />
                           ) : (
                             <Copy size={16} />
                           )}
@@ -272,29 +315,50 @@ export function PricingModal({
                   </div>
 
                   <div>
-                    <span className={styles.checkoutSpecsLabel}>Chủ tài khoản:</span>
-                    <div className={styles.checkoutSpecsValue}>CONG TY CO PHAN TECH SALON</div>
+                    <span className={styles.checkoutSpecsLabel}>
+                      Chủ tài khoản:
+                    </span>
+                    <div className={styles.checkoutSpecsValue}>
+                      CONG TY CO PHAN TECH SALON
+                    </div>
                   </div>
 
-                  <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "10px" }}>
-                    <span className={styles.checkoutSpecsLabel}>Số tiền chuyển khoản:</span>
+                  <div
+                    style={{
+                      borderTop: "1px solid var(--border-color)",
+                      paddingTop: "10px",
+                    }}
+                  >
+                    <span className={styles.checkoutSpecsLabel}>
+                      Số tiền chuyển khoản:
+                    </span>
                     <div className={styles.checkoutAmount}>
                       {checkoutInvoice.amount.toLocaleString("vi-VN")}đ
                     </div>
                   </div>
 
                   <div>
-                    <span className={styles.checkoutSpecsLabel}>Nội dung chuyển khoản (bắt buộc ghi đúng):</span>
+                    <span className={styles.checkoutSpecsLabel}>
+                      Nội dung chuyển khoản (bắt buộc ghi đúng):
+                    </span>
                     <div className={styles.checkoutContentField}>
                       {checkoutInvoice.invoiceNumber}
                       <Tooltip content="Sao chép nội dung chuyển khoản">
                         <button
-                          onClick={() => copyToClipboard(checkoutInvoice.invoiceNumber, "code")}
+                          onClick={() =>
+                            copyToClipboard(
+                              checkoutInvoice.invoiceNumber,
+                              "code",
+                            )
+                          }
                           className={styles.checkoutCopyBtn}
                           style={{ marginLeft: "auto" }}
                         >
                           {copiedField === "code" ? (
-                            <CheckCircle2 size={16} style={{ color: "var(--color-success)" }} />
+                            <CheckCircle2
+                              size={16}
+                              style={{ color: "var(--color-success)" }}
+                            />
                           ) : (
                             <Copy size={16} />
                           )}
@@ -307,13 +371,17 @@ export function PricingModal({
 
               {/* Dynamic VietQR display */}
               <div className={styles.checkoutQRCard}>
-                <div className={styles.checkoutQRLabel}>Quét mã QR để thanh toán</div>
+                <div className={styles.checkoutQRLabel}>
+                  Quét mã QR để thanh toán
+                </div>
                 <img
                   src={`https://img.vietqr.io/image/vietinbank-1023456789-compact2.png?amount=${checkoutInvoice.amount}&addInfo=${checkoutInvoice.invoiceNumber}&accountName=CONG%20TY%20CO%20PHAN%20TECH%20SALON`}
                   alt="VietQR Chuyển khoản"
                   className={styles.checkoutQRImage}
                 />
-                <div className={styles.checkoutQRSub}>Hỗ trợ tất cả ứng dụng ngân hàng và ví điện tử</div>
+                <div className={styles.checkoutQRSub}>
+                  Hỗ trợ tất cả ứng dụng ngân hàng và ví điện tử
+                </div>
               </div>
             </div>
 
@@ -326,7 +394,7 @@ export function PricingModal({
                 onClick={() => {
                   onCheckoutSuccess();
                   alert(
-                    "Cảm ơn bạn! Yêu cầu đang được hệ thống xử lý. Gói dịch vụ của bạn sẽ được kích hoạt sau khi chúng tôi nhận được thanh toán."
+                    "Cảm ơn bạn! Yêu cầu đang được hệ thống xử lý. Gói dịch vụ của bạn sẽ được kích hoạt sau khi chúng tôi nhận được thanh toán.",
                   );
                 }}
               >
@@ -339,4 +407,3 @@ export function PricingModal({
     </div>
   );
 }
-

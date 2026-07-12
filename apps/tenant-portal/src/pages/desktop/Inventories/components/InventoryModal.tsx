@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { X, ArrowUpRight, ArrowDownLeft, Image as ImageIcon } from "lucide-react";
+import {
+  X,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Image as ImageIcon,
+} from "lucide-react";
 
 import { PriceInputWithSuggestion } from "../../../../components/desktop/TableComponents";
 
@@ -28,7 +33,11 @@ interface InventoryModalProps {
   adjustQuantity: number;
   setAdjustQuantity: (val: number) => void;
   compressAndGetBase64: (file: File) => Promise<string>;
-  uploadFile: (base64Data: string, category: string, originalFilename?: string) => Promise<string>;
+  uploadFile: (
+    base64Data: string,
+    category: string,
+    originalFilename?: string,
+  ) => Promise<string>;
   handleSave: (e: React.FormEvent) => void;
 }
 
@@ -149,10 +158,15 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
                       const file = files[0];
                       try {
                         const base64 = await compressAndGetBase64(file);
-                        const uploadedUrl = await uploadFile(base64, "items", file.name);
+                        const uploadedUrl = await uploadFile(
+                          base64,
+                          "items",
+                          file.name,
+                        );
                         setImageUrl(uploadedUrl);
                       } catch (err: unknown) {
-                        const msg = err instanceof Error ? err.message : String(err);
+                        const msg =
+                          err instanceof Error ? err.message : String(err);
                         alert("Lỗi nạp ảnh: " + msg);
                       }
                     }
@@ -173,10 +187,15 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
                         const file = files[0];
                         try {
                           const base64 = await compressAndGetBase64(file);
-                          const uploadedUrl = await uploadFile(base64, "items", file.name);
+                          const uploadedUrl = await uploadFile(
+                            base64,
+                            "items",
+                            file.name,
+                          );
                           setImageUrl(uploadedUrl);
                         } catch (err: unknown) {
-                          const msg = err instanceof Error ? err.message : String(err);
+                          const msg =
+                            err instanceof Error ? err.message : String(err);
                           alert("Lỗi nạp ảnh: " + msg);
                         }
                       }
@@ -184,7 +203,11 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
                   />
                   {imageUrl ? (
                     <div className={styles.imagePreviewContainer}>
-                      <img src={imageUrl} alt="Preview" className={styles.previewImage} />
+                      <img
+                        src={imageUrl}
+                        alt="Preview"
+                        className={styles.previewImage}
+                      />
                       <button
                         type="button"
                         className={`btn btn-danger ${styles.deleteImageButton}`}
@@ -202,7 +225,9 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
                       <span className={styles.dropzoneTitle}>
                         Kéo thả ảnh sản phẩm hoặc click để chọn
                       </span>
-                      <span className={styles.dropzoneSub}>Tự động lưu trữ và tối ưu hóa</span>
+                      <span className={styles.dropzoneSub}>
+                        Tự động lưu trữ và tối ưu hóa
+                      </span>
                     </>
                   )}
                 </div>
@@ -214,7 +239,10 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
                 <div className={styles.adjustInfoName}>{name}</div>
                 <div className={styles.adjustInfoStock}>
                   Số lượng tồn kho hiện tại:{" "}
-                  <strong style={{ color: "var(--text-primary)" }}>{quantity}</strong> sản phẩm
+                  <strong style={{ color: "var(--text-primary)" }}>
+                    {quantity}
+                  </strong>{" "}
+                  sản phẩm
                 </div>
               </div>
 
@@ -224,7 +252,9 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
                   <button
                     type="button"
                     className={`btn ${styles.adjustTypeButton} ${
-                      adjustType === "import" ? styles.btnAdjustActiveSuccess : styles.btnAdjustInactive
+                      adjustType === "import"
+                        ? styles.btnAdjustActiveSuccess
+                        : styles.btnAdjustInactive
                     }`}
                     onClick={() => setAdjustType("import")}
                   >
@@ -233,7 +263,9 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
                   <button
                     type="button"
                     className={`btn ${styles.adjustTypeButton} ${
-                      adjustType === "export" ? styles.btnAdjustActiveDanger : styles.btnAdjustInactive
+                      adjustType === "export"
+                        ? styles.btnAdjustActiveDanger
+                        : styles.btnAdjustInactive
                     }`}
                     onClick={() => setAdjustType("export")}
                   >
@@ -250,14 +282,20 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
                   min={1}
                   required
                   value={adjustQuantity}
-                  onChange={(e) => setAdjustQuantity(parseInt(e.target.value) || 1)}
+                  onChange={(e) =>
+                    setAdjustQuantity(parseInt(e.target.value) || 1)
+                  }
                 />
               </div>
             </div>
           )}
 
           <div className={styles.buttonFooter}>
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onClose}
+            >
               Hủy
             </button>
             <button type="submit" className="btn btn-primary">
@@ -269,4 +307,3 @@ export const InventoryModal: React.FC<InventoryModalProps> = ({
     </div>
   );
 };
-

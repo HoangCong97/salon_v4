@@ -89,7 +89,9 @@ export default function StaffManagement() {
     <>
       <div
         className={`animate-fade-in ${styles.container} ${
-          activeTab === "permissions" ? styles.containerPermissions : styles.containerNormal
+          activeTab === "permissions"
+            ? styles.containerPermissions
+            : styles.containerNormal
         }`}
       >
         {/* Navigation Tabs Header */}
@@ -122,7 +124,9 @@ export default function StaffManagement() {
         ) : (
           <div
             className={`${styles.viewContainer} ${
-              activeTab === "permissions" ? styles.viewContainerPermissions : styles.viewContainerNormal
+              activeTab === "permissions"
+                ? styles.viewContainerPermissions
+                : styles.viewContainerNormal
             }`}
           >
             {/* VIEW TAB 1: STAFF LIST */}

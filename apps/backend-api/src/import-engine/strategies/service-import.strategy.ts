@@ -4,13 +4,12 @@ import { BaseImportStrategy } from "./base-import.strategy";
 
 @Injectable()
 export class ServiceImportStrategy extends BaseImportStrategy {
-  
   validate(row: any): string[] {
     const requiredFields = [
       { field: "name", label: "Tên dịch vụ" },
-      { field: "price", label: "Giá bán" }
+      { field: "price", label: "Giá bán" },
     ];
-    
+
     const errors = this.validateRequired(row, requiredFields);
 
     const price = this.cleanNumber(row.price, -1);
@@ -18,21 +17,33 @@ export class ServiceImportStrategy extends BaseImportStrategy {
       errors.push("Giá bán phải là số dương hoặc bằng 0.");
     }
 
-    if (row.discountPrice !== undefined && row.discountPrice !== null && row.discountPrice !== "") {
+    if (
+      row.discountPrice !== undefined &&
+      row.discountPrice !== null &&
+      row.discountPrice !== ""
+    ) {
       const discountPrice = this.cleanNumber(row.discountPrice, -1);
       if (discountPrice < 0) {
         errors.push("Giá KM phải là số dương hoặc bằng 0.");
       }
     }
 
-    if (row.discountAmount !== undefined && row.discountAmount !== null && row.discountAmount !== "") {
+    if (
+      row.discountAmount !== undefined &&
+      row.discountAmount !== null &&
+      row.discountAmount !== ""
+    ) {
       const discountAmount = this.cleanNumber(row.discountAmount, -1);
       if (discountAmount < 0) {
         errors.push("Mức giảm giá phải là số dương hoặc bằng 0.");
       }
     }
 
-    if (row.duration !== undefined && row.duration !== null && row.duration !== "") {
+    if (
+      row.duration !== undefined &&
+      row.duration !== null &&
+      row.duration !== ""
+    ) {
       const duration = this.cleanNumber(row.duration, -1);
       if (duration <= 0) {
         errors.push("Thời lượng phải lớn hơn 0 phút.");
@@ -45,7 +56,7 @@ export class ServiceImportStrategy extends BaseImportStrategy {
   async execute(
     tenantId: string,
     branchId: string | null,
-    data: any[]
+    data: any[],
   ): Promise<{
     importedCount: number;
     failedCount: number;
@@ -58,7 +69,7 @@ export class ServiceImportStrategy extends BaseImportStrategy {
     // Cache categories to speed up lookup and prevent duplicate category creation
     const categoryCache = new Map<string, string>();
     const existingCats = await prisma.serviceCategory.findMany({
-      where: { tenantId, deletedAt: null }
+      where: { tenantId, deletedAt: null },
     });
     for (const cat of existingCats) {
       categoryCache.set(cat.name.toLowerCase().trim(), cat.id);
@@ -77,7 +88,7 @@ export class ServiceImportStrategy extends BaseImportStrategy {
           errors.push({
             row: rowNum,
             data: row,
-            reason: validationErrors.join(" ")
+            reason: validationErrors.join(" "),
           });
           continue;
         }
@@ -90,10 +101,18 @@ export class ServiceImportStrategy extends BaseImportStrategy {
         let discountAmount = 0;
         let discountPrice = price;
 
-        if (row.discountAmount !== undefined && row.discountAmount !== null && row.discountAmount !== "") {
+        if (
+          row.discountAmount !== undefined &&
+          row.discountAmount !== null &&
+          row.discountAmount !== ""
+        ) {
           discountAmount = this.cleanNumber(row.discountAmount);
           discountPrice = Math.max(0, price - discountAmount);
-        } else if (row.discountPrice !== undefined && row.discountPrice !== null && row.discountPrice !== "") {
+        } else if (
+          row.discountPrice !== undefined &&
+          row.discountPrice !== null &&
+          row.discountPrice !== ""
+        ) {
           discountPrice = this.cleanNumber(row.discountPrice);
           discountAmount = Math.max(0, price - discountPrice);
         }
@@ -113,8 +132,8 @@ export class ServiceImportStrategy extends BaseImportStrategy {
                 tenantId,
                 name: categoryName,
                 color: "blue",
-                defaultCommission: 10.0
-              }
+                defaultCommission: 10.0,
+              },
             });
             categoryId = newCat.id;
             categoryCache.set(key, newCat.id);
@@ -141,8 +160,8 @@ export class ServiceImportStrategy extends BaseImportStrategy {
             tenantId,
             branchId,
             name,
-            deletedAt: null
-          }
+            deletedAt: null,
+          },
         });
 
         if (existingService) {
@@ -154,8 +173,8 @@ export class ServiceImportStrategy extends BaseImportStrategy {
               price: price,
               discountAmount: discountAmount,
               duration: duration,
-              updatedAt: new Date()
-            }
+              updatedAt: new Date(),
+            },
           });
         } else {
           await prisma.service.create({
@@ -167,8 +186,8 @@ export class ServiceImportStrategy extends BaseImportStrategy {
               serviceCategory: serviceCategory || undefined,
               price: price,
               discountAmount: discountAmount,
-              duration: duration
-            }
+              duration: duration,
+            },
           });
         }
 
@@ -178,7 +197,7 @@ export class ServiceImportStrategy extends BaseImportStrategy {
         errors.push({
           row: rowNum,
           data: row,
-          reason: `Lỗi hệ thống: ${err.message || err}`
+          reason: `Lỗi hệ thống: ${err.message || err}`,
         });
       }
     }
@@ -186,7 +205,7 @@ export class ServiceImportStrategy extends BaseImportStrategy {
     return {
       importedCount,
       failedCount,
-      errors
+      errors,
     };
   }
 }

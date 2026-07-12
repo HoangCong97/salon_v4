@@ -4,12 +4,9 @@ import { BaseImportStrategy } from "./base-import.strategy";
 
 @Injectable()
 export class CustomerImportStrategy extends BaseImportStrategy {
-  
   validate(row: any): string[] {
-    const requiredFields = [
-      { field: "name", label: "Tên khách hàng" }
-    ];
-    
+    const requiredFields = [{ field: "name", label: "Tên khách hàng" }];
+
     const errors = this.validateRequired(row, requiredFields);
 
     const email = this.cleanString(row.email);
@@ -20,7 +17,11 @@ export class CustomerImportStrategy extends BaseImportStrategy {
       }
     }
 
-    if (row.credibilityScore !== undefined && row.credibilityScore !== null && row.credibilityScore !== "") {
+    if (
+      row.credibilityScore !== undefined &&
+      row.credibilityScore !== null &&
+      row.credibilityScore !== ""
+    ) {
       const credibilityScore = this.cleanNumber(row.credibilityScore, -1);
       if (credibilityScore < 0 || credibilityScore > 100) {
         errors.push("Điểm uy tín phải nằm trong khoảng từ 0 đến 100.");
@@ -33,7 +34,7 @@ export class CustomerImportStrategy extends BaseImportStrategy {
   async execute(
     tenantId: string,
     branchId: string | null,
-    data: any[]
+    data: any[],
   ): Promise<{
     importedCount: number;
     failedCount: number;
@@ -56,7 +57,7 @@ export class CustomerImportStrategy extends BaseImportStrategy {
           errors.push({
             row: rowNum,
             data: row,
-            reason: validationErrors.join(" ")
+            reason: validationErrors.join(" "),
           });
           continue;
         }
@@ -74,8 +75,8 @@ export class CustomerImportStrategy extends BaseImportStrategy {
             where: {
               tenantId,
               phone,
-              deletedAt: null
-            }
+              deletedAt: null,
+            },
           });
         }
 
@@ -84,8 +85,8 @@ export class CustomerImportStrategy extends BaseImportStrategy {
             where: {
               tenantId,
               email,
-              deletedAt: null
-            }
+              deletedAt: null,
+            },
           });
         }
 
@@ -97,8 +98,8 @@ export class CustomerImportStrategy extends BaseImportStrategy {
               phone: phone || existingCustomer.phone,
               email: email || existingCustomer.email,
               credibilityScore,
-              updatedAt: new Date()
-            }
+              updatedAt: new Date(),
+            },
           });
         } else {
           await prisma.customer.create({
@@ -108,8 +109,8 @@ export class CustomerImportStrategy extends BaseImportStrategy {
               name,
               phone,
               email,
-              credibilityScore
-            }
+              credibilityScore,
+            },
           });
         }
 
@@ -119,7 +120,7 @@ export class CustomerImportStrategy extends BaseImportStrategy {
         errors.push({
           row: rowNum,
           data: row,
-          reason: `Lỗi hệ thống: ${err.message || err}`
+          reason: `Lỗi hệ thống: ${err.message || err}`,
         });
       }
     }
@@ -127,7 +128,7 @@ export class CustomerImportStrategy extends BaseImportStrategy {
     return {
       importedCount,
       failedCount,
-      errors
+      errors,
     };
   }
 }

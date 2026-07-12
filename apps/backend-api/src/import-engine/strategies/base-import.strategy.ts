@@ -2,7 +2,11 @@ import { ImportStrategy } from "../interfaces/import-strategy.interface";
 
 export abstract class BaseImportStrategy implements ImportStrategy {
   abstract validate(row: any): string[];
-  abstract execute(tenantId: string, branchId: string | null, data: any[]): Promise<{
+  abstract execute(
+    tenantId: string,
+    branchId: string | null,
+    data: any[],
+  ): Promise<{
     importedCount: number;
     failedCount: number;
     errors: Array<{ row: number; data: any; reason: string }>;
@@ -14,7 +18,7 @@ export abstract class BaseImportStrategy implements ImportStrategy {
   protected cleanNumber(val: any, fallback = 0): number {
     if (val === undefined || val === null || val === "") return fallback;
     if (typeof val === "number") return val;
-    
+
     const cleaned = String(val).replace(/[^\d.-]/g, "");
     const parsed = parseFloat(cleaned);
     return isNaN(parsed) ? fallback : parsed;
@@ -31,7 +35,10 @@ export abstract class BaseImportStrategy implements ImportStrategy {
   /**
    * Helper to validate that required fields exist and are not blank.
    */
-  protected validateRequired(row: any, requiredFields: Array<{ field: string; label: string }>): string[] {
+  protected validateRequired(
+    row: any,
+    requiredFields: Array<{ field: string; label: string }>,
+  ): string[] {
     const errors: string[] = [];
     for (const item of requiredFields) {
       const val = row[item.field];

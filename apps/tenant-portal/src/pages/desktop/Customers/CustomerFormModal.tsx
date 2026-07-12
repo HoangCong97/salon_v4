@@ -80,7 +80,10 @@ export const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
         await api.post(`/tenants/${currentTenantId}/customers`, payload);
         toast.success("Thêm khách hàng mới thành công!");
       } else {
-        await api.put(`/tenants/${currentTenantId}/customers/${selectedCustomerId}`, payload);
+        await api.put(
+          `/tenants/${currentTenantId}/customers/${selectedCustomerId}`,
+          payload,
+        );
         toast.success("Cập nhật thông tin khách hàng thành công!");
       }
 
@@ -100,7 +103,9 @@ export const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
         {/* Header */}
         <div className={styles.modalHeader}>
           <h3 className={styles.modalTitleText}>
-            {mode === "create" ? "THÊM KHÁCH HÀNG MỚI" : "CHỈNH SỬA CHI TIẾT KHÁCH HÀNG"}
+            {mode === "create"
+              ? "THÊM KHÁCH HÀNG MỚI"
+              : "CHỈNH SỬA CHI TIẾT KHÁCH HÀNG"}
           </h3>
           <button onClick={onClose} className={styles.closeBtn}>
             <X size={18} />
@@ -207,7 +212,9 @@ export const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
                   max="100"
                   value={credibilityScore}
                   onChange={(e) =>
-                    setCredibilityScore(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))
+                    setCredibilityScore(
+                      Math.min(100, Math.max(0, parseInt(e.target.value) || 0)),
+                    )
                   }
                   className={styles.numberInput}
                 />
@@ -215,7 +222,9 @@ export const CustomerFormModal: React.FC<CustomerFormModalProps> = ({
               {credibilityScore < 80 && (
                 <div
                   className={`${styles.warningAlert} ${
-                    credibilityScore >= 50 ? styles.warningAlertWarning : styles.warningAlertDanger
+                    credibilityScore >= 50
+                      ? styles.warningAlertWarning
+                      : styles.warningAlertDanger
                   }`}
                 >
                   <ShieldAlert size={14} className={styles.warningIcon} />

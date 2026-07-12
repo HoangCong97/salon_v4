@@ -53,7 +53,9 @@ export default function BrandCard({
         {/* Tenant Cover edit controls (Facebook style) */}
         <button
           className={styles["banner-upload-btn"]}
-          onClick={() => document.getElementById("tenant-banner-input")?.click()}
+          onClick={() =>
+            document.getElementById("tenant-banner-input")?.click()
+          }
         >
           <Camera size={14} /> Thay đổi ảnh bìa
         </button>
@@ -100,16 +102,26 @@ export default function BrandCard({
 
       <div className={styles.brandCardContent}>
         <div>
-          <span className={styles.brandBadge}>Thông tin thương hiệu (Tổng công ty)</span>
-          <h1 className={styles.brandName}>{tenantInfo.brandName || tenantInfo.name}</h1>
-          {tenantInfo.slogan && <p className={styles.brandSlogan}>"{tenantInfo.slogan}"</p>}
+          <span className={styles.brandBadge}>
+            Thông tin thương hiệu (Tổng công ty)
+          </span>
+          <h1 className={styles.brandName}>
+            {tenantInfo.brandName || tenantInfo.name}
+          </h1>
+          {tenantInfo.slogan && (
+            <p className={styles.brandSlogan}>"{tenantInfo.slogan}"</p>
+          )}
 
           {/* Contact and Social info row */}
           <div className={styles.brandContactRow}>
             {tenantInfo.hotline && (
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
+              >
                 <span className={styles.hotlineLabel}>HOTLINE</span>
-                <strong className={styles.hotlineVal}>{tenantInfo.hotline}</strong>
+                <strong className={styles.hotlineVal}>
+                  {tenantInfo.hotline}
+                </strong>
               </div>
             )}
             {tenantInfo.phone && (
@@ -238,7 +250,12 @@ export default function BrandCard({
           <button
             className="btn btn-secondary"
             onClick={onOpenBrandModal}
-            style={{ display: "flex", alignItems: "center", gap: "6px", height: "38px" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              height: "38px",
+            }}
           >
             <Edit2 size={15} /> Cấu hình bằng biểu mẫu
           </button>
@@ -247,4 +264,3 @@ export default function BrandCard({
     </div>
   );
 }
-

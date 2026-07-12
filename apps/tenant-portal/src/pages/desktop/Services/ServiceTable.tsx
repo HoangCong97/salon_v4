@@ -1,7 +1,11 @@
 import React from "react";
 import { Edit2, Trash2, Eye, EyeOff } from "lucide-react";
 
-import { ExcelInput, ExcelSelect, ExcelChipsInput } from "../../../components/desktop/TableComponents";
+import {
+  ExcelInput,
+  ExcelSelect,
+  ExcelChipsInput,
+} from "../../../components/desktop/TableComponents";
 import { Tooltip } from "../../../components/desktop/ui/Tooltip";
 
 import { useAuthStore } from "../../../store/useAuthStore";
@@ -14,13 +18,30 @@ interface ServiceTableProps {
   filteredServices: Service[];
   categories: ServiceCategory[];
   inlineEdits: Record<string, Partial<Service>>;
-  handleInlineChange: (serviceId: string, field: keyof Service, value: any) => void;
-  handlePriceChange: (serviceId: string, field: "price" | "discountPrice", valStr: string) => void;
-  handleAutoSave: (serviceId: string, updatedFields: Partial<Service>) => Promise<void>;
-  handleCommissionAutoSave: (serviceId: string, commissionVal: number) => Promise<void>;
+  handleInlineChange: (
+    serviceId: string,
+    field: keyof Service,
+    value: any,
+  ) => void;
+  handlePriceChange: (
+    serviceId: string,
+    field: "price" | "discountPrice",
+    valStr: string,
+  ) => void;
+  handleAutoSave: (
+    serviceId: string,
+    updatedFields: Partial<Service>,
+  ) => Promise<void>;
+  handleCommissionAutoSave: (
+    serviceId: string,
+    commissionVal: number,
+  ) => Promise<void>;
   handleOpenEditModal: (service: Service) => void;
   handleDelete: (id: string) => Promise<void>;
-  handleToggleActive: (serviceId: string, currentState: boolean) => Promise<void>;
+  handleToggleActive: (
+    serviceId: string,
+    currentState: boolean,
+  ) => Promise<void>;
   getInlineValue: (service: Service, field: keyof Service) => any;
   formatNumber: (val: number | string | undefined | null) => string;
   getColorStyle: (colorName: string) => any;
@@ -119,37 +140,96 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
         <thead>
           <tr>
             <th className={styles.th}>Tên dịch vụ</th>
-            <th className={styles.th} style={{ width: "180px" }}>Phân loại</th>
-            <th className={styles.th} style={{ width: "100px", textAlign: "center" }}>Thời lượng</th>
-            <th className={styles.th} style={{ width: "140px", textAlign: "center" }}>Giá bán</th>
-            <th className={styles.th} style={{ width: "140px", textAlign: "center" }}>Giá bán khác</th>
-            <th className={styles.th} style={{ width: "140px", textAlign: "center" }}>Giảm giá</th>
-            <th className={styles.th} style={{ width: "140px", textAlign: "center" }}>Giá KM</th>
-            <th className={styles.th} style={{ width: "120px", textAlign: "center" }}>Hoa hồng (%)</th>
-            {canManage && <th className={styles.th} style={{ width: "100px", textAlign: "center" }}>Thao tác</th>}
+            <th className={styles.th} style={{ width: "180px" }}>
+              Phân loại
+            </th>
+            <th
+              className={styles.th}
+              style={{ width: "100px", textAlign: "center" }}
+            >
+              Thời lượng
+            </th>
+            <th
+              className={styles.th}
+              style={{ width: "140px", textAlign: "center" }}
+            >
+              Giá bán
+            </th>
+            <th
+              className={styles.th}
+              style={{ width: "140px", textAlign: "center" }}
+            >
+              Giá bán khác
+            </th>
+            <th
+              className={styles.th}
+              style={{ width: "140px", textAlign: "center" }}
+            >
+              Giảm giá
+            </th>
+            <th
+              className={styles.th}
+              style={{ width: "140px", textAlign: "center" }}
+            >
+              Giá KM
+            </th>
+            <th
+              className={styles.th}
+              style={{ width: "120px", textAlign: "center" }}
+            >
+              Hoa hồng (%)
+            </th>
+            {canManage && (
+              <th
+                className={styles.th}
+                style={{ width: "100px", textAlign: "center" }}
+              >
+                Thao tác
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
           {filteredServices.map((service) => {
-            const currentCategoryId = getInlineValue(service, "categoryId") as string || "";
-            const currentCategoryObj = categories.find((c) => c.id === currentCategoryId);
+            const currentCategoryId =
+              (getInlineValue(service, "categoryId") as string) || "";
+            const currentCategoryObj = categories.find(
+              (c) => c.id === currentCategoryId,
+            );
 
             // Calculate discount values to only show if active and less than original price
-            const hasInlineDiscount = inlineEdits[service.id] && inlineEdits[service.id].hasOwnProperty("discountPrice");
+            const hasInlineDiscount =
+              inlineEdits[service.id] &&
+              inlineEdits[service.id].hasOwnProperty("discountPrice");
             const isDiscountActive = hasInlineDiscount
-              ? (inlineEdits[service.id].discountPrice !== null && (inlineEdits[service.id].discountPrice ?? 0) < (inlineEdits[service.id].price ?? service.price))
-              : (service.discountAmount !== undefined && service.discountAmount !== null && Number(service.discountAmount) > 0);
+              ? inlineEdits[service.id].discountPrice !== null &&
+                (inlineEdits[service.id].discountPrice ?? 0) <
+                  (inlineEdits[service.id].price ?? service.price)
+              : service.discountAmount !== undefined &&
+                service.discountAmount !== null &&
+                Number(service.discountAmount) > 0;
             const displayDiscountVal = isDiscountActive
-              ? (hasInlineDiscount ? (inlineEdits[service.id].discountPrice ?? null) : (service.discountPrice ?? null))
+              ? hasInlineDiscount
+                ? (inlineEdits[service.id].discountPrice ?? null)
+                : (service.discountPrice ?? null)
               : null;
 
             return (
-              <tr key={service.id} className={service.isActive === false ? styles.rowInactive : ''}>
+              <tr
+                key={service.id}
+                className={service.isActive === false ? styles.rowInactive : ""}
+              >
                 <td className={styles.td}>
                   <ExcelInput
                     value={getInlineValue(service, "name") as string}
-                    onChange={(val) => handleInlineChange(service.id, "name", val)}
-                    onBlur={() => handleAutoSave(service.id, { name: getInlineValue(service, "name") as string })}
+                    onChange={(val) =>
+                      handleInlineChange(service.id, "name", val)
+                    }
+                    onBlur={() =>
+                      handleAutoSave(service.id, {
+                        name: getInlineValue(service, "name") as string,
+                      })
+                    }
                     fontWeight="600"
                     disabled={!canManage}
                   />
@@ -161,7 +241,11 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                       handleInlineChange(service.id, "categoryId", newCatId);
                       handleAutoSave(service.id, { categoryId: newCatId });
                     }}
-                    options={categories.map((cat) => ({ value: cat.id, label: cat.name, colorStyle: getColorStyle(cat.color || "") }))}
+                    options={categories.map((cat) => ({
+                      value: cat.id,
+                      label: cat.name,
+                      colorStyle: getColorStyle(cat.color || ""),
+                    }))}
                     colorStyle={getColorStyle(currentCategoryObj?.color || "")}
                     placeholder="-- Chưa phân loại --"
                     disabled={!canManage}
@@ -170,9 +254,19 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                 <td className={styles.td}>
                   <ExcelInput
                     type="number"
-                    value={getInlineValue(service, "duration") as number || 0}
-                    onChange={(val) => handleInlineChange(service.id, "duration", parseInt(val) || 0)}
-                    onBlur={() => handleAutoSave(service.id, { duration: getInlineValue(service, "duration") as number })}
+                    value={(getInlineValue(service, "duration") as number) || 0}
+                    onChange={(val) =>
+                      handleInlineChange(
+                        service.id,
+                        "duration",
+                        parseInt(val) || 0,
+                      )
+                    }
+                    onBlur={() =>
+                      handleAutoSave(service.id, {
+                        duration: getInlineValue(service, "duration") as number,
+                      })
+                    }
                     textAlign="center"
                     unit="phút"
                     disabled={!canManage}
@@ -180,9 +274,17 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                 </td>
                 <td className={styles.td}>
                   <ExcelInput
-                    value={formatNumber(getInlineValue(service, "price") as number | string)}
-                    onChange={(val) => handlePriceChange(service.id, "price", val)}
-                    onBlur={() => handleAutoSave(service.id, { price: getInlineValue(service, "price") as number })}
+                    value={formatNumber(
+                      getInlineValue(service, "price") as number | string,
+                    )}
+                    onChange={(val) =>
+                      handlePriceChange(service.id, "price", val)
+                    }
+                    onBlur={() =>
+                      handleAutoSave(service.id, {
+                        price: getInlineValue(service, "price") as number,
+                      })
+                    }
                     textAlign="center"
                     fontWeight="500"
                     unit="đ"
@@ -191,11 +293,26 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                 </td>
                 <td className={styles.td}>
                   <ExcelChipsInput
-                    values={getInlineValue(service, "additionalPrices") as number[] || []}
-                    onChange={(vals) => handleInlineChange(service.id, "additionalPrices", vals)}
+                    values={
+                      (getInlineValue(
+                        service,
+                        "additionalPrices",
+                      ) as number[]) || []
+                    }
+                    onChange={(vals) =>
+                      handleInlineChange(service.id, "additionalPrices", vals)
+                    }
                     onBlur={(finalVals) => {
-                      const valsToSave = finalVals !== undefined ? finalVals : (getInlineValue(service, "additionalPrices") as number[] || []);
-                      handleAutoSave(service.id, { additionalPrices: valsToSave });
+                      const valsToSave =
+                        finalVals !== undefined
+                          ? finalVals
+                          : (getInlineValue(
+                              service,
+                              "additionalPrices",
+                            ) as number[]) || [];
+                      handleAutoSave(service.id, {
+                        additionalPrices: valsToSave,
+                      });
                     }}
                     disabled={!canManage}
                   />
@@ -203,11 +320,21 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                 <td className={styles.td}>
                   <ExcelInput
                     value={
-                      getInlineValue(service, "discountInput" as keyof Service) !== undefined
-                        ? (getInlineValue(service, "discountInput" as keyof Service) as string)
-                        : (displayDiscountVal !== null && service.price > displayDiscountVal
-                          ? formatNumber(Number(service.price) - Number(displayDiscountVal))
-                          : "")
+                      getInlineValue(
+                        service,
+                        "discountInput" as keyof Service,
+                      ) !== undefined
+                        ? (getInlineValue(
+                            service,
+                            "discountInput" as keyof Service,
+                          ) as string)
+                        : displayDiscountVal !== null &&
+                            service.price > displayDiscountVal
+                          ? formatNumber(
+                              Number(service.price) -
+                                Number(displayDiscountVal),
+                            )
+                          : ""
                     }
                     onChange={(val) => handleDiscountInputChange(service, val)}
                     onBlur={() => handleDiscountInputBlur(service)}
@@ -216,14 +343,23 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                     fontWeight="600"
                     textColor="var(--color-danger)"
                     unit={
-                      getInlineValue(service, "discountInput" as keyof Service)?.toString().includes("%")
+                      getInlineValue(service, "discountInput" as keyof Service)
+                        ?.toString()
+                        .includes("%")
                         ? "%"
                         : "đ"
                     }
                     showUnit={
-                      getInlineValue(service, "discountInput" as keyof Service) !== undefined
-                        ? getInlineValue(service, "discountInput" as keyof Service)?.toString() !== ""
-                        : displayDiscountVal !== null && service.price > displayDiscountVal
+                      getInlineValue(
+                        service,
+                        "discountInput" as keyof Service,
+                      ) !== undefined
+                        ? getInlineValue(
+                            service,
+                            "discountInput" as keyof Service,
+                          )?.toString() !== ""
+                        : displayDiscountVal !== null &&
+                          service.price > displayDiscountVal
                     }
                     disabled={!canManage}
                   />
@@ -231,9 +367,15 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                 <td className={styles.td}>
                   <ExcelInput
                     value={
-                      getInlineValue(service, "promoInput" as keyof Service) !== undefined
-                        ? (getInlineValue(service, "promoInput" as keyof Service) as string)
-                        : (displayDiscountVal !== null ? formatNumber(displayDiscountVal) : "")
+                      getInlineValue(service, "promoInput" as keyof Service) !==
+                      undefined
+                        ? (getInlineValue(
+                            service,
+                            "promoInput" as keyof Service,
+                          ) as string)
+                        : displayDiscountVal !== null
+                          ? formatNumber(displayDiscountVal)
+                          : ""
                     }
                     onChange={(val) => handlePromoInputChange(service, val)}
                     onBlur={() => handlePromoInputBlur(service)}
@@ -242,13 +384,19 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                     fontWeight="600"
                     textColor="var(--color-success)"
                     unit={
-                      getInlineValue(service, "promoInput" as keyof Service)?.toString().includes("%")
+                      getInlineValue(service, "promoInput" as keyof Service)
+                        ?.toString()
+                        .includes("%")
                         ? "%"
                         : "đ"
                     }
                     showUnit={
-                      getInlineValue(service, "promoInput" as keyof Service) !== undefined
-                        ? getInlineValue(service, "promoInput" as keyof Service)?.toString() !== ""
+                      getInlineValue(service, "promoInput" as keyof Service) !==
+                      undefined
+                        ? getInlineValue(
+                            service,
+                            "promoInput" as keyof Service,
+                          )?.toString() !== ""
                         : displayDiscountVal !== null
                     }
                     disabled={!canManage}
@@ -259,17 +407,24 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                     <ExcelInput
                       type="number"
                       value={
-                        getInlineValue(service, "commission") !== undefined && getInlineValue(service, "commission") !== null
+                        getInlineValue(service, "commission") !== undefined &&
+                        getInlineValue(service, "commission") !== null
                           ? (getInlineValue(service, "commission") as number)
-                          : (currentCategoryObj.defaultCommission || 0)
+                          : currentCategoryObj.defaultCommission || 0
                       }
-                      onChange={(val) => handleInlineChange(service.id, "commission", parseInt(val) || 0)}
+                      onChange={(val) =>
+                        handleInlineChange(
+                          service.id,
+                          "commission",
+                          parseInt(val) || 0,
+                        )
+                      }
                       onBlur={() =>
                         handleCommissionAutoSave(
                           service.id,
                           getInlineValue(service, "commission") !== undefined
                             ? (getInlineValue(service, "commission") as number)
-                            : currentCategoryObj.defaultCommission
+                            : currentCategoryObj.defaultCommission,
                         )
                       }
                       textAlign="center"
@@ -279,20 +434,33 @@ export const ServiceTable: React.FC<ServiceTableProps> = ({
                       disabled={!canManage}
                     />
                   ) : (
-                    <div className={styles.centerTdText}>
-                      --
-                    </div>
+                    <div className={styles.centerTdText}>--</div>
                   )}
                 </td>
                 {canManage && (
                   <td className={styles.actionTd}>
                     <div className={styles.actionButtons}>
-                      <Tooltip content={service.isActive === false ? "Hiện trên POS" : "Ẩn khỏi POS"}>
+                      <Tooltip
+                        content={
+                          service.isActive === false
+                            ? "Hiện trên POS"
+                            : "Ẩn khỏi POS"
+                        }
+                      >
                         <button
-                          className={`btn ${service.isActive === false ? 'btn-warning' : 'btn-secondary'} ${styles.actionBtn}`}
-                          onClick={() => handleToggleActive(service.id, service.isActive !== false)}
+                          className={`btn ${service.isActive === false ? "btn-warning" : "btn-secondary"} ${styles.actionBtn}`}
+                          onClick={() =>
+                            handleToggleActive(
+                              service.id,
+                              service.isActive !== false,
+                            )
+                          }
                         >
-                          {service.isActive === false ? <EyeOff size={12} /> : <Eye size={12} />}
+                          {service.isActive === false ? (
+                            <EyeOff size={12} />
+                          ) : (
+                            <Eye size={12} />
+                          )}
                         </button>
                       </Tooltip>
                       <Tooltip content="Chỉnh sửa chi tiết">

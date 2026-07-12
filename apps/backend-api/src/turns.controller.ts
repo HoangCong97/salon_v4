@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, Headers, HttpStatus, HttpException } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  Headers,
+  HttpStatus,
+  HttpException,
+} from "@nestjs/common";
 import { prisma } from "@salon/database";
 import { NotificationGateway } from "./notification.gateway";
 
@@ -22,7 +34,7 @@ export class TurnsController {
   async getDailyTurns(
     @Param("tenantId") tenantId: string,
     @Param("branchId") branchId: string,
-    @Query("date") dateParam?: string
+    @Query("date") dateParam?: string,
   ) {
     try {
       const targetDate = getLocalTodayUtc(dateParam);
@@ -35,14 +47,14 @@ export class TurnsController {
           branchId,
           workDate: targetDate,
           isOff: false,
-          deletedAt: null
+          deletedAt: null,
         },
         select: {
-          staffId: true
-        }
+          staffId: true,
+        },
       });
 
-      let staffIds = scheduledShifts.map(s => s.staffId);
+      let staffIds = scheduledShifts.map((s) => s.staffId);
 
       // 2. Fallback: If no shifts scheduled, load all active staff assigned to this branch
       if (staffIds.length === 0) {
@@ -53,15 +65,15 @@ export class TurnsController {
             userBranches: {
               some: {
                 branchId,
-                deletedAt: null
-              }
-            }
+                deletedAt: null,
+              },
+            },
           },
           select: {
-            id: true
-          }
+            id: true,
+          },
         });
-        staffIds = branchStaff.map(s => s.id);
+        staffIds = branchStaff.map((s) => s.id);
       }
 
       // 3. For each staff, ensure EmployeeDailyTurn record exists for targetDate (Optimized)
@@ -71,15 +83,17 @@ export class TurnsController {
           branchId,
           staffId: { in: staffIds },
           workDate: targetDate,
-          deletedAt: null
+          deletedAt: null,
         },
         select: {
-          staffId: true
-        }
+          staffId: true,
+        },
       });
 
       const existingStaffIds = new Set(existingTurns.map((t) => t.staffId));
-      const missingStaffIds = staffIds.filter((id) => !existingStaffIds.has(id));
+      const missingStaffIds = staffIds.filter(
+        (id) => !existingStaffIds.has(id),
+      );
 
       if (missingStaffIds.length > 0) {
         await prisma.employeeDailyTurn.createMany({
@@ -90,9 +104,9 @@ export class TurnsController {
             workDate: targetDate,
             totalWalkinCount: 0,
             totalBookedCount: 0,
-            totalCustomersToday: 0
+            totalCustomersToday: 0,
           })),
-          skipDuplicates: true
+          skipDuplicates: true,
         });
       }
 
@@ -102,7 +116,7 @@ export class TurnsController {
           tenantId,
           branchId,
           workDate: targetDate,
-          deletedAt: null
+          deletedAt: null,
         },
         include: {
           staff: {
@@ -111,12 +125,12 @@ export class TurnsController {
               name: true,
               role: {
                 select: {
-                  name: true
-                }
-              }
-            }
-          }
-        }
+                  name: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       // 5. Apply the standard queue sorting algorithm:
@@ -127,11 +141,14 @@ export class TurnsController {
         if (a.totalWalkinCount !== b.totalWalkinCount) {
           return a.totalWalkinCount - b.totalWalkinCount;
         }
-        
+
         if (!a.lastAssignedAt && b.lastAssignedAt) return -1;
         if (a.lastAssignedAt && !b.lastAssignedAt) return 1;
         if (a.lastAssignedAt && b.lastAssignedAt) {
-          return new Date(a.lastAssignedAt).getTime() - new Date(b.lastAssignedAt).getTime();
+          return (
+            new Date(a.lastAssignedAt).getTime() -
+            new Date(b.lastAssignedAt).getTime()
+          );
         }
 
         return a.staff.name.localeCompare(b.staff.name);
@@ -146,12 +163,14 @@ export class TurnsController {
         totalWalkinCount: t.totalWalkinCount,
         totalBookedCount: t.totalBookedCount,
         totalCustomersToday: t.totalCustomersToday,
-        lastAssignedAt: t.lastAssignedAt ? t.lastAssignedAt.toISOString() : null
+        lastAssignedAt: t.lastAssignedAt
+          ? t.lastAssignedAt.toISOString()
+          : null,
       }));
     } catch (error) {
       throw new HttpException(
         `Failed to fetch turns queue: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -162,16 +181,20 @@ export class TurnsController {
     @Param("tenantId") tenantId: string,
     @Param("branchId") branchId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: {
+    @Body()
+    body: {
       staffId: string;
       turnType: "walkin" | "booked";
       date?: string;
-    }
+    },
   ) {
     try {
       const { staffId, turnType, date } = body;
       if (!staffId || !turnType) {
-        throw new HttpException("staffId và turnType là bắt buộc", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "staffId và turnType là bắt buộc",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const targetDate = getLocalTodayUtc(date);
@@ -183,17 +206,22 @@ export class TurnsController {
           branchId,
           staffId,
           workDate: targetDate,
-          deletedAt: null
-        }
+          deletedAt: null,
+        },
       });
 
       if (!existing) {
-        throw new HttpException("Không tìm thấy hàng đợi xoay tua của nhân viên hôm nay", HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          "Không tìm thấy hàng đợi xoay tua của nhân viên hôm nay",
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       // Prepare updates
-      const updatedWalkin = existing.totalWalkinCount + (turnType === "walkin" ? 1 : 0);
-      const updatedBooked = existing.totalBookedCount + (turnType === "booked" ? 1 : 0);
+      const updatedWalkin =
+        existing.totalWalkinCount + (turnType === "walkin" ? 1 : 0);
+      const updatedBooked =
+        existing.totalBookedCount + (turnType === "booked" ? 1 : 0);
       const totalCustomers = updatedWalkin + updatedBooked;
 
       const updated = await prisma.employeeDailyTurn.update({
@@ -203,17 +231,21 @@ export class TurnsController {
           totalBookedCount: updatedBooked,
           totalCustomersToday: totalCustomers,
           lastAssignedAt: new Date(),
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "dailyTurns.updated", { branchId, senderId });
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "dailyTurns.updated",
+        { branchId, senderId },
+      );
       return updated;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to assign turn: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -225,17 +257,21 @@ export class TurnsController {
     @Param("branchId") branchId: string,
     @Param("staffId") staffId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: {
+    @Body()
+    body: {
       totalWalkinCount: number;
       totalBookedCount: number;
       date?: string;
-    }
+    },
   ) {
     try {
       const { totalWalkinCount, totalBookedCount, date } = body;
-      
+
       if (totalWalkinCount === undefined || totalBookedCount === undefined) {
-        throw new HttpException("totalWalkinCount và totalBookedCount là bắt buộc", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "totalWalkinCount và totalBookedCount là bắt buộc",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const targetDate = getLocalTodayUtc(date);
@@ -246,12 +282,15 @@ export class TurnsController {
           branchId,
           staffId,
           workDate: targetDate,
-          deletedAt: null
-        }
+          deletedAt: null,
+        },
       });
 
       if (!existing) {
-        throw new HttpException("Không tìm thấy hàng đợi của nhân viên này", HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          "Không tìm thấy hàng đợi của nhân viên này",
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       const updated = await prisma.employeeDailyTurn.update({
@@ -260,17 +299,21 @@ export class TurnsController {
           totalWalkinCount,
           totalBookedCount,
           totalCustomersToday: totalWalkinCount + totalBookedCount,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "dailyTurns.updated", { branchId, senderId });
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "dailyTurns.updated",
+        { branchId, senderId },
+      );
       return updated;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to adjust turns count: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -281,7 +324,7 @@ export class TurnsController {
     @Param("tenantId") tenantId: string,
     @Param("branchId") branchId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: { date?: string }
+    @Body() body: { date?: string },
   ) {
     try {
       const targetDate = getLocalTodayUtc(body.date);
@@ -291,23 +334,27 @@ export class TurnsController {
           tenantId,
           branchId,
           workDate: targetDate,
-          deletedAt: null
+          deletedAt: null,
         },
         data: {
           totalWalkinCount: 0,
           totalBookedCount: 0,
           totalCustomersToday: 0,
           lastAssignedAt: null,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "dailyTurns.updated", { branchId, senderId });
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "dailyTurns.updated",
+        { branchId, senderId },
+      );
       return { success: true, message: "Hàng đợi đã được khởi động lại về 0" };
     } catch (error) {
       throw new HttpException(
         `Failed to reset queue: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -318,10 +365,11 @@ export class TurnsController {
     @Param("tenantId") tenantId: string,
     @Param("branchId") branchId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: {
+    @Body()
+    body: {
       staffId: string;
       date?: string;
-    }
+    },
   ) {
     try {
       const { staffId, date } = body;
@@ -338,12 +386,15 @@ export class TurnsController {
           branchId,
           staffId,
           workDate: targetDate,
-          deletedAt: null
-        }
+          deletedAt: null,
+        },
       });
 
       if (existing) {
-        throw new HttpException("Nhân viên này đã có sẵn trong hàng đợi ngày hôm nay", HttpStatus.CONFLICT);
+        throw new HttpException(
+          "Nhân viên này đã có sẵn trong hàng đợi ngày hôm nay",
+          HttpStatus.CONFLICT,
+        );
       }
 
       // Add to queue
@@ -355,17 +406,21 @@ export class TurnsController {
           workDate: targetDate,
           totalWalkinCount: 0,
           totalBookedCount: 0,
-          totalCustomersToday: 0
-        }
+          totalCustomersToday: 0,
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "dailyTurns.updated", { branchId, senderId });
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "dailyTurns.updated",
+        { branchId, senderId },
+      );
       return newTurn;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to add staff to queue: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

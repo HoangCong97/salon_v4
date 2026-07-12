@@ -16,7 +16,7 @@ export class ImportEngineService {
     private readonly staffImportStrategy: StaffImportStrategy,
     private readonly customerImportStrategy: CustomerImportStrategy,
     private readonly payrollImportStrategy: PayrollImportStrategy,
-    private readonly inventoryImportStrategy: InventoryImportStrategy
+    private readonly inventoryImportStrategy: InventoryImportStrategy,
   ) {
     // Register available strategies
     this.strategies.set("service", serviceImportStrategy);
@@ -40,14 +40,29 @@ export class ImportEngineService {
   async analyzeMapping(
     fileHeaders: string[],
     sampleRows: any[][],
-    targetSchema: Array<{ field: string; label: string; type: string; required: boolean; description?: string }>
-  ): Promise<{ mappings: Array<{ fileHeader: string; targetField: string; confidence: number }>; unmapped: string[] }> {
+    targetSchema: Array<{
+      field: string;
+      label: string;
+      type: string;
+      required: boolean;
+      description?: string;
+    }>,
+  ): Promise<{
+    mappings: Array<{
+      fileHeader: string;
+      targetField: string;
+      confidence: number;
+    }>;
+    unmapped: string[];
+  }> {
     const apiKey = process.env.AI_API_KEY;
     const baseUrl = process.env.AI_BASE_URL || "https://api.deepseek.com/v1";
     const model = process.env.AI_MODEL || "deepseek-chat";
     console.log("analyzeMapping");
     if (!apiKey) {
-      this.logger.warn("AI_API_KEY is not defined in environment. Falling back to local semantic matching.");
+      this.logger.warn(
+        "AI_API_KEY is not defined in environment. Falling back to local semantic matching.",
+      );
       return this.fallbackMatching(fileHeaders, targetSchema);
     }
 
@@ -80,17 +95,21 @@ Instructions:
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: model,
           messages: [
-            { role: "system", content: "You are a helpful AI assistant that only outputs raw JSON. Do not include markdown code block formatting." },
-            { role: "user", content: prompt }
+            {
+              role: "system",
+              content:
+                "You are a helpful AI assistant that only outputs raw JSON. Do not include markdown code block formatting.",
+            },
+            { role: "user", content: prompt },
           ],
           response_format: { type: "json_object" },
-          temperature: 0.1
-        })
+          temperature: 0.1,
+        }),
       });
 
       if (!response.ok) {
@@ -99,18 +118,24 @@ Instructions:
 
       const resData = await response.json();
       const rawText = resData.choices?.[0]?.message?.content?.trim() || "";
-      
+
       // Parse JSON safely
-      const cleanJson = rawText.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
+      const cleanJson = rawText
+        .replace(/^```json\s*/i, "")
+        .replace(/```$/, "")
+        .trim();
       const parsed = JSON.parse(cleanJson);
-      
+
       if (parsed && Array.isArray(parsed.mappings)) {
         return parsed;
       }
 
       throw new Error("Invalid output format returned by AI provider");
     } catch (err: any) {
-      this.logger.error(`AI API mapping failed: ${err.message || err}. Using local fallback.`, err.stack);
+      this.logger.error(
+        `AI API mapping failed: ${err.message || err}. Using local fallback.`,
+        err.stack,
+      );
       return this.fallbackMatching(fileHeaders, targetSchema);
     }
   }
@@ -120,32 +145,138 @@ Instructions:
    */
   private fallbackMatching(
     fileHeaders: string[],
-    targetSchema: Array<{ field: string; label: string; type: string; required: boolean }>
-  ): { mappings: Array<{ fileHeader: string; targetField: string; confidence: number }>; unmapped: string[] } {
-    const mappings: Array<{ fileHeader: string; targetField: string; confidence: number }> = [];
+    targetSchema: Array<{
+      field: string;
+      label: string;
+      type: string;
+      required: boolean;
+    }>,
+  ): {
+    mappings: Array<{
+      fileHeader: string;
+      targetField: string;
+      confidence: number;
+    }>;
+    unmapped: string[];
+  } {
+    const mappings: Array<{
+      fileHeader: string;
+      targetField: string;
+      confidence: number;
+    }> = [];
     const mappedTargets = new Set<string>();
     console.log("fallbackMatching");
-    const clean = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, "").trim();
+    const clean = (s: string) =>
+      s
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, "")
+        .replace(/\s+/g, "")
+        .trim();
 
     // Map common synonyms (Vietnamese)
     const synonyms: Record<string, string[]> = {
-      name: ["ten", "hoten", "tennhanvien", "tennv", "name", "fullname", "tendichvu", "tensanpham", "tenhanghoa", "dichvu", "sanpham", "title", "nhanvien", "staffname"],
+      name: [
+        "ten",
+        "hoten",
+        "tennhanvien",
+        "tennv",
+        "name",
+        "fullname",
+        "tendichvu",
+        "tensanpham",
+        "tenhanghoa",
+        "dichvu",
+        "sanpham",
+        "title",
+        "nhanvien",
+        "staffname",
+      ],
       price: ["gia", "giaban", "dongia", "giagoc", "price", "rate"],
-      discountPrice: ["giakm", "giakhuyenmai", "giadasautrung", "giadasaukhuyenmai", "promo", "promoprice"],
-      discountAmount: ["giamgia", "mucgiam", "tiengiam", "chietkhau", "discount", "deduction"],
-      duration: ["thoiluong", "duration", "sophut", "phut", "thoigian", "mins", "minutes"],
-      categoryName: ["nhom", "phankhoa", "phanloai", "nhomdichvu", "category", "group"],
+      discountPrice: [
+        "giakm",
+        "giakhuyenmai",
+        "giadasautrung",
+        "giadasaukhuyenmai",
+        "promo",
+        "promoprice",
+      ],
+      discountAmount: [
+        "giamgia",
+        "mucgiam",
+        "tiengiam",
+        "chietkhau",
+        "discount",
+        "deduction",
+      ],
+      duration: [
+        "thoiluong",
+        "duration",
+        "sophut",
+        "phut",
+        "thoigian",
+        "mins",
+        "minutes",
+      ],
+      categoryName: [
+        "nhom",
+        "phankhoa",
+        "phanloai",
+        "nhomdichvu",
+        "category",
+        "group",
+      ],
       email: ["email", "thudientu", "thudientu", "mail"],
-      phone: ["sodt", "sodienthoai", "phone", "dienthoai", "tel", "contact", "sdt", "staffphone"],
+      phone: [
+        "sodt",
+        "sodienthoai",
+        "phone",
+        "dienthoai",
+        "tel",
+        "contact",
+        "sdt",
+        "staffphone",
+      ],
       sex: ["gioitinh", "sex", "gender", "phai"],
-      baseSalary: ["luongcoban", "luong", "salary", "basesalary", "mucluong", "tienluong"],
-      roleName: ["chucvu", "role", "rolename", "vitri", "chucdanh", "nhomquyen"],
+      baseSalary: [
+        "luongcoban",
+        "luong",
+        "salary",
+        "basesalary",
+        "mucluong",
+        "tienluong",
+      ],
+      roleName: [
+        "chucvu",
+        "role",
+        "rolename",
+        "vitri",
+        "chucdanh",
+        "nhomquyen",
+      ],
       allowance: ["phucap", "trocap", "allowance", "phucapkhac"],
-      commissionAmount: ["hoahong", "commission", "tienhoahong", "hoahongnhanvien"],
+      commissionAmount: [
+        "hoahong",
+        "commission",
+        "tienhoahong",
+        "hoahongnhanvien",
+      ],
       tipAmount: ["tip", "tientip", "bot", "tienbot", "tips"],
       deductionAmount: ["khautru", "deduction", "truluong", "phat", "tientru"],
-      finalSalary: ["thucnhan", "thuclethuan", "luongthucnhan", "finalsalary", "thucnhanluong"],
-      salaryPeriod: ["chu-ky-luong", "chukyluong", "period", "thang", "salaryperiod", "chuky"]
+      finalSalary: [
+        "thucnhan",
+        "thuclethuan",
+        "luongthucnhan",
+        "finalsalary",
+        "thucnhanluong",
+      ],
+      salaryPeriod: [
+        "chu-ky-luong",
+        "chukyluong",
+        "period",
+        "thang",
+        "salaryperiod",
+        "chuky",
+      ],
     };
 
     for (const header of fileHeaders) {
@@ -159,7 +290,10 @@ Instructions:
         const targetFieldClean = clean(fieldKey);
 
         // Exact or direct matches
-        if (cleanedHeader === targetFieldClean || cleanedHeader === targetLabelClean) {
+        if (
+          cleanedHeader === targetFieldClean ||
+          cleanedHeader === targetLabelClean
+        ) {
           bestMatchField = fieldKey;
           highestConfidence = 0.95;
           break;
@@ -169,15 +303,19 @@ Instructions:
         const list = synonyms[fieldKey] || [];
         if (list.includes(cleanedHeader)) {
           bestMatchField = fieldKey;
-          highestConfidence = 0.90;
+          highestConfidence = 0.9;
           break;
         }
 
         // Substring matching
-        if (cleanedHeader.includes(targetFieldClean) || targetFieldClean.includes(cleanedHeader) ||
-            cleanedHeader.includes(targetLabelClean) || targetLabelClean.includes(cleanedHeader)) {
+        if (
+          cleanedHeader.includes(targetFieldClean) ||
+          targetFieldClean.includes(cleanedHeader) ||
+          cleanedHeader.includes(targetLabelClean) ||
+          targetLabelClean.includes(cleanedHeader)
+        ) {
           bestMatchField = fieldKey;
-          highestConfidence = 0.70;
+          highestConfidence = 0.7;
         }
       }
 
@@ -185,19 +323,19 @@ Instructions:
         mappings.push({
           fileHeader: header,
           targetField: bestMatchField,
-          confidence: highestConfidence
+          confidence: highestConfidence,
         });
         mappedTargets.add(bestMatchField);
       }
     }
 
     const unmapped = targetSchema
-      .map(t => t.field)
-      .filter(field => !mappedTargets.has(field));
+      .map((t) => t.field)
+      .filter((field) => !mappedTargets.has(field));
 
     return {
       mappings,
-      unmapped
+      unmapped,
     };
   }
 }

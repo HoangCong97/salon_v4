@@ -24,31 +24,58 @@ export const POSReceiptModal: React.FC<POSReceiptModalProps> = ({
   return (
     <div className={styles.modalOverlay}>
       <div className={`card animate-fade-in ${styles.receiptCard}`}>
-        
         {/* Header info */}
         <div className={styles.receiptHeader}>
           <h2 className={styles.receiptTitle}>HAIRSTAR BEAUTY SALON</h2>
           <p className={styles.receiptSub}>
-            {branches.find(b => b.id === currentBranchId)?.name || "Chi nhánh HairStar"}
+            {branches.find((b) => b.id === currentBranchId)?.name ||
+              "Chi nhánh HairStar"}
           </p>
           <p className={styles.receiptMeta}>Mã HĐ: {receiptData.id}</p>
-          <p className={styles.receiptMeta}>Ngày: {new Date(receiptData.createdAt).toLocaleString("vi-VN")}</p>
+          <p className={styles.receiptMeta}>
+            Ngày: {new Date(receiptData.createdAt).toLocaleString("vi-VN")}
+          </p>
         </div>
 
         {/* General Metadata */}
         <div className={styles.receiptInfo}>
-          <div><strong>Thu ngân:</strong> {receiptData.cashier?.name || "Thu ngân"}</div>
-          <div><strong>Khách hàng:</strong> {receiptData.customer?.name || "Khách vãng lai"}</div>
+          <div>
+            <strong>Thu ngân:</strong> {receiptData.cashier?.name || "Thu ngân"}
+          </div>
+          <div>
+            <strong>Khách hàng:</strong>{" "}
+            {receiptData.customer?.name || "Khách vãng lai"}
+          </div>
         </div>
 
         {/* List of items */}
         <table className={styles.receiptTable}>
           <thead>
             <tr className={styles.receiptThRow}>
-              <th className={`${styles.receiptTh}`} style={{ textAlign: "left" }}>Tên dịch vụ / SP</th>
-              <th className={`${styles.receiptTh}`} style={{ textAlign: "center" }}>SL</th>
-              <th className={`${styles.receiptTh}`} style={{ textAlign: "right" }}>Đơn giá</th>
-              <th className={`${styles.receiptTh}`} style={{ textAlign: "right" }}>T.Tiền</th>
+              <th
+                className={`${styles.receiptTh}`}
+                style={{ textAlign: "left" }}
+              >
+                Tên dịch vụ / SP
+              </th>
+              <th
+                className={`${styles.receiptTh}`}
+                style={{ textAlign: "center" }}
+              >
+                SL
+              </th>
+              <th
+                className={`${styles.receiptTh}`}
+                style={{ textAlign: "right" }}
+              >
+                Đơn giá
+              </th>
+              <th
+                className={`${styles.receiptTh}`}
+                style={{ textAlign: "right" }}
+              >
+                T.Tiền
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -62,9 +89,18 @@ export const POSReceiptModal: React.FC<POSReceiptModalProps> = ({
                     </span>
                   )}
                 </td>
-                <td className={styles.receiptTd} style={{ textAlign: "center" }}>{item.quantity}</td>
-                <td className={styles.receiptTd} style={{ textAlign: "right" }}>{formatCurrencyVND(Number(item.price))}</td>
-                <td className={styles.receiptTd} style={{ textAlign: "right" }}>{formatCurrencyVND(Number(item.price) * item.quantity)}</td>
+                <td
+                  className={styles.receiptTd}
+                  style={{ textAlign: "center" }}
+                >
+                  {item.quantity}
+                </td>
+                <td className={styles.receiptTd} style={{ textAlign: "right" }}>
+                  {formatCurrencyVND(Number(item.price))}
+                </td>
+                <td className={styles.receiptTd} style={{ textAlign: "right" }}>
+                  {formatCurrencyVND(Number(item.price) * item.quantity)}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -79,7 +115,9 @@ export const POSReceiptModal: React.FC<POSReceiptModalProps> = ({
           {Number(receiptData.discountAmount) > 0 && (
             <div className={styles.receiptRow}>
               <span>Chiết khấu/Giảm giá:</span>
-              <span>-{formatCurrencyVND(Number(receiptData.discountAmount))}</span>
+              <span>
+                -{formatCurrencyVND(Number(receiptData.discountAmount))}
+              </span>
             </div>
           )}
           <div className={styles.receiptFinalRow}>
@@ -90,20 +128,25 @@ export const POSReceiptModal: React.FC<POSReceiptModalProps> = ({
 
         {/* Payment confirmation text */}
         <div className={styles.receiptStatus}>
-          <p className={styles.receiptStatusTitle}>TRẠNG THÁI: ĐÃ THANH TOÁN ({receiptData.paymentMethod === "CASH" ? "TIỀN MẶT" : "CHUYỂN KHOẢN"})</p>
-          <p className={styles.receiptStatusItalic}>Cảm ơn quý khách và hẹn gặp lại!</p>
+          <p className={styles.receiptStatusTitle}>
+            TRẠNG THÁI: ĐÃ THANH TOÁN (
+            {receiptData.paymentMethod === "CASH" ? "TIỀN MẶT" : "CHUYỂN KHOẢN"}
+            )
+          </p>
+          <p className={styles.receiptStatusItalic}>
+            Cảm ơn quý khách và hẹn gặp lại!
+          </p>
         </div>
 
         {/* Close button */}
         <div className={styles.receiptFooterBtnRow}>
-          <button 
-            className={`btn btn-secondary ${styles.receiptCloseBtn}`} 
+          <button
+            className={`btn btn-secondary ${styles.receiptCloseBtn}`}
             onClick={() => setShowReceipt(false)}
           >
             ĐÓNG HOÁ ĐƠN
           </button>
         </div>
-
       </div>
     </div>
   );
@@ -165,9 +208,7 @@ export const POSCreateCustomerModal: React.FC<POSCreateCustomerModalProps> = ({
             />
           </div>
           <div>
-            <label className={styles.custModalLabel}>
-              Số điện thoại
-            </label>
+            <label className={styles.custModalLabel}>Số điện thoại</label>
             <input
               type="text"
               className={`form-input ${styles.custModalInput}`}

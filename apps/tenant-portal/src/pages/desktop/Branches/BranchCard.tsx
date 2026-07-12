@@ -1,5 +1,14 @@
 import React from "react";
-import { MapPin, Phone, Mail, Camera, Building2, RotateCcw, Edit2, Trash2 } from "lucide-react";
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Camera,
+  Building2,
+  RotateCcw,
+  Edit2,
+  Trash2,
+} from "lucide-react";
 
 import { Branch, TenantInfo } from "./types";
 
@@ -10,8 +19,14 @@ interface BranchCardProps {
   tenantInfo: TenantInfo | null;
   onEdit: (branch: Branch) => void;
   onDelete: (id: string) => void;
-  onUploadLogo: (branch: Branch, e: React.ChangeEvent<HTMLInputElement>) => void;
-  onUploadBanner: (branch: Branch, e: React.ChangeEvent<HTMLInputElement>) => void;
+  onUploadLogo: (
+    branch: Branch,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => void;
+  onUploadBanner: (
+    branch: Branch,
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => void;
   onResetLogo: (branch: Branch) => void;
   onResetBanner: (branch: Branch) => void;
 }
@@ -26,10 +41,15 @@ export default function BranchCard({
   onResetLogo,
   onResetBanner,
 }: BranchCardProps) {
-  const defaultBannerGradient = "linear-gradient(135deg, hsl(221, 83%, 60%) 0%, hsl(260, 80%, 55%) 100%)";
+  const defaultBannerGradient =
+    "linear-gradient(135deg, hsl(221, 83%, 60%) 0%, hsl(260, 80%, 55%) 100%)";
 
   // Inheritance Fallback Logic
-  const finalBrandName = branch.brandName || tenantInfo?.brandName || tenantInfo?.name || "Chi nhánh";
+  const finalBrandName =
+    branch.brandName ||
+    tenantInfo?.brandName ||
+    tenantInfo?.name ||
+    "Chi nhánh";
   const finalSlogan = branch.slogan || tenantInfo?.slogan || "";
   const finalLogoUrl = branch.logoUrl || tenantInfo?.logoUrl || "";
   const finalBannerUrl = branch.bannerUrl || tenantInfo?.bannerUrl || "";
@@ -38,10 +58,12 @@ export default function BranchCard({
   const finalEmail = branch.email || tenantInfo?.email || "";
   const finalWebsiteUrl = branch.websiteUrl || tenantInfo?.websiteUrl || "";
   const finalFanpageUrl = branch.fanpageUrl || tenantInfo?.fanpageUrl || "";
-  const finalInstagramUrl = branch.instagramUrl || tenantInfo?.instagramUrl || "";
+  const finalInstagramUrl =
+    branch.instagramUrl || tenantInfo?.instagramUrl || "";
   const finalTiktokUrl = branch.tiktokUrl || tenantInfo?.tiktokUrl || "";
 
-  const isBrandNameInherited = !branch.brandName && (tenantInfo?.brandName || tenantInfo?.name);
+  const isBrandNameInherited =
+    !branch.brandName && (tenantInfo?.brandName || tenantInfo?.name);
   const isSloganInherited = !branch.slogan && tenantInfo?.slogan;
   const isLogoInherited = !branch.logoUrl && tenantInfo?.logoUrl;
   const isBannerInherited = !branch.bannerUrl && tenantInfo?.bannerUrl;
@@ -53,7 +75,9 @@ export default function BranchCard({
   const isInstagramInherited = !branch.instagramUrl && tenantInfo?.instagramUrl;
   const isTiktokInherited = !branch.tiktokUrl && tenantInfo?.tiktokUrl;
 
-  const bannerBg = finalBannerUrl ? `url(${finalBannerUrl})` : defaultBannerGradient;
+  const bannerBg = finalBannerUrl
+    ? `url(${finalBannerUrl})`
+    : defaultBannerGradient;
 
   return (
     <div className={`${styles["branch-card"]} animate-fade-in`}>
@@ -78,8 +102,15 @@ export default function BranchCard({
         {/* Branch Banner edit controls */}
         <button
           className={styles["banner-upload-btn"]}
-          style={{ padding: "4px 8px", fontSize: "10.5px", right: "8px", bottom: "8px" }}
-          onClick={() => document.getElementById(`branch-banner-input-${branch.id}`)?.click()}
+          style={{
+            padding: "4px 8px",
+            fontSize: "10.5px",
+            right: "8px",
+            bottom: "8px",
+          }}
+          onClick={() =>
+            document.getElementById(`branch-banner-input-${branch.id}`)?.click()
+          }
         >
           <Camera size={12} />
         </button>
@@ -109,10 +140,16 @@ export default function BranchCard({
               ? "Logo thừa kế từ thương hiệu (Click để tải lên đè)"
               : "Logo riêng chi nhánh (Click để thay đổi)"
           }
-          onClick={() => document.getElementById(`branch-logo-input-${branch.id}`)?.click()}
+          onClick={() =>
+            document.getElementById(`branch-logo-input-${branch.id}`)?.click()
+          }
         >
           {finalLogoUrl ? (
-            <img src={finalLogoUrl} alt="Logo" className={styles["branch-logo-image"]} />
+            <img
+              src={finalLogoUrl}
+              alt="Logo"
+              className={styles["branch-logo-image"]}
+            />
           ) : (
             <Building2 size={24} style={{ color: "var(--color-primary)" }} />
           )}
@@ -142,7 +179,10 @@ export default function BranchCard({
           <div className={styles.branchBrandRow}>
             <span className={styles.branchBrandName}>{finalBrandName}</span>
             {isBrandNameInherited && (
-              <span className={styles.inheritanceTag} title="Tên thương hiệu thừa kế từ tổng công ty">
+              <span
+                className={styles.inheritanceTag}
+                title="Tên thương hiệu thừa kế từ tổng công ty"
+              >
                 Kế thừa
               </span>
             )}
@@ -152,7 +192,10 @@ export default function BranchCard({
             <div className={styles.branchSloganRow}>
               <span className={styles.branchSlogan}>"{finalSlogan}"</span>
               {isSloganInherited && (
-                <span className={styles.branchSloganInherit} title="Slogan thừa kế từ tổng công ty">
+                <span
+                  className={styles.branchSloganInherit}
+                  title="Slogan thừa kế từ tổng công ty"
+                >
                   (kế thừa)
                 </span>
               )}
@@ -173,7 +216,14 @@ export default function BranchCard({
                 <span className={styles.branchHotlineText}>
                   {finalHotline}
                   {isHotlineInherited && (
-                    <span style={{ fontSize: "10px", fontWeight: "400", color: "var(--text-muted)", fontStyle: "italic" }}>
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: "400",
+                        color: "var(--text-muted)",
+                        fontStyle: "italic",
+                      }}
+                    >
                       {" "}
                       (kế thừa)
                     </span>
@@ -186,7 +236,9 @@ export default function BranchCard({
               <span className={styles.branchContactText}>
                 {finalPhone || "Chưa thiết lập điện thoại"}
                 {isPhoneInherited && (
-                  <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
+                  <span
+                    style={{ color: "var(--text-muted)", fontStyle: "italic" }}
+                  >
                     {" "}
                     (thương hiệu)
                   </span>
@@ -198,7 +250,9 @@ export default function BranchCard({
               <span className={styles.branchContactText}>
                 {finalEmail || "Chưa thiết lập email"}
                 {isEmailInherited && (
-                  <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
+                  <span
+                    style={{ color: "var(--text-muted)", fontStyle: "italic" }}
+                  >
                     {" "}
                     (thương hiệu)
                   </span>
@@ -208,7 +262,10 @@ export default function BranchCard({
           </div>
 
           {/* Social Media public Links */}
-          {(finalWebsiteUrl || finalFanpageUrl || finalInstagramUrl || finalTiktokUrl) && (
+          {(finalWebsiteUrl ||
+            finalFanpageUrl ||
+            finalInstagramUrl ||
+            finalTiktokUrl) && (
             <div className={styles.branchSocialRow}>
               {finalWebsiteUrl && (
                 <a
@@ -329,4 +386,3 @@ export default function BranchCard({
     </div>
   );
 }
-

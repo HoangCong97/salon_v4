@@ -45,7 +45,11 @@ export const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   const handleOverlayClick = (e: React.MouseEvent) => {
-    if (closeOnOverlayClick && modalRef.current && !modalRef.current.contains(e.target as Node)) {
+    if (
+      closeOnOverlayClick &&
+      modalRef.current &&
+      !modalRef.current.contains(e.target as Node)
+    ) {
       onClose();
     }
   };
@@ -61,24 +65,22 @@ export const Modal: React.FC<ModalProps> = ({
         {/* Header */}
         <div className={styles.header}>
           <h3 className={styles.title}>{title || ""}</h3>
-          <button className={styles.closeButton} onClick={onClose} aria-label="Close modal">
+          <button
+            className={styles.closeButton}
+            onClick={onClose}
+            aria-label="Close modal"
+          >
             <X size={18} />
           </button>
         </div>
 
         {/* Body */}
-        <div className={styles.body}>
-          {children}
-        </div>
+        <div className={styles.body}>{children}</div>
 
         {/* Footer */}
-        {footer && (
-          <div className={styles.footer}>
-            {footer}
-          </div>
-        )}
+        {footer && <div className={styles.footer}>{footer}</div>}
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };

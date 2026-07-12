@@ -27,7 +27,7 @@ export const ImportWizardModal: React.FC<ImportWizardModalProps> = ({
   droppedFile,
 }) => {
   const { currentTenantId, currentBranchId } = useAuthStore();
-  
+
   const {
     step,
     setStep,
@@ -67,17 +67,22 @@ export const ImportWizardModal: React.FC<ImportWizardModalProps> = ({
 
   const handleImportClick = async () => {
     if (!currentTenantId) return;
-    
+
     // Check if there are unmapped required fields that lack default values
-    const unmappedRequired = targetSchema.filter(t => {
+    const unmappedRequired = targetSchema.filter((t) => {
       const isMapped = Object.values(mappings).includes(t.field);
-      const hasDefault = defaultValues[t.field] !== undefined && defaultValues[t.field] !== null && String(defaultValues[t.field]).trim() !== "";
+      const hasDefault =
+        defaultValues[t.field] !== undefined &&
+        defaultValues[t.field] !== null &&
+        String(defaultValues[t.field]).trim() !== "";
       return t.required && !isMapped && !hasDefault;
     });
 
     if (unmappedRequired.length > 0) {
-      const fieldNames = unmappedRequired.map(f => `"${f.label}"`).join(", ");
-      setError(`Vui lòng đối chiếu cột hoặc nhập giá trị mặc định cho trường bắt buộc: ${fieldNames}`);
+      const fieldNames = unmappedRequired.map((f) => `"${f.label}"`).join(", ");
+      setError(
+        `Vui lòng đối chiếu cột hoặc nhập giá trị mặc định cho trường bắt buộc: ${fieldNames}`,
+      );
       return;
     }
 
@@ -91,18 +96,22 @@ export const ImportWizardModal: React.FC<ImportWizardModalProps> = ({
 
   const handleDownloadTemplate = () => {
     try {
-      const headers = targetSchema.map(t => t.label);
+      const headers = targetSchema.map((t) => t.label);
       const worksheet = XLSX.utils.aoa_to_sheet([headers]);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "MauNhapLieu");
 
       // Add a helpful sample row based on the field types to guide users
-      const sampleRow = targetSchema.map(t => {
+      const sampleRow = targetSchema.map((t) => {
         if (t.field === "name") {
           return `Ví dụ ${entityLabel} A`;
         }
         if (t.type === "number") {
-          if (t.field.toLowerCase().includes("price") || t.field.toLowerCase().includes("amount") || t.field.toLowerCase().includes("salary")) {
+          if (
+            t.field.toLowerCase().includes("price") ||
+            t.field.toLowerCase().includes("amount") ||
+            t.field.toLowerCase().includes("salary")
+          ) {
             return 150000;
           }
           if (t.field.toLowerCase().includes("duration")) {
@@ -120,7 +129,7 @@ export const ImportWizardModal: React.FC<ImportWizardModalProps> = ({
       });
 
       XLSX.utils.sheet_add_aoa(worksheet, [sampleRow], { origin: "A2" });
-      
+
       const cleanLabel = entityLabel.toLowerCase().replace(/\s+/g, "_");
       XLSX.writeFile(workbook, `mau_nhap_lieu_${cleanLabel}.xlsx`);
     } catch (err: any) {
@@ -157,7 +166,8 @@ export const ImportWizardModal: React.FC<ImportWizardModalProps> = ({
           maxHeight: "90vh",
           display: "flex",
           flexDirection: "column",
-          boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+          boxShadow:
+            "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
           overflow: "hidden",
         }}
       >
@@ -172,11 +182,24 @@ export const ImportWizardModal: React.FC<ImportWizardModalProps> = ({
           }}
         >
           <div>
-            <h3 style={{ fontSize: "16px", fontWeight: "700", color: "var(--text-primary)" }}>
+            <h3
+              style={{
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "var(--text-primary)",
+              }}
+            >
               Nhập danh sách {entityLabel} từ Excel
             </h3>
             {fileName && (
-              <span style={{ fontSize: "12px", color: "var(--text-muted)", display: "block", marginTop: "2px" }}>
+              <span
+                style={{
+                  fontSize: "12px",
+                  color: "var(--text-muted)",
+                  display: "block",
+                  marginTop: "2px",
+                }}
+              >
                 File: {fileName}
               </span>
             )}
@@ -230,14 +253,16 @@ export const ImportWizardModal: React.FC<ImportWizardModalProps> = ({
                   justifyContent: "center",
                   gap: "8px",
                   padding: "12px",
-                  borderBottom: isActive ? "2px solid var(--color-primary)" : "2px solid transparent",
+                  borderBottom: isActive
+                    ? "2px solid var(--color-primary)"
+                    : "2px solid transparent",
                   color: isActive
                     ? "var(--color-primary)"
                     : isCompleted
-                    ? "var(--color-success)"
-                    : "var(--text-muted)",
+                      ? "var(--color-success)"
+                      : "var(--text-muted)",
                   transition: "all 0.2s ease",
-                  backgroundColor: isActive ? "white" : "transparent"
+                  backgroundColor: isActive ? "white" : "transparent",
                 }}
               >
                 <div
@@ -248,8 +273,8 @@ export const ImportWizardModal: React.FC<ImportWizardModalProps> = ({
                     backgroundColor: isActive
                       ? "var(--color-primary)"
                       : isCompleted
-                      ? "var(--color-success)"
-                      : "hsl(210, 40%, 90%)",
+                        ? "var(--color-success)"
+                        : "hsl(210, 40%, 90%)",
                     color: "white",
                     display: "flex",
                     alignItems: "center",
@@ -357,7 +382,11 @@ export const ImportWizardModal: React.FC<ImportWizardModalProps> = ({
           )}
 
           {step === 3 && (
-            <button type="button" className="btn btn-primary" onClick={handleFinish}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleFinish}
+            >
               Hoàn tất
             </button>
           )}

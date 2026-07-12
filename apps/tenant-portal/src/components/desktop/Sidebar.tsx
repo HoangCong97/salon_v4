@@ -1,7 +1,23 @@
 import React, { useEffect, useMemo } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuthStore, SubscriptionData } from "../../store/useAuthStore";
-import { LayoutDashboard, Store, Users, BarChart3, MapPin, Layers, Package, CalendarDays, Receipt, Contact, CalendarClock, Crown, Sparkles, Award, Coins } from "lucide-react";
+import {
+  LayoutDashboard,
+  Store,
+  Users,
+  BarChart3,
+  MapPin,
+  Layers,
+  Package,
+  CalendarDays,
+  Receipt,
+  Contact,
+  CalendarClock,
+  Crown,
+  Sparkles,
+  Award,
+  Coins,
+} from "lucide-react";
 import { Tooltip } from "./ui/Tooltip";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import { useQuery } from "@tanstack/react-query";
@@ -18,7 +34,8 @@ const planConfig = {
     name: "Gói Basic",
     color: "#d97706", // Bronze / Amber
     icon: Award,
-    background: "linear-gradient(135deg, rgba(217, 119, 6, 0.08) 0%, rgba(146, 64, 14, 0.15) 100%)",
+    background:
+      "linear-gradient(135deg, rgba(217, 119, 6, 0.08) 0%, rgba(146, 64, 14, 0.15) 100%)",
     border: "1px solid rgba(217, 119, 6, 0.35)",
     borderColor: "rgba(217, 119, 6, 0.35)",
     glow: "0 0 10px rgba(217, 119, 6, 0.15)",
@@ -30,7 +47,8 @@ const planConfig = {
     name: "Gói Plus",
     color: "#94a3b8", // Silver / Slate
     icon: Sparkles,
-    background: "linear-gradient(135deg, rgba(148, 163, 184, 0.08) 0%, rgba(100, 116, 139, 0.15) 100%)",
+    background:
+      "linear-gradient(135deg, rgba(148, 163, 184, 0.08) 0%, rgba(100, 116, 139, 0.15) 100%)",
     border: "1px solid rgba(148, 163, 184, 0.35)",
     borderColor: "rgba(148, 163, 184, 0.35)",
     glow: "0 0 10px rgba(148, 163, 184, 0.15)",
@@ -42,14 +60,15 @@ const planConfig = {
     name: "Gói Premium",
     color: "#fbbf24", // Gold
     icon: Crown,
-    background: "linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(180, 83, 9, 0.15) 100%)",
+    background:
+      "linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(180, 83, 9, 0.15) 100%)",
     border: "1px solid rgba(245, 158, 11, 0.4)",
     borderColor: "rgba(245, 158, 11, 0.4)",
     glow: "0 0 12px rgba(245, 158, 11, 0.2)",
     glowHover: "0 0 18px rgba(245, 158, 11, 0.4)",
     iconBg: "rgba(245, 158, 11, 0.18)",
     borderHover: "rgba(245, 158, 11, 0.6)",
-  }
+  },
 };
 
 const getPlanConfig = (code: string | null | undefined) => {
@@ -77,13 +96,15 @@ const SubscriptionTooltip = ({ subData }: { subData: SubscriptionData }) => {
   const config = getPlanConfig(subData.planCode);
 
   return (
-    <div style={{
-      whiteSpace: "normal",
-      width: "220px",
-      padding: "6px 4px",
-      fontFamily: "Inter, sans-serif",
-      color: "#0f172a"
-    }}>
+    <div
+      style={{
+        whiteSpace: "normal",
+        width: "220px",
+        padding: "6px 4px",
+        fontFamily: "Inter, sans-serif",
+        color: "#0f172a",
+      }}
+    >
       <style>{`
         .tooltip-row {
           display: flex;
@@ -97,48 +118,67 @@ const SubscriptionTooltip = ({ subData }: { subData: SubscriptionData }) => {
           font-weight: 600;
         }
       `}</style>
-      <div style={{
-        fontWeight: "bold",
-        fontSize: "13px",
-        marginBottom: "8px",
-        borderBottom: "1px solid rgba(15, 23, 42, 0.1)",
-        paddingBottom: "6px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between"
-      }}>
-        <span style={{ color: config.color, fontWeight: "700" }}>{config.name}</span>
-        <span style={{
-          fontSize: "10px",
-          padding: "2px 6px",
-          borderRadius: "100px",
-          background: isExpired ? "#fee2e2" : "#dcfce7",
-          color: isExpired ? "#991b1b" : "#166534",
-          fontWeight: "600"
-        }}>
+      <div
+        style={{
+          fontWeight: "bold",
+          fontSize: "13px",
+          marginBottom: "8px",
+          borderBottom: "1px solid rgba(15, 23, 42, 0.1)",
+          paddingBottom: "6px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <span style={{ color: config.color, fontWeight: "700" }}>
+          {config.name}
+        </span>
+        <span
+          style={{
+            fontSize: "10px",
+            padding: "2px 6px",
+            borderRadius: "100px",
+            background: isExpired ? "#fee2e2" : "#dcfce7",
+            color: isExpired ? "#991b1b" : "#166534",
+            fontWeight: "600",
+          }}
+        >
           {isExpired ? "Hết hạn" : "Hoạt động"}
         </span>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "2px", fontSize: "11.5px" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "2px",
+          fontSize: "11.5px",
+        }}
+      >
         <div className="tooltip-row">
           <span className="tooltip-label">Thời hạn còn lại:</span>
           <span className="tooltip-val">{daysRemaining} ngày</span>
         </div>
         <div className="tooltip-row">
           <span className="tooltip-label">Ngày hết hạn:</span>
-          <span className="tooltip-val">{formatDate(subData.planExpiresAt)}</span>
+          <span className="tooltip-val">
+            {formatDate(subData.planExpiresAt)}
+          </span>
         </div>
         <div className="tooltip-row">
           <span className="tooltip-label">Số chi nhánh:</span>
           <span className="tooltip-val">
-            {subData.currentBranchesCount} / {subData.maxBranches === -1 ? "Không giới hạn" : subData.maxBranches}
+            {subData.currentBranchesCount} /{" "}
+            {subData.maxBranches === -1
+              ? "Không giới hạn"
+              : subData.maxBranches}
           </span>
         </div>
         <div className="tooltip-row">
           <span className="tooltip-label">Số nhân viên:</span>
           <span className="tooltip-val">
-            {subData.currentStaffCount} / {subData.maxStaff === -1 ? "Không giới hạn" : subData.maxStaff}
+            {subData.currentStaffCount} /{" "}
+            {subData.maxStaff === -1 ? "Không giới hạn" : subData.maxStaff}
           </span>
         </div>
       </div>
@@ -147,17 +187,17 @@ const SubscriptionTooltip = ({ subData }: { subData: SubscriptionData }) => {
 };
 
 export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
-  const { 
-    user, 
-    brandName, 
-    logoUrl, 
-    hasPermission, 
-    currentTenantId, 
+  const {
+    user,
+    brandName,
+    logoUrl,
+    hasPermission,
+    currentTenantId,
     currentBranchId,
-    subscription, 
-    subscriptionLoading, 
-    fetchSubscription, 
-    setIsPricingModalOpen 
+    subscription,
+    subscriptionLoading,
+    fetchSubscription,
+    setIsPricingModalOpen,
   } = useAuthStore();
 
   useEffect(() => {
@@ -181,7 +221,10 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   // Fetch invoices to count today's invoices
   const { data: invoices } = useQuery<any[]>({
     queryKey: queryKeys.invoices.list(currentTenantId!, currentBranchId!),
-    queryFn: () => api.get(`/tenants/${currentTenantId}/branches/${currentBranchId}/invoices`),
+    queryFn: () =>
+      api.get(
+        `/tenants/${currentTenantId}/branches/${currentBranchId}/invoices`,
+      ),
     enabled: !!currentTenantId && !!currentBranchId,
   });
 
@@ -197,23 +240,83 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
   }, [invoices]);
 
   const menuItems = [
-    { path: "/", label: "Tổng quan", icon: LayoutDashboard, permission: "booking.view" },
-    { path: "/appointments",  label: "Lịch hẹn",            icon: CalendarClock, permission: "booking.view" },
-    { path: "/pos", label: "Bán hàng POS", icon: Store, permission: "pos.view" },
-    { path: "/invoices", label: "Lịch sử hóa đơn", icon: Receipt, permission: "invoice.view" },
-    { path: "/customers",     label: "Khách hàng",          icon: Contact,       permission: "customer.view" },
-    { path: "/services", label: "Danh mục dịch vụ", icon: Layers, permission: "service.view" },
-    { path: "/inventories", label: "Quản lý kho hàng", icon: Package, permission: "inventory.view" },
+    {
+      path: "/",
+      label: "Tổng quan",
+      icon: LayoutDashboard,
+      permission: "booking.view",
+    },
+    {
+      path: "/appointments",
+      label: "Lịch hẹn",
+      icon: CalendarClock,
+      permission: "booking.view",
+    },
+    {
+      path: "/pos",
+      label: "Bán hàng POS",
+      icon: Store,
+      permission: "pos.view",
+    },
+    {
+      path: "/invoices",
+      label: "Lịch sử hóa đơn",
+      icon: Receipt,
+      permission: "invoice.view",
+    },
+    {
+      path: "/customers",
+      label: "Khách hàng",
+      icon: Contact,
+      permission: "customer.view",
+    },
+    {
+      path: "/services",
+      label: "Danh mục dịch vụ",
+      icon: Layers,
+      permission: "service.view",
+    },
+    {
+      path: "/inventories",
+      label: "Quản lý kho hàng",
+      icon: Package,
+      permission: "inventory.view",
+    },
     { path: "/staff", label: "Nhân sự", icon: Users, permission: "staff.view" },
-    { path: "/payroll", label: "Bảng lương", icon: Coins, permission: "staff.view" },
-    { path: "/shifts", label: "Lịch trực ca", icon: CalendarDays, permission: "shift.view" },
-    { path: "/attendance", label: "Lịch điểm danh & Ứng tiền", icon: CalendarDays, permission: "shift.view" },
-    { path: "/reports", label: "Báo cáo", icon: BarChart3, permission: "report.view" },
-    { path: "/branches", label: "Cơ sở & Chi nhánh", icon: MapPin, permission: "branch.view" },
+    {
+      path: "/payroll",
+      label: "Bảng lương",
+      icon: Coins,
+      permission: "staff.view",
+    },
+    {
+      path: "/shifts",
+      label: "Lịch trực ca",
+      icon: CalendarDays,
+      permission: "shift.view",
+    },
+    {
+      path: "/attendance",
+      label: "Lịch điểm danh & Ứng tiền",
+      icon: CalendarDays,
+      permission: "shift.view",
+    },
+    {
+      path: "/reports",
+      label: "Báo cáo",
+      icon: BarChart3,
+      permission: "report.view",
+    },
+    {
+      path: "/branches",
+      label: "Cơ sở & Chi nhánh",
+      icon: MapPin,
+      permission: "branch.view",
+    },
   ];
 
-  const allowedItems = menuItems.filter(item =>
-    user && (!item.permission || hasPermission(item.permission))
+  const allowedItems = menuItems.filter(
+    (item) => user && (!item.permission || hasPermission(item.permission)),
   );
 
   return (
@@ -229,7 +332,7 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
         transition: "width 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
         overflow: "hidden",
         zIndex: 50,
-        borderRight: "1px solid rgba(255, 255, 255, 0.05)"
+        borderRight: "1px solid rgba(255, 255, 255, 0.05)",
       }}
     >
       {/* Sidebar Header */}
@@ -243,7 +346,7 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
           borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
           gap: "10px",
           overflow: "hidden",
-          whiteSpace: "nowrap"
+          whiteSpace: "nowrap",
         }}
       >
         {logoUrl ? (
@@ -255,7 +358,7 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               height: "36px",
               borderRadius: "var(--radius-sm)",
               objectFit: "cover",
-              flexShrink: 0
+              flexShrink: 0,
             }}
           />
         ) : (
@@ -268,7 +371,7 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              flexShrink: 0
+              flexShrink: 0,
             }}
           >
             <svg
@@ -301,12 +404,15 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               color: "var(--text-on-dark)",
               whiteSpace: "nowrap",
               overflow: "hidden",
-              textOverflow: "ellipsis"
+              textOverflow: "ellipsis",
             }}
           >
-            {brandName ? brandName.toUpperCase() : (
+            {brandName ? (
+              brandName.toUpperCase()
+            ) : (
               <>
-                SALON<span style={{ color: "var(--color-primary)" }}>Portal</span>
+                SALON
+                <span style={{ color: "var(--color-primary)" }}>Portal</span>
               </>
             )}
           </span>
@@ -314,7 +420,15 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
       </div>
 
       {/* Navigation Links */}
-      <div style={{ flexGrow: 1, padding: "16px 8px", display: "flex", flexDirection: "column", gap: "4px" }}>
+      <div
+        style={{
+          flexGrow: 1,
+          padding: "16px 8px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "4px",
+        }}
+      >
         {allowedItems.map((item) => {
           const Icon = item.icon;
           const navLink = (
@@ -339,8 +453,12 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               {({ isActive }) => (
                 <>
                   <Icon size={20} style={{ flexShrink: 0 }} />
-                  {!collapsed && <span style={{ fontSize: "14px", whiteSpace: "nowrap" }}>{item.label}</span>}
-                  
+                  {!collapsed && (
+                    <span style={{ fontSize: "14px", whiteSpace: "nowrap" }}>
+                      {item.label}
+                    </span>
+                  )}
+
                   {item.path === "/invoices" && todayInvoiceCount > 0 && (
                     <span
                       style={{
@@ -401,22 +519,24 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 50% { opacity: 0.3; }
               }
             `}</style>
-            <div style={{ 
-              margin: collapsed ? "8px auto" : "8px 8px", 
-              width: collapsed ? "44px" : "auto", 
-              height: collapsed ? "44px" : "56px",
-              borderRadius: collapsed ? "10px" : "12px",
-              background: "rgba(255, 255, 255, 0.05)",
-              border: "1px solid rgba(255, 255, 255, 0.08)",
-              animation: "pulse 1.5s infinite ease-in-out"
-            }} />
+            <div
+              style={{
+                margin: collapsed ? "8px auto" : "8px 8px",
+                width: collapsed ? "44px" : "auto",
+                height: collapsed ? "44px" : "56px",
+                borderRadius: collapsed ? "10px" : "12px",
+                background: "rgba(255, 255, 255, 0.05)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                animation: "pulse 1.5s infinite ease-in-out",
+              }}
+            />
           </>
         )}
 
         {/* Subscription Info Card */}
         {subscription && (
-          <Tooltip 
-            content={<SubscriptionTooltip subData={subscription} />} 
+          <Tooltip
+            content={<SubscriptionTooltip subData={subscription} />}
             position={collapsed ? "right" : "top"}
           >
             {collapsed ? (
@@ -435,18 +555,25 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                   boxShadow: getPlanConfig(subscription.planCode).glow,
                   transition: "all 0.2s ease-in-out",
                   margin: "8px auto",
-                  color: getPlanConfig(subscription.planCode).color
+                  color: getPlanConfig(subscription.planCode).color,
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "scale(1.08)";
-                  e.currentTarget.style.boxShadow = getPlanConfig(subscription.planCode).glowHover;
+                  e.currentTarget.style.boxShadow = getPlanConfig(
+                    subscription.planCode,
+                  ).glowHover;
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = "scale(1)";
-                  e.currentTarget.style.boxShadow = getPlanConfig(subscription.planCode).glow;
+                  e.currentTarget.style.boxShadow = getPlanConfig(
+                    subscription.planCode,
+                  ).glow;
                 }}
               >
-                {React.createElement(getPlanConfig(subscription.planCode).icon, { size: 20 })}
+                {React.createElement(
+                  getPlanConfig(subscription.planCode).icon,
+                  { size: 20 },
+                )}
               </div>
             ) : (
               <div
@@ -464,68 +591,107 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                   transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
                   margin: "8px 8px",
                   position: "relative",
-                  overflow: "hidden"
+                  overflow: "hidden",
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = getPlanConfig(subscription.planCode).glowHover;
-                  e.currentTarget.style.borderColor = getPlanConfig(subscription.planCode).borderHover;
+                  e.currentTarget.style.boxShadow = getPlanConfig(
+                    subscription.planCode,
+                  ).glowHover;
+                  e.currentTarget.style.borderColor = getPlanConfig(
+                    subscription.planCode,
+                  ).borderHover;
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = getPlanConfig(subscription.planCode).glow;
-                  e.currentTarget.style.borderColor = getPlanConfig(subscription.planCode).borderColor;
+                  e.currentTarget.style.boxShadow = getPlanConfig(
+                    subscription.planCode,
+                  ).glow;
+                  e.currentTarget.style.borderColor = getPlanConfig(
+                    subscription.planCode,
+                  ).borderColor;
                 }}
               >
                 {/* Glowing reflection/shine effect */}
-                <div style={{
-                  position: "absolute",
-                  top: 0,
-                  left: "-50%",
-                  width: "200%",
-                  height: "100%",
-                  background: "linear-gradient(to right, transparent, rgba(255,255,255,0.03), transparent)",
-                  transform: "skewX(-30deg)",
-                  pointerEvents: "none",
-                }} />
-                
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "32px",
-                  height: "32px",
-                  borderRadius: "8px",
-                  background: getPlanConfig(subscription.planCode).iconBg,
-                  color: getPlanConfig(subscription.planCode).color,
-                  flexShrink: 0
-                }}>
-                  {React.createElement(getPlanConfig(subscription.planCode).icon, { size: 18 })}
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: "-50%",
+                    width: "200%",
+                    height: "100%",
+                    background:
+                      "linear-gradient(to right, transparent, rgba(255,255,255,0.03), transparent)",
+                    transform: "skewX(-30deg)",
+                    pointerEvents: "none",
+                  }}
+                />
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "8px",
+                    background: getPlanConfig(subscription.planCode).iconBg,
+                    color: getPlanConfig(subscription.planCode).color,
+                    flexShrink: 0,
+                  }}
+                >
+                  {React.createElement(
+                    getPlanConfig(subscription.planCode).icon,
+                    { size: 18 },
+                  )}
                 </div>
-                
-                <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flexGrow: 1 }}>
-                  <span style={{ 
-                    fontSize: "13px", 
-                    fontWeight: "700", 
-                    color: "white", 
-                    whiteSpace: "nowrap", 
-                    overflow: "hidden", 
-                    textOverflow: "ellipsis" 
-                  }}>
+
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    minWidth: 0,
+                    flexGrow: 1,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: "700",
+                      color: "white",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
                     {subscription.planName}
                   </span>
-                  <span style={{ 
-                    fontSize: "11px", 
-                    color: "rgba(255, 255, 255, 0.4)", 
-                    fontWeight: "500", 
-                    marginTop: "2px" 
-                  }}>
-                    {subscription.planStatus === "EXPIRED" ? "Đã hết hạn" : `Còn lại: ${Math.max(0, Math.ceil((new Date(subscription.planExpiresAt || "").getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))} ngày`}
+                  <span
+                    style={{
+                      fontSize: "11px",
+                      color: "rgba(255, 255, 255, 0.4)",
+                      fontWeight: "500",
+                      marginTop: "2px",
+                    }}
+                  >
+                    {subscription.planStatus === "EXPIRED"
+                      ? "Đã hết hạn"
+                      : `Còn lại: ${Math.max(0, Math.ceil((new Date(subscription.planExpiresAt || "").getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))} ngày`}
                   </span>
                 </div>
-                
+
                 {/* Small indicator arrow */}
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.3)"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ flexShrink: 0 }}
+                >
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </div>
@@ -560,8 +726,14 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
                 whiteSpace: "nowrap",
                 overflow: "hidden",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)")}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.05)")}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.backgroundColor =
+                  "rgba(255, 255, 255, 0.1)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.backgroundColor =
+                  "rgba(255, 255, 255, 0.05)")
+              }
             >
               »
             </button>
@@ -583,8 +755,14 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
               whiteSpace: "nowrap",
               overflow: "hidden",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.05)")}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor =
+                "rgba(255, 255, 255, 0.1)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor =
+                "rgba(255, 255, 255, 0.05)")
+            }
           >
             « Thu gọn
           </button>

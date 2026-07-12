@@ -1,5 +1,14 @@
 import React from "react";
-import { Eye, Edit, Sparkles, Lock, Unlock, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Eye,
+  Edit,
+  Sparkles,
+  Lock,
+  Unlock,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { formatDateVN } from "@salon/shared-utils";
 import { TenantData } from "../types";
 
@@ -12,7 +21,12 @@ interface TenantTableProps {
   setPageSize: (val: number) => void;
   totalPages: number;
   filteredTenantsLength: number;
-  getPlanDetails: (planCode: string) => { name: string; bgColor: string; color: string; price: number };
+  getPlanDetails: (planCode: string) => {
+    name: string;
+    bgColor: string;
+    color: string;
+    price: number;
+  };
   onSelectTenant: (tenant: TenantData) => void;
   onOpenEditModal: (tenant: TenantData) => void;
   onTriggerImpersonate: (name: string) => void;
@@ -321,9 +335,7 @@ export const TenantTable: React.FC<TenantTableProps> = ({
           <span>
             Hiển thị{" "}
             <strong>
-              {filteredTenantsLength > 0
-                ? (currentPage - 1) * pageSize + 1
-                : 0}
+              {filteredTenantsLength > 0 ? (currentPage - 1) * pageSize + 1 : 0}
             </strong>{" "}
             -{" "}
             <strong>

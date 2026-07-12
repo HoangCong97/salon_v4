@@ -20,26 +20,23 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const buttonClass = [
-    styles.btn,
-    styles[variant],
-    styles[size],
-    className
-  ].filter(Boolean).join(" ");
+  const buttonClass = [styles.btn, styles[variant], styles[size], className]
+    .filter(Boolean)
+    .join(" ");
 
   return (
-    <button
-      className={buttonClass}
-      disabled={disabled || loading}
-      {...props}
-    >
+    <button className={buttonClass} disabled={disabled || loading} {...props}>
       {loading && <span className={styles.spinner} />}
       {!loading && icon && iconPosition === "left" && (
-        <span style={{ display: "inline-flex", alignItems: "center" }}>{icon}</span>
+        <span style={{ display: "inline-flex", alignItems: "center" }}>
+          {icon}
+        </span>
       )}
       {children}
       {!loading && icon && iconPosition === "right" && (
-        <span style={{ display: "inline-flex", alignItems: "center" }}>{icon}</span>
+        <span style={{ display: "inline-flex", alignItems: "center" }}>
+          {icon}
+        </span>
       )}
     </button>
   );

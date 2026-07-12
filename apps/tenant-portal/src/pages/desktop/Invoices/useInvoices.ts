@@ -26,7 +26,7 @@ export function useInvoices() {
     queryKey: queryKeys.shifts.staff(currentTenantId!, currentBranchId!),
     queryFn: () =>
       api.get(
-        `/tenants/${currentTenantId}/branches/${currentBranchId}/shifts/staff`
+        `/tenants/${currentTenantId}/branches/${currentBranchId}/shifts/staff`,
       ),
     enabled: !!currentTenantId && !!currentBranchId,
   });
@@ -48,7 +48,9 @@ export function useInvoices() {
   } = useQuery<Invoice[]>({
     queryKey: queryKeys.invoices.list(currentTenantId!, currentBranchId!),
     queryFn: () =>
-      api.get(`/tenants/${currentTenantId}/branches/${currentBranchId}/invoices`),
+      api.get(
+        `/tenants/${currentTenantId}/branches/${currentBranchId}/invoices`,
+      ),
     enabled: !!currentTenantId && !!currentBranchId,
   });
 
@@ -59,7 +61,9 @@ export function useInvoices() {
   } = useQuery<SimpleItem[]>({
     queryKey: queryKeys.services.list(currentTenantId!, currentBranchId),
     queryFn: () =>
-      api.get(`/tenants/${currentTenantId}/services?branchId=${currentBranchId}`),
+      api.get(
+        `/tenants/${currentTenantId}/services?branchId=${currentBranchId}`,
+      ),
     enabled: !!currentTenantId && !!currentBranchId,
   });
 
@@ -71,7 +75,7 @@ export function useInvoices() {
     queryKey: queryKeys.inventories.list(currentTenantId!, currentBranchId),
     queryFn: () =>
       api.get(
-        `/tenants/${currentTenantId}/inventories?branchId=${currentBranchId}`
+        `/tenants/${currentTenantId}/inventories?branchId=${currentBranchId}`,
       ),
     enabled: !!currentTenantId && !!currentBranchId,
   });
@@ -84,7 +88,7 @@ export function useInvoices() {
     queryKey: queryKeys.servicePackages.list(currentTenantId!, currentBranchId),
     queryFn: () =>
       api.get(
-        `/tenants/${currentTenantId}/services/packages?branchId=${currentBranchId}`
+        `/tenants/${currentTenantId}/services/packages?branchId=${currentBranchId}`,
       ),
     enabled: !!currentTenantId && !!currentBranchId,
   });
@@ -175,11 +179,15 @@ export function useInvoices() {
     return `${year}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
   };
 
-  const [datePreset, setDatePreset] = useState<"today" | "week" | "month" | "custom">("today");
+  const [datePreset, setDatePreset] = useState<
+    "today" | "week" | "month" | "custom"
+  >("today");
   const [startDate, setStartDate] = useState(getTodayISO);
   const [endDate, setEndDate] = useState(getTodayISO);
 
-  const handlePresetChange = (preset: "today" | "week" | "month" | "custom") => {
+  const handlePresetChange = (
+    preset: "today" | "week" | "month" | "custom",
+  ) => {
     setDatePreset(preset);
     if (preset === "today") {
       const today = getTodayISO();
@@ -243,7 +251,7 @@ export function useInvoices() {
         const hasStylist = inv.items?.some(
           (item) =>
             item.staffId === selectedStaffId ||
-            item.stylist?.id === selectedStaffId
+            item.stylist?.id === selectedStaffId,
         );
         if (!hasStylist) return false;
       }
@@ -300,21 +308,24 @@ export function useInvoices() {
   }, [filteredInvoices]);
 
   // Delete invoice handler
-  const handleDeleteInvoice = useCallback(async (invoiceId: string) => {
-    if (!currentTenantId || !currentBranchId) return;
-    if (!window.confirm("Bạn có chắc chắn muốn xóa hóa đơn này?")) return;
-    try {
-      await api.delete(
-        `/tenants/${currentTenantId}/branches/${currentBranchId}/invoices/${invoiceId}`
-      );
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.invoices.all(currentTenantId, currentBranchId)
-      });
-      setSelectedInvoice(null);
-    } catch (err) {
-      alert(`Lỗi xóa hóa đơn: ${(err as any).message}`);
-    }
-  }, [currentTenantId, currentBranchId, queryClient]);
+  const handleDeleteInvoice = useCallback(
+    async (invoiceId: string) => {
+      if (!currentTenantId || !currentBranchId) return;
+      if (!window.confirm("Bạn có chắc chắn muốn xóa hóa đơn này?")) return;
+      try {
+        await api.delete(
+          `/tenants/${currentTenantId}/branches/${currentBranchId}/invoices/${invoiceId}`,
+        );
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.invoices.all(currentTenantId, currentBranchId),
+        });
+        setSelectedInvoice(null);
+      } catch (err) {
+        alert(`Lỗi xóa hóa đơn: ${(err as any).message}`);
+      }
+    },
+    [currentTenantId, currentBranchId, queryClient],
+  );
 
   return {
     currentBranchId,

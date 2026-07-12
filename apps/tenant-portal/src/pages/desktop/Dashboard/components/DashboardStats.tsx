@@ -25,11 +25,17 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
       <div className={styles.statsStripItem}>
         <div className={styles.statsStripLabelGroup}>
           <span className={styles.statsStripLabel}>Doanh thu hôm nay</span>
-          <span className={`badge ${isGrowthPositive ? "badge-success" : "badge-danger"}`} style={{ fontSize: "9px", padding: "1px 6px" }}>
-            {isGrowthPositive ? `+` : ""}{daily.growth}%
+          <span
+            className={`badge ${isGrowthPositive ? "badge-success" : "badge-danger"}`}
+            style={{ fontSize: "9px", padding: "1px 6px" }}
+          >
+            {isGrowthPositive ? `+` : ""}
+            {daily.growth}%
           </span>
         </div>
-        <h2 className={`${styles.statsStripValue} ${isGrowthPositive ? styles.valueSuccess : styles.valueDanger}`}>
+        <h2
+          className={`${styles.statsStripValue} ${isGrowthPositive ? styles.valueSuccess : styles.valueDanger}`}
+        >
           {formatVND(daily.revenue)}
         </h2>
       </div>
@@ -38,7 +44,12 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
       <div className={styles.statsStripItem}>
         <div className={styles.statsStripLabelGroup}>
           <span className={styles.statsStripLabel}>Lịch hẹn hôm nay</span>
-          <span className="badge badge-primary" style={{ fontSize: "9px", padding: "1px 6px" }}>{bookings.total} Lịch</span>
+          <span
+            className="badge badge-primary"
+            style={{ fontSize: "9px", padding: "1px 6px" }}
+          >
+            {bookings.total} Lịch
+          </span>
         </div>
         <h2 className={styles.statsStripValue}>
           {bookings.completed} / {bookings.total}
@@ -49,7 +60,10 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
       <div className={styles.statsStripItem}>
         <div className={styles.statsStripLabelGroup}>
           <span className={styles.statsStripLabel}>Nhân sự hoạt động</span>
-          <span className="badge badge-info" style={{ fontSize: "9px", padding: "1px 6px" }}>
+          <span
+            className="badge badge-info"
+            style={{ fontSize: "9px", padding: "1px 6px" }}
+          >
             {staff.scheduled > 0 ? "Có ca" : "Không ca"}
           </span>
         </div>
@@ -62,11 +76,16 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
       <div className={styles.statsStripItem}>
         <div className={styles.statsStripLabelGroup}>
           <span className={styles.statsStripLabel}>Hết hàng cảnh báo</span>
-          <span className={`badge ${inventory.lowStock > 0 ? "badge-danger" : "badge-success"}`} style={{ fontSize: "9px", padding: "1px 6px" }}>
+          <span
+            className={`badge ${inventory.lowStock > 0 ? "badge-danger" : "badge-success"}`}
+            style={{ fontSize: "9px", padding: "1px 6px" }}
+          >
             {inventory.lowStock > 0 ? "Cần nhập" : "An toàn"}
           </span>
         </div>
-        <h2 className={`${styles.statsStripValue} ${inventory.lowStock > 0 ? styles.valueDanger : ""}`}>
+        <h2
+          className={`${styles.statsStripValue} ${inventory.lowStock > 0 ? styles.valueDanger : ""}`}
+        >
           {inventory.lowStock}
         </h2>
       </div>

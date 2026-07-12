@@ -15,8 +15,8 @@ import { InventoryImportStrategy } from "./strategies/inventory-import.strategy"
     StaffImportStrategy,
     CustomerImportStrategy,
     PayrollImportStrategy,
-    InventoryImportStrategy
+    InventoryImportStrategy,
   ],
-  exports: [ImportEngineService]
+  exports: [ImportEngineService],
 })
 export class ImportEngineModule {}

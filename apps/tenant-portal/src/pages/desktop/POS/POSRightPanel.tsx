@@ -1,9 +1,22 @@
 import React from "react";
 import {
-  Users, Trash2, Plus, Tag, CreditCard, QrCode, FileText, X, Printer, Loader2
+  Users,
+  Trash2,
+  Plus,
+  Tag,
+  CreditCard,
+  QrCode,
+  FileText,
+  X,
+  Printer,
+  Loader2,
 } from "lucide-react";
 
-import { ExcelInput, ExcelSelect, ExcelRow } from "../../../components/desktop/TableComponents";
+import {
+  ExcelInput,
+  ExcelSelect,
+  ExcelRow,
+} from "../../../components/desktop/TableComponents";
 
 import { formatCurrencyVND } from "@salon/shared-utils";
 
@@ -78,7 +91,10 @@ interface POSRightPanelProps {
   activeServices: ServiceItem[];
   updateCartItemStylist: (cartId: string, newStylistId: string) => void;
   updateCartItemPrice: (cartId: string, newPriceVal: string | number) => void;
-  updateCartItemDiscount: (cartId: string, newDiscountVal: string | number) => void;
+  updateCartItemDiscount: (
+    cartId: string,
+    newDiscountVal: string | number,
+  ) => void;
   adjustQuantity: (cartId: string, amount: number) => void;
   customers: Array<{ id: string; name: string; phone: string; rank: string }>;
   onCreateCustomer: (name: string, phone: string) => void;
@@ -106,7 +122,9 @@ const formatDateTimeDMYHM = (dateStr?: string) => {
 };
 
 const parseDateTimeDMYHM = (str: string): Date | null => {
-  const match = str.trim().match(/^(\d{2})[-/.](\d{2})[-/.](\d{4})\s+(\d{2}):(\d{2})$/);
+  const match = str
+    .trim()
+    .match(/^(\d{2})[-/.](\d{2})[-/.](\d{4})\s+(\d{2}):(\d{2})$/);
   if (!match) return null;
   const day = parseInt(match[1], 10);
   const month = parseInt(match[2], 10) - 1;
@@ -151,14 +169,15 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
   canEditInvoice,
   updateInvoiceCreatedAt,
 }) => {
-  const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
-  const activeInvoice = invoices.find(inv => inv.id === activeInvoiceId);
+  const selectedCustomer = customers.find((c) => c.id === selectedCustomerId);
+  const activeInvoice = invoices.find((inv) => inv.id === activeInvoiceId);
   const isEditing = activeInvoice?.isEditing;
 
   // VietQR configuration
   const bankId = import.meta.env.VITE_BANK_ID || "MB";
   const bankAccount = import.meta.env.VITE_BANK_ACCOUNT || "0973666999";
-  const bankAccountName = import.meta.env.VITE_BANK_ACCOUNT_NAME || "HOANG CONG";
+  const bankAccountName =
+    import.meta.env.VITE_BANK_ACCOUNT_NAME || "HOANG CONG";
   const qrUrl = `https://img.vietqr.io/image/${bankId}-${bankAccount}-compact2.png?amount=${finalAmount}&addInfo=Thanh%20toan%20POS%20${activeInvoiceId.substring(0, 8)}&accountName=${encodeURIComponent(bankAccountName)}`;
 
   const [customerQuery, setCustomerQuery] = React.useState("");
@@ -167,7 +186,9 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
   const [prefillName, setPrefillName] = React.useState("");
   const [prefillPhone, setPrefillPhone] = React.useState("");
   const [showQRPopover, setShowQRPopover] = React.useState(false);
-  const [currentTime, setCurrentTime] = React.useState(() => new Date().toISOString());
+  const [currentTime, setCurrentTime] = React.useState(() =>
+    new Date().toISOString(),
+  );
   const [dateTimeStr, setDateTimeStr] = React.useState("");
   const isFocusedRef = React.useRef(false);
   const tabsScrollRef = React.useRef<HTMLDivElement>(null);
@@ -177,7 +198,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
     if (tabsScrollRef.current) {
       tabsScrollRef.current.scrollTo({
         left: tabsScrollRef.current.scrollWidth,
-        behavior: "smooth"
+        behavior: "smooth",
       });
     }
   }, [invoices.length]);
@@ -192,9 +213,17 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
 
   React.useEffect(() => {
     if (isFocusedRef.current) return;
-    const activeDate = activeInvoice?.createdAt || activeInvoice?.originalCreatedAt || currentTime;
+    const activeDate =
+      activeInvoice?.createdAt ||
+      activeInvoice?.originalCreatedAt ||
+      currentTime;
     setDateTimeStr(formatDateTimeDMYHM(activeDate));
-  }, [activeInvoiceId, activeInvoice?.createdAt, activeInvoice?.originalCreatedAt, currentTime]);
+  }, [
+    activeInvoiceId,
+    activeInvoice?.createdAt,
+    activeInvoice?.originalCreatedAt,
+    currentTime,
+  ]);
 
   const handleDateTimeStrChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -212,7 +241,10 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
     if (parsedDate) {
       updateInvoiceCreatedAt(parsedDate.toISOString());
     } else {
-      const activeDate = activeInvoice?.createdAt || activeInvoice?.originalCreatedAt || currentTime;
+      const activeDate =
+        activeInvoice?.createdAt ||
+        activeInvoice?.originalCreatedAt ||
+        currentTime;
       setDateTimeStr(formatDateTimeDMYHM(activeDate));
     }
   };
@@ -236,12 +268,18 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
   const filteredCustomers = React.useMemo(() => {
     const q = customerQuery.trim().toLowerCase();
     if (!q) return [];
-    return customers.filter(c =>
-      (c.name.toLowerCase().includes(q) || c.phone.includes(q)) && c.id !== "c1"
+    return customers.filter(
+      (c) =>
+        (c.name.toLowerCase().includes(q) || c.phone.includes(q)) &&
+        c.id !== "c1",
     );
   }, [customerQuery, customers]);
 
-  const exactMatch = customers.find(c => c.name.toLowerCase() === customerQuery.trim().toLowerCase() || c.phone === customerQuery.trim());
+  const exactMatch = customers.find(
+    (c) =>
+      c.name.toLowerCase() === customerQuery.trim().toLowerCase() ||
+      c.phone === customerQuery.trim(),
+  );
   const showCreateSuggestion = customerQuery.trim().length > 0 && !exactMatch;
 
   return (
@@ -277,7 +315,11 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
             >
               <span className={styles.tabText}>{inv.name}</span>
               {inv.cart.length > 0 && (
-                <span className={isActive ? styles.tabBadgeActive : styles.tabBadgeInactive}>
+                <span
+                  className={
+                    isActive ? styles.tabBadgeActive : styles.tabBadgeInactive
+                  }
+                >
                   {inv.cart.length}
                 </span>
               )}
@@ -304,18 +346,36 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
 
       {/* Customer Selection */}
       <div className={styles.customerSection}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "12px",
+          }}
+        >
           <h3 className={styles.customerHeader} style={{ margin: 0 }}>
             <Users size={18} className={styles.customerIcon} /> KHÁCH HÀNG
           </h3>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontWeight: 500, minWidth: "60px" }}>Thời gian:</span>
+            <span
+              style={{
+                fontSize: "12px",
+                color: "var(--text-secondary)",
+                fontWeight: 500,
+                minWidth: "60px",
+              }}
+            >
+              Thời gian:
+            </span>
             <input
               type="text"
               value={dateTimeStr}
               onChange={handleDateTimeStrChange}
               onBlur={handleBlur}
-              onFocus={() => { isFocusedRef.current = true; }}
+              onFocus={() => {
+                isFocusedRef.current = true;
+              }}
               placeholder="DD-MM-YYYY HH:MM"
               disabled={!canEditInvoice}
               className="form-input"
@@ -329,7 +389,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                 opacity: canEditInvoice ? 1 : 0.6,
                 cursor: canEditInvoice ? "text" : "not-allowed",
                 background: canEditInvoice ? "white" : "#f1f5f9",
-                textAlign: "center"
+                textAlign: "center",
               }}
             />
           </div>
@@ -338,7 +398,14 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
         {showSuggestions && (
           <div
             onClick={() => setShowSuggestions(false)}
-            style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 90 }}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 90,
+            }}
           />
         )}
         <div className={styles.customerGrid}>
@@ -351,9 +418,9 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
               onFocus={() => setShowSuggestions(true)}
               placeholder="Nhập khách hàng..."
             />
-            {showSuggestions && (customerQuery.trim().length > 0) && (
+            {showSuggestions && customerQuery.trim().length > 0 && (
               <div className={styles.suggestionsBox}>
-                {filteredCustomers.map(c => (
+                {filteredCustomers.map((c) => (
                   <div
                     key={c.id}
                     onClick={() => {
@@ -362,10 +429,15 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                       setShowSuggestions(false);
                     }}
                     className={styles.suggestionItem}
-                    onMouseEnter={(e) => e.currentTarget.style.background = "#f1f5f9"}
-                    onMouseLeave={(e) => e.currentTarget.style.background = "none"}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = "#f1f5f9")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = "none")
+                    }
                   >
-                    <strong>{c.name}</strong> {c.phone ? `(${c.phone})` : ""} - <span className={styles.suggestionRank}>{c.rank}</span>
+                    <strong>{c.name}</strong> {c.phone ? `(${c.phone})` : ""} -{" "}
+                    <span className={styles.suggestionRank}>{c.rank}</span>
                   </div>
                 ))}
 
@@ -385,8 +457,13 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                       setShowSuggestions(false);
                     }}
                     className={styles.newCustomerBtn}
-                    onMouseEnter={(e) => e.currentTarget.style.background = "#e0f2fe"}
-                    onMouseLeave={(e) => e.currentTarget.style.background = "var(--color-primary-light)"}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = "#e0f2fe")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background =
+                        "var(--color-primary-light)")
+                    }
                   >
                     ➕ Tạo khách hàng mới: "{customerQuery}"
                   </div>
@@ -401,7 +478,14 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
       </div>
 
       {/* Cart items area */}
-      <h3 style={{ fontSize: "14px", fontWeight: "700", color: "var(--text-secondary)", marginBottom: "8px" }}>
+      <h3
+        style={{
+          fontSize: "14px",
+          fontWeight: "700",
+          color: "var(--text-secondary)",
+          marginBottom: "8px",
+        }}
+      >
         MẶT HÀNG THANH TOÁN ({cart.length})
       </h3>
 
@@ -416,11 +500,30 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th className={styles.th} style={{ width: "140px" }}>Mặt hàng</th>
-                  <th className={styles.th} style={{ width: "130px" }}>Thợ</th>
-                  <th className={styles.th} style={{ textAlign: "center", width: "125px" }}>Đơn giá</th>
-                  <th className={`${styles.th} ${styles.thDiscount}`} style={{ textAlign: "center", width: "110px" }}>Giảm giá</th>
-                  <th className={styles.th} style={{ textAlign: "right", width: "110px" }}>T.Tiền</th>
+                  <th className={styles.th} style={{ width: "140px" }}>
+                    Mặt hàng
+                  </th>
+                  <th className={styles.th} style={{ width: "130px" }}>
+                    Thợ
+                  </th>
+                  <th
+                    className={styles.th}
+                    style={{ textAlign: "center", width: "125px" }}
+                  >
+                    Đơn giá
+                  </th>
+                  <th
+                    className={`${styles.th} ${styles.thDiscount}`}
+                    style={{ textAlign: "center", width: "110px" }}
+                  >
+                    Giảm giá
+                  </th>
+                  <th
+                    className={styles.th}
+                    style={{ textAlign: "right", width: "110px" }}
+                  >
+                    T.Tiền
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -428,14 +531,22 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                   const empColor = getEmployeeColor(cItem.staffId, activeStaff);
 
                   // Get available prices for this service
-                  const serviceObj = activeServices.find(s => s.id === cItem.itemId);
+                  const serviceObj = activeServices.find(
+                    (s) => s.id === cItem.itemId,
+                  );
                   const availablePrices: number[] = [];
                   if (serviceObj) {
-                    if (serviceObj.price !== undefined && serviceObj.price !== null) {
+                    if (
+                      serviceObj.price !== undefined &&
+                      serviceObj.price !== null
+                    ) {
                       availablePrices.push(serviceObj.price);
                     }
-                    if (serviceObj.additionalPrices && Array.isArray(serviceObj.additionalPrices)) {
-                      serviceObj.additionalPrices.forEach(p => {
+                    if (
+                      serviceObj.additionalPrices &&
+                      Array.isArray(serviceObj.additionalPrices)
+                    ) {
+                      serviceObj.additionalPrices.forEach((p) => {
                         const numP = Number(p);
                         if (!isNaN(numP) && !availablePrices.includes(numP)) {
                           availablePrices.push(numP);
@@ -444,7 +555,8 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                     }
                   }
 
-                  const hasMultiplePrices = cItem.itemType === "SERVICE" && availablePrices.length > 1;
+                  const hasMultiplePrices =
+                    cItem.itemType === "SERVICE" && availablePrices.length > 1;
 
                   return (
                     <ExcelRow
@@ -466,8 +578,13 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                       <td className={styles.tdStaff}>
                         <ExcelSelect
                           value={cItem.staffId}
-                          onChange={(val) => updateCartItemStylist(cItem.id, val)}
-                          options={activeStaff.map(st => ({ value: st.id, label: st.name.split("(")[0] }))}
+                          onChange={(val) =>
+                            updateCartItemStylist(cItem.id, val)
+                          }
+                          options={activeStaff.map((st) => ({
+                            value: st.id,
+                            label: st.name.split("(")[0],
+                          }))}
                           colorStyle={{
                             background: "white",
                             color: empColor.color,
@@ -475,7 +592,7 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                             height: "26px",
                             fontSize: "11.5px",
                             fontWeight: "500",
-                            width: "100%"
+                            width: "100%",
                           }}
                         />
                       </td>
@@ -485,10 +602,12 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                         {hasMultiplePrices ? (
                           <ExcelSelect
                             value={formatNumber(cItem.price)}
-                            onChange={(val) => updateCartItemPrice(cItem.id, val)}
+                            onChange={(val) =>
+                              updateCartItemPrice(cItem.id, val)
+                            }
                             options={availablePrices.map((p) => ({
                               value: String(p),
-                              label: `${formatNumber(p)}đ`
+                              label: `${formatNumber(p)}đ`,
                             }))}
                             placeholder="-- Chọn giá --"
                             allowCustom={true}
@@ -502,14 +621,16 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                               borderRadius: "var(--radius-sm)",
                               background: "white",
                               color: "var(--text-primary)",
-                              margin: "0 auto"
+                              margin: "0 auto",
                             }}
                           />
                         ) : (
                           <div className={styles.priceWrapper}>
                             <ExcelInput
                               value={formatNumber(cItem.price)}
-                              onChange={(val) => updateCartItemPrice(cItem.id, val)}
+                              onChange={(val) =>
+                                updateCartItemPrice(cItem.id, val)
+                              }
                               textAlign="center"
                               fontWeight="500"
                               unit="đ"
@@ -525,7 +646,9 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                         <div className={styles.discountWrapper}>
                           <ExcelInput
                             value={formatNumber(cItem.discount)}
-                            onChange={(val) => updateCartItemDiscount(cItem.id, val)}
+                            onChange={(val) =>
+                              updateCartItemDiscount(cItem.id, val)
+                            }
                             textAlign="center"
                             fontWeight="500"
                             unit="đ"
@@ -540,11 +663,16 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
                       <td className={styles.tdTotal}>
                         <div className={styles.totalContainer}>
                           <span className={styles.totalPriceText}>
-                            {formatCurrencyVND((cItem.price - (cItem.discount || 0)) * cItem.quantity)}
+                            {formatCurrencyVND(
+                              (cItem.price - (cItem.discount || 0)) *
+                                cItem.quantity,
+                            )}
                           </span>
                           <button
                             type="button"
-                            onClick={() => adjustQuantity(cItem.id, -cItem.quantity)}
+                            onClick={() =>
+                              adjustQuantity(cItem.id, -cItem.quantity)
+                            }
                             className={styles.deleteItemBtn}
                           >
                             <Trash2 size={14} />
@@ -562,7 +690,6 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
 
       {/* Payment Method & QR Code Display */}
       <div className={styles.checkoutSection}>
-
         {/* Voucher input */}
         <div className={styles.voucherWrapper}>
           <div className={styles.voucherInputWrapper}>
@@ -625,33 +752,55 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
         <div className={styles.calcSection}>
           <div className={styles.calcRow}>
             <span className={styles.calcLabel}>Tạm tính:</span>
-            <span className={styles.calcValue}>{formatCurrencyVND(subtotal)}</span>
+            <span className={styles.calcValue}>
+              {formatCurrencyVND(subtotal)}
+            </span>
           </div>
           {discountPercent > 0 && (
             <div className={styles.calcRow}>
-              <span className={styles.discountLabel}>Giảm giá ({discountPercent}%):</span>
-              <span className={styles.discountValue}>-{formatCurrencyVND(discountAmount)}</span>
+              <span className={styles.discountLabel}>
+                Giảm giá ({discountPercent}%):
+              </span>
+              <span className={styles.discountValue}>
+                -{formatCurrencyVND(discountAmount)}
+              </span>
             </div>
           )}
           <div className={styles.finalRow}>
             <span className={styles.finalLabel}>Thành tiền:</span>
-            <span className={styles.finalValue}>{formatCurrencyVND(finalAmount)}</span>
+            <span className={styles.finalValue}>
+              {formatCurrencyVND(finalAmount)}
+            </span>
           </div>
         </div>
 
         {/* Print & checkout button */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", width: "100%" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "10px",
+            width: "100%",
+          }}
+        >
           <button
             type="button"
             className={`btn ${styles.checkoutBtnSuccess}`}
             disabled={cart.length === 0 || checkingOut}
             onClick={() => handleCheckout(true)}
-            style={{ display: "flex", gap: "6px", alignItems: "center", justifyContent: "center" }}
+            style={{
+              display: "flex",
+              gap: "6px",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
             {checkingOut ? (
               <Loader2 className="animate-spin" size={16} />
+            ) : isEditing ? (
+              "CẬP NHẬT"
             ) : (
-              isEditing ? "CẬP NHẬT" : "THANH TOÁN"
+              "THANH TOÁN"
             )}
           </button>
           <button
@@ -659,18 +808,23 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
             className={`btn btn-primary ${styles.checkoutBtn}`}
             disabled={cart.length === 0 || checkingOut}
             onClick={() => handleCheckout(false)}
-            style={{ display: "flex", gap: "6px", alignItems: "center", justifyContent: "center" }}
+            style={{
+              display: "flex",
+              gap: "6px",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
             {checkingOut ? (
               <Loader2 className="animate-spin" size={16} />
             ) : (
               <>
-                <Printer size={16} /> {isEditing ? "CẬP NHẬT & IN" : "IN & THANH TOÁN"}
+                <Printer size={16} />{" "}
+                {isEditing ? "CẬP NHẬT & IN" : "IN & THANH TOÁN"}
               </>
             )}
           </button>
         </div>
-
       </div>
 
       <POSCreateCustomerModal
@@ -682,39 +836,48 @@ export const POSRightPanel: React.FC<POSRightPanelProps> = ({
       />
 
       {/* Floating QR Card Popover */}
-      {paymentMethod === "BANK_TRANSFER" && showQRPopover && finalAmount > 0 && (
-        <div className={styles.qrCardPopover}>
-          {/* Close button */}
-          <button
-            onClick={() => setShowQRPopover(false)}
-            className={styles.qrCloseBtn}
-          >
-            <X size={16} />
-          </button>
+      {paymentMethod === "BANK_TRANSFER" &&
+        showQRPopover &&
+        finalAmount > 0 && (
+          <div className={styles.qrCardPopover}>
+            {/* Close button */}
+            <button
+              onClick={() => setShowQRPopover(false)}
+              className={styles.qrCloseBtn}
+            >
+              <X size={16} />
+            </button>
 
-          <h4 className={styles.qrHeader}>MÃ QR THANH TOÁN</h4>
+            <h4 className={styles.qrHeader}>MÃ QR THANH TOÁN</h4>
 
-          <div className={styles.qrCodeBorder}>
-            <img 
-              src={qrUrl} 
-              alt="VietQR Payment Code" 
-              style={{ width: "250px", height: "250px", objectFit: "contain", display: "block" }} 
-            />
+            <div className={styles.qrCodeBorder}>
+              <img
+                src={qrUrl}
+                alt="VietQR Payment Code"
+                style={{
+                  width: "250px",
+                  height: "250px",
+                  objectFit: "contain",
+                  display: "block",
+                }}
+              />
+            </div>
+
+            <div className={styles.qrFooterDesc}>
+              Quét mã QR chuyển khoản đối soát VNPAY/PayOS
+            </div>
+
+            <div className={styles.qrFooterAmount}>
+              Số tiền:{" "}
+              <strong style={{ color: "var(--color-primary)" }}>
+                {formatCurrencyVND(finalAmount)}
+              </strong>
+            </div>
+
+            {/* Popover Arrow pointing to Chuyển khoản button */}
+            <div className={styles.qrArrow} />
           </div>
-
-          <div className={styles.qrFooterDesc}>
-            Quét mã QR chuyển khoản đối soát VNPAY/PayOS
-          </div>
-
-          <div className={styles.qrFooterAmount}>
-            Số tiền: <strong style={{ color: "var(--color-primary)" }}>{formatCurrencyVND(finalAmount)}</strong>
-          </div>
-
-          {/* Popover Arrow pointing to Chuyển khoản button */}
-          <div className={styles.qrArrow} />
-        </div>
-      )}
-
+        )}
     </div>
   );
 };

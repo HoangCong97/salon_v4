@@ -5,10 +5,23 @@ import { useConfirm } from "../../../components/desktop/ConfirmDialog";
 import { useToast } from "../../../components/desktop/ToastProvider";
 import { api } from "../../../utils/apiClient";
 import { queryKeys } from "../../../utils/queryKeys";
-import { Staff, AttendanceAnomaly, CashAdvance, TYPE_OPTIONS, ModalMode, DialogTab } from "./types";
+import {
+  Staff,
+  AttendanceAnomaly,
+  CashAdvance,
+  TYPE_OPTIONS,
+  ModalMode,
+  DialogTab,
+} from "./types";
 
 export function useAttendance() {
-  const { currentTenantId, currentBranchId, hasPermission, branches, setBranch } = useAuthStore();
+  const {
+    currentTenantId,
+    currentBranchId,
+    hasPermission,
+    branches,
+    setBranch,
+  } = useAuthStore();
   const confirm = useConfirm();
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -30,7 +43,8 @@ export function useAttendance() {
   // Dialog State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>("create");
-  const [activeDialogTab, setActiveDialogTab] = useState<DialogTab>("attendance");
+  const [activeDialogTab, setActiveDialogTab] =
+    useState<DialogTab>("attendance");
   const [selectedDateStr, setSelectedDateStr] = useState<string>(""); // YYYY-MM-DD
 
   // Create/Edit form values
@@ -53,14 +67,23 @@ export function useAttendance() {
   });
 
   const { data: attData } = useQuery<AttendanceAnomaly[]>({
-    queryKey: queryKeys.payrolls.attendances(currentTenantId!, currentBranchId!),
-    queryFn: () => api.get(`/tenants/${currentTenantId}/payrolls/attendances?branchId=${currentBranchId}`),
+    queryKey: queryKeys.payrolls.attendances(
+      currentTenantId!,
+      currentBranchId!,
+    ),
+    queryFn: () =>
+      api.get(
+        `/tenants/${currentTenantId}/payrolls/attendances?branchId=${currentBranchId}`,
+      ),
     enabled: !!currentTenantId && !!currentBranchId,
   });
 
   const { data: advData } = useQuery<CashAdvance[]>({
     queryKey: queryKeys.payrolls.advances(currentTenantId!, currentBranchId!),
-    queryFn: () => api.get(`/tenants/${currentTenantId}/payrolls/advances?branchId=${currentBranchId}`),
+    queryFn: () =>
+      api.get(
+        `/tenants/${currentTenantId}/payrolls/advances?branchId=${currentBranchId}`,
+      ),
     enabled: !!currentTenantId && !!currentBranchId,
   });
 
@@ -81,9 +104,21 @@ export function useAttendance() {
 
   const fetchCalendarData = useCallback(async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: queryKeys.staff.all(currentTenantId!) }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.payrolls.attendances(currentTenantId!, currentBranchId!) }),
-      queryClient.invalidateQueries({ queryKey: queryKeys.payrolls.advances(currentTenantId!, currentBranchId!) }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.staff.all(currentTenantId!),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.payrolls.attendances(
+          currentTenantId!,
+          currentBranchId!,
+        ),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.payrolls.advances(
+          currentTenantId!,
+          currentBranchId!,
+        ),
+      }),
     ]);
   }, [queryClient, currentTenantId, currentBranchId]);
 
@@ -137,7 +172,7 @@ export function useAttendance() {
   // Generate calendar grid array
   const calendarCells = useMemo(() => {
     const cells = [];
-    
+
     // First day of the current month
     const firstDayOfMonth = new Date(year, month, 1);
     // Day of the week of first day (0 = CN, 1 = T2, ..., 6 = T7)
@@ -154,12 +189,16 @@ export function useAttendance() {
     // Add empty padding from previous month
     for (let i = startDayOfWeek - 1; i >= 0; i--) {
       const day = prevMonthDays - i;
-      const cellDate = new Date(month === 0 ? year - 1 : year, month === 0 ? 11 : month - 1, day);
+      const cellDate = new Date(
+        month === 0 ? year - 1 : year,
+        month === 0 ? 11 : month - 1,
+        day,
+      );
       cells.push({
         date: cellDate,
         day,
         isCurrentMonth: false,
-        dateStr: formatDateString(cellDate)
+        dateStr: formatDateString(cellDate),
       });
     }
 
@@ -170,19 +209,23 @@ export function useAttendance() {
         date: cellDate,
         day: i,
         isCurrentMonth: true,
-        dateStr: formatDateString(cellDate)
+        dateStr: formatDateString(cellDate),
       });
     }
 
     // Add padding from next month to complete 42 cell grid (6 rows of 7)
     const remainingCells = 42 - cells.length;
     for (let i = 1; i <= remainingCells; i++) {
-      const cellDate = new Date(month === 11 ? year + 1 : year, month === 11 ? 0 : month + 1, i);
+      const cellDate = new Date(
+        month === 11 ? year + 1 : year,
+        month === 11 ? 0 : month + 1,
+        i,
+      );
       cells.push({
         date: cellDate,
         day: i,
         isCurrentMonth: false,
-        dateStr: formatDateString(cellDate)
+        dateStr: formatDateString(cellDate),
       });
     }
 
@@ -220,7 +263,10 @@ export function useAttendance() {
   };
 
   // Open modal for editing an anomaly
-  const handleEditAnomaly = (anomaly: AttendanceAnomaly, e: React.MouseEvent) => {
+  const handleEditAnomaly = (
+    anomaly: AttendanceAnomaly,
+    e: React.MouseEvent,
+  ) => {
     e.stopPropagation();
     if (!canManage) return;
     setSelectedDateStr(anomaly.workDate.split("T")[0]);
@@ -262,11 +308,17 @@ export function useAttendance() {
           staffId: formStaffId,
           workDate: selectedDateStr,
           workStatus: formWorkStatus,
-          lateMinutes: (formWorkStatus === "LATE" || formWorkStatus === "EARLY_OUT") ? formLateMinutes : 0,
-          note: formNote
+          lateMinutes:
+            formWorkStatus === "LATE" || formWorkStatus === "EARLY_OUT"
+              ? formLateMinutes
+              : 0,
+          note: formNote,
         };
 
-        await api.post(`/tenants/${currentTenantId}/payrolls/attendances`, payload);
+        await api.post(
+          `/tenants/${currentTenantId}/payrolls/attendances`,
+          payload,
+        );
         toast.success("Ghi nhận điểm danh bất thường thành công!");
       } else {
         const payload = {
@@ -275,14 +327,20 @@ export function useAttendance() {
           advanceDate: selectedDateStr,
           amount: formAdvanceAmount,
           status: formAdvanceStatus,
-          note: formNote
+          note: formNote,
         };
 
         if (modalMode === "edit" && selectedItemId) {
-          await api.put(`/tenants/${currentTenantId}/payrolls/advances/${selectedItemId}`, payload);
+          await api.put(
+            `/tenants/${currentTenantId}/payrolls/advances/${selectedItemId}`,
+            payload,
+          );
           toast.success("Cập nhật phiếu ứng tiền thành công!");
         } else {
-          await api.post(`/tenants/${currentTenantId}/payrolls/advances`, payload);
+          await api.post(
+            `/tenants/${currentTenantId}/payrolls/advances`,
+            payload,
+          );
           toast.success("Tạo phiếu ứng tiền thành công!");
         }
       }
@@ -298,21 +356,26 @@ export function useAttendance() {
   const handleDelete = async () => {
     if (!currentTenantId || !selectedItemId) return;
 
-    const message = activeDialogTab === "attendance"
-      ? "Bạn có chắc chắn muốn xóa ghi chép bất thường này?"
-      : "Bạn có chắc chắn muốn xóa phiếu ứng tiền này?";
+    const message =
+      activeDialogTab === "attendance"
+        ? "Bạn có chắc chắn muốn xóa ghi chép bất thường này?"
+        : "Bạn có chắc chắn muốn xóa phiếu ứng tiền này?";
 
-    if (!(await confirm({
-      title: "Xác nhận xóa bỏ",
-      message,
-      type: "danger",
-      confirmText: "Xóa bỏ"
-    }))) return;
+    if (
+      !(await confirm({
+        title: "Xác nhận xóa bỏ",
+        message,
+        type: "danger",
+        confirmText: "Xóa bỏ",
+      }))
+    )
+      return;
 
     try {
-      const endpoint = activeDialogTab === "attendance"
-        ? `attendances/${selectedItemId}`
-        : `advances/${selectedItemId}`;
+      const endpoint =
+        activeDialogTab === "attendance"
+          ? `attendances/${selectedItemId}`
+          : `advances/${selectedItemId}`;
 
       await api.delete(`/tenants/${currentTenantId}/payrolls/${endpoint}`);
       toast.success("Đã xóa bỏ ghi chép thành công!");
@@ -327,13 +390,18 @@ export function useAttendance() {
 
   // Get items matching a cell date string
   const getCellItems = (cellDateStr: string) => {
-    const dayAttendances = filteredAttendances.filter(a => a.workDate.startsWith(cellDateStr));
-    const dayAdvances = filteredAdvances.filter(a => a.advanceDate.startsWith(cellDateStr));
+    const dayAttendances = filteredAttendances.filter((a) =>
+      a.workDate.startsWith(cellDateStr),
+    );
+    const dayAdvances = filteredAdvances.filter((a) =>
+      a.advanceDate.startsWith(cellDateStr),
+    );
     return { dayAttendances, dayAdvances };
   };
 
   const formatAdvanceAmount = (num: number) => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1).replace(".0", "") + "M";
+    if (num >= 1000000)
+      return (num / 1000000).toFixed(1).replace(".0", "") + "M";
     if (num >= 1000) return (num / 1000).toFixed(0) + "k";
     return num.toString();
   };

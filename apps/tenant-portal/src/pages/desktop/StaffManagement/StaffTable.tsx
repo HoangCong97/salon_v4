@@ -1,7 +1,20 @@
 import React from "react";
-import { Search, Plus, Users, Edit2, Trash2, Upload, Download } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Users,
+  Edit2,
+  Trash2,
+  Upload,
+  Download,
+} from "lucide-react";
 
-import { ExcelInput, ExcelSelect, ExcelMultipleSelect, ExcelRow } from "../../../components/desktop/TableComponents";
+import {
+  ExcelInput,
+  ExcelSelect,
+  ExcelMultipleSelect,
+  ExcelRow,
+} from "../../../components/desktop/TableComponents";
 import { ExportButton } from "../../../components/desktop/ExportButton";
 import { ImportButton } from "../../../components/desktop/ImportButton";
 import { Tooltip } from "../../../components/desktop/ui/Tooltip";
@@ -12,7 +25,13 @@ import { useToast } from "../../../components/desktop/ToastProvider";
 import { api } from "../../../utils/apiClient";
 import { ExportColumnMapping } from "../../../utils/exportData";
 
-import { StaffMember, Role, Branch, getRoleColorStyle, getStatusColorStyle } from "./types";
+import {
+  StaffMember,
+  Role,
+  Branch,
+  getRoleColorStyle,
+  getStatusColorStyle,
+} from "./types";
 
 import styles from "./StaffManagement.module.css";
 
@@ -26,9 +45,16 @@ interface StaffTableProps {
   handleOpenEditModal: (item: StaffMember) => void;
   handleDeleteStaff: (id: string) => Promise<void>;
   inlineEdits: Record<string, Partial<StaffMember>>;
-  handleInlineChange: (staffId: string, field: keyof StaffMember, value: any) => void;
+  handleInlineChange: (
+    staffId: string,
+    field: keyof StaffMember,
+    value: any,
+  ) => void;
   handleSalaryChange: (staffId: string, valStr: string) => void;
-  handleAutoSave: (staffId: string, updatedFields: Partial<StaffMember>) => Promise<void>;
+  handleAutoSave: (
+    staffId: string,
+    updatedFields: Partial<StaffMember>,
+  ) => Promise<void>;
   getInlineValue: (item: StaffMember, field: keyof StaffMember) => any;
   formatNumber: (val: number | string | undefined | null) => string;
   adminUserId?: string;
@@ -71,17 +97,42 @@ export const StaffTable: React.FC<StaffTableProps> = ({
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const canManage = hasPermission("staff.manage");
 
-  const staffExportColumns = React.useMemo<ExportColumnMapping[]>(() => [
-    { key: "name", header: "Họ tên nhân viên" },
-    { key: "loginId", header: "ID đăng nhập" },
-    { key: "phone", header: "Số điện thoại" },
-    { key: "sex", header: "Giới tính" },
-    { key: "baseSalary", header: "Lương cơ bản (VND)", transform: (val) => Number(val) },
-    { key: "role", header: "Chức vụ", transform: (val) => val ? val.name : "" },
-    { key: "branches", header: "Chi nhánh hoạt động", transform: (val) => Array.isArray(val) ? val.map((b: any) => b.name).join(", ") : "" },
-    { key: "status", header: "Trạng thái", transform: (val) => val === "ACTIVE" ? "Đang hoạt động" : val === "SUSPENDED" ? "Tạm ngừng" : "Ngưng hoạt động" },
-    { key: "note", header: "Ghi chú" }
-  ], []);
+  const staffExportColumns = React.useMemo<ExportColumnMapping[]>(
+    () => [
+      { key: "name", header: "Họ tên nhân viên" },
+      { key: "loginId", header: "ID đăng nhập" },
+      { key: "phone", header: "Số điện thoại" },
+      { key: "sex", header: "Giới tính" },
+      {
+        key: "baseSalary",
+        header: "Lương cơ bản (VND)",
+        transform: (val) => Number(val),
+      },
+      {
+        key: "role",
+        header: "Chức vụ",
+        transform: (val) => (val ? val.name : ""),
+      },
+      {
+        key: "branches",
+        header: "Chi nhánh hoạt động",
+        transform: (val) =>
+          Array.isArray(val) ? val.map((b: any) => b.name).join(", ") : "",
+      },
+      {
+        key: "status",
+        header: "Trạng thái",
+        transform: (val) =>
+          val === "ACTIVE"
+            ? "Đang hoạt động"
+            : val === "SUSPENDED"
+              ? "Tạm ngừng"
+              : "Ngưng hoạt động",
+      },
+      { key: "note", header: "Ghi chú" },
+    ],
+    [],
+  );
 
   const handleImageDrop = async (itemId: string, file: File) => {
     if (!canManage) return;
@@ -95,11 +146,14 @@ export const StaffTable: React.FC<StaffTableProps> = ({
       reader.onload = async () => {
         const base64Data = reader.result as string;
         try {
-          const data = await api.post<{ url: string }>(`/tenants/${currentTenantId}/upload`, {
-            file: base64Data,
-            category: "staff",
-            filename: file.name
-          });
+          const data = await api.post<{ url: string }>(
+            `/tenants/${currentTenantId}/upload`,
+            {
+              file: base64Data,
+              category: "staff",
+              filename: file.name,
+            },
+          );
           const imageUrl = data.url;
 
           // Revoke preview URL to free memory
@@ -152,7 +206,9 @@ export const StaffTable: React.FC<StaffTableProps> = ({
           >
             <option value="">Chi nhánh (Tất cả)</option>
             {branches.map((b) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
             ))}
           </select>
 
@@ -164,7 +220,9 @@ export const StaffTable: React.FC<StaffTableProps> = ({
           >
             <option value="">Chức vụ (Tất cả)</option>
             {roles.map((r) => (
-              <option key={r.id} value={r.id}>{r.name}</option>
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
             ))}
           </select>
 
@@ -181,7 +239,10 @@ export const StaffTable: React.FC<StaffTableProps> = ({
           </select>
 
           {/* Reset Filter Button if any filters are active */}
-          {(selectedBranchFilter || selectedRoleFilter || selectedStatusFilter || searchTerm) && (
+          {(selectedBranchFilter ||
+            selectedRoleFilter ||
+            selectedStatusFilter ||
+            searchTerm) && (
             <button
               className={`btn btn-secondary ${styles.resetFilterBtn}`}
               onClick={() => {
@@ -198,9 +259,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
 
         {/* Right: Action Buttons */}
         <div className={styles.actionsRight}>
-          {canManage && (
-            <ImportButton onClick={handleOpenImportModal} />
-          )}
+          {canManage && <ImportButton onClick={handleOpenImportModal} />}
 
           <ExportButton
             data={filteredStaff}
@@ -224,7 +283,10 @@ export const StaffTable: React.FC<StaffTableProps> = ({
           <Users size={48} className={styles.emptyIcon} />
           <h3 className={styles.emptyTitle}>Không tìm thấy nhân viên</h3>
           <p className={styles.emptyDesc}>
-            {searchTerm || selectedBranchFilter || selectedRoleFilter || selectedStatusFilter
+            {searchTerm ||
+            selectedBranchFilter ||
+            selectedRoleFilter ||
+            selectedStatusFilter
               ? "Không tìm thấy kết quả phù hợp với các bộ lọc hiện tại."
               : "Salon của bạn hiện chưa có nhân viên nào."}
           </p>
@@ -235,24 +297,58 @@ export const StaffTable: React.FC<StaffTableProps> = ({
             <table className="data-table">
               <thead>
                 <tr>
-                  <th className={styles.th} style={{ width: "220px" }}>Họ tên nhân viên</th>
-                  <th className={styles.th} style={{ width: "200px" }}>ID đăng nhập</th>
-                  <th className={styles.th} style={{ width: "150px" }}>Mật khẩu</th>
-                  <th className={styles.th} style={{ width: "150px" }}>Số điện thoại</th>
-                  <th className={styles.th} style={{ minWidth: "220px" }}>Chi nhánh hoạt động</th>
-                  <th className={styles.th} style={{ width: "150px" }}>Chức vụ</th>
-                  <th className={styles.th} style={{ width: "150px", textAlign: "center" }}>Lương cơ bản</th>
-                  <th className={styles.th} style={{ width: "140px" }}>Trạng thái</th>
-                  {canManage && <th className={styles.th} style={{ width: "120px", textAlign: "center" }}>Thao tác</th>}
+                  <th className={styles.th} style={{ width: "220px" }}>
+                    Họ tên nhân viên
+                  </th>
+                  <th className={styles.th} style={{ width: "200px" }}>
+                    ID đăng nhập
+                  </th>
+                  <th className={styles.th} style={{ width: "150px" }}>
+                    Mật khẩu
+                  </th>
+                  <th className={styles.th} style={{ width: "150px" }}>
+                    Số điện thoại
+                  </th>
+                  <th className={styles.th} style={{ minWidth: "220px" }}>
+                    Chi nhánh hoạt động
+                  </th>
+                  <th className={styles.th} style={{ width: "150px" }}>
+                    Chức vụ
+                  </th>
+                  <th
+                    className={styles.th}
+                    style={{ width: "150px", textAlign: "center" }}
+                  >
+                    Lương cơ bản
+                  </th>
+                  <th className={styles.th} style={{ width: "140px" }}>
+                    Trạng thái
+                  </th>
+                  {canManage && (
+                    <th
+                      className={styles.th}
+                      style={{ width: "120px", textAlign: "center" }}
+                    >
+                      Thao tác
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
                 {filteredStaff.map((item) => {
-                  const inlineRoleVal = getInlineValue(item, "role") as { id: string; name: string } | null;
-                  const inlineStatusVal = getInlineValue(item, "status") as string;
-                  const inlineBranchesVal = getInlineValue(item, "branches") as Branch[] || [];
+                  const inlineRoleVal = getInlineValue(item, "role") as {
+                    id: string;
+                    name: string;
+                  } | null;
+                  const inlineStatusVal = getInlineValue(
+                    item,
+                    "status",
+                  ) as string;
+                  const inlineBranchesVal =
+                    (getInlineValue(item, "branches") as Branch[]) || [];
                   const selectedBranchIds = inlineBranchesVal.map((b) => b.id);
-                  const inlineAvatarVal = getInlineValue(item, "avatar") as string || item.avatar;
+                  const inlineAvatarVal =
+                    (getInlineValue(item, "avatar") as string) || item.avatar;
 
                   const isAdminRow = item.isAdmin || item.id === adminUserId;
                   const isSelf = item.id === currentUser?.id;
@@ -260,7 +356,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                   const isSuspended = inlineStatusVal === "SUSPENDED";
 
                   const filteredRoles = roles.filter(
-                    (r) => isAdminRow || r.name.toUpperCase() !== "ADMIN"
+                    (r) => isAdminRow || r.name.toUpperCase() !== "ADMIN",
                   );
 
                   const handleBranchChange = (newBranchIds: string[]) => {
@@ -299,8 +395,14 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                           <div className={styles.inputWrapper}>
                             <ExcelInput
                               value={getInlineValue(item, "name") as string}
-                              onChange={(val) => handleInlineChange(item.id, "name", val)}
-                              onBlur={() => handleAutoSave(item.id, { name: getInlineValue(item, "name") as string })}
+                              onChange={(val) =>
+                                handleInlineChange(item.id, "name", val)
+                              }
+                              onBlur={() =>
+                                handleAutoSave(item.id, {
+                                  name: getInlineValue(item, "name") as string,
+                                })
+                              }
                               fontWeight="600"
                               disabled={isSuspended || !canManage}
                             />
@@ -312,8 +414,17 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                       <td className={styles.td}>
                         <ExcelInput
                           value={getInlineValue(item, "loginId") as string}
-                          onChange={(val) => handleInlineChange(item.id, "loginId", val)}
-                          onBlur={() => handleAutoSave(item.id, { loginId: getInlineValue(item, "loginId") as string })}
+                          onChange={(val) =>
+                            handleInlineChange(item.id, "loginId", val)
+                          }
+                          onBlur={() =>
+                            handleAutoSave(item.id, {
+                              loginId: getInlineValue(
+                                item,
+                                "loginId",
+                              ) as string,
+                            })
+                          }
                           disabled={isSuspended || isSelfAdmin || !canManage}
                         />
                       </td>
@@ -322,9 +433,20 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                       <td className={styles.td}>
                         <ExcelInput
                           type="password"
-                          value={getInlineValue(item, "password") as string || ""}
-                          onChange={(val) => handleInlineChange(item.id, "password", val)}
-                          onBlur={() => handleAutoSave(item.id, { password: getInlineValue(item, "password") as string })}
+                          value={
+                            (getInlineValue(item, "password") as string) || ""
+                          }
+                          onChange={(val) =>
+                            handleInlineChange(item.id, "password", val)
+                          }
+                          onBlur={() =>
+                            handleAutoSave(item.id, {
+                              password: getInlineValue(
+                                item,
+                                "password",
+                              ) as string,
+                            })
+                          }
                           disabled={isSuspended || isSelfAdmin || !canManage}
                         />
                       </td>
@@ -333,8 +455,14 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                       <td className={styles.td}>
                         <ExcelInput
                           value={getInlineValue(item, "phone") as string}
-                          onChange={(val) => handleInlineChange(item.id, "phone", val)}
-                          onBlur={() => handleAutoSave(item.id, { phone: getInlineValue(item, "phone") as string })}
+                          onChange={(val) =>
+                            handleInlineChange(item.id, "phone", val)
+                          }
+                          onBlur={() =>
+                            handleAutoSave(item.id, {
+                              phone: getInlineValue(item, "phone") as string,
+                            })
+                          }
                           disabled={isSuspended || isSelfAdmin || !canManage}
                         />
                       </td>
@@ -343,7 +471,10 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                       <td className={styles.td}>
                         <ExcelMultipleSelect
                           values={selectedBranchIds}
-                          options={branches.map((b) => ({ value: b.id, label: b.name }))}
+                          options={branches.map((b) => ({
+                            value: b.id,
+                            label: b.name,
+                          }))}
                           onChange={handleBranchChange}
                           placeholder="Chưa gán chi nhánh"
                           disabled={isSuspended || !canManage}
@@ -355,13 +486,23 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                         <ExcelSelect
                           value={inlineRoleVal ? inlineRoleVal.id : ""}
                           onChange={(newRoleId) => {
-                            const foundRole = roles.find((r) => r.id === newRoleId);
-                            const nextRoleObj = foundRole ? { id: foundRole.id, name: foundRole.name } : null;
+                            const foundRole = roles.find(
+                              (r) => r.id === newRoleId,
+                            );
+                            const nextRoleObj = foundRole
+                              ? { id: foundRole.id, name: foundRole.name }
+                              : null;
                             handleInlineChange(item.id, "role", nextRoleObj);
                             handleAutoSave(item.id, { role: nextRoleObj });
                           }}
-                          options={filteredRoles.map((r) => ({ value: r.id, label: r.name, colorStyle: getRoleColorStyle(r.name) }))}
-                          colorStyle={getRoleColorStyle(inlineRoleVal ? inlineRoleVal.name : "Employee")}
+                          options={filteredRoles.map((r) => ({
+                            value: r.id,
+                            label: r.name,
+                            colorStyle: getRoleColorStyle(r.name),
+                          }))}
+                          colorStyle={getRoleColorStyle(
+                            inlineRoleVal ? inlineRoleVal.name : "Employee",
+                          )}
                           placeholder="-- Chọn vai trò --"
                           disabled={isSuspended || isAdminRow || !canManage}
                         />
@@ -370,9 +511,20 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                       {/* 7. Lương cơ bản */}
                       <td className={styles.td}>
                         <ExcelInput
-                          value={formatNumber(getInlineValue(item, "baseSalary") as number | string)}
+                          value={formatNumber(
+                            getInlineValue(item, "baseSalary") as
+                              | number
+                              | string,
+                          )}
                           onChange={(val) => handleSalaryChange(item.id, val)}
-                          onBlur={() => handleAutoSave(item.id, { baseSalary: getInlineValue(item, "baseSalary") as number })}
+                          onBlur={() =>
+                            handleAutoSave(item.id, {
+                              baseSalary: getInlineValue(
+                                item,
+                                "baseSalary",
+                              ) as number,
+                            })
+                          }
                           textAlign="center"
                           fontWeight="500"
                           unit="đ"
@@ -389,9 +541,21 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                             handleAutoSave(item.id, { status: newStatus });
                           }}
                           options={[
-                            { value: "ACTIVE", label: "Hoạt động", colorStyle: getStatusColorStyle("ACTIVE") },
-                            { value: "SUSPENDED", label: "Tạm ngừng", colorStyle: getStatusColorStyle("SUSPENDED") },
-                            { value: "INACTIVE", label: "Tạm khóa", colorStyle: getStatusColorStyle("INACTIVE") },
+                            {
+                              value: "ACTIVE",
+                              label: "Hoạt động",
+                              colorStyle: getStatusColorStyle("ACTIVE"),
+                            },
+                            {
+                              value: "SUSPENDED",
+                              label: "Tạm ngừng",
+                              colorStyle: getStatusColorStyle("SUSPENDED"),
+                            },
+                            {
+                              value: "INACTIVE",
+                              label: "Tạm khóa",
+                              colorStyle: getStatusColorStyle("INACTIVE"),
+                            },
                           ]}
                           colorStyle={getStatusColorStyle(inlineStatusVal)}
                           disabled={isSelfAdmin || !canManage}
@@ -402,28 +566,53 @@ export const StaffTable: React.FC<StaffTableProps> = ({
                       {canManage && (
                         <td className={styles.actionTd}>
                           <div className={styles.actionButtons}>
-                            <Tooltip content={isSuspended ? "Tài khoản tạm ngừng không thể chỉnh sửa" : "Chỉnh sửa chi tiết"}>
+                            <Tooltip
+                              content={
+                                isSuspended
+                                  ? "Tài khoản tạm ngừng không thể chỉnh sửa"
+                                  : "Chỉnh sửa chi tiết"
+                              }
+                            >
                               <button
                                 className={`btn btn-secondary ${styles.actionBtn}`}
                                 style={{
                                   opacity: isSuspended ? 0.5 : 1,
-                                  cursor: isSuspended ? "not-allowed" : "pointer"
+                                  cursor: isSuspended
+                                    ? "not-allowed"
+                                    : "pointer",
                                 }}
-                                onClick={() => !isSuspended && handleOpenEditModal(item)}
+                                onClick={() =>
+                                  !isSuspended && handleOpenEditModal(item)
+                                }
                                 disabled={isSuspended}
                               >
                                 <Edit2 size={12} />
                               </button>
                             </Tooltip>
-                            <Tooltip content={isSuspended ? "Tài khoản tạm ngừng không thể xóa" : (isAdminRow ? "Không thể xóa tài khoản Admin" : "Xóa nhân viên")}>
+                            <Tooltip
+                              content={
+                                isSuspended
+                                  ? "Tài khoản tạm ngừng không thể xóa"
+                                  : isAdminRow
+                                    ? "Không thể xóa tài khoản Admin"
+                                    : "Xóa nhân viên"
+                              }
+                            >
                               <button
                                 className={`btn btn-danger-light ${styles.actionBtn}`}
                                 style={{
-                                  opacity: (isAdminRow || isSuspended) ? 0.5 : 1,
-                                  cursor: (isAdminRow || isSuspended) ? "not-allowed" : "pointer"
+                                  opacity: isAdminRow || isSuspended ? 0.5 : 1,
+                                  cursor:
+                                    isAdminRow || isSuspended
+                                      ? "not-allowed"
+                                      : "pointer",
                                 }}
                                 disabled={isAdminRow || isSuspended}
-                                onClick={() => !isAdminRow && !isSuspended && handleDeleteStaff(item.id)}
+                                onClick={() =>
+                                  !isAdminRow &&
+                                  !isSuspended &&
+                                  handleDeleteStaff(item.id)
+                                }
                               >
                                 <Trash2 size={12} />
                               </button>

@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter, HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  HashRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { useWebSocketSync } from "../hooks/useWebSocketSync";
 
@@ -29,7 +35,6 @@ import AttendanceCalendar from "../pages/desktop/AttendanceCalendar";
 import Schedule from "../pages/mobile/Schedule";
 import ShiftTasks from "../pages/mobile/ShiftTasks";
 import Profile from "../pages/mobile/Profile";
-
 
 // Custom Screen Size Hook
 function useWindowWidth() {
@@ -94,16 +99,48 @@ export default function AdaptiveRouter() {
           fontFamily: "var(--font-family)",
         }}
       >
-        <div className="card" style={{ maxWidth: "400px", display: "flex", flexDirection: "column", gap: "20px" }}>
+        <div
+          className="card"
+          style={{
+            maxWidth: "400px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "20px",
+          }}
+        >
           <span style={{ fontSize: "48px" }}>🖥️📱</span>
-          <h2 style={{ fontSize: "18px", fontWeight: "700" }}>Giao diện Quản trị & POS</h2>
-          <p style={{ color: "var(--text-secondary)", fontSize: "14px", lineHeight: "1.6" }}>
-            Trang bán hàng POS và Cấu hình chi nhánh được thiết kế tối ưu cho màn hình máy tính (PC/Laptop/Tablet). 
-            Vui lòng sử dụng thiết bị có màn hình lớn hơn để tiếp tục thao tác.
+          <h2 style={{ fontSize: "18px", fontWeight: "700" }}>
+            Giao diện Quản trị & POS
+          </h2>
+          <p
+            style={{
+              color: "var(--text-secondary)",
+              fontSize: "14px",
+              lineHeight: "1.6",
+            }}
+          >
+            Trang bán hàng POS và Cấu hình chi nhánh được thiết kế tối ưu cho
+            màn hình máy tính (PC/Laptop/Tablet). Vui lòng sử dụng thiết bị có
+            màn hình lớn hơn để tiếp tục thao tác.
           </p>
-          <div style={{ height: "1px", background: "var(--border-color)" }}></div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px", textAlign: "left" }}>
-            <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--text-secondary)" }}>
+          <div
+            style={{ height: "1px", background: "var(--border-color)" }}
+          ></div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              textAlign: "left",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "12px",
+                fontWeight: "600",
+                color: "var(--text-secondary)",
+              }}
+            >
               Hoặc trải nghiệm giao diện nhân viên (Mobile Web):
             </span>
             <button
@@ -125,57 +162,125 @@ export default function AdaptiveRouter() {
       <Routes>
         <Route element={<DesktopLayout />}>
           <Route path="/" element={<Dashboard />} />
-          <Route 
-            path="/pos" 
-            element={hasPermission("pos.view") ? <POS /> : <Navigate to="/" replace />} 
+          <Route
+            path="/pos"
+            element={
+              hasPermission("pos.view") ? <POS /> : <Navigate to="/" replace />
+            }
           />
-          
+
           {/* Permission-restricted routes */}
-          <Route 
-            path="/branches" 
-            element={hasPermission("branch.view") ? <Branches /> : <Navigate to="/" replace />} 
+          <Route
+            path="/branches"
+            element={
+              hasPermission("branch.view") ? (
+                <Branches />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           />
-          <Route 
-            path="/services" 
-            element={hasPermission("service.view") ? <Services /> : <Navigate to="/" replace />} 
+          <Route
+            path="/services"
+            element={
+              hasPermission("service.view") ? (
+                <Services />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           />
-          <Route 
-            path="/inventories" 
-            element={hasPermission("inventory.view") ? <Inventories /> : <Navigate to="/" replace />} 
+          <Route
+            path="/inventories"
+            element={
+              hasPermission("inventory.view") ? (
+                <Inventories />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           />
-          <Route 
-            path="/staff" 
-            element={hasPermission("staff.view") ? <StaffManagement /> : <Navigate to="/" replace />} 
+          <Route
+            path="/staff"
+            element={
+              hasPermission("staff.view") ? (
+                <StaffManagement />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           />
-          <Route 
-            path="/payroll" 
-            element={hasPermission("staff.view") ? <Payroll /> : <Navigate to="/" replace />} 
+          <Route
+            path="/payroll"
+            element={
+              hasPermission("staff.view") ? (
+                <Payroll />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           />
-          <Route 
-            path="/shifts" 
-            element={hasPermission("shift.view") ? <Shifts /> : <Navigate to="/" replace />} 
+          <Route
+            path="/shifts"
+            element={
+              hasPermission("shift.view") ? (
+                <Shifts />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           />
-          <Route 
-            path="/attendance" 
-            element={hasPermission("shift.view") ? <AttendanceCalendar /> : <Navigate to="/" replace />} 
+          <Route
+            path="/attendance"
+            element={
+              hasPermission("shift.view") ? (
+                <AttendanceCalendar />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           />
-          <Route 
-            path="/reports" 
-            element={hasPermission("report.view") ? <Reports /> : <Navigate to="/" replace />} 
+          <Route
+            path="/reports"
+            element={
+              hasPermission("report.view") ? (
+                <Reports />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           />
-          <Route 
-            path="/invoices" 
-            element={hasPermission("invoice.view") ? <Invoices /> : <Navigate to="/" replace />} 
+          <Route
+            path="/invoices"
+            element={
+              hasPermission("invoice.view") ? (
+                <Invoices />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           />
-          <Route 
-            path="/customers" 
-            element={hasPermission("customer.view") ? <Customers /> : <Navigate to="/" replace />} 
+          <Route
+            path="/customers"
+            element={
+              hasPermission("customer.view") ? (
+                <Customers />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           />
-          <Route 
-            path="/appointments" 
-            element={hasPermission("booking.view") ? <Appointments /> : <Navigate to="/" replace />} 
+          <Route
+            path="/appointments"
+            element={
+              hasPermission("booking.view") ? (
+                <Appointments />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           />
-          
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

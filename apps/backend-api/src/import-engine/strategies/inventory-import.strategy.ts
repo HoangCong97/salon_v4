@@ -4,13 +4,12 @@ import { BaseImportStrategy } from "./base-import.strategy";
 
 @Injectable()
 export class InventoryImportStrategy extends BaseImportStrategy {
-  
   validate(row: any): string[] {
     const requiredFields = [
       { field: "name", label: "Tên sản phẩm" },
-      { field: "sellPrice", label: "Giá bán" }
+      { field: "sellPrice", label: "Giá bán" },
     ];
-    
+
     const errors = this.validateRequired(row, requiredFields);
 
     const sellPrice = this.cleanNumber(row.sellPrice, -1);
@@ -18,28 +17,44 @@ export class InventoryImportStrategy extends BaseImportStrategy {
       errors.push("Giá bán phải là số dương hoặc bằng 0.");
     }
 
-    if (row.costPrice !== undefined && row.costPrice !== null && row.costPrice !== "") {
+    if (
+      row.costPrice !== undefined &&
+      row.costPrice !== null &&
+      row.costPrice !== ""
+    ) {
       const costPrice = this.cleanNumber(row.costPrice, -1);
       if (costPrice < 0) {
         errors.push("Giá vốn phải là số dương hoặc bằng 0.");
       }
     }
 
-    if (row.quantity !== undefined && row.quantity !== null && row.quantity !== "") {
+    if (
+      row.quantity !== undefined &&
+      row.quantity !== null &&
+      row.quantity !== ""
+    ) {
       const quantity = this.cleanNumber(row.quantity, -1);
       if (quantity < 0) {
         errors.push("Số lượng phải là số dương hoặc bằng 0.");
       }
     }
 
-    if (row.discountPrice !== undefined && row.discountPrice !== null && row.discountPrice !== "") {
+    if (
+      row.discountPrice !== undefined &&
+      row.discountPrice !== null &&
+      row.discountPrice !== ""
+    ) {
       const discountPrice = this.cleanNumber(row.discountPrice, -1);
       if (discountPrice < 0) {
         errors.push("Giá khuyến mãi phải là số dương hoặc bằng 0.");
       }
     }
 
-    if (row.discountAmount !== undefined && row.discountAmount !== null && row.discountAmount !== "") {
+    if (
+      row.discountAmount !== undefined &&
+      row.discountAmount !== null &&
+      row.discountAmount !== ""
+    ) {
       const discountAmount = this.cleanNumber(row.discountAmount, -1);
       if (discountAmount < 0) {
         errors.push("Mức giảm giá phải là số dương hoặc bằng 0.");
@@ -52,7 +67,7 @@ export class InventoryImportStrategy extends BaseImportStrategy {
   async execute(
     tenantId: string,
     branchId: string | null,
-    data: any[]
+    data: any[],
   ): Promise<{
     importedCount: number;
     failedCount: number;
@@ -75,7 +90,7 @@ export class InventoryImportStrategy extends BaseImportStrategy {
           errors.push({
             row: rowNum,
             data: row,
-            reason: validationErrors.join(" ")
+            reason: validationErrors.join(" "),
           });
           continue;
         }
@@ -87,9 +102,17 @@ export class InventoryImportStrategy extends BaseImportStrategy {
 
         // 2. Compute discount values
         let discountAmount = 0;
-        if (row.discountAmount !== undefined && row.discountAmount !== null && row.discountAmount !== "") {
+        if (
+          row.discountAmount !== undefined &&
+          row.discountAmount !== null &&
+          row.discountAmount !== ""
+        ) {
           discountAmount = this.cleanNumber(row.discountAmount, 0);
-        } else if (row.discountPrice !== undefined && row.discountPrice !== null && row.discountPrice !== "") {
+        } else if (
+          row.discountPrice !== undefined &&
+          row.discountPrice !== null &&
+          row.discountPrice !== ""
+        ) {
           const discountPrice = this.cleanNumber(row.discountPrice, sellPrice);
           discountAmount = Math.max(0, sellPrice - discountPrice);
         }
@@ -100,8 +123,8 @@ export class InventoryImportStrategy extends BaseImportStrategy {
             tenantId,
             branchId,
             name,
-            deletedAt: null
-          }
+            deletedAt: null,
+          },
         });
 
         if (existingInventory) {
@@ -112,8 +135,8 @@ export class InventoryImportStrategy extends BaseImportStrategy {
               sellPrice: sellPrice,
               discountAmount: discountAmount,
               quantity: quantity,
-              updatedAt: new Date()
-            }
+              updatedAt: new Date(),
+            },
           });
         } else {
           await prisma.inventory.create({
@@ -124,8 +147,8 @@ export class InventoryImportStrategy extends BaseImportStrategy {
               costPrice: costPrice,
               sellPrice: sellPrice,
               discountAmount: discountAmount,
-              quantity: quantity
-            }
+              quantity: quantity,
+            },
           });
         }
 
@@ -135,7 +158,7 @@ export class InventoryImportStrategy extends BaseImportStrategy {
         errors.push({
           row: rowNum,
           data: row,
-          reason: `Lỗi hệ thống: ${err.message || err}`
+          reason: `Lỗi hệ thống: ${err.message || err}`,
         });
       }
     }
@@ -143,7 +166,7 @@ export class InventoryImportStrategy extends BaseImportStrategy {
     return {
       importedCount,
       failedCount,
-      errors
+      errors,
     };
   }
 }

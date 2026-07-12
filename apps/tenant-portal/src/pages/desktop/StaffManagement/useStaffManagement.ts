@@ -19,7 +19,14 @@ import { TargetField } from "../../../hooks/useImportWizard";
 import { api } from "../../../utils/apiClient";
 import { queryKeys } from "../../../utils/queryKeys";
 
-import { Role, Branch, StaffMember, SystemPermission, DailyTurn, getAdminUser } from "./types";
+import {
+  Role,
+  Branch,
+  StaffMember,
+  SystemPermission,
+  DailyTurn,
+  getAdminUser,
+} from "./types";
 
 export function useStaffManagement() {
   const { currentTenantId, currentBranchId, branches } = useAuthStore();
@@ -28,7 +35,9 @@ export function useStaffManagement() {
   const queryClient = useQueryClient();
 
   // Navigation Tab State
-  const [activeTab, setActiveTab] = useState<"staff" | "permissions" | "turns">("staff");
+  const [activeTab, setActiveTab] = useState<"staff" | "permissions" | "turns">(
+    "staff",
+  );
 
   // Search Filter State
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,10 +46,14 @@ export function useStaffManagement() {
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("");
 
   // Inline Editing State for Staff
-  const [inlineEdits, setInlineEdits] = useState<Record<string, Partial<StaffMember>>>({});
+  const [inlineEdits, setInlineEdits] = useState<
+    Record<string, Partial<StaffMember>>
+  >({});
 
   // Inline Editing State for Turns (turns counts adjustments)
-  const [turnEdits, setTurnEdits] = useState<Record<string, { walkin: number; booked: number }>>({});
+  const [turnEdits, setTurnEdits] = useState<
+    Record<string, { walkin: number; booked: number }>
+  >({});
 
   // Staff Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -49,11 +62,15 @@ export function useStaffManagement() {
 
   // Role Permission Assignment States
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
-  const [assignedPermissionIds, setAssignedPermissionIds] = useState<string[]>([]);
+  const [assignedPermissionIds, setAssignedPermissionIds] = useState<string[]>(
+    [],
+  );
 
   // Custom Role Modal States
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
-  const [roleModalMode, setRoleModalMode] = useState<"create" | "edit">("create");
+  const [roleModalMode, setRoleModalMode] = useState<"create" | "edit">(
+    "create",
+  );
 
   // Manual Add Staff to Queue Modal State
   const [isAddStaffToQueueOpen, setIsAddStaffToQueueOpen] = useState(false);
@@ -115,21 +132,29 @@ export function useStaffManagement() {
   });
 
   /** Fetch xoay tua thợ theo chi nhánh */
-  const { data: dailyTurns = [], isLoading: turnsLoading } = useQuery<DailyTurn[]>({
+  const { data: dailyTurns = [], isLoading: turnsLoading } = useQuery<
+    DailyTurn[]
+  >({
     queryKey: queryKeys.dailyTurns.list(currentTenantId!, currentBranchId!),
     queryFn: () =>
-      api.get(`/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns`),
+      api.get(
+        `/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns`,
+      ),
     enabled: !!currentTenantId && !!currentBranchId,
   });
 
   /** Fetch quyền hạn của chức vụ được chọn */
-  const { data: fetchedPermissionIds, isLoading: permissionsLoading } = useQuery<string[]>({
-    queryKey: queryKeys.roles.permissions(currentTenantId!, selectedRoleId!),
-    queryFn: () =>
-      api.get(`/tenants/${currentTenantId}/roles/${selectedRoleId}/permissions`),
-    enabled: !!currentTenantId && !!selectedRoleId && activeTab === "permissions",
-    // Sync vào local state khi data thay đổi
-  });
+  const { data: fetchedPermissionIds, isLoading: permissionsLoading } =
+    useQuery<string[]>({
+      queryKey: queryKeys.roles.permissions(currentTenantId!, selectedRoleId!),
+      queryFn: () =>
+        api.get(
+          `/tenants/${currentTenantId}/roles/${selectedRoleId}/permissions`,
+        ),
+      enabled:
+        !!currentTenantId && !!selectedRoleId && activeTab === "permissions",
+      // Sync vào local state khi data thay đổi
+    });
 
   // Sync fetched permission IDs to local state khi role thay đổi
   // Dùng pattern "controlled by query" — chỉ sync khi data mới về
@@ -163,7 +188,11 @@ export function useStaffManagement() {
     }
   };
 
-  const handleInlineChange = (staffId: string, field: keyof StaffMember, value: any) => {
+  const handleInlineChange = (
+    staffId: string,
+    field: keyof StaffMember,
+    value: any,
+  ) => {
     setInlineEdits((prev) => ({
       ...prev,
       [staffId]: {
@@ -186,25 +215,31 @@ export function useStaffManagement() {
 
   /** Mutation: Auto-save inline edit cho 1 nhân viên */
   const autoSaveMutation = useMutation({
-    mutationFn: async ({ staffId, payload }: { staffId: string; payload: any }) => {
+    mutationFn: async ({
+      staffId,
+      payload,
+    }: {
+      staffId: string;
+      payload: any;
+    }) => {
       return api.put(`/tenants/${currentTenantId}/staff/${staffId}`, payload);
     },
     onMutate: async ({ staffId, payload }) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: queryKeys.staff.list(currentTenantId!) });
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.staff.list(currentTenantId!),
+      });
 
       // Snapshot previous value
       const previousStaff = queryClient.getQueryData<StaffMember[]>(
-        queryKeys.staff.list(currentTenantId!)
+        queryKeys.staff.list(currentTenantId!),
       );
 
       // Optimistic update: cập nhật item trong cache ngay lập tức
       queryClient.setQueryData<StaffMember[]>(
         queryKeys.staff.list(currentTenantId!),
         (old) =>
-          old?.map((s) =>
-            s.id === staffId ? { ...s, ...payload } : s
-          ) ?? []
+          old?.map((s) => (s.id === staffId ? { ...s, ...payload } : s)) ?? [],
       );
 
       return { previousStaff };
@@ -214,7 +249,7 @@ export function useStaffManagement() {
       if (context?.previousStaff) {
         queryClient.setQueryData(
           queryKeys.staff.list(currentTenantId!),
-          context.previousStaff
+          context.previousStaff,
         );
       }
       toast.error(`Lưu tự động thất bại: ${(_err as Error).message}`);
@@ -230,7 +265,9 @@ export function useStaffManagement() {
       // Update auth store user if current user is updated
       const currentUser = useAuthStore.getState().user;
       if (currentUser && staffId === currentUser.id) {
-        const roleName = payload.roleId ? roles.find((r) => r.id === payload.roleId)?.name?.toUpperCase() : currentUser.role;
+        const roleName = payload.roleId
+          ? roles.find((r) => r.id === payload.roleId)?.name?.toUpperCase()
+          : currentUser.role;
         useAuthStore.setState({
           user: {
             ...currentUser,
@@ -238,30 +275,38 @@ export function useStaffManagement() {
             avatar: payload.avatar ?? currentUser.avatar,
             role: roleName as any,
             status: payload.status ?? currentUser.status,
-          }
+          },
         });
         const rememberMe = localStorage.getItem("rememberMe") === "true";
         const storage = rememberMe ? localStorage : sessionStorage;
         const storedUser = storage.getItem("user");
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
-          storage.setItem("user", JSON.stringify({
-            ...parsedUser,
-            name: payload.name ?? parsedUser.name,
-            avatar: payload.avatar ?? parsedUser.avatar,
-            role: roleName,
-            status: payload.status ?? parsedUser.status,
-          }));
+          storage.setItem(
+            "user",
+            JSON.stringify({
+              ...parsedUser,
+              name: payload.name ?? parsedUser.name,
+              avatar: payload.avatar ?? parsedUser.avatar,
+              role: roleName,
+              status: payload.status ?? parsedUser.status,
+            }),
+          );
         }
       }
     },
     onSettled: () => {
       // Refetch to ensure server truth
-      queryClient.invalidateQueries({ queryKey: queryKeys.staff.all(currentTenantId!) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.staff.all(currentTenantId!),
+      });
     },
   });
 
-  const handleAutoSave = async (staffId: string, updatedFields: Partial<StaffMember>) => {
+  const handleAutoSave = async (
+    staffId: string,
+    updatedFields: Partial<StaffMember>,
+  ) => {
     const originalStaff = staff.find((s) => s.id === staffId);
     if (!originalStaff) return;
 
@@ -327,16 +372,18 @@ export function useStaffManagement() {
     mutationFn: (id: string) =>
       api.delete(`/tenants/${currentTenantId}/staff/${id}`),
     onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.staff.list(currentTenantId!) });
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.staff.list(currentTenantId!),
+      });
 
       const previousStaff = queryClient.getQueryData<StaffMember[]>(
-        queryKeys.staff.list(currentTenantId!)
+        queryKeys.staff.list(currentTenantId!),
       );
 
       // Optimistic: Xóa item khỏi UI ngay lập tức
       queryClient.setQueryData<StaffMember[]>(
         queryKeys.staff.list(currentTenantId!),
-        (old) => old?.filter((s) => s.id !== id) ?? []
+        (old) => old?.filter((s) => s.id !== id) ?? [],
       );
 
       return { previousStaff };
@@ -346,7 +393,7 @@ export function useStaffManagement() {
       if (context?.previousStaff) {
         queryClient.setQueryData(
           queryKeys.staff.list(currentTenantId!),
-          context.previousStaff
+          context.previousStaff,
         );
       }
       toast.error("Xóa nhân viên thất bại!");
@@ -355,7 +402,9 @@ export function useStaffManagement() {
       toast.success("Đã xóa nhân viên thành công!");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.staff.all(currentTenantId!) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.staff.all(currentTenantId!),
+      });
     },
   });
 
@@ -363,7 +412,8 @@ export function useStaffManagement() {
     if (
       !(await confirm({
         title: "Xóa nhân sự",
-        message: "Bạn có chắc chắn muốn xóa tài khoản nhân viên này khỏi hệ thống?",
+        message:
+          "Bạn có chắc chắn muốn xóa tài khoản nhân viên này khỏi hệ thống?",
         type: "danger",
         confirmText: "Xóa",
       }))
@@ -379,9 +429,11 @@ export function useStaffManagement() {
       return api.post(`/tenants/${currentTenantId}/staff`, payload);
     },
     onMutate: async (payload) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.staff.list(currentTenantId!) });
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.staff.list(currentTenantId!),
+      });
       const previousStaff = queryClient.getQueryData<StaffMember[]>(
-        queryKeys.staff.list(currentTenantId!)
+        queryKeys.staff.list(currentTenantId!),
       );
 
       const tempId = `temp-${Date.now()}`;
@@ -403,7 +455,7 @@ export function useStaffManagement() {
 
       queryClient.setQueryData<StaffMember[]>(
         queryKeys.staff.list(currentTenantId!),
-        (old) => [...(old || []), optimisticStaff]
+        (old) => [...(old || []), optimisticStaff],
       );
 
       return { previousStaff };
@@ -412,7 +464,7 @@ export function useStaffManagement() {
       if (context?.previousStaff) {
         queryClient.setQueryData(
           queryKeys.staff.list(currentTenantId!),
-          context.previousStaff
+          context.previousStaff,
         );
       }
       toast.error(`Thêm nhân sự thất bại: ${(err as Error).message}`);
@@ -421,19 +473,29 @@ export function useStaffManagement() {
       toast.success("Thêm nhân sự mới thành công!");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.staff.all(currentTenantId!) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.staff.all(currentTenantId!),
+      });
     },
   });
 
   /** Mutation: Cập nhật nhân sự với Optimistic UI */
   const updateStaffMutation = useMutation({
-    mutationFn: async ({ staffId, payload }: { staffId: string; payload: any }) => {
+    mutationFn: async ({
+      staffId,
+      payload,
+    }: {
+      staffId: string;
+      payload: any;
+    }) => {
       return api.put(`/tenants/${currentTenantId}/staff/${staffId}`, payload);
     },
     onMutate: async ({ staffId, payload }) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.staff.list(currentTenantId!) });
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.staff.list(currentTenantId!),
+      });
       const previousStaff = queryClient.getQueryData<StaffMember[]>(
-        queryKeys.staff.list(currentTenantId!)
+        queryKeys.staff.list(currentTenantId!),
       );
 
       queryClient.setQueryData<StaffMember[]>(
@@ -453,10 +515,12 @@ export function useStaffManagement() {
                   note: payload.note || "",
                   avatar: payload.avatar || "",
                   role: roles.find((r) => r.id === payload.roleId) || null,
-                  branches: branchList.filter((b) => payload.branchIds.includes(b.id)),
+                  branches: branchList.filter((b) =>
+                    payload.branchIds.includes(b.id),
+                  ),
                 }
-              : s
-          ) ?? []
+              : s,
+          ) ?? [],
       );
 
       return { previousStaff };
@@ -465,7 +529,7 @@ export function useStaffManagement() {
       if (context?.previousStaff) {
         queryClient.setQueryData(
           queryKeys.staff.list(currentTenantId!),
-          context.previousStaff
+          context.previousStaff,
         );
       }
       toast.error(`Cập nhật nhân sự thất bại: ${(err as Error).message}`);
@@ -476,7 +540,9 @@ export function useStaffManagement() {
       // Update auth store user if current user is updated
       const currentUser = useAuthStore.getState().user;
       if (currentUser && staffId === currentUser.id) {
-        const roleName = payload.roleId ? roles.find((r) => r.id === payload.roleId)?.name?.toUpperCase() : currentUser.role;
+        const roleName = payload.roleId
+          ? roles.find((r) => r.id === payload.roleId)?.name?.toUpperCase()
+          : currentUser.role;
         useAuthStore.setState({
           user: {
             ...currentUser,
@@ -484,29 +550,38 @@ export function useStaffManagement() {
             avatar: payload.avatar ?? currentUser.avatar,
             role: roleName as any,
             status: payload.status ?? currentUser.status,
-          }
+          },
         });
         const rememberMe = localStorage.getItem("rememberMe") === "true";
         const storage = rememberMe ? localStorage : sessionStorage;
         const storedUser = storage.getItem("user");
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
-          storage.setItem("user", JSON.stringify({
-            ...parsedUser,
-            name: payload.name ?? parsedUser.name,
-            avatar: payload.avatar ?? parsedUser.avatar,
-            role: roleName,
-            status: payload.status ?? parsedUser.status,
-          }));
+          storage.setItem(
+            "user",
+            JSON.stringify({
+              ...parsedUser,
+              name: payload.name ?? parsedUser.name,
+              avatar: payload.avatar ?? parsedUser.avatar,
+              role: roleName,
+              status: payload.status ?? parsedUser.status,
+            }),
+          );
         }
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.staff.all(currentTenantId!) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.staff.all(currentTenantId!),
+      });
     },
   });
 
-  const handleSaveStaff = (payload: any, mode: "create" | "edit", staffId?: string | null) => {
+  const handleSaveStaff = (
+    payload: any,
+    mode: "create" | "edit",
+    staffId?: string | null,
+  ) => {
     if (mode === "create") {
       createStaffMutation.mutate(payload);
     } else if (mode === "edit" && staffId) {
@@ -521,25 +596,35 @@ export function useStaffManagement() {
   const handlePermissionCheckboxChange = (permissionId: string) => {
     const activeRole = roles.find((r) => r.id === selectedRoleId);
     if (activeRole && activeRole.name.toUpperCase() === "ADMIN") {
-      toast.warning("Quyền hạn của chức vụ Admin là tối cao và không thể thay đổi.");
+      toast.warning(
+        "Quyền hạn của chức vụ Admin là tối cao và không thể thay đổi.",
+      );
       return;
     }
 
     setAssignedPermissionIds((prev) =>
-      prev.includes(permissionId) ? prev.filter((id) => id !== permissionId) : [...prev, permissionId]
+      prev.includes(permissionId)
+        ? prev.filter((id) => id !== permissionId)
+        : [...prev, permissionId],
     );
   };
 
   /** Mutation: Lưu phân quyền chức vụ */
   const savePermissionsMutation = useMutation({
     mutationFn: () =>
-      api.put(`/tenants/${currentTenantId}/roles/${selectedRoleId}/permissions`, {
-        permissionIds: assignedPermissionIds,
-      }),
+      api.put(
+        `/tenants/${currentTenantId}/roles/${selectedRoleId}/permissions`,
+        {
+          permissionIds: assignedPermissionIds,
+        },
+      ),
     onSuccess: () => {
       toast.success("Cập nhật phân quyền chức vụ thành công!");
       queryClient.invalidateQueries({
-        queryKey: queryKeys.roles.permissions(currentTenantId!, selectedRoleId!),
+        queryKey: queryKeys.roles.permissions(
+          currentTenantId!,
+          selectedRoleId!,
+        ),
       });
     },
     onError: (err) => {
@@ -558,9 +643,13 @@ export function useStaffManagement() {
     if (mode === "edit") {
       const activeRole = roles.find((r) => r.id === selectedRoleId);
       if (!activeRole) return;
-      const isBuiltin = ["ADMIN", "MANAGER", "CASHIER", "EMPLOYEE"].includes(activeRole.name.toUpperCase());
+      const isBuiltin = ["ADMIN", "MANAGER", "CASHIER", "EMPLOYEE"].includes(
+        activeRole.name.toUpperCase(),
+      );
       if (isBuiltin) {
-        toast.warning("Không thể sửa đổi thông tin của chức vụ hệ thống mặc định.");
+        toast.warning(
+          "Không thể sửa đổi thông tin của chức vụ hệ thống mặc định.",
+        );
         return;
       }
     }
@@ -572,16 +661,18 @@ export function useStaffManagement() {
     mutationFn: (roleId: string) =>
       api.delete(`/tenants/${currentTenantId}/roles/${roleId}`),
     onMutate: async (roleId) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.roles.list(currentTenantId!) });
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.roles.list(currentTenantId!),
+      });
 
       const previousRoles = queryClient.getQueryData<Role[]>(
-        queryKeys.roles.list(currentTenantId!)
+        queryKeys.roles.list(currentTenantId!),
       );
 
       // Optimistic: Xóa role khỏi UI
       queryClient.setQueryData<Role[]>(
         queryKeys.roles.list(currentTenantId!),
-        (old) => old?.filter((r) => r.id !== roleId) ?? []
+        (old) => old?.filter((r) => r.id !== roleId) ?? [],
       );
 
       return { previousRoles };
@@ -590,7 +681,7 @@ export function useStaffManagement() {
       if (context?.previousRoles) {
         queryClient.setQueryData(
           queryKeys.roles.list(currentTenantId!),
-          context.previousRoles
+          context.previousRoles,
         );
       }
       toast.error((err as Error).message || "Xóa chức vụ thất bại!");
@@ -599,8 +690,12 @@ export function useStaffManagement() {
       toast.success("Đã xóa chức vụ thành công!");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.roles.all(currentTenantId!) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.staff.all(currentTenantId!) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.roles.all(currentTenantId!),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.staff.all(currentTenantId!),
+      });
     },
   });
 
@@ -609,7 +704,9 @@ export function useStaffManagement() {
     const activeRole = roles.find((r) => r.id === selectedRoleId);
     if (!activeRole) return;
 
-    const isBuiltin = ["ADMIN", "MANAGER", "CASHIER", "EMPLOYEE"].includes(activeRole.name.toUpperCase());
+    const isBuiltin = ["ADMIN", "MANAGER", "CASHIER", "EMPLOYEE"].includes(
+      activeRole.name.toUpperCase(),
+    );
     if (isBuiltin) {
       toast.warning("Không thể xóa các chức vụ mặc định của hệ thống.");
       return;
@@ -635,36 +732,56 @@ export function useStaffManagement() {
 
   /** Mutation: Gán lượt nhận khách — Optimistic UI */
   const assignTurnMutation = useMutation({
-    mutationFn: ({ staffId, turnType }: { staffId: string; turnType: "walkin" | "booked" }) =>
+    mutationFn: ({
+      staffId,
+      turnType,
+    }: {
+      staffId: string;
+      turnType: "walkin" | "booked";
+    }) =>
       api.post(
         `/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns/assign`,
-        { staffId, turnType }
+        { staffId, turnType },
       ),
     onMutate: async ({ staffId, turnType }) => {
-      const turnsKey = queryKeys.dailyTurns.list(currentTenantId!, currentBranchId!);
+      const turnsKey = queryKeys.dailyTurns.list(
+        currentTenantId!,
+        currentBranchId!,
+      );
       await queryClient.cancelQueries({ queryKey: turnsKey });
 
       const previousTurns = queryClient.getQueryData<DailyTurn[]>(turnsKey);
 
       // Optimistic: tăng count ngay lập tức
-      queryClient.setQueryData<DailyTurn[]>(turnsKey, (old) =>
-        old?.map((t) =>
-          t.staffId === staffId
-            ? {
-                ...t,
-                totalWalkinCount: turnType === "walkin" ? t.totalWalkinCount + 1 : t.totalWalkinCount,
-                totalBookedCount: turnType === "booked" ? t.totalBookedCount + 1 : t.totalBookedCount,
-                totalCustomersToday: t.totalCustomersToday + 1,
-                lastAssignedAt: new Date().toISOString(),
-              }
-            : t
-        ) ?? []
+      queryClient.setQueryData<DailyTurn[]>(
+        turnsKey,
+        (old) =>
+          old?.map((t) =>
+            t.staffId === staffId
+              ? {
+                  ...t,
+                  totalWalkinCount:
+                    turnType === "walkin"
+                      ? t.totalWalkinCount + 1
+                      : t.totalWalkinCount,
+                  totalBookedCount:
+                    turnType === "booked"
+                      ? t.totalBookedCount + 1
+                      : t.totalBookedCount,
+                  totalCustomersToday: t.totalCustomersToday + 1,
+                  lastAssignedAt: new Date().toISOString(),
+                }
+              : t,
+          ) ?? [],
       );
 
       return { previousTurns };
     },
     onError: (err, _vars, context) => {
-      const turnsKey = queryKeys.dailyTurns.list(currentTenantId!, currentBranchId!);
+      const turnsKey = queryKeys.dailyTurns.list(
+        currentTenantId!,
+        currentBranchId!,
+      );
       if (context?.previousTurns) {
         queryClient.setQueryData(turnsKey, context.previousTurns);
       }
@@ -677,7 +794,10 @@ export function useStaffManagement() {
     },
   });
 
-  const handleAssignTurn = async (staffId: string, turnType: "walkin" | "booked") => {
+  const handleAssignTurn = async (
+    staffId: string,
+    turnType: "walkin" | "booked",
+  ) => {
     if (!currentTenantId || !currentBranchId) return;
     assignTurnMutation.mutate({ staffId, turnType });
   };
@@ -686,7 +806,7 @@ export function useStaffManagement() {
   const resetTurnsMutation = useMutation({
     mutationFn: () =>
       api.post(
-        `/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns/reset`
+        `/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns/reset`,
       ),
     onSuccess: () => {
       toast.success("Khởi tạo lại lượt xoay tua hôm nay thành công!");
@@ -704,7 +824,8 @@ export function useStaffManagement() {
     if (
       !(await confirm({
         title: "Reset lượt nhận khách",
-        message: "Bạn có chắc chắn muốn RESET toàn bộ lượt nhận khách hôm nay về 0?",
+        message:
+          "Bạn có chắc chắn muốn RESET toàn bộ lượt nhận khách hôm nay về 0?",
         type: "warning",
         confirmText: "Reset",
       }))
@@ -714,7 +835,11 @@ export function useStaffManagement() {
     resetTurnsMutation.mutate();
   };
 
-  const handleInlineTurnChange = (staffId: string, field: "walkin" | "booked", valueStr: string) => {
+  const handleInlineTurnChange = (
+    staffId: string,
+    field: "walkin" | "booked",
+    valueStr: string,
+  ) => {
     const val = parseInt(valueStr.replace(/\D/g, ""), 10) || 0;
 
     // Get current values
@@ -735,8 +860,14 @@ export function useStaffManagement() {
     }));
   };
 
-  const getInlineTurnValue = (turn: DailyTurn, field: "walkin" | "booked"): number => {
-    if (turnEdits[turn.staffId] && turnEdits[turn.staffId][field] !== undefined) {
+  const getInlineTurnValue = (
+    turn: DailyTurn,
+    field: "walkin" | "booked",
+  ): number => {
+    if (
+      turnEdits[turn.staffId] &&
+      turnEdits[turn.staffId][field] !== undefined
+    ) {
       return turnEdits[turn.staffId][field];
     }
     return field === "walkin" ? turn.totalWalkinCount : turn.totalBookedCount;
@@ -747,7 +878,7 @@ export function useStaffManagement() {
     mutationFn: ({ staffId, payload }: { staffId: string; payload: any }) =>
       api.put(
         `/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns/${staffId}`,
-        payload
+        payload,
       ),
     onError: (err) => {
       toast.error((err as Error).message || "Không thể cập nhật lượt thủ công");
@@ -766,14 +897,18 @@ export function useStaffManagement() {
     },
   });
 
-  const handleAutoSaveTurn = async (staffId: string, field: "walkin" | "booked") => {
+  const handleAutoSaveTurn = async (
+    staffId: string,
+    field: "walkin" | "booked",
+  ) => {
     const turn = dailyTurns.find((t) => t.staffId === staffId);
     if (!turn) return;
 
     const edits = turnEdits[staffId];
     if (!edits) return;
 
-    const originalVal = field === "walkin" ? turn.totalWalkinCount : turn.totalBookedCount;
+    const originalVal =
+      field === "walkin" ? turn.totalWalkinCount : turn.totalBookedCount;
     const currentVal = edits[field];
     if (originalVal === currentVal) return;
 
@@ -791,7 +926,9 @@ export function useStaffManagement() {
     // Filter staff members gán chi nhánh này nhưng chưa có trong dailyTurns
     const inQueueIds = dailyTurns.map((t) => t.staffId);
     const availableStaff = staff.filter(
-      (s) => s.branches.some((b) => b.id === currentBranchId) && !inQueueIds.includes(s.id)
+      (s) =>
+        s.branches.some((b) => b.id === currentBranchId) &&
+        !inQueueIds.includes(s.id),
     );
 
     if (availableStaff.length === 0) {
@@ -807,66 +944,100 @@ export function useStaffManagement() {
   // ==========================================================
 
   // Dynamic Staff Schema for Import Matcher
-  const staffSchema = useMemo<TargetField[]>(() => [
-    { field: "name", label: "Tên nhân viên", type: "string", required: true, description: "Họ và tên của nhân viên" },
-    { field: "loginId", label: "ID đăng nhập", type: "string", required: true, description: "ID dùng để đăng nhập hệ thống" },
-    { field: "email", label: "Email liên hệ", type: "string", required: false, description: "Email liên hệ (tùy chọn)" },
-    { field: "phone", label: "Số điện thoại", type: "string", required: false, description: "Số điện thoại liên hệ" },
-    {
-      field: "sex",
-      label: "Giới tính",
-      type: "select",
-      required: false,
-      options: [
-        { value: "Nam", label: "Nam" },
-        { value: "Nữ", label: "Nữ" }
-      ],
-      description: "Giới tính của nhân viên"
-    },
-    { field: "baseSalary", label: "Lương cơ bản", type: "number", required: false, description: "Mức lương cơ bản của nhân viên (VND)" },
-    {
-      field: "roleName",
-      label: "Chức vụ",
-      type: "select",
-      required: false,
-      options: roles.map((r) => ({ value: r.name, label: r.name })),
-      description: "Tên chức vụ. Nếu chưa tồn tại, hệ thống sẽ tự động tạo mới."
-    }
-  ], [roles]);
+  const staffSchema = useMemo<TargetField[]>(
+    () => [
+      {
+        field: "name",
+        label: "Tên nhân viên",
+        type: "string",
+        required: true,
+        description: "Họ và tên của nhân viên",
+      },
+      {
+        field: "loginId",
+        label: "ID đăng nhập",
+        type: "string",
+        required: true,
+        description: "ID dùng để đăng nhập hệ thống",
+      },
+      {
+        field: "email",
+        label: "Email liên hệ",
+        type: "string",
+        required: false,
+        description: "Email liên hệ (tùy chọn)",
+      },
+      {
+        field: "phone",
+        label: "Số điện thoại",
+        type: "string",
+        required: false,
+        description: "Số điện thoại liên hệ",
+      },
+      {
+        field: "sex",
+        label: "Giới tính",
+        type: "select",
+        required: false,
+        options: [
+          { value: "Nam", label: "Nam" },
+          { value: "Nữ", label: "Nữ" },
+        ],
+        description: "Giới tính của nhân viên",
+      },
+      {
+        field: "baseSalary",
+        label: "Lương cơ bản",
+        type: "number",
+        required: false,
+        description: "Mức lương cơ bản của nhân viên (VND)",
+      },
+      {
+        field: "roleName",
+        label: "Chức vụ",
+        type: "select",
+        required: false,
+        options: roles.map((r) => ({ value: r.name, label: r.name })),
+        description:
+          "Tên chức vụ. Nếu chưa tồn tại, hệ thống sẽ tự động tạo mới.",
+      },
+    ],
+    [roles],
+  );
 
   // Find the admin user (either by isAdmin flag or fallback to oldest createdAt)
   const adminUser = getAdminUser(staff);
   const adminUserId = adminUser?.id;
 
   // Filter staff based on search query & other filter criteria
-  const filteredStaffBase = staff.filter(
-    (item) => {
-      // 1. Text Search Filter
-      const matchesSearch =
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.loginId && item.loginId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (item.email && item.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (item.phone && item.phone.includes(searchTerm)) ||
-        (item.role && item.role.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredStaffBase = staff.filter((item) => {
+    // 1. Text Search Filter
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.loginId &&
+        item.loginId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.email &&
+        item.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.phone && item.phone.includes(searchTerm)) ||
+      (item.role &&
+        item.role.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
-      // 2. Branch Filter
-      const matchesBranch =
-        selectedBranchFilter === "" ||
-        item.branches.some((b) => b.id === selectedBranchFilter);
+    // 2. Branch Filter
+    const matchesBranch =
+      selectedBranchFilter === "" ||
+      item.branches.some((b) => b.id === selectedBranchFilter);
 
-      // 3. Role Filter
-      const matchesRole =
-        selectedRoleFilter === "" ||
-        (item.role && item.role.id === selectedRoleFilter);
+    // 3. Role Filter
+    const matchesRole =
+      selectedRoleFilter === "" ||
+      (item.role && item.role.id === selectedRoleFilter);
 
-      // 4. Status Filter
-      const matchesStatus =
-        selectedStatusFilter === "" ||
-        item.status === selectedStatusFilter;
+    // 4. Status Filter
+    const matchesStatus =
+      selectedStatusFilter === "" || item.status === selectedStatusFilter;
 
-      return matchesSearch && matchesBranch && matchesRole && matchesStatus;
-    }
-  );
+    return matchesSearch && matchesBranch && matchesRole && matchesStatus;
+  });
 
   // Sort: Admin user always goes first
   const filteredStaff = [...filteredStaffBase].sort((a, b) => {
@@ -880,7 +1051,9 @@ export function useStaffManagement() {
   // Calculate staff list gán chi nhánh này chưa có trong turns queue
   const inQueueIds = dailyTurns.map((t) => t.staffId);
   const queueAddableStaff = staff.filter(
-    (s) => s.branches.some((b) => b.id === currentBranchId) && !inQueueIds.includes(s.id)
+    (s) =>
+      s.branches.some((b) => b.id === currentBranchId) &&
+      !inQueueIds.includes(s.id),
   );
 
   // ==========================================================
@@ -892,13 +1065,21 @@ export function useStaffManagement() {
   const fetchStaffAndRoles = useCallback(
     async (silent?: boolean) => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.staff.all(currentTenantId!) }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.roles.all(currentTenantId!) }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.branches.all(currentTenantId!) }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.permissions.all(currentTenantId!) }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.staff.all(currentTenantId!),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.roles.all(currentTenantId!),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.branches.all(currentTenantId!),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.permissions.all(currentTenantId!),
+        }),
       ]);
     },
-    [queryClient, currentTenantId]
+    [queryClient, currentTenantId],
   );
 
   /** Invalidate & refetch daily turns */
@@ -910,7 +1091,7 @@ export function useStaffManagement() {
         });
       }
     },
-    [queryClient, currentTenantId, currentBranchId]
+    [queryClient, currentTenantId, currentBranchId],
   );
 
   return {

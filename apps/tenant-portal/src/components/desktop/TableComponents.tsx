@@ -38,7 +38,7 @@ export const ExcelInput: React.FC<ExcelInputProps> = ({
     showSuggestion,
     suggestedValue,
     applySuggestion,
-    handleKeyDown: handleSuggestionKeyDown
+    handleKeyDown: handleSuggestionKeyDown,
   } = usePriceSuggestion(value, onChange, false);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLInputElement>) => {
@@ -63,11 +63,28 @@ export const ExcelInput: React.FC<ExcelInputProps> = ({
   };
 
   // Adjust paddings dynamically to prevent text from overlapping units
-  const paddingLeft = textAlign === "center" ? ((unit && showUnit) ? (unit === "phút" ? "32px" : "24px") : "10px") : "10px";
-  const paddingRight = (unit && showUnit) ? (unit === "phút" ? "32px" : "24px") : "10px";
+  const paddingLeft =
+    textAlign === "center"
+      ? unit && showUnit
+        ? unit === "phút"
+          ? "32px"
+          : "24px"
+        : "10px"
+      : "10px";
+  const paddingRight =
+    unit && showUnit ? (unit === "phút" ? "32px" : "24px") : "10px";
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", alignItems: "center", zIndex: isFocused ? 50 : 1 }}>
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        zIndex: isFocused ? 50 : 1,
+      }}
+    >
       <input
         type={type}
         value={value ?? ""}
@@ -158,7 +175,11 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-  const [dropdownCoords, setDropdownCoords] = useState({ top: 0, left: 0, width: 0 });
+  const [dropdownCoords, setDropdownCoords] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+  });
   const [hoveredValue, setHoveredValue] = useState<string | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
@@ -169,7 +190,7 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
     showSuggestion,
     suggestedValue,
     applySuggestion,
-    handleKeyDown: handleSuggestionKeyDown
+    handleKeyDown: handleSuggestionKeyDown,
   } = usePriceSuggestion(value, onChange, false);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLInputElement>) => {
@@ -185,7 +206,7 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
       setDropdownCoords({
         top: rect.bottom + window.scrollY,
         left: rect.left + window.scrollX,
-        width: rect.width
+        width: rect.width,
       });
     }
   };
@@ -223,14 +244,14 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
 
   const cleanStr = (s: string) => (s || "").replace(/\D/g, "");
 
-  const selectedOpt = options.find(opt => {
+  const selectedOpt = options.find((opt) => {
     if (opt.value === value) return true;
     const cleanOpt = cleanStr(opt.value);
     const cleanVal = cleanStr(value);
     return cleanOpt && cleanVal && cleanOpt === cleanVal;
   });
 
-  const displayLabel = selectedOpt ? selectedOpt.label : (value || placeholder);
+  const displayLabel = selectedOpt ? selectedOpt.label : value || placeholder;
 
   return (
     <div
@@ -294,7 +315,7 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
               paddingLeft: "16px",
               paddingRight: canOpen ? "24px" : "16px",
               boxSizing: "border-box",
-              outline: "none"
+              outline: "none",
             }}
           />
           {canOpen && (
@@ -317,7 +338,7 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
                 alignItems: "center",
                 justifyContent: "center",
                 color: "var(--text-muted)",
-                fontSize: "9px"
+                fontSize: "9px",
               }}
             >
               ▼
@@ -346,7 +367,7 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
             padding: canOpen ? "0 24px 0 10px" : "0 10px",
             fontSize: "12px",
             fontWeight: "500",
-            cursor: disabled ? "not-allowed" : (canOpen ? "pointer" : "default"),
+            cursor: disabled ? "not-allowed" : canOpen ? "pointer" : "default",
             boxSizing: "border-box",
             borderRadius: "var(--radius-sm)",
             position: "relative",
@@ -354,90 +375,105 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
             ...colorStyle,
           }}
         >
-          <span style={{ 
-            textAlign: "center", 
-            width: "100%",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis"
-          }}>
+          <span
+            style={{
+              textAlign: "center",
+              width: "100%",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
             {displayLabel}
           </span>
           {canOpen && (
-            <span style={{ position: "absolute", right: "8px", fontSize: "9px", color: "var(--text-muted)" }}>
+            <span
+              style={{
+                position: "absolute",
+                right: "8px",
+                fontSize: "9px",
+                color: "var(--text-muted)",
+              }}
+            >
               ▼
             </span>
           )}
         </div>
       )}
 
-      {isOpen && createPortal(
-        <div
-          ref={dropdownRef}
-          style={{
-            position: "absolute",
-            top: `${dropdownCoords.top}px`,
-            left: `${dropdownCoords.left}px`,
-            width: `${dropdownCoords.width}px`,
-            maxHeight: "200px",
-            overflowY: "auto",
-            backgroundColor: "white",
-            border: "1px solid var(--border-color)",
-            borderRadius: "var(--radius-md)",
-            boxShadow: "var(--shadow-md)",
-            zIndex: 9999,
-            marginTop: "2px",
-            padding: "4px",
-            boxSizing: "border-box",
-            display: "flex",
-            flexDirection: "column",
-            gap: "2px",
-          }}
-        >
-          {options.map((opt) => {
-            const isSelected = opt.value === value;
-            const isHovered = hoveredValue === opt.value;
-            return (
-              <div
-                key={opt.value}
-                onMouseEnter={() => setHoveredValue(opt.value)}
-                onMouseLeave={() => setHoveredValue(null)}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onChange(opt.value);
-                  setIsOpen(false);
-                }}
-                style={{
-                  padding: "8px 10px",
-                  borderRadius: "16px",
-                  cursor: "pointer",
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  textAlign: "center",
-                  transition: "all 0.1s ease",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  filter: isHovered ? "brightness(0.95)" : "none",
-                  ...((isSelected || !opt.colorStyle) ? {
-                    background: isSelected 
-                      ? "var(--color-primary-light)" 
-                      : (isHovered ? "var(--bg-app)" : "transparent"),
-                    color: isSelected || isHovered
-                      ? "var(--color-primary)" 
-                      : "var(--text-primary)",
-                  } : {}),
-                  ...(opt.colorStyle || {}),
-                }}
-                className="excel-select-option"
-              >
-                {opt.label}
-              </div>
-            );
-          })}
-        </div>,
-        document.body
-      )}
+      {isOpen &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            style={{
+              position: "absolute",
+              top: `${dropdownCoords.top}px`,
+              left: `${dropdownCoords.left}px`,
+              width: `${dropdownCoords.width}px`,
+              maxHeight: "200px",
+              overflowY: "auto",
+              backgroundColor: "white",
+              border: "1px solid var(--border-color)",
+              borderRadius: "var(--radius-md)",
+              boxShadow: "var(--shadow-md)",
+              zIndex: 9999,
+              marginTop: "2px",
+              padding: "4px",
+              boxSizing: "border-box",
+              display: "flex",
+              flexDirection: "column",
+              gap: "2px",
+            }}
+          >
+            {options.map((opt) => {
+              const isSelected = opt.value === value;
+              const isHovered = hoveredValue === opt.value;
+              return (
+                <div
+                  key={opt.value}
+                  onMouseEnter={() => setHoveredValue(opt.value)}
+                  onMouseLeave={() => setHoveredValue(null)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onChange(opt.value);
+                    setIsOpen(false);
+                  }}
+                  style={{
+                    padding: "8px 10px",
+                    borderRadius: "16px",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    textAlign: "center",
+                    transition: "all 0.1s ease",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    filter: isHovered ? "brightness(0.95)" : "none",
+                    ...(isSelected || !opt.colorStyle
+                      ? {
+                          background: isSelected
+                            ? "var(--color-primary-light)"
+                            : isHovered
+                              ? "var(--bg-app)"
+                              : "transparent",
+                          color:
+                            isSelected || isHovered
+                              ? "var(--color-primary)"
+                              : "var(--text-primary)",
+                        }
+                      : {}),
+                    ...(opt.colorStyle || {}),
+                  }}
+                  className="excel-select-option"
+                >
+                  {opt.label}
+                </div>
+              );
+            })}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };
@@ -447,14 +483,19 @@ export const ExcelSelect: React.FC<ExcelSelectProps> = ({
 export function usePriceSuggestion(
   value: string | number | undefined | null,
   onChange: (newValue: string) => void,
-  multiSegment = false
+  multiSegment = false,
 ) {
   const strValue = String(value ?? "");
   const cleanValue = multiSegment ? strValue : strValue.replace(/,/g, "");
   const segments = cleanValue.split(",");
   const lastSegment = segments[segments.length - 1] || "";
-  const lastSegmentDigits = /^\d+$/.test(lastSegment.trim()) ? lastSegment.trim() : null;
-  const showSuggestion = lastSegmentDigits !== null && lastSegmentDigits.length <= 4 && lastSegmentDigits.length > 0;
+  const lastSegmentDigits = /^\d+$/.test(lastSegment.trim())
+    ? lastSegment.trim()
+    : null;
+  const showSuggestion =
+    lastSegmentDigits !== null &&
+    lastSegmentDigits.length <= 4 &&
+    lastSegmentDigits.length > 0;
   const suggestedValue = lastSegmentDigits ? lastSegmentDigits + "000" : "";
 
   const applySuggestion = () => {
@@ -482,7 +523,7 @@ export function usePriceSuggestion(
     showSuggestion,
     suggestedValue,
     applySuggestion,
-    handleKeyDown
+    handleKeyDown,
   };
 }
 
@@ -497,7 +538,7 @@ export const PriceSuggestionBadge: React.FC<PriceSuggestionBadgeProps> = ({
   show,
   suggestedValue,
   onClick,
-  style
+  style,
 }) => {
   if (!show || !suggestedValue) return null;
 
@@ -525,7 +566,7 @@ export const PriceSuggestionBadge: React.FC<PriceSuggestionBadgeProps> = ({
         alignItems: "center",
         gap: "6px",
         whiteSpace: "nowrap",
-        ...style
+        ...style,
       }}
       onClick={onClick}
       onMouseDown={(e) => {
@@ -551,13 +592,18 @@ export const PriceSuggestionBadge: React.FC<PriceSuggestionBadgeProps> = ({
   );
 };
 
-interface PriceInputWithSuggestionProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange"> {
+interface PriceInputWithSuggestionProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "onChange"
+> {
   value: string;
   onChange: (val: string) => void;
   multiSegment?: boolean;
 }
 
-export const PriceInputWithSuggestion: React.FC<PriceInputWithSuggestionProps> = ({
+export const PriceInputWithSuggestion: React.FC<
+  PriceInputWithSuggestionProps
+> = ({
   value,
   onChange,
   multiSegment = false,
@@ -566,12 +612,8 @@ export const PriceInputWithSuggestion: React.FC<PriceInputWithSuggestionProps> =
   ...props
 }) => {
   const [isFocused, setIsFocused] = useState(false);
-  const {
-    showSuggestion,
-    suggestedValue,
-    applySuggestion,
-    handleKeyDown
-  } = usePriceSuggestion(value, onChange, multiSegment);
+  const { showSuggestion, suggestedValue, applySuggestion, handleKeyDown } =
+    usePriceSuggestion(value, onChange, multiSegment);
 
   const handleKeyDownEvent = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const handled = handleKeyDown(e);
@@ -581,7 +623,13 @@ export const PriceInputWithSuggestion: React.FC<PriceInputWithSuggestionProps> =
   };
 
   return (
-    <div style={{ position: "relative", width: "100%", zIndex: isFocused ? 50 : 1 }}>
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        zIndex: isFocused ? 50 : 1,
+      }}
+    >
       <input
         {...props}
         className={className}
@@ -653,7 +701,7 @@ export const ExcelChipsInput: React.FC<ExcelChipsInputProps> = ({
     showSuggestion,
     suggestedValue,
     applySuggestion,
-    handleKeyDown: handleSuggestionKeyDown
+    handleKeyDown: handleSuggestionKeyDown,
   } = usePriceSuggestion(inputValue, addChip, false);
 
   const handleInputChange = (val: string) => {
@@ -710,10 +758,11 @@ export const ExcelChipsInput: React.FC<ExcelChipsInputProps> = ({
         boxSizing: "border-box",
         zIndex: isFocused ? 50 : 1,
         background: isFocused ? "white" : "transparent",
-        outline: (isFocused && hasOutline) ? "2px solid var(--color-primary)" : "none",
+        outline:
+          isFocused && hasOutline ? "2px solid var(--color-primary)" : "none",
         outlineOffset: "-2px",
         overflow: "visible",
-        cursor: "text"
+        cursor: "text",
       }}
     >
       {values.map((val, idx) => (
@@ -731,7 +780,7 @@ export const ExcelChipsInput: React.FC<ExcelChipsInputProps> = ({
             borderRadius: "4px",
             height: "24px",
             flexShrink: 0,
-            boxSizing: "border-box"
+            boxSizing: "border-box",
           }}
         >
           {formatChipValue(val)}
@@ -753,7 +802,7 @@ export const ExcelChipsInput: React.FC<ExcelChipsInputProps> = ({
               color: "var(--color-primary)",
               fontSize: "12px",
               fontWeight: "bold",
-              lineHeight: 1
+              lineHeight: 1,
             }}
           >
             ×
@@ -799,7 +848,7 @@ export const ExcelChipsInput: React.FC<ExcelChipsInputProps> = ({
           fontSize: "13px",
           padding: 0,
           outline: "none",
-          boxShadow: "none"
+          boxShadow: "none",
         }}
       />
       <PriceSuggestionBadge
@@ -835,7 +884,11 @@ export const ExcelMultipleSelect: React.FC<ExcelMultipleSelectProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [dropdownCoords, setDropdownCoords] = useState({ top: 0, left: 0, width: 0 });
+  const [dropdownCoords, setDropdownCoords] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+  });
   const containerRef = React.useRef<HTMLDivElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -845,7 +898,7 @@ export const ExcelMultipleSelect: React.FC<ExcelMultipleSelectProps> = ({
       setDropdownCoords({
         top: rect.bottom + window.scrollY,
         left: rect.left + window.scrollX,
-        width: rect.width
+        width: rect.width,
       });
     }
   };
@@ -894,12 +947,14 @@ export const ExcelMultipleSelect: React.FC<ExcelMultipleSelectProps> = ({
   };
 
   const filteredOptions = options.filter((opt) =>
-    opt.label.toLowerCase().includes(searchTerm.toLowerCase())
+    opt.label.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const selectedLabels = options
     .filter((opt) => values.includes(opt.value))
-    .map((opt) => opt.label.replace(/HairStar|BarberShop| - Chi nhánh/g, "").trim());
+    .map((opt) =>
+      opt.label.replace(/HairStar|BarberShop| - Chi nhánh/g, "").trim(),
+    );
 
   return (
     <div
@@ -946,7 +1001,9 @@ export const ExcelMultipleSelect: React.FC<ExcelMultipleSelectProps> = ({
           }}
         >
           {selectedLabels.length === 0 ? (
-            <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>{placeholder}</span>
+            <span style={{ color: "var(--text-muted)", fontStyle: "italic" }}>
+              {placeholder}
+            </span>
           ) : (
             selectedLabels.map((lbl, idx) => (
               <span
@@ -967,121 +1024,147 @@ export const ExcelMultipleSelect: React.FC<ExcelMultipleSelectProps> = ({
             ))
           )}
         </div>
-        <span style={{ color: "var(--text-muted)", fontSize: "10px", flexShrink: 0, marginLeft: "4px" }}>
+        <span
+          style={{
+            color: "var(--text-muted)",
+            fontSize: "10px",
+            flexShrink: 0,
+            marginLeft: "4px",
+          }}
+        >
           ▼
         </span>
       </div>
 
       {/* Dropdown Menu via Portal */}
-      {isOpen && createPortal(
-        <div
-          ref={dropdownRef}
-          style={{
-            position: "absolute",
-            top: `${dropdownCoords.top}px`,
-            left: `${dropdownCoords.left}px`,
-            width: `${Math.max(260, dropdownCoords.width)}px`,
-            maxHeight: "260px",
-            backgroundColor: "white",
-            border: "1px solid var(--border-color)",
-            borderRadius: "var(--radius-md)",
-            boxShadow: "var(--shadow-md)",
-            zIndex: 9999,
-            marginTop: "2px",
-            padding: "8px",
-            boxSizing: "border-box",
-            display: "flex",
-            flexDirection: "column",
-            gap: "8px",
-          }}
-        >
-          {/* Search Box */}
-          <div style={{ position: "relative", width: "100%" }}>
-            <input
-              type="text"
-              placeholder="Tìm kiếm..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                width: "100%",
-                height: "30px",
-                padding: "4px 8px 4px 28px",
-                fontSize: "12px",
-                border: "1px solid var(--border-color)",
-                borderRadius: "var(--radius-sm)",
-                boxSizing: "border-box",
-              }}
-            />
-            <span
-              style={{
-                position: "absolute",
-                left: "8px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                fontSize: "12px",
-                color: "var(--text-muted)",
-              }}
-            >
-              🔍
-            </span>
-          </div>
-
-          {/* Options List */}
+      {isOpen &&
+        createPortal(
           <div
+            ref={dropdownRef}
             style={{
-              overflowY: "auto",
+              position: "absolute",
+              top: `${dropdownCoords.top}px`,
+              left: `${dropdownCoords.left}px`,
+              width: `${Math.max(260, dropdownCoords.width)}px`,
+              maxHeight: "260px",
+              backgroundColor: "white",
+              border: "1px solid var(--border-color)",
+              borderRadius: "var(--radius-md)",
+              boxShadow: "var(--shadow-md)",
+              zIndex: 9999,
+              marginTop: "2px",
+              padding: "8px",
+              boxSizing: "border-box",
               display: "flex",
               flexDirection: "column",
-              gap: "2px",
-              flexGrow: 1,
+              gap: "8px",
             }}
           >
-            {filteredOptions.length === 0 ? (
-              <div style={{ padding: "8px", fontSize: "12px", color: "var(--text-muted)", textAlign: "center" }}>
-                Không tìm thấy kết quả
-              </div>
-            ) : (
-              filteredOptions.map((opt) => {
-                const isChecked = values.includes(opt.value);
-                return (
-                  <div
-                    key={opt.value}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleToggle(opt.value);
-                    }}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "6px 8px",
-                      borderRadius: "calc(var(--radius-sm) - 2px)",
-                      cursor: "pointer",
-                      fontSize: "12px",
-                      background: isChecked ? "var(--color-primary-light)" : "transparent",
-                      color: isChecked ? "var(--color-primary)" : "var(--text-primary)",
-                      transition: "all 0.1s ease",
-                    }}
-                    className="excel-multiple-select-option"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      onChange={() => { }}
-                      style={{ cursor: "pointer" }}
-                    />
-                    <span style={{ fontWeight: isChecked ? "600" : "400", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {opt.label}
-                    </span>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>,
-        document.body
-      )}
+            {/* Search Box */}
+            <div style={{ position: "relative", width: "100%" }}>
+              <input
+                type="text"
+                placeholder="Tìm kiếm..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  width: "100%",
+                  height: "30px",
+                  padding: "4px 8px 4px 28px",
+                  fontSize: "12px",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: "var(--radius-sm)",
+                  boxSizing: "border-box",
+                }}
+              />
+              <span
+                style={{
+                  position: "absolute",
+                  left: "8px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  fontSize: "12px",
+                  color: "var(--text-muted)",
+                }}
+              >
+                🔍
+              </span>
+            </div>
+
+            {/* Options List */}
+            <div
+              style={{
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: "2px",
+                flexGrow: 1,
+              }}
+            >
+              {filteredOptions.length === 0 ? (
+                <div
+                  style={{
+                    padding: "8px",
+                    fontSize: "12px",
+                    color: "var(--text-muted)",
+                    textAlign: "center",
+                  }}
+                >
+                  Không tìm thấy kết quả
+                </div>
+              ) : (
+                filteredOptions.map((opt) => {
+                  const isChecked = values.includes(opt.value);
+                  return (
+                    <div
+                      key={opt.value}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggle(opt.value);
+                      }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "6px 8px",
+                        borderRadius: "calc(var(--radius-sm) - 2px)",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        background: isChecked
+                          ? "var(--color-primary-light)"
+                          : "transparent",
+                        color: isChecked
+                          ? "var(--color-primary)"
+                          : "var(--text-primary)",
+                        transition: "all 0.1s ease",
+                      }}
+                      className="excel-multiple-select-option"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => {}}
+                        style={{ cursor: "pointer" }}
+                      />
+                      <span
+                        style={{
+                          fontWeight: isChecked ? "600" : "400",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {opt.label}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };
@@ -1138,12 +1221,10 @@ export const ExcelRow: React.FC<ExcelRowProps> = ({
         backgroundColor: isDragging ? "var(--color-primary-light)" : undefined,
         outline: isDragging ? "2px dashed var(--color-primary)" : undefined,
         outlineOffset: "-2px",
-        ...style
+        ...style,
       }}
     >
       {children}
     </tr>
   );
 };
-
-

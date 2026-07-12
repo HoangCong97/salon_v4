@@ -1,10 +1,22 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, Headers, HttpStatus, HttpException } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  Headers,
+  HttpStatus,
+  HttpException,
+} from "@nestjs/common";
 import { prisma } from "@salon/database";
 import { NotificationGateway } from "./notification.gateway";
 
 /**
  * BookingController — API for Appointments page
- * 
+ *
  * Handles CRUD operations for bookings + booking details.
  * GET returns data in ServiceItem[] format expected by the frontend grid.
  */
@@ -44,11 +56,14 @@ export class BookingController {
   async getBookings(
     @Param("tenantId") tenantId: string,
     @Query("branchId") branchId: string,
-    @Query("date") date: string // yyyy-MM-dd
+    @Query("date") date: string, // yyyy-MM-dd
   ) {
     try {
       if (!branchId || !date) {
-        throw new HttpException("branchId and date are required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "branchId and date are required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       // Build date range for the query day (in Vietnam timezone UTC+7)
@@ -67,7 +82,9 @@ export class BookingController {
           bookingDetails: {
             where: { deletedAt: null },
             include: {
-              service: { select: { id: true, name: true, duration: true, price: true } },
+              service: {
+                select: { id: true, name: true, duration: true, price: true },
+              },
               staff: { select: { id: true, name: true } },
             },
           },
@@ -76,11 +93,13 @@ export class BookingController {
       });
 
       // Transform to ServiceItem[] format expected by frontend
-      const items = bookings.flatMap(booking => {
-        const custName = booking.customer?.name ?? booking.customerName ?? "Khách vãng lai";
-        const custPhone = booking.customer?.phone ?? booking.customerPhone ?? undefined;
+      const items = bookings.flatMap((booking) => {
+        const custName =
+          booking.customer?.name ?? booking.customerName ?? "Khách vãng lai";
+        const custPhone =
+          booking.customer?.phone ?? booking.customerPhone ?? undefined;
 
-        return booking.bookingDetails.map(detail => ({
+        return booking.bookingDetails.map((detail) => ({
           id: detail.id,
           groupId: booking.id,
           customerName: custName,
@@ -105,7 +124,7 @@ export class BookingController {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to fetch bookings: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -118,7 +137,8 @@ export class BookingController {
   async createBooking(
     @Param("tenantId") tenantId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: {
+    @Body()
+    body: {
       branchId: string;
       customerId?: string;
       customerName?: string;
@@ -133,32 +153,48 @@ export class BookingController {
         duration?: number;
         status?: string;
       }>;
-    }
+    },
   ) {
     try {
-      const { branchId, customerId, customerName, customerPhone, source, note, date, details } = body;
+      const {
+        branchId,
+        customerId,
+        customerName,
+        customerPhone,
+        source,
+        note,
+        date,
+        details,
+      } = body;
 
       if (!branchId || !date || !details?.length) {
-        throw new HttpException("branchId, date, and at least one detail are required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "branchId, date, and at least one detail are required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       // Compute booking startTime/endTime from details
-      const times = details.map(d => this.parseDateTime(date, d.startTime));
-      const bookingStart = new Date(Math.min(...times.map(t => t.getTime())));
+      const times = details.map((d) => this.parseDateTime(date, d.startTime));
+      const bookingStart = new Date(Math.min(...times.map((t) => t.getTime())));
 
       // Fetch service durations to compute end time
-      const serviceIds = details.map(d => d.serviceId);
+      const serviceIds = details.map((d) => d.serviceId);
       const services = await prisma.service.findMany({
         where: { id: { in: serviceIds } },
         select: { id: true, duration: true },
       });
-      const serviceDurationMap = new Map(services.map(s => [s.id, s.duration ?? 30]));
+      const serviceDurationMap = new Map(
+        services.map((s) => [s.id, s.duration ?? 30]),
+      );
 
-      const latestEnd = Math.max(...details.map(d => {
-        const start = this.parseDateTime(date, d.startTime).getTime();
-        const dur = d.duration ?? serviceDurationMap.get(d.serviceId) ?? 30;
-        return start + dur * 60 * 1000;
-      }));
+      const latestEnd = Math.max(
+        ...details.map((d) => {
+          const start = this.parseDateTime(date, d.startTime).getTime();
+          const dur = d.duration ?? serviceDurationMap.get(d.serviceId) ?? 30;
+          return start + dur * 60 * 1000;
+        }),
+      );
       const bookingEnd = new Date(latestEnd);
 
       const booking = await prisma.booking.create({
@@ -166,15 +202,15 @@ export class BookingController {
           tenantId,
           branchId,
           customerId: customerId || null,
-          customerName: customerId ? null : (customerName || null),
-          customerPhone: customerId ? null : (customerPhone || null),
+          customerName: customerId ? null : customerName || null,
+          customerPhone: customerId ? null : customerPhone || null,
           startTime: bookingStart,
           endTime: bookingEnd,
           status: "PENDING",
           source: source || "WALK_IN",
           note: note || null,
           bookingDetails: {
-            create: details.map(d => ({
+            create: details.map((d) => ({
               serviceId: d.serviceId,
               staffId: d.staffId || null,
               startTime: this.parseDateTime(date, d.startTime),
@@ -187,7 +223,9 @@ export class BookingController {
           customer: { select: { id: true, name: true, phone: true } },
           bookingDetails: {
             include: {
-              service: { select: { id: true, name: true, duration: true, price: true } },
+              service: {
+                select: { id: true, name: true, duration: true, price: true },
+              },
               staff: { select: { id: true, name: true } },
             },
           },
@@ -195,12 +233,18 @@ export class BookingController {
       });
 
       // Return in ServiceItem[] format
-      const custName = booking.customer?.name ?? booking.customerName ?? "Khách vãng lai";
-      const custPhone = booking.customer?.phone ?? booking.customerPhone ?? undefined;
+      const custName =
+        booking.customer?.name ?? booking.customerName ?? "Khách vãng lai";
+      const custPhone =
+        booking.customer?.phone ?? booking.customerPhone ?? undefined;
 
-      this.notificationGateway.broadcastToTenant(tenantId, "appointments.updated", { branchId, senderId });
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "appointments.updated",
+        { branchId, senderId },
+      );
 
-      return booking.bookingDetails.map(detail => ({
+      return booking.bookingDetails.map((detail) => ({
         id: detail.id,
         groupId: booking.id,
         customerName: custName,
@@ -222,7 +266,7 @@ export class BookingController {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to create booking: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -236,7 +280,7 @@ export class BookingController {
     @Param("tenantId") tenantId: string,
     @Param("detailId") detailId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: { staffId?: string; startTime?: string; date?: string }
+    @Body() body: { staffId?: string; startTime?: string; date?: string },
   ) {
     try {
       const updateData: any = {};
@@ -260,14 +304,18 @@ export class BookingController {
         throw new HttpException("Forbidden", HttpStatus.FORBIDDEN);
       }
 
-      this.notificationGateway.broadcastToTenant(tenantId, "appointments.updated", { branchId: detail.booking.branchId, senderId });
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "appointments.updated",
+        { branchId: detail.booking.branchId, senderId },
+      );
 
       return { success: true, id: detail.id };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to assign: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -281,7 +329,7 @@ export class BookingController {
     @Param("tenantId") tenantId: string,
     @Param("detailId") detailId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: { duration: number }
+    @Body() body: { duration: number },
   ) {
     try {
       const detail = await prisma.bookingDetail.update({
@@ -296,14 +344,18 @@ export class BookingController {
         throw new HttpException("Forbidden", HttpStatus.FORBIDDEN);
       }
 
-      this.notificationGateway.broadcastToTenant(tenantId, "appointments.updated", { branchId: detail.booking.branchId, senderId });
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "appointments.updated",
+        { branchId: detail.booking.branchId, senderId },
+      );
 
       return { success: true, id: detail.id };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to resize: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -317,7 +369,7 @@ export class BookingController {
     @Param("tenantId") tenantId: string,
     @Param("detailId") detailId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: { status: string }
+    @Body() body: { status: string },
   ) {
     try {
       const detail = await prisma.bookingDetail.update({
@@ -332,14 +384,18 @@ export class BookingController {
         throw new HttpException("Forbidden", HttpStatus.FORBIDDEN);
       }
 
-      this.notificationGateway.broadcastToTenant(tenantId, "appointments.updated", { branchId: detail.booking.branchId, senderId });
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "appointments.updated",
+        { branchId: detail.booking.branchId, senderId },
+      );
 
       return { success: true, id: detail.id };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to update status: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -352,7 +408,7 @@ export class BookingController {
   async deleteDetail(
     @Param("tenantId") tenantId: string,
     @Param("detailId") detailId: string,
-    @Headers("x-user-id") senderId: string
+    @Headers("x-user-id") senderId: string,
   ) {
     try {
       const detail = await prisma.bookingDetail.update({
@@ -382,14 +438,18 @@ export class BookingController {
         });
       }
 
-      this.notificationGateway.broadcastToTenant(tenantId, "appointments.updated", { branchId: detail.booking.branchId, senderId });
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "appointments.updated",
+        { branchId: detail.booking.branchId, senderId },
+      );
 
       return { success: true, id: detail.id };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to delete: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

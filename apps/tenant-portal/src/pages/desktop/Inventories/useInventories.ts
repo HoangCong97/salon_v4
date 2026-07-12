@@ -105,7 +105,7 @@ export function useInventories() {
   const uploadFile = async (
     base64Data: string,
     category: string,
-    originalFilename?: string
+    originalFilename?: string,
   ): Promise<string> => {
     const data = await api.post<{ url: string }>(
       `/tenants/${currentTenantId}/upload`,
@@ -113,7 +113,7 @@ export function useInventories() {
         file: base64Data,
         category,
         filename: originalFilename,
-      }
+      },
     );
     return data.url;
   };
@@ -128,7 +128,7 @@ export function useInventories() {
   const handlePriceChange = (
     itemId: string,
     field: "costPrice" | "sellPrice" | "quantity",
-    valStr: string
+    valStr: string,
   ) => {
     const cleaned = valStr.replace(/\D/g, "");
     if (cleaned === "") {
@@ -141,7 +141,7 @@ export function useInventories() {
   const handleInlineChange = (
     itemId: string,
     field: keyof InventoryItem,
-    value: string | number | undefined | null
+    value: string | number | undefined | null,
   ) => {
     setInlineEdits((prev) => ({
       ...prev,
@@ -161,7 +161,7 @@ export function useInventories() {
 
   const handleAutoSave = async (
     itemId: string,
-    updatedFields: Partial<InventoryItem>
+    updatedFields: Partial<InventoryItem>,
   ) => {
     const originalItem = items.find((i) => i.id === itemId);
     if (!originalItem) return;
@@ -178,7 +178,9 @@ export function useInventories() {
 
     // Skip save if values are identical to original
     let hasChanges = false;
-    for (const key of Object.keys(updatedFields) as Array<keyof InventoryItem>) {
+    for (const key of Object.keys(updatedFields) as Array<
+      keyof InventoryItem
+    >) {
       if (updatedFields[key] !== originalItem[key]) {
         hasChanges = true;
         break;
@@ -203,7 +205,7 @@ export function useInventories() {
     try {
       await api.put(
         `/tenants/${currentTenantId}/inventories/${itemId}`,
-        payload
+        payload,
       );
 
       // Clear inlineEdits for this item
@@ -291,7 +293,7 @@ export function useInventories() {
       } else {
         await api.put(
           `/tenants/${currentTenantId}/inventories/${selectedItemId}`,
-          payload
+          payload,
         );
         toast.success("Cập nhật sản phẩm thành công!");
       }
@@ -327,8 +329,12 @@ export function useInventories() {
 
   const handleToggleActive = async (itemId: string, currentState: boolean) => {
     try {
-      await api.patch(`/tenants/${currentTenantId}/inventories/${itemId}/toggle-active`);
-      toast.success(currentState ? "Đã ẩn sản phẩm khỏi POS" : "Đã hiện sản phẩm trên POS");
+      await api.patch(
+        `/tenants/${currentTenantId}/inventories/${itemId}/toggle-active`,
+      );
+      toast.success(
+        currentState ? "Đã ẩn sản phẩm khỏi POS" : "Đã hiện sản phẩm trên POS",
+      );
       await fetchInventory();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);

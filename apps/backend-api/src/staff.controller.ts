@@ -1,39 +1,73 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Headers, HttpStatus, HttpException } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Headers,
+  HttpStatus,
+  HttpException,
+} from "@nestjs/common";
 import { prisma } from "@salon/database";
 import { deleteOldFile } from "./file-utils";
 import { NotificationGateway } from "./notification.gateway";
 
 const defaultRolePermissions: Record<string, string[]> = {
   admin: [
-    "booking.view", "booking.create", "booking.edit", "booking.delete",
-    "pos.view", "invoice.view", "invoice.create",
-    "customer.view", "customer.manage",
-    "service.view", "service.manage",
-    "inventory.view", "inventory.manage",
-    "staff.view", "staff.manage",
-    "shift.view", "shift.manage",
+    "booking.view",
+    "booking.create",
+    "booking.edit",
+    "booking.delete",
+    "pos.view",
+    "invoice.view",
+    "invoice.create",
+    "customer.view",
+    "customer.manage",
+    "service.view",
+    "service.manage",
+    "inventory.view",
+    "inventory.manage",
+    "staff.view",
+    "staff.manage",
+    "shift.view",
+    "shift.manage",
     "report.view",
-    "branch.view", "branch.manage"
+    "branch.view",
+    "branch.manage",
   ],
   manager: [
-    "booking.view", "booking.create", "booking.edit", "booking.delete",
-    "pos.view", "invoice.view", "invoice.create",
-    "customer.view", "customer.manage",
-    "service.view", "service.manage",
-    "inventory.view", "inventory.manage",
-    "staff.view", "shift.view", "shift.manage",
+    "booking.view",
+    "booking.create",
+    "booking.edit",
+    "booking.delete",
+    "pos.view",
+    "invoice.view",
+    "invoice.create",
+    "customer.view",
+    "customer.manage",
+    "service.view",
+    "service.manage",
+    "inventory.view",
+    "inventory.manage",
+    "staff.view",
+    "shift.view",
+    "shift.manage",
     "report.view",
-    "branch.view"
+    "branch.view",
   ],
   cashier: [
-    "booking.view", "booking.create", "booking.edit",
-    "pos.view", "invoice.view", "invoice.create",
-    "customer.view", "customer.manage"
-  ],
-  employee: [
     "booking.view",
-    "shift.view"
-  ]
+    "booking.create",
+    "booking.edit",
+    "pos.view",
+    "invoice.view",
+    "invoice.create",
+    "customer.view",
+    "customer.manage",
+  ],
+  employee: ["booking.view", "shift.view"],
 };
 
 // Memory caches to optimize performance and prevent database connection pool bottlenecks
@@ -47,8 +81,8 @@ export async function ensureStandardRolesAndPermissions(tenantId: string) {
     return prisma.role.findMany({
       where: {
         tenantId,
-        deletedAt: null
-      }
+        deletedAt: null,
+      },
     });
   }
 
@@ -59,14 +93,14 @@ export async function ensureStandardRolesAndPermissions(tenantId: string) {
     { name: "Admin", description: "Quản trị viên tối cao của salon" },
     { name: "Manager", description: "Quản lý chi nhánh" },
     { name: "Cashier", description: "Nhân viên thu ngân" },
-    { name: "Employee", description: "Kỹ thuật viên / Thợ làm tóc" }
+    { name: "Employee", description: "Kỹ thuật viên / Thợ làm tóc" },
   ];
 
   const existingRoles = await prisma.role.findMany({
     where: {
       tenantId,
-      deletedAt: null
-    }
+      deletedAt: null,
+    },
   });
 
   const roles = [];
@@ -74,15 +108,15 @@ export async function ensureStandardRolesAndPermissions(tenantId: string) {
 
   for (const r of standardRoles) {
     let found = existingRoles.find(
-      (er) => er.name.toLowerCase() === r.name.toLowerCase()
+      (er) => er.name.toLowerCase() === r.name.toLowerCase(),
     );
     if (!found) {
       found = await prisma.role.create({
         data: {
           tenantId,
           name: r.name,
-          description: r.description
-        }
+          description: r.description,
+        },
       });
       newlyCreatedRoleIds.add(found.id);
     }
@@ -93,19 +127,20 @@ export async function ensureStandardRolesAndPermissions(tenantId: string) {
   const roleIds = roles.map((role) => role.id);
   const existingRolePermissions = await prisma.rolePermission.findMany({
     where: {
-      roleId: { in: roleIds }
-    }
+      roleId: { in: roleIds },
+    },
   });
 
   // Check and populate default permissions for roles in-memory
   for (const found of roles) {
     const isNew = newlyCreatedRoleIds.has(found.id);
     const currentPermCount = existingRolePermissions.filter(
-      (rp) => rp.roleId === found.id
+      (rp) => rp.roleId === found.id,
     ).length;
 
     if (isNew || currentPermCount === 0) {
-      const defaultSlugs = defaultRolePermissions[found.name.toLowerCase()] || [];
+      const defaultSlugs =
+        defaultRolePermissions[found.name.toLowerCase()] || [];
       const permIdsToLink = dbPermissions
         .filter((p) => defaultSlugs.includes(p.slug))
         .map((p) => p.id);
@@ -114,9 +149,9 @@ export async function ensureStandardRolesAndPermissions(tenantId: string) {
         await prisma.rolePermission.createMany({
           data: permIdsToLink.map((permissionId) => ({
             roleId: found.id,
-            permissionId
+            permissionId,
           })),
-          skipDuplicates: true
+          skipDuplicates: true,
         });
       }
     }
@@ -133,48 +168,158 @@ export async function ensureStandardPermissions() {
   }
 
   const standardPermissions = [
-    { slug: "booking.view", groupName: "Lịch hẹn", name: "Xem lịch hẹn", description: "Xem danh sách lịch hẹn" },
-    { slug: "booking.create", groupName: "Lịch hẹn", name: "Tạo lịch hẹn", description: "Cho phép đặt lịch hẹn mới" },
-    { slug: "booking.edit", groupName: "Lịch hẹn", name: "Sửa lịch hẹn", description: "Cho phép chỉnh sửa lịch hẹn" },
-    { slug: "booking.delete", groupName: "Lịch hẹn", name: "Xóa lịch hẹn", description: "Cho phép hủy/xóa lịch hẹn" },
+    {
+      slug: "booking.view",
+      groupName: "Lịch hẹn",
+      name: "Xem lịch hẹn",
+      description: "Xem danh sách lịch hẹn",
+    },
+    {
+      slug: "booking.create",
+      groupName: "Lịch hẹn",
+      name: "Tạo lịch hẹn",
+      description: "Cho phép đặt lịch hẹn mới",
+    },
+    {
+      slug: "booking.edit",
+      groupName: "Lịch hẹn",
+      name: "Sửa lịch hẹn",
+      description: "Cho phép chỉnh sửa lịch hẹn",
+    },
+    {
+      slug: "booking.delete",
+      groupName: "Lịch hẹn",
+      name: "Xóa lịch hẹn",
+      description: "Cho phép hủy/xóa lịch hẹn",
+    },
 
-    { slug: "pos.view", groupName: "Bán hàng POS", name: "Truy cập POS", description: "Cho phép truy cập màn hình bán hàng POS" },
-    { slug: "invoice.view", groupName: "Hóa đơn", name: "Xem hóa đơn", description: "Xem lịch sử danh sách hóa đơn" },
-    { slug: "invoice.create", groupName: "Hóa đơn", name: "Tạo hóa đơn", description: "Tạo và in hóa đơn thanh toán" },
-    { slug: "invoice.edit", groupName: "Hóa đơn", name: "Sửa hóa đơn", description: "Chỉnh sửa mặt hàng và thời gian hóa đơn" },
-    { slug: "invoice.delete", groupName: "Hóa đơn", name: "Xóa hóa đơn", description: "Xóa hóa đơn khỏi hệ thống" },
+    {
+      slug: "pos.view",
+      groupName: "Bán hàng POS",
+      name: "Truy cập POS",
+      description: "Cho phép truy cập màn hình bán hàng POS",
+    },
+    {
+      slug: "invoice.view",
+      groupName: "Hóa đơn",
+      name: "Xem hóa đơn",
+      description: "Xem lịch sử danh sách hóa đơn",
+    },
+    {
+      slug: "invoice.create",
+      groupName: "Hóa đơn",
+      name: "Tạo hóa đơn",
+      description: "Tạo và in hóa đơn thanh toán",
+    },
+    {
+      slug: "invoice.edit",
+      groupName: "Hóa đơn",
+      name: "Sửa hóa đơn",
+      description: "Chỉnh sửa mặt hàng và thời gian hóa đơn",
+    },
+    {
+      slug: "invoice.delete",
+      groupName: "Hóa đơn",
+      name: "Xóa hóa đơn",
+      description: "Xóa hóa đơn khỏi hệ thống",
+    },
 
-    { slug: "customer.view", groupName: "Khách hàng", name: "Xem khách hàng", description: "Xem danh sách khách hàng" },
-    { slug: "customer.manage", groupName: "Khách hàng", name: "Quản lý khách hàng", description: "Thêm, sửa, xóa khách hàng" },
+    {
+      slug: "customer.view",
+      groupName: "Khách hàng",
+      name: "Xem khách hàng",
+      description: "Xem danh sách khách hàng",
+    },
+    {
+      slug: "customer.manage",
+      groupName: "Khách hàng",
+      name: "Quản lý khách hàng",
+      description: "Thêm, sửa, xóa khách hàng",
+    },
 
-    { slug: "service.view", groupName: "Dịch vụ", name: "Xem dịch vụ", description: "Xem danh mục và bảng giá dịch vụ" },
-    { slug: "service.manage", groupName: "Dịch vụ", name: "Quản lý dịch vụ", description: "Thêm, sửa, xóa dịch vụ" },
+    {
+      slug: "service.view",
+      groupName: "Dịch vụ",
+      name: "Xem dịch vụ",
+      description: "Xem danh mục và bảng giá dịch vụ",
+    },
+    {
+      slug: "service.manage",
+      groupName: "Dịch vụ",
+      name: "Quản lý dịch vụ",
+      description: "Thêm, sửa, xóa dịch vụ",
+    },
 
-    { slug: "inventory.view", groupName: "Kho hàng", name: "Xem kho hàng", description: "Xem số lượng tồn kho sản phẩm" },
-    { slug: "inventory.manage", groupName: "Kho hàng", name: "Quản lý kho hàng", description: "Nhập, xuất, điều chỉnh kho hàng" },
+    {
+      slug: "inventory.view",
+      groupName: "Kho hàng",
+      name: "Xem kho hàng",
+      description: "Xem số lượng tồn kho sản phẩm",
+    },
+    {
+      slug: "inventory.manage",
+      groupName: "Kho hàng",
+      name: "Quản lý kho hàng",
+      description: "Nhập, xuất, điều chỉnh kho hàng",
+    },
 
-    { slug: "staff.view", groupName: "Nhân sự", name: "Xem nhân sự", description: "Xem danh sách thông tin nhân viên" },
-    { slug: "staff.manage", groupName: "Nhân sự", name: "Quản lý nhân sự", description: "Thêm, sửa, xóa và cấu hình lương nhân viên" },
+    {
+      slug: "staff.view",
+      groupName: "Nhân sự",
+      name: "Xem nhân sự",
+      description: "Xem danh sách thông tin nhân viên",
+    },
+    {
+      slug: "staff.manage",
+      groupName: "Nhân sự",
+      name: "Quản lý nhân sự",
+      description: "Thêm, sửa, xóa và cấu hình lương nhân viên",
+    },
 
-    { slug: "shift.view", groupName: "Lịch trực", name: "Xem lịch trực ca", description: "Xem lịch ca kíp của nhân viên" },
-    { slug: "shift.manage", groupName: "Lịch trực", name: "Phân ca xếp lịch", description: "Xếp lịch làm việc và chấm công" },
+    {
+      slug: "shift.view",
+      groupName: "Lịch trực",
+      name: "Xem lịch trực ca",
+      description: "Xem lịch ca kíp của nhân viên",
+    },
+    {
+      slug: "shift.manage",
+      groupName: "Lịch trực",
+      name: "Phân ca xếp lịch",
+      description: "Xếp lịch làm việc và chấm công",
+    },
 
-    { slug: "report.view", groupName: "Báo cáo", name: "Xem báo cáo", description: "Xem báo cáo thống kê doanh thu và hoạt động" },
+    {
+      slug: "report.view",
+      groupName: "Báo cáo",
+      name: "Xem báo cáo",
+      description: "Xem báo cáo thống kê doanh thu và hoạt động",
+    },
 
-    { slug: "branch.view", groupName: "Chi nhánh", name: "Xem chi nhánh", description: "Xem danh sách chi nhánh" },
-    { slug: "branch.manage", groupName: "Chi nhánh", name: "Quản lý chi nhánh", description: "Thêm, sửa, cấu hình chi nhánh" },
+    {
+      slug: "branch.view",
+      groupName: "Chi nhánh",
+      name: "Xem chi nhánh",
+      description: "Xem danh sách chi nhánh",
+    },
+    {
+      slug: "branch.manage",
+      groupName: "Chi nhánh",
+      name: "Quản lý chi nhánh",
+      description: "Thêm, sửa, cấu hình chi nhánh",
+    },
   ];
 
   const existing = await prisma.permission.findMany({
-    where: { deletedAt: null }
+    where: { deletedAt: null },
   });
 
   const permissions = [];
   for (const sp of standardPermissions) {
-    let found = existing.find(e => e.slug === sp.slug);
+    let found = existing.find((e) => e.slug === sp.slug);
     if (!found) {
       found = await prisma.permission.create({
-        data: sp
+        data: sp,
       });
     }
     permissions.push(found);
@@ -189,7 +334,7 @@ async function getAdminUserId(tenantId: string): Promise<string | null> {
   }
 
   const tenant = await prisma.tenant.findUnique({
-    where: { id: tenantId }
+    where: { id: tenantId },
   });
 
   let adminUser = await prisma.user.findFirst({
@@ -199,23 +344,23 @@ async function getAdminUserId(tenantId: string): Promise<string | null> {
       OR: [
         { loginId: tenant?.phone ? tenant.phone : undefined },
         { loginId: tenant?.email ? tenant.email.toLowerCase() : undefined },
-        { phone: tenant?.phone ? tenant.phone : undefined }
-      ]
+        { phone: tenant?.phone ? tenant.phone : undefined },
+      ],
     },
     orderBy: {
-      createdAt: "asc"
-    }
+      createdAt: "asc",
+    },
   });
 
   if (!adminUser) {
     adminUser = await prisma.user.findFirst({
       where: {
         tenantId,
-        deletedAt: null
+        deletedAt: null,
       },
       orderBy: {
-        createdAt: "asc"
-      }
+        createdAt: "asc",
+      },
     });
   }
 
@@ -236,7 +381,7 @@ export class StaffController {
     } catch (error) {
       throw new HttpException(
         `Failed to fetch roles: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -251,22 +396,22 @@ export class StaffController {
       const staffList = await prisma.user.findMany({
         where: {
           tenantId,
-          deletedAt: null
+          deletedAt: null,
         },
         include: {
           role: true,
           userBranches: {
             where: {
-              deletedAt: null
+              deletedAt: null,
             },
             include: {
-              branch: true
-            }
-          }
+              branch: true,
+            },
+          },
         },
         orderBy: {
-          createdAt: "desc"
-        }
+          createdAt: "desc",
+        },
       });
 
       const adminUserId = await getAdminUserId(tenantId);
@@ -287,15 +432,15 @@ export class StaffController {
         role: user.role ? { id: user.role.id, name: user.role.name } : null,
         branches: user.userBranches.map((ub) => ({
           id: ub.branch.id,
-          name: ub.branch.name
+          name: ub.branch.name,
         })),
         isAdmin: user.id === adminUserId,
-        createdAt: user.createdAt.toISOString()
+        createdAt: user.createdAt.toISOString(),
       }));
     } catch (error) {
       throw new HttpException(
         `Failed to fetch staff: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -305,7 +450,8 @@ export class StaffController {
   async createStaff(
     @Param("tenantId") tenantId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: {
+    @Body()
+    body: {
       name: string;
       loginId: string;
       email?: string;
@@ -318,11 +464,14 @@ export class StaffController {
       note?: string;
       branchIds?: string[];
       avatar?: string;
-    }
+    },
   ) {
     try {
       if (!body.name || !body.loginId || !body.password) {
-        throw new HttpException("Tên, ID đăng nhập và Mật khẩu là bắt buộc", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Tên, ID đăng nhập và Mật khẩu là bắt buộc",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       // Check if loginId already exists for this tenant
@@ -330,12 +479,15 @@ export class StaffController {
         where: {
           loginId: body.loginId.toLowerCase().trim(),
           tenantId,
-          deletedAt: null
-        }
+          deletedAt: null,
+        },
       });
 
       if (existingUser) {
-        throw new HttpException("ID đăng nhập này đã được sử dụng trong hệ thống", HttpStatus.CONFLICT);
+        throw new HttpException(
+          "ID đăng nhập này đã được sử dụng trong hệ thống",
+          HttpStatus.CONFLICT,
+        );
       }
 
       const password = body.password;
@@ -354,8 +506,8 @@ export class StaffController {
           roleId: body.roleId || null,
           status: body.status || "ACTIVE",
           note: body.note || null,
-          avatar: body.avatar || null
-        }
+          avatar: body.avatar || null,
+        },
       });
 
       tenantAdminCache.delete(tenantId);
@@ -365,8 +517,8 @@ export class StaffController {
         data: {
           userId: user.id,
           theme: "light",
-          language: "vi"
-        }
+          language: "vi",
+        },
       });
 
       // Assign to branches
@@ -374,8 +526,8 @@ export class StaffController {
         await prisma.userBranch.createMany({
           data: body.branchIds.map((branchId) => ({
             userId: user.id,
-            branchId
-          }))
+            branchId,
+          })),
         });
       }
 
@@ -386,9 +538,9 @@ export class StaffController {
           role: true,
           userBranches: {
             where: { deletedAt: null },
-            include: { branch: true }
-          }
-        }
+            include: { branch: true },
+          },
+        },
       });
 
       if (!createdUser) {
@@ -397,7 +549,9 @@ export class StaffController {
 
       const adminUserId = await getAdminUserId(tenantId);
 
-      this.notificationGateway.broadcastToTenant(tenantId, "staff.updated", { senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "staff.updated", {
+        senderId,
+      });
 
       return {
         id: createdUser.id,
@@ -410,19 +564,21 @@ export class StaffController {
         status: createdUser.status,
         note: createdUser.note || "",
         avatar: createdUser.avatar || "",
-        role: createdUser.role ? { id: createdUser.role.id, name: createdUser.role.name } : null,
+        role: createdUser.role
+          ? { id: createdUser.role.id, name: createdUser.role.name }
+          : null,
         branches: createdUser.userBranches.map((ub) => ({
           id: ub.branch.id,
-          name: ub.branch.name
+          name: ub.branch.name,
         })),
         isAdmin: createdUser.id === adminUserId,
-        createdAt: createdUser.createdAt.toISOString()
+        createdAt: createdUser.createdAt.toISOString(),
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to create staff member: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -433,7 +589,8 @@ export class StaffController {
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: {
+    @Body()
+    body: {
       name: string;
       loginId: string;
       email?: string;
@@ -446,35 +603,46 @@ export class StaffController {
       note?: string;
       branchIds?: string[];
       avatar?: string;
-    }
+    },
   ) {
     try {
       if (!body.name || !body.loginId) {
-        throw new HttpException("Tên và ID đăng nhập là bắt buộc", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Tên và ID đăng nhập là bắt buộc",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       // Ensure staff member exists
       const existing = await prisma.user.findFirst({
-        where: { id, tenantId, deletedAt: null }
+        where: { id, tenantId, deletedAt: null },
       });
 
       if (!existing) {
-        throw new HttpException("Không tìm thấy thông tin nhân viên", HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          "Không tìm thấy thông tin nhân viên",
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       // Check loginId uniqueness if loginId changed
-      if (body.loginId.toLowerCase() !== (existing.loginId || "").toLowerCase()) {
+      if (
+        body.loginId.toLowerCase() !== (existing.loginId || "").toLowerCase()
+      ) {
         const loginIdExists = await prisma.user.findFirst({
           where: {
             loginId: body.loginId.toLowerCase(),
             tenantId,
             id: { not: id },
-            deletedAt: null
-          }
+            deletedAt: null,
+          },
         });
 
         if (loginIdExists) {
-          throw new HttpException("ID đăng nhập này đã được sử dụng bởi nhân viên khác", HttpStatus.CONFLICT);
+          throw new HttpException(
+            "ID đăng nhập này đã được sử dụng bởi nhân viên khác",
+            HttpStatus.CONFLICT,
+          );
         }
       }
 
@@ -489,7 +657,7 @@ export class StaffController {
         roleId: body.roleId ?? null,
         status: body.status ?? "ACTIVE",
         note: body.note ?? null,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       if (body.avatar !== undefined && body.avatar !== existing.avatar) {
@@ -504,7 +672,7 @@ export class StaffController {
       // Update User
       await prisma.user.update({
         where: { id },
-        data: updateData
+        data: updateData,
       });
 
       tenantAdminCache.delete(tenantId);
@@ -512,15 +680,15 @@ export class StaffController {
       // Update user branches: Delete all existing user-branch links, and create new ones
       if (body.branchIds) {
         await prisma.userBranch.deleteMany({
-          where: { userId: id }
+          where: { userId: id },
         });
 
         if (body.branchIds.length > 0) {
           await prisma.userBranch.createMany({
             data: body.branchIds.map((branchId) => ({
               userId: id,
-              branchId
-            }))
+              branchId,
+            })),
           });
         }
       }
@@ -532,9 +700,9 @@ export class StaffController {
           role: true,
           userBranches: {
             where: { deletedAt: null },
-            include: { branch: true }
-          }
-        }
+            include: { branch: true },
+          },
+        },
       });
 
       if (!updatedUser) {
@@ -543,7 +711,9 @@ export class StaffController {
 
       const adminUserId = await getAdminUserId(tenantId);
 
-      this.notificationGateway.broadcastToTenant(tenantId, "staff.updated", { senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "staff.updated", {
+        senderId,
+      });
 
       return {
         id: updatedUser.id,
@@ -556,19 +726,21 @@ export class StaffController {
         status: updatedUser.status,
         note: updatedUser.note || "",
         avatar: updatedUser.avatar || "",
-        role: updatedUser.role ? { id: updatedUser.role.id, name: updatedUser.role.name } : null,
+        role: updatedUser.role
+          ? { id: updatedUser.role.id, name: updatedUser.role.name }
+          : null,
         branches: updatedUser.userBranches.map((ub) => ({
           id: ub.branch.id,
-          name: ub.branch.name
+          name: ub.branch.name,
         })),
         isAdmin: updatedUser.id === adminUserId,
-        createdAt: updatedUser.createdAt.toISOString()
+        createdAt: updatedUser.createdAt.toISOString(),
       };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to update staff member: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -578,23 +750,26 @@ export class StaffController {
   async deleteStaff(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
-    @Headers("x-user-id") senderId: string
+    @Headers("x-user-id") senderId: string,
   ) {
     try {
       const existing = await prisma.user.findFirst({
-        where: { id, tenantId, deletedAt: null }
+        where: { id, tenantId, deletedAt: null },
       });
 
       if (!existing) {
-        throw new HttpException("Không tìm thấy thông tin nhân viên hoặc đã bị xóa trước đó", HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          "Không tìm thấy thông tin nhân viên hoặc đã bị xóa trước đó",
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       // Soft delete user
       await prisma.user.update({
         where: { id },
         data: {
-          deletedAt: new Date()
-        }
+          deletedAt: new Date(),
+        },
       });
 
       tenantAdminCache.delete(tenantId);
@@ -603,18 +778,20 @@ export class StaffController {
       await prisma.userBranch.updateMany({
         where: { userId: id, deletedAt: null },
         data: {
-          deletedAt: new Date()
-        }
+          deletedAt: new Date(),
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "staff.updated", { senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "staff.updated", {
+        senderId,
+      });
 
       return { success: true, message: "Nhân viên đã được xóa thành công" };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to delete staff member: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -627,7 +804,7 @@ export class StaffController {
     } catch (error) {
       throw new HttpException(
         `Failed to fetch permissions: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -638,13 +815,13 @@ export class StaffController {
     try {
       const rolePermissions = await prisma.rolePermission.findMany({
         where: { roleId },
-        select: { permissionId: true }
+        select: { permissionId: true },
       });
-      return rolePermissions.map(rp => rp.permissionId);
+      return rolePermissions.map((rp) => rp.permissionId);
     } catch (error) {
       throw new HttpException(
         `Failed to fetch role permissions: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -655,37 +832,42 @@ export class StaffController {
     @Param("roleId") roleId: string,
     @Param("tenantId") tenantId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: { permissionIds: string[] }
+    @Body() body: { permissionIds: string[] },
   ) {
     try {
       const { permissionIds } = body;
       if (!Array.isArray(permissionIds)) {
-        throw new HttpException("permissionIds must be an array of strings", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "permissionIds must be an array of strings",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       // Delete old permissions
       await prisma.rolePermission.deleteMany({
-        where: { roleId }
+        where: { roleId },
       });
 
       // Insert new permissions
       if (permissionIds.length > 0) {
         await prisma.rolePermission.createMany({
-          data: permissionIds.map(permissionId => ({
+          data: permissionIds.map((permissionId) => ({
             roleId,
-            permissionId
-          }))
+            permissionId,
+          })),
         });
       }
 
-      this.notificationGateway.broadcastToTenant(tenantId, "roles.updated", { senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "roles.updated", {
+        senderId,
+      });
 
       return { success: true, message: "Permissions updated successfully" };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to update role permissions: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -695,29 +877,34 @@ export class StaffController {
   async createRole(
     @Param("tenantId") tenantId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: { name: string; description?: string }
+    @Body() body: { name: string; description?: string },
   ) {
     try {
       if (!body.name) {
-        throw new HttpException("Tên vai trò là bắt buộc", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Tên vai trò là bắt buộc",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const role = await prisma.role.create({
         data: {
           tenantId,
           name: body.name,
-          description: body.description || null
-        }
+          description: body.description || null,
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "roles.updated", { senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "roles.updated", {
+        senderId,
+      });
 
       return role;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to create role: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -728,19 +915,25 @@ export class StaffController {
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: { name: string; description?: string }
+    @Body() body: { name: string; description?: string },
   ) {
     try {
       if (!body.name) {
-        throw new HttpException("Tên vai trò là bắt buộc", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Tên vai trò là bắt buộc",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const existing = await prisma.role.findFirst({
-        where: { id, tenantId, deletedAt: null }
+        where: { id, tenantId, deletedAt: null },
       });
 
       if (!existing) {
-        throw new HttpException("Không tìm thấy vai trò hoặc vai trò đã bị xóa", HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          "Không tìm thấy vai trò hoặc vai trò đã bị xóa",
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       const updated = await prisma.role.update({
@@ -748,18 +941,20 @@ export class StaffController {
         data: {
           name: body.name,
           description: body.description ?? null,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "roles.updated", { senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "roles.updated", {
+        senderId,
+      });
 
       return updated;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to update role: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -769,41 +964,49 @@ export class StaffController {
   async deleteRole(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
-    @Headers("x-user-id") senderId: string
+    @Headers("x-user-id") senderId: string,
   ) {
     try {
       const existing = await prisma.role.findFirst({
-        where: { id, tenantId, deletedAt: null }
+        where: { id, tenantId, deletedAt: null },
       });
 
       if (!existing) {
-        throw new HttpException("Không tìm thấy vai trò hoặc vai trò đã bị xóa", HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          "Không tìm thấy vai trò hoặc vai trò đã bị xóa",
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       // Check if any users are assigned to this role
       const userCount = await prisma.user.count({
-        where: { roleId: id, deletedAt: null }
+        where: { roleId: id, deletedAt: null },
       });
 
       if (userCount > 0) {
-        throw new HttpException("Không thể xóa vai trò đang được gán cho nhân viên", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Không thể xóa vai trò đang được gán cho nhân viên",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       await prisma.role.update({
         where: { id },
         data: {
-          deletedAt: new Date()
-        }
+          deletedAt: new Date(),
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "roles.updated", { senderId });
+      this.notificationGateway.broadcastToTenant(tenantId, "roles.updated", {
+        senderId,
+      });
 
       return { success: true, message: "Xóa vai trò thành công" };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to delete role: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

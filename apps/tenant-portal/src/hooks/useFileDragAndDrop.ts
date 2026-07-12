@@ -8,11 +8,13 @@ export function useFileDragAndDrop(onFileDrop: (file: File) => void) {
     const isSpreadsheetDrag = (dt: DataTransfer) => {
       if (!dt.items || dt.items.length === 0) return false;
       const items = Array.from(dt.items);
-      
-      const hasFiles = items.some(item => item.kind === "file");
+
+      const hasFiles = items.some((item) => item.kind === "file");
       if (!hasFiles) return false;
 
-      const hasImages = items.some(item => item.kind === "file" && item.type.startsWith("image/"));
+      const hasImages = items.some(
+        (item) => item.kind === "file" && item.type.startsWith("image/"),
+      );
       if (hasImages) return false;
 
       const spreadsheetTypes = [
@@ -24,16 +26,17 @@ export function useFileDragAndDrop(onFileDrop: (file: File) => void) {
         "application/csv",
       ];
 
-      return items.some(item => 
-        item.kind === "file" && 
-        (spreadsheetTypes.includes(item.type) || item.type === "")
+      return items.some(
+        (item) =>
+          item.kind === "file" &&
+          (spreadsheetTypes.includes(item.type) || item.type === ""),
       );
     };
 
     const handleDragEnter = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      
+
       if (e.dataTransfer && isSpreadsheetDrag(e.dataTransfer)) {
         dragCounter.current++;
         setIsDragActive(true);
@@ -51,7 +54,7 @@ export function useFileDragAndDrop(onFileDrop: (file: File) => void) {
     const handleDragLeave = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      
+
       if (e.dataTransfer && isSpreadsheetDrag(e.dataTransfer)) {
         dragCounter.current--;
         // Check if cursor leaves viewport or if counter is 0 or less

@@ -1,6 +1,19 @@
 import React from "react";
 import { createPortal } from "react-dom";
-import { X, Clock, User, Calendar, MapPin, Activity, Layers, Sparkles, Edit, Lock, Unlock, Trash2 } from "lucide-react";
+import {
+  X,
+  Clock,
+  User,
+  Calendar,
+  MapPin,
+  Activity,
+  Layers,
+  Sparkles,
+  Edit,
+  Lock,
+  Unlock,
+  Trash2,
+} from "lucide-react";
 import { formatDateVN, formatCurrencyVND } from "@salon/shared-utils";
 import { TenantData } from "../types";
 
@@ -11,7 +24,12 @@ interface TenantDrawerProps {
   setDrawerTab: (tab: "general" | "invoices") => void;
   tenantInvoices: any[];
   loadingInvoices: boolean;
-  getPlanDetails: (planCode: string) => { name: string; bgColor: string; color: string; price: number };
+  getPlanDetails: (planCode: string) => {
+    name: string;
+    bgColor: string;
+    color: string;
+    price: number;
+  };
   onTriggerImpersonate: (name: string) => void;
   onOpenEditModal: (tenant: TenantData) => void;
   onOpenPlanModal: (tenant: TenantData) => void;
@@ -68,8 +86,7 @@ export const TenantDrawer: React.FC<TenantDrawerProps> = ({
           padding: "24px 20px",
           display: "flex",
           flexDirection: "column",
-          animation:
-            "fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+          animation: "fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards",
         }}
       >
         {/* Drawer Header */}
@@ -228,10 +245,7 @@ export const TenantDrawer: React.FC<TenantDrawerProps> = ({
                     fontSize: "13px",
                   }}
                 >
-                  <User
-                    size={15}
-                    style={{ color: "var(--text-muted)" }}
-                  />
+                  <User size={15} style={{ color: "var(--text-muted)" }} />
                   <div>
                     <div
                       style={{
@@ -261,10 +275,7 @@ export const TenantDrawer: React.FC<TenantDrawerProps> = ({
                     fontSize: "13px",
                   }}
                 >
-                  <Calendar
-                    size={15}
-                    style={{ color: "var(--text-muted)" }}
-                  />
+                  <Calendar size={15} style={{ color: "var(--text-muted)" }} />
                   <div>
                     <div
                       style={{
@@ -331,10 +342,7 @@ export const TenantDrawer: React.FC<TenantDrawerProps> = ({
                     fontSize: "13px",
                   }}
                 >
-                  <Activity
-                    size={15}
-                    style={{ color: "var(--text-muted)" }}
-                  />
+                  <Activity size={15} style={{ color: "var(--text-muted)" }} />
                   <div>
                     <div
                       style={{

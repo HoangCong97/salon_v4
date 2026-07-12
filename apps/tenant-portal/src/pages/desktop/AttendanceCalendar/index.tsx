@@ -91,7 +91,11 @@ export default function AttendanceCalendar() {
       {/* Grid Content */}
       {loading ? (
         <div className={styles.loadingWrapper}>
-          <Loader2 className="animate-spin" size={36} style={{ color: "var(--color-primary)" }} />
+          <Loader2
+            className="animate-spin"
+            size={36}
+            style={{ color: "var(--color-primary)" }}
+          />
         </div>
       ) : error ? (
         <div className={`card ${styles.errorCard}`}>
@@ -142,4 +146,3 @@ export default function AttendanceCalendar() {
     </div>
   );
 }
-

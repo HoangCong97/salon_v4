@@ -12,7 +12,12 @@ interface BrandModalProps {
   onSave: (payload: Partial<TenantInfo>) => Promise<void>;
 }
 
-export default function BrandModal({ isOpen, onClose, tenantInfo, onSave }: BrandModalProps) {
+export default function BrandModal({
+  isOpen,
+  onClose,
+  tenantInfo,
+  onSave,
+}: BrandModalProps) {
   const [brandNameText, setBrandNameText] = useState("");
   const [brandSloganInput, setBrandSloganInput] = useState("");
   const [brandLogoInput, setBrandLogoInput] = useState("");
@@ -75,17 +80,25 @@ export default function BrandModal({ isOpen, onClose, tenantInfo, onSave }: Bran
   return (
     <div className={styles.modalOverlay}>
       <div className={`card animate-fade-in ${styles.modalCard}`}>
-        <button type="button" className={styles.modalCloseBtn} onClick={onClose}>
+        <button
+          type="button"
+          className={styles.modalCloseBtn}
+          onClick={onClose}
+        >
           <X size={20} />
         </button>
         <h2 className={styles.modalTitle}>Thiết lập thương hiệu chung</h2>
         <form onSubmit={handleSubmit}>
           <div className={styles.modalScrollBody}>
             {/* Section 1: Basic Info */}
-            <h4 className={styles.sectionHeaderFirst}>Thông tin thương hiệu gốc</h4>
+            <h4 className={styles.sectionHeaderFirst}>
+              Thông tin thương hiệu gốc
+            </h4>
             <div className={styles.formGrid1Col}>
               <div className={`form-group ${styles.formGroup0Margin}`}>
-                <label className="form-label">Tên tổng công ty / Thương hiệu gốc *</label>
+                <label className="form-label">
+                  Tên tổng công ty / Thương hiệu gốc *
+                </label>
                 <input
                   className={`form-input ${styles.formInputHeight}`}
                   type="text"
@@ -130,7 +143,9 @@ export default function BrandModal({ isOpen, onClose, tenantInfo, onSave }: Bran
                   placeholder="Email chăm sóc khách hàng toàn hệ thống"
                 />
               </div>
-              <div className={`form-group ${styles.formGroup0Margin} ${styles.gridColSpan2}`}>
+              <div
+                className={`form-group ${styles.formGroup0Margin} ${styles.gridColSpan2}`}
+              >
                 <label className="form-label">Trụ sở chính</label>
                 <textarea
                   className={`form-input ${styles.textareaNoResize}`}
@@ -210,4 +225,3 @@ export default function BrandModal({ isOpen, onClose, tenantInfo, onSave }: Bran
     </div>
   );
 }
-

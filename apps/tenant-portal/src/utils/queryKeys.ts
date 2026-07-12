@@ -3,7 +3,7 @@
  * ---
  * Quản lý tập trung tất cả query keys cho TanStack Query.
  * Pattern: [entity, tenantId, ...params] để đảm bảo invalidation chính xác.
- * 
+ *
  * Quy ước:
  * - `.all(tenantId)`: Invalidate TẤT CẢ queries của entity đó cho tenant
  * - `.list(tenantId)`: Query key cho danh sách
@@ -55,7 +55,8 @@ export const queryKeys = {
   /** Nhóm dịch vụ (Service Categories) */
   serviceCategories: {
     all: (tenantId: string) => ["service-categories", tenantId] as const,
-    list: (tenantId: string) => ["service-categories", tenantId, "list"] as const,
+    list: (tenantId: string) =>
+      ["service-categories", tenantId, "list"] as const,
   },
 
   /** Khách hàng (Customers) */
@@ -77,8 +78,12 @@ export const queryKeys = {
   shifts: {
     all: (tenantId: string, branchId: string) =>
       ["shifts", tenantId, branchId] as const,
-    list: (tenantId: string, branchId: string, startDate: string, endDate: string) =>
-      ["shifts", tenantId, branchId, startDate, endDate] as const,
+    list: (
+      tenantId: string,
+      branchId: string,
+      startDate: string,
+      endDate: string,
+    ) => ["shifts", tenantId, branchId, startDate, endDate] as const,
     staff: (tenantId: string, branchId: string) =>
       ["shifts", tenantId, branchId, "staff"] as const,
   },

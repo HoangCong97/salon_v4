@@ -1,6 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Upload, ChevronDown, FileSpreadsheet, FileText } from "lucide-react";
-import { exportToSpreadsheet, ExportFileType, ExportColumnMapping } from "../../utils/exportData";
+import {
+  exportToSpreadsheet,
+  ExportFileType,
+  ExportColumnMapping,
+} from "../../utils/exportData";
 
 interface ExportButtonProps<T> {
   data: T[];
@@ -21,7 +25,10 @@ export function ExportButton<T>({
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
@@ -37,7 +44,10 @@ export function ExportButton<T>({
   };
 
   return (
-    <div ref={dropdownRef} style={{ position: "relative", display: "inline-block" }}>
+    <div
+      ref={dropdownRef}
+      style={{ position: "relative", display: "inline-block" }}
+    >
       <button
         className="btn btn-secondary"
         onClick={() => setIsOpen(!isOpen)}
@@ -75,7 +85,8 @@ export function ExportButton<T>({
             backgroundColor: "white",
             border: "1px solid var(--border-color)",
             borderRadius: "var(--radius-md)",
-            boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+            boxShadow:
+              "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
             zIndex: 1000,
             overflow: "hidden",
             display: "flex",
@@ -98,10 +109,17 @@ export function ExportButton<T>({
               color: "var(--text-primary)",
               transition: "background-color 0.15s",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "hsl(210, 40%, 96%)")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor = "hsl(210, 40%, 96%)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor = "transparent")
+            }
           >
-            <FileSpreadsheet size={16} style={{ color: "hsl(142, 76%, 36%)" }} />
+            <FileSpreadsheet
+              size={16}
+              style={{ color: "hsl(142, 76%, 36%)" }}
+            />
             <span>Excel (.xlsx)</span>
           </button>
           <button
@@ -119,10 +137,17 @@ export function ExportButton<T>({
               color: "var(--text-primary)",
               transition: "background-color 0.15s",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "hsl(210, 40%, 96%)")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor = "hsl(210, 40%, 96%)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor = "transparent")
+            }
           >
-            <FileSpreadsheet size={16} style={{ color: "hsl(142, 76%, 45%)", opacity: 0.8 }} />
+            <FileSpreadsheet
+              size={16}
+              style={{ color: "hsl(142, 76%, 45%)", opacity: 0.8 }}
+            />
             <span>Excel 97-2003 (.xls)</span>
           </button>
           <button
@@ -140,8 +165,12 @@ export function ExportButton<T>({
               color: "var(--text-primary)",
               transition: "background-color 0.15s",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "hsl(210, 40%, 96%)")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor = "hsl(210, 40%, 96%)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor = "transparent")
+            }
           >
             <FileText size={16} style={{ color: "hsl(215, 20%, 50%)" }} />
             <span>Text CSV (.csv)</span>

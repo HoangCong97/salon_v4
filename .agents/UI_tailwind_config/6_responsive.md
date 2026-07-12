@@ -1,4 +1,4 @@
-Viết Mobile First. ``` Nếu dự án không chia desktop-mobile ```
+Viết Mobile First. `Nếu dự án không chia desktop-mobile`
 
 sm
 

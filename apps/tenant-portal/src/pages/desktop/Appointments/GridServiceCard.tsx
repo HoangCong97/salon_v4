@@ -22,9 +22,19 @@ interface GridServiceCardProps {
 }
 
 export function GridServiceCard({
-  item, topPx, height, accentColor, bgColor, bdColor,
-  dragActive, isBeingDragged,
-  onDragStart, onDragEnd, onDoubleClick, onResize, onResizeEnd,
+  item,
+  topPx,
+  height,
+  accentColor,
+  bgColor,
+  bdColor,
+  dragActive,
+  isBeingDragged,
+  onDragStart,
+  onDragEnd,
+  onDoubleClick,
+  onResize,
+  onResizeEnd,
 }: GridServiceCardProps) {
   const cfg = STATUS_CFG[item.status];
 
@@ -61,7 +71,11 @@ export function GridServiceCard({
     `;
     document.body.appendChild(ghost);
     e.dataTransfer.setData("text/plain", item.id);
-    e.dataTransfer.setDragImage(ghost, Math.min(w / 2, 80), Math.min(height / 2, 30));
+    e.dataTransfer.setDragImage(
+      ghost,
+      Math.min(w / 2, 80),
+      Math.min(height / 2, 30),
+    );
     setTimeout(() => document.body.removeChild(ghost), 0);
     onDragStart(e);
   };
@@ -107,7 +121,10 @@ export function GridServiceCard({
       draggable={!isResizing}
       onDragStart={handleDragStart}
       onDragEnd={onDragEnd}
-      onDoubleClick={e => { e.stopPropagation(); onDoubleClick(); }}
+      onDoubleClick={(e) => {
+        e.stopPropagation();
+        onDoubleClick();
+      }}
       className={`${styles.gridCard} ${
         height < 40 ? styles.gridCardMiniPadding : styles.gridCardFullPadding
       }`}
@@ -128,7 +145,10 @@ export function GridServiceCard({
       <div className={styles.gridCardInner}>
         {height < 40 ? (
           <div className={styles.gridCardInnerMini}>
-            <div className={styles.gridCardDot} style={{ background: cfg.dot }} />
+            <div
+              className={styles.gridCardDot}
+              style={{ background: cfg.dot }}
+            />
             <span className={styles.gridCardCustNameMini}>
               {item.customerName}
             </span>
@@ -139,28 +159,48 @@ export function GridServiceCard({
         ) : (
           <>
             <div className={styles.gridCardHeader}>
-              <div className={styles.gridCardDot} style={{ background: cfg.dot }} />
-              <span className={styles.gridCardStatusText} style={{ color: cfg.text }}>
+              <div
+                className={styles.gridCardDot}
+                style={{ background: cfg.dot }}
+              />
+              <span
+                className={styles.gridCardStatusText}
+                style={{ color: cfg.text }}
+              >
                 {cfg.label}
               </span>
-              <span className={`${styles.sourceBadge} ${
-                item.source === "ONLINE" ? styles.sourceOnline : styles.sourceWalkIn
-              }`}>
+              <span
+                className={`${styles.sourceBadge} ${
+                  item.source === "ONLINE"
+                    ? styles.sourceOnline
+                    : styles.sourceWalkIn
+                }`}
+              >
                 {item.source === "ONLINE" ? "🌐" : "🏠"}
               </span>
             </div>
             <div className={styles.gridCardCustName}>
-              {item.customerName}{height < 70 && <span className={styles.gridCardSvcNameInline}> · {item.service.name}</span>}
+              {item.customerName}
+              {height < 70 && (
+                <span className={styles.gridCardSvcNameInline}>
+                  {" "}
+                  · {item.service.name}
+                </span>
+              )}
             </div>
             {height >= 70 && (
               <div className={styles.gridCardSvcName}>
-                <Scissors size={9} style={{ marginRight: 3, verticalAlign: "middle" }} />
+                <Scissors
+                  size={9}
+                  style={{ marginRight: 3, verticalAlign: "middle" }}
+                />
                 {item.service.name}
               </div>
             )}
             {height >= 88 && (
               <div className={styles.gridCardTime}>
-                <Clock size={8} />{item.startTime} · {item.service.duration}p
+                <Clock size={8} />
+                {item.startTime} · {item.service.duration}p
               </div>
             )}
           </>

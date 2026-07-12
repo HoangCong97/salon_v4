@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, Headers, HttpStatus, HttpException } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  Headers,
+  HttpStatus,
+  HttpException,
+} from "@nestjs/common";
 import { prisma } from "@salon/database";
 import { NotificationGateway } from "./notification.gateway";
 
@@ -10,33 +22,33 @@ export class CustomerController {
   @Get()
   async getCustomers(
     @Param("tenantId") tenantId: string,
-    @Query("branchId") branchId?: string
+    @Query("branchId") branchId?: string,
   ) {
     try {
       const whereClause: any = {
         tenantId,
-        deletedAt: null
+        deletedAt: null,
       };
 
       if (branchId) {
         whereClause.OR = [
           { branchId: branchId },
-          { branchId: null } // Include tenant-wide global customers too
+          { branchId: null }, // Include tenant-wide global customers too
         ];
       }
 
       const customers = await prisma.customer.findMany({
         where: whereClause,
         orderBy: {
-          createdAt: "desc"
-        }
+          createdAt: "desc",
+        },
       });
 
       return customers;
     } catch (error) {
       throw new HttpException(
         `Failed to fetch customers: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -46,18 +58,22 @@ export class CustomerController {
   async createCustomer(
     @Param("tenantId") tenantId: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: {
+    @Body()
+    body: {
       name: string;
       phone?: string;
       email?: string;
       password?: string;
       credibilityScore?: number;
       branchId?: string;
-    }
+    },
   ) {
     try {
       if (!body.name) {
-        throw new HttpException("Customer name is required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Customer name is required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const created = await prisma.customer.create({
@@ -68,18 +84,25 @@ export class CustomerController {
           phone: body.phone || null,
           email: body.email || null,
           password: body.password || null,
-          credibilityScore: body.credibilityScore !== undefined ? Number(body.credibilityScore) : 100
-        }
+          credibilityScore:
+            body.credibilityScore !== undefined
+              ? Number(body.credibilityScore)
+              : 100,
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "customers.updated", { branchId: created.branchId, senderId });
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "customers.updated",
+        { branchId: created.branchId, senderId },
+      );
 
       return created;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to create customer: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -90,23 +113,27 @@ export class CustomerController {
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
     @Headers("x-user-id") senderId: string,
-    @Body() body: {
+    @Body()
+    body: {
       name: string;
       phone?: string;
       email?: string;
       password?: string;
       credibilityScore?: number;
       branchId?: string;
-    }
+    },
   ) {
     try {
       if (!body.name) {
-        throw new HttpException("Customer name is required", HttpStatus.BAD_REQUEST);
+        throw new HttpException(
+          "Customer name is required",
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       // Ensure customer exists and belongs to tenant
       const existing = await prisma.customer.findFirst({
-        where: { id, tenantId, deletedAt: null }
+        where: { id, tenantId, deletedAt: null },
       });
 
       if (!existing) {
@@ -121,19 +148,26 @@ export class CustomerController {
           phone: body.phone ?? null,
           email: body.email ?? null,
           password: body.password ?? null,
-          credibilityScore: body.credibilityScore !== undefined ? Number(body.credibilityScore) : undefined,
-          updatedAt: new Date()
-        }
+          credibilityScore:
+            body.credibilityScore !== undefined
+              ? Number(body.credibilityScore)
+              : undefined,
+          updatedAt: new Date(),
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "customers.updated", { branchId: updated.branchId, senderId });
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "customers.updated",
+        { branchId: updated.branchId, senderId },
+      );
 
       return updated;
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to update customer: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -143,33 +177,40 @@ export class CustomerController {
   async deleteCustomer(
     @Param("tenantId") tenantId: string,
     @Param("id") id: string,
-    @Headers("x-user-id") senderId: string
+    @Headers("x-user-id") senderId: string,
   ) {
     try {
       // Ensure customer exists and belongs to tenant
       const existing = await prisma.customer.findFirst({
-        where: { id, tenantId, deletedAt: null }
+        where: { id, tenantId, deletedAt: null },
       });
 
       if (!existing) {
-        throw new HttpException("Customer not found or already deleted", HttpStatus.NOT_FOUND);
+        throw new HttpException(
+          "Customer not found or already deleted",
+          HttpStatus.NOT_FOUND,
+        );
       }
 
       await prisma.customer.update({
         where: { id },
         data: {
-          deletedAt: new Date()
-        }
+          deletedAt: new Date(),
+        },
       });
 
-      this.notificationGateway.broadcastToTenant(tenantId, "customers.updated", { branchId: existing.branchId, senderId });
+      this.notificationGateway.broadcastToTenant(
+        tenantId,
+        "customers.updated",
+        { branchId: existing.branchId, senderId },
+      );
 
       return { success: true, message: "Customer deleted successfully" };
     } catch (error) {
       if (error instanceof HttpException) throw error;
       throw new HttpException(
         `Failed to delete customer: ${(error as any).message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

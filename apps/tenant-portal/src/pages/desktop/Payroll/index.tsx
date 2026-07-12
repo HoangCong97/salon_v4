@@ -32,9 +32,15 @@ export default function Payroll() {
   const canManage = hasPermission("staff.manage");
 
   // Date & Branch selection
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
-  const [selectedBranch, setSelectedBranch] = useState<string>(currentBranchId || "");
+  const [selectedYear, setSelectedYear] = useState<number>(
+    new Date().getFullYear(),
+  );
+  const [selectedMonth, setSelectedMonth] = useState<number>(
+    new Date().getMonth() + 1,
+  );
+  const [selectedBranch, setSelectedBranch] = useState<string>(
+    currentBranchId || "",
+  );
 
   // Sync selectedBranch if currentBranchId changes in auth store
   React.useEffect(() => {
@@ -45,7 +51,9 @@ export default function Payroll() {
 
   // Derived / local state
   const [searchTerm, setSearchTerm] = useState("");
-  const [inlineEdits, setInlineEdits] = useState<Record<string, Partial<PayrollMember>>>({});
+  const [inlineEdits, setInlineEdits] = useState<
+    Record<string, Partial<PayrollMember>>
+  >({});
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [droppedFile, setDroppedFile] = useState<File | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -69,32 +77,92 @@ export default function Payroll() {
     return `${selectedYear}-${String(selectedMonth).padStart(2, "0")}`;
   }, [selectedYear, selectedMonth]);
 
-  const targetSchema = useMemo<TargetField[]>(() => [
-    { field: "salaryPeriod", label: "Chu kỳ lương (YYYY-MM)", type: "string", required: true, description: "Chu kỳ tính lương (ví dụ: 2026-06)" },
-    { field: "email", label: "Email nhân viên", type: "string", required: false, description: "Dùng để xác định tài khoản nhân viên" },
-    { field: "phone", label: "Số điện thoại", type: "string", required: false, description: "Số điện thoại nhân viên" },
-    { field: "name", label: "Tên nhân viên", type: "string", required: false, description: "Họ tên của nhân viên" },
-    { field: "baseSalary", label: "Lương cơ bản", type: "number", required: false },
-    { field: "allowance", label: "Phụ cấp", type: "number", required: false },
-    { field: "commissionAmount", label: "Hoa hồng", type: "number", required: false },
-    { field: "tipAmount", label: "Tiền Tip", type: "number", required: false },
-    { field: "deductionAmount", label: "Khấu trừ", type: "number", required: false },
-    { field: "finalSalary", label: "Thực nhận", type: "number", required: false },
-    {
-      field: "status",
-      label: "Trạng thái",
-      type: "select",
-      required: false,
-      options: [
-        { value: "DRAFT", label: "Bản nháp" },
-        { value: "PAID", label: "Đã thanh toán" }
-      ]
-    }
-  ], []);
+  const targetSchema = useMemo<TargetField[]>(
+    () => [
+      {
+        field: "salaryPeriod",
+        label: "Chu kỳ lương (YYYY-MM)",
+        type: "string",
+        required: true,
+        description: "Chu kỳ tính lương (ví dụ: 2026-06)",
+      },
+      {
+        field: "email",
+        label: "Email nhân viên",
+        type: "string",
+        required: false,
+        description: "Dùng để xác định tài khoản nhân viên",
+      },
+      {
+        field: "phone",
+        label: "Số điện thoại",
+        type: "string",
+        required: false,
+        description: "Số điện thoại nhân viên",
+      },
+      {
+        field: "name",
+        label: "Tên nhân viên",
+        type: "string",
+        required: false,
+        description: "Họ tên của nhân viên",
+      },
+      {
+        field: "baseSalary",
+        label: "Lương cơ bản",
+        type: "number",
+        required: false,
+      },
+      { field: "allowance", label: "Phụ cấp", type: "number", required: false },
+      {
+        field: "commissionAmount",
+        label: "Hoa hồng",
+        type: "number",
+        required: false,
+      },
+      {
+        field: "tipAmount",
+        label: "Tiền Tip",
+        type: "number",
+        required: false,
+      },
+      {
+        field: "deductionAmount",
+        label: "Khấu trừ",
+        type: "number",
+        required: false,
+      },
+      {
+        field: "finalSalary",
+        label: "Thực nhận",
+        type: "number",
+        required: false,
+      },
+      {
+        field: "status",
+        label: "Trạng thái",
+        type: "select",
+        required: false,
+        options: [
+          { value: "DRAFT", label: "Bản nháp" },
+          { value: "PAID", label: "Đã thanh toán" },
+        ],
+      },
+    ],
+    [],
+  );
 
   // TanStack Query for payroll list
-  const { data: payrolls = [], isLoading: payrollsLoading, error: queryError } = useQuery<PayrollMember[]>({
-    queryKey: queryKeys.payrolls.list(currentTenantId!, selectedBranch || "all", periodStr),
+  const {
+    data: payrolls = [],
+    isLoading: payrollsLoading,
+    error: queryError,
+  } = useQuery<PayrollMember[]>({
+    queryKey: queryKeys.payrolls.list(
+      currentTenantId!,
+      selectedBranch || "all",
+      periodStr,
+    ),
     queryFn: () => {
       const url = selectedBranch
         ? `/tenants/${currentTenantId}/payrolls?period=${periodStr}&branchId=${selectedBranch}`
@@ -107,11 +175,18 @@ export default function Payroll() {
   const loading = payrollsLoading || generating;
   const error = queryError ? (queryError as Error).message : null;
 
-  const fetchPayrolls = useCallback(async (silent = false) => {
-    await queryClient.invalidateQueries({
-      queryKey: queryKeys.payrolls.list(currentTenantId!, selectedBranch || "all", periodStr)
-    });
-  }, [queryClient, currentTenantId, selectedBranch, periodStr]);
+  const fetchPayrolls = useCallback(
+    async (silent = false) => {
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.payrolls.list(
+          currentTenantId!,
+          selectedBranch || "all",
+          periodStr,
+        ),
+      });
+    },
+    [queryClient, currentTenantId, selectedBranch, periodStr],
+  );
 
   const handleGeneratePayroll = async () => {
     if (!currentTenantId || !selectedBranch) {
@@ -122,7 +197,7 @@ export default function Payroll() {
     try {
       await api.post(`/tenants/${currentTenantId}/payrolls/generate`, {
         period: periodStr,
-        branchId: selectedBranch
+        branchId: selectedBranch,
       });
       toast.success("Khởi tạo bảng lương thành công!");
       await fetchPayrolls(true);
@@ -134,17 +209,25 @@ export default function Payroll() {
   };
 
   // Inline editing helpers
-  const handleInlineChange = (payrollId: string, field: keyof PayrollMember, value: any) => {
+  const handleInlineChange = (
+    payrollId: string,
+    field: keyof PayrollMember,
+    value: any,
+  ) => {
     setInlineEdits((prev) => ({
       ...prev,
       [payrollId]: {
         ...prev[payrollId],
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   };
 
-  const handleNumericChange = (payrollId: string, field: keyof PayrollMember, valStr: string) => {
+  const handleNumericChange = (
+    payrollId: string,
+    field: keyof PayrollMember,
+    valStr: string,
+  ) => {
     const cleanNum = parseInt(valStr.replace(/\D/g, ""), 10) || 0;
     handleInlineChange(payrollId, field, cleanNum);
   };
@@ -156,18 +239,26 @@ export default function Payroll() {
     return item[field];
   };
 
-  const handleAutoSave = async (payrollId: string, updatedFields: Partial<PayrollMember>) => {
+  const handleAutoSave = async (
+    payrollId: string,
+    updatedFields: Partial<PayrollMember>,
+  ) => {
     const original = payrolls.find((p) => p.id === payrollId);
     if (!original) return;
 
     const merged = {
       ...original,
       ...inlineEdits[payrollId],
-      ...updatedFields
+      ...updatedFields,
     };
 
     // Calculate final salary dynamically: Base + Allowance + Commission + Tip - Deduction
-    const finalSalary = merged.baseSalary + merged.allowance + merged.commissionAmount + merged.tipAmount - merged.deductionAmount;
+    const finalSalary =
+      merged.baseSalary +
+      merged.allowance +
+      merged.commissionAmount +
+      merged.tipAmount -
+      merged.deductionAmount;
     merged.finalSalary = finalSalary > 0 ? finalSalary : 0;
 
     // Check if there is actual change
@@ -187,7 +278,7 @@ export default function Payroll() {
         allowance: merged.allowance,
         commissionAmount: merged.commissionAmount,
         tipAmount: merged.tipAmount,
-        deductionAmount: merged.deductionAmount
+        deductionAmount: merged.deductionAmount,
       });
 
       // Clear edit cache
@@ -210,15 +301,18 @@ export default function Payroll() {
     if (
       !(await confirm({
         title: "Xác nhận thanh toán lương",
-        message: "Bạn có chắc chắn muốn đánh dấu bảng lương này là ĐÃ THANH TOÁN? Thao tác này sẽ khóa số liệu lương.",
+        message:
+          "Bạn có chắc chắn muốn đánh dấu bảng lương này là ĐÃ THANH TOÁN? Thao tác này sẽ khóa số liệu lương.",
         type: "info",
-        confirmText: "Xác nhận"
+        confirmText: "Xác nhận",
       }))
     )
       return;
 
     try {
-      await api.put(`/tenants/${currentTenantId}/payrolls/${payrollId}`, { status: "PAID" });
+      await api.put(`/tenants/${currentTenantId}/payrolls/${payrollId}`, {
+        status: "PAID",
+      });
       toast.success("Đã cập nhật thanh toán lương!");
       await fetchPayrolls(true);
     } catch (err: any) {
@@ -228,7 +322,7 @@ export default function Payroll() {
 
   const handleMarkAllPaid = async () => {
     if (!currentTenantId || payrolls.length === 0) return;
-    const unpaid = payrolls.filter(p => p.status === "DRAFT");
+    const unpaid = payrolls.filter((p) => p.status === "DRAFT");
     if (unpaid.length === 0) {
       toast.info("Tất cả bảng lương của tháng này đã được thanh toán.");
       return;
@@ -239,23 +333,25 @@ export default function Payroll() {
         title: "Thanh toán hàng loạt",
         message: `Bạn có chắc muốn thanh toán lương cho TOÀN BỘ ${unpaid.length} nhân viên chưa nhận lương trong tháng này?`,
         type: "info",
-        confirmText: "Thanh toán tất cả"
+        confirmText: "Thanh toán tất cả",
       }))
     )
       return;
 
     try {
-      const payload = unpaid.map(p => ({
+      const payload = unpaid.map((p) => ({
         id: p.id,
         baseSalary: p.baseSalary,
         allowance: p.allowance,
         commissionAmount: p.commissionAmount,
         tipAmount: p.tipAmount,
         deductionAmount: p.deductionAmount,
-        status: "PAID"
+        status: "PAID",
       }));
 
-      await api.put(`/tenants/${currentTenantId}/payrolls/bulk`, { payrolls: payload });
+      await api.put(`/tenants/${currentTenantId}/payrolls/bulk`, {
+        payrolls: payload,
+      });
       toast.success("Thanh toán lương hàng loạt thành công!");
       await fetchPayrolls(true);
     } catch (err: any) {
@@ -265,7 +361,10 @@ export default function Payroll() {
 
   const formatMoney = (val: number | string | undefined | null): string => {
     if (val === undefined || val === null || val === "") return "0";
-    const num = typeof val === "number" ? val : parseInt(String(val).replace(/\D/g, ""), 10) || 0;
+    const num =
+      typeof val === "number"
+        ? val
+        : parseInt(String(val).replace(/\D/g, ""), 10) || 0;
     return new Intl.NumberFormat("vi-VN").format(num);
   };
 
@@ -274,22 +373,62 @@ export default function Payroll() {
       (p) =>
         p.staff.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.staff.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (p.staff.phone && p.staff.phone.includes(searchTerm))
+        (p.staff.phone && p.staff.phone.includes(searchTerm)),
     );
   }, [payrolls, searchTerm]);
 
   // Export mapping
-  const exportColumns = useMemo<ExportColumnMapping[]>(() => [
-    { key: "staff", header: "Tên nhân viên", transform: (val) => val?.name || "" },
-    { key: "baseSalary", header: "Lương cơ bản", transform: (val) => Number(val) },
-    { key: "allowance", header: "Phụ cấp", transform: (val) => Number(val || 0) },
-    { key: "commissionAmount", header: "Hoa hồng", transform: (val) => Number(val || 0) },
-    { key: "tipAmount", header: "Tiền Tip", transform: (val) => Number(val || 0) },
-    { key: "deductionAmount", header: "Khấu trừ", transform: (val) => Number(val || 0) },
-    { key: "finalSalary", header: "Thực nhận", transform: (val) => Number(val) },
-    { key: "status", header: "Trạng thái", transform: (val) => val === "PAID" ? "Đã thanh toán" : "Bản nháp" },
-    { key: "paidAt", header: "Ngày thanh toán", transform: (val) => val ? new Date(val).toLocaleDateString("vi-VN") : "" }
-  ], []);
+  const exportColumns = useMemo<ExportColumnMapping[]>(
+    () => [
+      {
+        key: "staff",
+        header: "Tên nhân viên",
+        transform: (val) => val?.name || "",
+      },
+      {
+        key: "baseSalary",
+        header: "Lương cơ bản",
+        transform: (val) => Number(val),
+      },
+      {
+        key: "allowance",
+        header: "Phụ cấp",
+        transform: (val) => Number(val || 0),
+      },
+      {
+        key: "commissionAmount",
+        header: "Hoa hồng",
+        transform: (val) => Number(val || 0),
+      },
+      {
+        key: "tipAmount",
+        header: "Tiền Tip",
+        transform: (val) => Number(val || 0),
+      },
+      {
+        key: "deductionAmount",
+        header: "Khấu trừ",
+        transform: (val) => Number(val || 0),
+      },
+      {
+        key: "finalSalary",
+        header: "Thực nhận",
+        transform: (val) => Number(val),
+      },
+      {
+        key: "status",
+        header: "Trạng thái",
+        transform: (val) => (val === "PAID" ? "Đã thanh toán" : "Bản nháp"),
+      },
+      {
+        key: "paidAt",
+        header: "Ngày thanh toán",
+        transform: (val) =>
+          val ? new Date(val).toLocaleDateString("vi-VN") : "",
+      },
+    ],
+    [],
+  );
 
   const getInitials = (name: string): string => {
     if (!name) return "?";
@@ -334,7 +473,11 @@ export default function Payroll() {
         ) : filteredPayrolls.length === 0 ? (
           <EmptyState
             title="Không tìm thấy dữ liệu lương"
-            description={searchTerm ? "Không có kết quả phù hợp." : "Chưa lập bảng lương cho chu kỳ này. Vui lòng bấm 'Lập bảng lương' để bắt đầu."}
+            description={
+              searchTerm
+                ? "Không có kết quả phù hợp."
+                : "Chưa lập bảng lương cho chu kỳ này. Vui lòng bấm 'Lập bảng lương' để bắt đầu."
+            }
             icon={<Coins size={48} />}
           />
         ) : (

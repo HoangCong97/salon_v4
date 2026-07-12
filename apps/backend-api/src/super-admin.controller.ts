@@ -1,11 +1,21 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, HttpStatus, HttpException } from "@nestjs/common";
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  HttpStatus,
+  HttpException,
+} from "@nestjs/common";
 import { prisma } from "@salon/database";
 import { NotificationGateway } from "./notification.gateway";
 
 @Controller("api/super-admin")
 export class SuperAdminController {
   constructor(private readonly notificationGateway: NotificationGateway) {}
-  
+
   // 1. GET DASHBOARD STATS
   @Get("dashboard/stats")
   async getDashboardStats() {
@@ -19,13 +29,13 @@ export class SuperAdminController {
             plan: {
               select: {
                 code: true,
-                price: true
-              }
-            }
-          }
+                price: true,
+              },
+            },
+          },
         }),
         prisma.branch.count({ where: { deletedAt: null } }),
-        prisma.booking.count({ where: { deletedAt: null } })
+        prisma.booking.count({ where: { deletedAt: null } }),
       ]);
 
       // Calculate stats in a single pass in-memory
@@ -67,10 +77,13 @@ export class SuperAdminController {
         totalBranches,
         totalBookings,
         plansDistribution,
-        uptime: "99.98%"
+        uptime: "99.98%",
       };
     } catch (error) {
-      throw new HttpException(`Failed to fetch stats: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        `Failed to fetch stats: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -88,7 +101,7 @@ export class SuperAdminController {
         this.pingServiceHelper("https://api.twilio.com"),
         this.pingServiceHelper("https://api.sendgrid.com"),
         this.pingServiceHelper("https://sandbox.vnpayment.vn"),
-        this.pingServiceHelper(aiUrl)
+        this.pingServiceHelper(aiUrl),
       ]);
 
       return {
@@ -96,10 +109,13 @@ export class SuperAdminController {
         twilio,
         sendgrid,
         vnpay,
-        ai
+        ai,
       };
     } catch (error) {
-      throw new HttpException(`Failed to fetch health metrics: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        `Failed to fetch health metrics: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -136,7 +152,9 @@ export class SuperAdminController {
     return this.pingServiceHelper(aiUrl);
   }
 
-  private async pingServiceHelper(url: string): Promise<{ status: string; latency: number }> {
+  private async pingServiceHelper(
+    url: string,
+  ): Promise<{ status: string; latency: number }> {
     const start = Date.now();
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -145,7 +163,7 @@ export class SuperAdminController {
       const res = await fetch(url, {
         method: "HEAD",
         signal: controller.signal,
-        headers: { "User-Agent": "Node-Fetch" }
+        headers: { "User-Agent": "Node-Fetch" },
       });
       clearTimeout(timeoutId);
       const latency = Date.now() - start;
@@ -165,10 +183,13 @@ export class SuperAdminController {
     try {
       return await prisma.saasPlan.findMany({
         where: { deletedAt: null },
-        orderBy: { price: "asc" }
+        orderBy: { price: "asc" },
       });
     } catch (error) {
-      throw new HttpException(`Failed to fetch plans: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        `Failed to fetch plans: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -176,7 +197,13 @@ export class SuperAdminController {
   @Put("plans/:id")
   async updatePlan(
     @Param("id") id: string,
-    @Body() body: { price: number; maxBranches: any; maxStaff: any; features?: string[] }
+    @Body()
+    body: {
+      price: number;
+      maxBranches: any;
+      maxStaff: any;
+      features?: string[];
+    },
   ) {
     try {
       // Parse values
@@ -184,21 +211,25 @@ export class SuperAdminController {
       if (typeof body.maxBranches === "number") {
         maxBranchesInt = body.maxBranches;
       } else if (typeof body.maxBranches === "string") {
-        maxBranchesInt = body.maxBranches.includes("Không giới hạn") ? -1 : parseInt(body.maxBranches) || 1;
+        maxBranchesInt = body.maxBranches.includes("Không giới hạn")
+          ? -1
+          : parseInt(body.maxBranches) || 1;
       }
 
       let maxStaffInt = 5;
       if (typeof body.maxStaff === "number") {
         maxStaffInt = body.maxStaff;
       } else if (typeof body.maxStaff === "string") {
-        maxStaffInt = body.maxStaff.includes("Không giới hạn") ? -1 : parseInt(body.maxStaff) || 5;
+        maxStaffInt = body.maxStaff.includes("Không giới hạn")
+          ? -1
+          : parseInt(body.maxStaff) || 5;
       }
 
       const updateData: any = {
         price: body.price,
         maxBranches: maxBranchesInt,
         maxStaff: maxStaffInt,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       if (body.features) {
@@ -207,10 +238,13 @@ export class SuperAdminController {
 
       return await prisma.saasPlan.update({
         where: { id },
-        data: updateData
+        data: updateData,
       });
     } catch (error) {
-      throw new HttpException(`Failed to update plan: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        `Failed to update plan: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -223,10 +257,10 @@ export class SuperAdminController {
         include: {
           plan: true,
           _count: {
-            select: { branches: true }
-          }
+            select: { branches: true },
+          },
         },
-        orderBy: { createdAt: "desc" }
+        orderBy: { createdAt: "desc" },
       });
 
       // Map count property to match frontend expectations
@@ -240,22 +274,33 @@ export class SuperAdminController {
         status: t.status,
         plan: t.plan ? t.plan.code : "FREE",
         branchesCount: t._count.branches,
-        createdAt: t.createdAt.toISOString()
+        createdAt: t.createdAt.toISOString(),
       }));
     } catch (error) {
-      throw new HttpException(`Failed to fetch tenants: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        `Failed to fetch tenants: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   // 5. CREATE NEW TENANT (SALON)
   @Post("tenants")
   async createTenant(
-    @Body() body: { name: string; owner: string; phone: string; email: string; plan: string; address: string }
+    @Body()
+    body: {
+      name: string;
+      owner: string;
+      phone: string;
+      email: string;
+      plan: string;
+      address: string;
+    },
   ) {
     try {
       // Find the plan by code
       const plan = await prisma.saasPlan.findFirst({
-        where: { code: body.plan.toUpperCase(), deletedAt: null }
+        where: { code: body.plan.toUpperCase(), deletedAt: null },
       });
 
       const tenant = await prisma.tenant.create({
@@ -266,11 +311,11 @@ export class SuperAdminController {
           email: body.email,
           address: body.address,
           status: "ACTIVE",
-          planId: plan ? plan.id : null
+          planId: plan ? plan.id : null,
         },
         include: {
-          plan: true
-        }
+          plan: true,
+        },
       });
 
       // Auto-create a default branch for the new salon tenant
@@ -280,8 +325,8 @@ export class SuperAdminController {
           name: `${body.name} - Chi nhánh Trụ Sở`,
           phone: body.phone,
           email: body.email,
-          address: body.address
-        }
+          address: body.address,
+        },
       });
 
       // Emit WebSocket event
@@ -292,7 +337,7 @@ export class SuperAdminController {
         phone: tenant.phone,
         email: tenant.email,
         planCode: tenant.plan ? tenant.plan.code : "FREE",
-        createdAt: tenant.createdAt.toISOString()
+        createdAt: tenant.createdAt.toISOString(),
       });
 
       return {
@@ -305,10 +350,13 @@ export class SuperAdminController {
         status: tenant.status,
         plan: tenant.plan ? tenant.plan.code : "FREE",
         branchesCount: 1,
-        createdAt: tenant.createdAt.toISOString()
+        createdAt: tenant.createdAt.toISOString(),
       };
     } catch (error) {
-      throw new HttpException(`Failed to create tenant: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        `Failed to create tenant: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -316,28 +364,28 @@ export class SuperAdminController {
   @Put("tenants/:id/status")
   async toggleTenantStatus(
     @Param("id") id: string,
-    @Body() body: { status: string }
+    @Body() body: { status: string },
   ) {
     try {
       const updated = await prisma.tenant.update({
         where: { id },
         data: {
           status: body.status,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         include: {
           plan: true,
           _count: {
-            select: { branches: true }
-          }
-        }
+            select: { branches: true },
+          },
+        },
       });
 
       // Emit WebSocket event
       this.notificationGateway.broadcast("tenant.status-updated", {
         id: updated.id,
         name: updated.name,
-        status: updated.status
+        status: updated.status,
       });
 
       return {
@@ -350,10 +398,13 @@ export class SuperAdminController {
         status: updated.status,
         plan: updated.plan ? updated.plan.code : "FREE",
         branchesCount: updated._count.branches,
-        createdAt: updated.createdAt.toISOString()
+        createdAt: updated.createdAt.toISOString(),
       };
     } catch (error) {
-      throw new HttpException(`Failed to toggle tenant status: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        `Failed to toggle tenant status: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -361,12 +412,12 @@ export class SuperAdminController {
   @Put("tenants/:id/plan")
   async changeTenantPlan(
     @Param("id") id: string,
-    @Body() body: { planCode: string }
+    @Body() body: { planCode: string },
   ) {
     try {
       // Find the plan by code
       const plan = await prisma.saasPlan.findFirst({
-        where: { code: body.planCode.toUpperCase(), deletedAt: null }
+        where: { code: body.planCode.toUpperCase(), deletedAt: null },
       });
 
       if (!plan) {
@@ -377,21 +428,21 @@ export class SuperAdminController {
         where: { id },
         data: {
           planId: plan.id,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         include: {
           plan: true,
           _count: {
-            select: { branches: true }
-          }
-        }
+            select: { branches: true },
+          },
+        },
       });
 
       // Emit WebSocket event
       this.notificationGateway.broadcast("tenant.plan-changed", {
         id: updated.id,
         name: updated.name,
-        planCode: updated.plan ? updated.plan.code : "FREE"
+        planCode: updated.plan ? updated.plan.code : "FREE",
       });
 
       return {
@@ -404,10 +455,13 @@ export class SuperAdminController {
         status: updated.status,
         plan: updated.plan ? updated.plan.code : "FREE",
         branchesCount: updated._count.branches,
-        createdAt: updated.createdAt.toISOString()
+        createdAt: updated.createdAt.toISOString(),
       };
     } catch (error) {
-      throw new HttpException(`Failed to change tenant plan: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        `Failed to change tenant plan: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -419,23 +473,32 @@ export class SuperAdminController {
         where: { deletedAt: null },
         include: {
           tenant: true,
-          plan: true
+          plan: true,
         },
-        orderBy: { createdAt: "desc" }
+        orderBy: { createdAt: "desc" },
       });
 
       return invoicesList.map((inv: any) => ({
         id: inv.invoiceNumber,
         dbId: inv.id, // Keep the primary key UUID for backend calls
         salonName: inv.tenant.name,
-        planName: inv.plan ? inv.plan.name.replace("Gói ", "").replace(" (Free Trial)", "").replace(" (Basic)", "").replace(" (Premium)", "") : "Free",
+        planName: inv.plan
+          ? inv.plan.name
+              .replace("Gói ", "")
+              .replace(" (Free Trial)", "")
+              .replace(" (Basic)", "")
+              .replace(" (Premium)", "")
+          : "Free",
         amount: Number(inv.amount),
         date: inv.createdAt.toISOString(),
         status: inv.paymentStatus,
-        paymentMethod: inv.paymentMethod || "Chưa xác định"
+        paymentMethod: inv.paymentMethod || "Chưa xác định",
       }));
     } catch (error) {
-      throw new HttpException(`Failed to fetch invoices: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        `Failed to fetch invoices: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -445,7 +508,7 @@ export class SuperAdminController {
     try {
       // ID here can be the invoiceNumber (e.g., INV-2026-001)
       const inv = await prisma.saasInvoice.findFirst({
-        where: { invoiceNumber: id, deletedAt: null }
+        where: { invoiceNumber: id, deletedAt: null },
       });
 
       if (!inv) {
@@ -456,12 +519,12 @@ export class SuperAdminController {
         where: { id: inv.id },
         data: {
           paymentStatus: "PAID",
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         include: {
           tenant: true,
-          plan: true
-        }
+          plan: true,
+        },
       });
 
       // Automatically activate or renew the tenant's SaaS plan upon invoice approval
@@ -477,8 +540,8 @@ export class SuperAdminController {
             planStatus: "ACTIVE",
             planStartedAt,
             planExpiresAt,
-            updatedAt: new Date()
-          }
+            updatedAt: new Date(),
+          },
         });
       }
 
@@ -492,7 +555,7 @@ export class SuperAdminController {
         amount: Number(updated.amount),
         date: updated.createdAt.toISOString(),
         status: updated.paymentStatus,
-        paymentMethod: updated.paymentMethod || "Chuyển khoản ngân hàng"
+        paymentMethod: updated.paymentMethod || "Chuyển khoản ngân hàng",
       });
 
       return {
@@ -503,10 +566,13 @@ export class SuperAdminController {
         amount: Number(updated.amount),
         date: updated.createdAt.toISOString(),
         status: updated.paymentStatus,
-        paymentMethod: updated.paymentMethod || "Chưa xác định"
+        paymentMethod: updated.paymentMethod || "Chưa xác định",
       };
     } catch (error) {
-      throw new HttpException(`Failed to approve invoice: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        `Failed to approve invoice: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -514,7 +580,14 @@ export class SuperAdminController {
   @Put("tenants/:id")
   async updateTenant(
     @Param("id") id: string,
-    @Body() body: { name: string; owner: string; phone: string; email: string; address: string }
+    @Body()
+    body: {
+      name: string;
+      owner: string;
+      phone: string;
+      email: string;
+      address: string;
+    },
   ) {
     try {
       const updated = await prisma.tenant.update({
@@ -525,14 +598,14 @@ export class SuperAdminController {
           phone: body.phone,
           email: body.email,
           address: body.address,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         },
         include: {
           plan: true,
           _count: {
-            select: { branches: true }
-          }
-        }
+            select: { branches: true },
+          },
+        },
       });
 
       return {
@@ -545,10 +618,13 @@ export class SuperAdminController {
         status: updated.status,
         plan: updated.plan ? updated.plan.code : "FREE",
         branchesCount: updated._count.branches,
-        createdAt: updated.createdAt.toISOString()
+        createdAt: updated.createdAt.toISOString(),
       };
     } catch (error) {
-      throw new HttpException(`Failed to update tenant: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        `Failed to update tenant: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -560,12 +636,15 @@ export class SuperAdminController {
         where: { id },
         data: {
           deletedAt: new Date(),
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
       return { id };
     } catch (error) {
-      throw new HttpException(`Failed to delete tenant: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        `Failed to delete tenant: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -576,7 +655,7 @@ export class SuperAdminController {
       const invoicesList = await prisma.saasInvoice.findMany({
         where: { tenantId: id, deletedAt: null },
         include: { plan: true },
-        orderBy: { createdAt: "desc" }
+        orderBy: { createdAt: "desc" },
       });
       return invoicesList.map((inv: any) => ({
         id: inv.invoiceNumber,
@@ -585,10 +664,13 @@ export class SuperAdminController {
         amount: Number(inv.amount),
         date: inv.createdAt.toISOString(),
         status: inv.paymentStatus,
-        paymentMethod: inv.paymentMethod || "Chưa xác định"
+        paymentMethod: inv.paymentMethod || "Chưa xác định",
       }));
     } catch (error) {
-      throw new HttpException(`Failed to fetch tenant invoices: ${(error as any).message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        `Failed to fetch tenant invoices: ${(error as any).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

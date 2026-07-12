@@ -54,10 +54,13 @@ export function useImportWizard(targetSchema: TargetField[]) {
     reader.onload = async (e) => {
       try {
         const buffer = e.target?.result as ArrayBuffer;
-        const workbook = XLSX.read(new Uint8Array(buffer), { type: "array", codepage: 65001 });
+        const workbook = XLSX.read(new Uint8Array(buffer), {
+          type: "array",
+          codepage: 65001,
+        });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        
+
         // Convert to array of objects
         const rows = XLSX.utils.sheet_to_json<any>(worksheet, { defval: "" });
         if (rows.length === 0) {
@@ -65,20 +68,24 @@ export function useImportWizard(targetSchema: TargetField[]) {
         }
 
         // Get headers from first row keys
-        const headers = Object.keys(rows[0]).filter(k => !k.startsWith("__rowNum"));
+        const headers = Object.keys(rows[0]).filter(
+          (k) => !k.startsWith("__rowNum"),
+        );
         setFileHeaders(headers);
         setRawData(rows);
 
         // Get up to 3 sample rows as arrays
-        const samples = rows.slice(0, 3).map(row => 
-          headers.map(h => row[h]?.toString() || "")
-        );
+        const samples = rows
+          .slice(0, 3)
+          .map((row) => headers.map((h) => row[h]?.toString() || ""));
         setSampleRows(samples);
 
         // Call backend API to analyze mapping suggestions using DeepSeek
         await getMappingSuggestions(headers, samples);
       } catch (err: any) {
-        setError(err.message || "Không thể đọc file. Vui lòng kiểm tra lại định dạng.");
+        setError(
+          err.message || "Không thể đọc file. Vui lòng kiểm tra lại định dạng.",
+        );
         setIsAnalyzing(false);
       }
     };
@@ -100,8 +107,8 @@ export function useImportWizard(targetSchema: TargetField[]) {
         body: JSON.stringify({
           fileHeaders: headers,
           sampleRows: samples,
-          targetSchema
-        })
+          targetSchema,
+        }),
       });
 
       if (!res.ok) throw new Error("Không thể phân tích file bằng AI");
@@ -137,7 +144,7 @@ export function useImportWizard(targetSchema: TargetField[]) {
   };
 
   const handleMappingChange = (fileHeader: string, targetField: string) => {
-    setMappings(prev => {
+    setMappings((prev) => {
       const updated = { ...prev };
       if (!targetField) {
         delete updated[fileHeader];
@@ -155,14 +162,18 @@ export function useImportWizard(targetSchema: TargetField[]) {
   };
 
   const handleDefaultValueChange = (field: string, value: any) => {
-    setDefaultValues(prev => ({
+    setDefaultValues((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   // Submit parsed data + mapping config to backend to execute imports
-  const executeImport = async (entity: string, tenantId: string, branchId: string | null) => {
+  const executeImport = async (
+    entity: string,
+    tenantId: string,
+    branchId: string | null,
+  ) => {
     setIsImporting(true);
     setError(null);
 
@@ -174,13 +185,13 @@ export function useImportWizard(targetSchema: TargetField[]) {
         body: JSON.stringify({
           rawData,
           mappings,
-          defaultValues
-        })
+          defaultValues,
+        }),
       });
 
       if (!res.ok) throw new Error("Lỗi kết nối máy chủ khi import.");
       const resultData = await res.json();
-      
+
       setReport(resultData);
       setStep(3); // Go to Step 3 (Report)
     } catch (err: any) {
@@ -208,6 +219,6 @@ export function useImportWizard(targetSchema: TargetField[]) {
     handleMappingChange,
     handleDefaultValueChange,
     executeImport,
-    reset
+    reset,
   };
 }

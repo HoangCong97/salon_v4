@@ -65,9 +65,15 @@ export const RoleModal: React.FC<RoleModalProps> = ({
     try {
       let roleResult;
       if (mode === "create") {
-        roleResult = await api.post<{ id: string }>(`/tenants/${currentTenantId}/roles`, payload);
+        roleResult = await api.post<{ id: string }>(
+          `/tenants/${currentTenantId}/roles`,
+          payload,
+        );
       } else {
-        roleResult = await api.put<{ id: string }>(`/tenants/${currentTenantId}/roles/${selectedRoleId}`, payload);
+        roleResult = await api.put<{ id: string }>(
+          `/tenants/${currentTenantId}/roles/${selectedRoleId}`,
+          payload,
+        );
       }
 
       onClose();
@@ -84,11 +90,11 @@ export const RoleModal: React.FC<RoleModalProps> = ({
 
   return (
     <div className={styles.modalOverlay}>
-      <div className={`card animate-fade-in ${styles.modalCard}`} style={{ maxWidth: "420px", padding: "24px" }}>
-        <button
-          className={styles.closeButton}
-          onClick={onClose}
-        >
+      <div
+        className={`card animate-fade-in ${styles.modalCard}`}
+        style={{ maxWidth: "420px", padding: "24px" }}
+      >
+        <button className={styles.closeButton} onClick={onClose}>
           <X size={20} />
         </button>
         <h2 className={styles.modalHeader}>
@@ -121,10 +127,18 @@ export const RoleModal: React.FC<RoleModalProps> = ({
           </div>
 
           <div className={styles.modalFooter}>
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onClose}
+            >
               Hủy
             </button>
-            <button type="submit" className="btn btn-primary" disabled={savingRole}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={savingRole}
+            >
               {savingRole ? "Đang lưu..." : "Lưu chức vụ"}
             </button>
           </div>
