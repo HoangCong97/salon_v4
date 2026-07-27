@@ -66,6 +66,7 @@ export interface MonthlyTrendItem {
 
 export interface InvoiceItemDetail {
   id: string;
+  itemId: string;
   name: string;
   itemType: string;
   price: number;
@@ -73,6 +74,7 @@ export interface InvoiceItemDetail {
   totalPrice: number;
   discountAmount: number;
   finalAmount: number;
+  staffId: string | null;
 }
 
 export interface InvoiceDetailItem {

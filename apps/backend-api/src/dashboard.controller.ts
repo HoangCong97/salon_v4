@@ -6,7 +6,7 @@ import {
   HttpStatus,
   HttpException,
 } from "@nestjs/common";
-import { prisma } from "@salon/database";
+import { prisma, Prisma } from "@salon/database";
 
 @Controller("api/tenants/:tenantId/branches/:branchId/dashboard-stats")
 export class DashboardController {
@@ -15,7 +15,19 @@ export class DashboardController {
     @Param("tenantId") tenantId: string,
     @Param("branchId") branchId: string,
     @Query("month") monthParam?: string,
+    @Query("days") daysParam?: string,
+    @Query("staff") staffParam?: string,
+    @Query("services") servicesParam?: string,
   ) {
+    const selectedDaysList = daysParam
+      ? daysParam.split(",").filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+      : [];
+    const selectedStaffList = staffParam
+      ? staffParam.split(",").filter((id) => id.trim().length > 0)
+      : [];
+    const selectedServicesList = servicesParam
+      ? servicesParam.split(",").filter((id) => id.trim().length > 0)
+      : [];
     try {
       // 1. Timezone offset UTC+7 (Vietnam Time)
       const nowLocal = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
@@ -30,27 +42,59 @@ export class DashboardController {
       const startOfYesterday = new Date(`${yesterdayStr}T00:00:00+07:00`);
       const endOfYesterday = new Date(`${yesterdayStr}T23:59:59.999+07:00`);
 
-      // Target year and month calculation (based on query param e.g. "2025-07")
-      let targetYear = nowLocal.getFullYear();
-      let targetMonth = nowLocal.getMonth(); // 0-11
-      if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
-        const parts = monthParam.split("-");
-        targetYear = parseInt(parts[0], 10);
-        targetMonth = parseInt(parts[1], 10) - 1;
+      // Target year and month calculation (based on query param e.g. "2025-07,2025-08")
+      interface SelectedMonthRange {
+        year: number;
+        month: number;
+        monthStr: string;
+        daysInMonth: number;
+        start: Date;
+        end: Date;
+        yearMonth: string;
+      }
+      const selectedMonthRanges: SelectedMonthRange[] = [];
+
+      if (monthParam) {
+        const monthsList = monthParam
+          .split(",")
+          .filter((m) => /^\d{4}-\d{2}$/.test(m));
+        for (const mStr of monthsList) {
+          const parts = mStr.split("-");
+          const yr = parseInt(parts[0], 10);
+          const mn = parseInt(parts[1], 10) - 1;
+          const monthStr = String(mn + 1).padStart(2, "0");
+          const days = new Date(yr, mn + 1, 0).getDate();
+          const start = new Date(`${yr}-${monthStr}-01T00:00:00+07:00`);
+          const end = new Date(`${yr}-${monthStr}-${days}T23:59:59.999+07:00`);
+          selectedMonthRanges.push({
+            year: yr,
+            month: mn,
+            monthStr,
+            daysInMonth: days,
+            start,
+            end,
+            yearMonth: mStr,
+          });
+        }
       }
 
-      const targetMonthStr = String(targetMonth + 1).padStart(2, "0");
-      const targetDaysInMonth = new Date(
-        targetYear,
-        targetMonth + 1,
-        0,
-      ).getDate();
-      const startOfTargetMonth = new Date(
-        `${targetYear}-${targetMonthStr}-01T00:00:00+07:00`,
-      );
-      const endOfTargetMonth = new Date(
-        `${targetYear}-${targetMonthStr}-${targetDaysInMonth}T23:59:59.999+07:00`,
-      );
+      if (selectedMonthRanges.length === 0) {
+        const yr = nowLocal.getFullYear();
+        const mn = nowLocal.getMonth();
+        const monthStr = String(mn + 1).padStart(2, "0");
+        const days = new Date(yr, mn + 1, 0).getDate();
+        const start = new Date(`${yr}-${monthStr}-01T00:00:00+07:00`);
+        const end = new Date(`${yr}-${monthStr}-${days}T23:59:59.999+07:00`);
+        selectedMonthRanges.push({
+          year: yr,
+          month: mn,
+          monthStr,
+          daysInMonth: days,
+          start,
+          end,
+          yearMonth: `${yr}-${monthStr}`,
+        });
+      }
 
       // Current calendar month (for general stats cards comparison)
       const curYear = nowLocal.getFullYear();
@@ -176,14 +220,16 @@ export class DashboardController {
             createdAt: true,
           },
         }),
-        // Invoices Target Month (selected month for daily table)
+        // Invoices Target Month (selected months for daily table)
         prisma.invoice.findMany({
           where: {
             tenantId,
             branchId,
             deletedAt: null,
             status: "COMPLETED",
-            createdAt: { gte: startOfTargetMonth, lte: endOfTargetMonth },
+            OR: selectedMonthRanges.map((r) => ({
+              createdAt: { gte: r.start, lte: r.end },
+            })),
           },
           include: {
             customer: { select: { id: true, name: true, phone: true } },
@@ -281,6 +327,54 @@ export class DashboardController {
       allInventories.forEach((i) => itemNames.set(i.id, i.name));
       allServicePackages.forEach((p) => itemNames.set(p.id, p.name));
 
+      let targetInvoices = invoicesTargetMonth;
+
+      if (selectedStaffList.length > 0 || selectedServicesList.length > 0) {
+        targetInvoices = invoicesTargetMonth
+          .map((inv) => {
+            const filteredItems = inv.items.filter((item) => {
+              const matchesStaff =
+                selectedStaffList.length === 0 ||
+                (item.staffId && selectedStaffList.includes(item.staffId));
+              const matchesService =
+                selectedServicesList.length === 0 ||
+                (item.itemType === "SERVICE" &&
+                  selectedServicesList.includes(item.itemId));
+              return matchesStaff && matchesService;
+            });
+
+            if (filteredItems.length === 0) return null;
+
+            const totalPrice = new Prisma.Decimal(
+              filteredItems.reduce(
+                (sum, item) => sum + Number(item.totalPrice),
+                0,
+              ),
+            );
+            const discountAmount = new Prisma.Decimal(
+              filteredItems.reduce(
+                (sum, item) => sum + Number(item.discountAmount),
+                0,
+              ),
+            );
+            const actualFinal = new Prisma.Decimal(
+              filteredItems.reduce(
+                (sum, item) => sum + Number(item.finalAmount),
+                0,
+              ),
+            );
+
+            return {
+              ...inv,
+              items: filteredItems,
+              totalPrice,
+              discountAmount,
+              finalAmount: actualFinal,
+            };
+          })
+          .filter((inv): inv is NonNullable<typeof inv> => inv !== null);
+      }
+
       // 3. Aggregate stats in-memory
       const todayRevenue = invoicesToday.reduce(
         (sum, inv) => sum + Number(inv.finalAmount),
@@ -359,76 +453,81 @@ export class DashboardController {
 
       // 5. Construct Target Month's Daily Revenues list (dailyRevenues) - Ascending Order (1 to targetDaysInMonth)
       const dailyRevenues = [];
-      for (let d = 1; d <= targetDaysInMonth; d++) {
-        const dStr = `${targetYear}-${targetMonthStr}-${String(d).padStart(2, "0")}`;
-        const dateLabel = `${d} thg ${targetMonthStr}, ${targetYear}`;
+      for (const r of selectedMonthRanges) {
+        for (let d = 1; d <= r.daysInMonth; d++) {
+          const dStr = `${r.year}-${r.monthStr}-${String(d).padStart(2, "0")}`;
+          const dateLabel = `${d} thg ${r.monthStr}, ${r.year}`;
 
-        const dayInvoices = invoicesTargetMonth.filter((inv) => {
-          const invLocal = new Date(
-            inv.createdAt.getTime() + 7 * 60 * 60 * 1000,
+          const dayInvoices = targetInvoices.filter((inv) => {
+            const invLocal = new Date(
+              inv.createdAt.getTime() + 7 * 60 * 60 * 1000,
+            );
+            return invLocal.toISOString().startsWith(dStr);
+          });
+
+          const totalPrice = dayInvoices.reduce(
+            (sum, inv) => sum + Number(inv.totalPrice),
+            0,
           );
-          return invLocal.toISOString().startsWith(dStr);
-        });
-
-        const totalPrice = dayInvoices.reduce(
-          (sum, inv) => sum + Number(inv.totalPrice),
-          0,
-        );
-        const finalAmount = dayInvoices.reduce(
-          (sum, inv) => sum + Number(inv.finalAmount),
-          0,
-        );
-        const discountAmount = dayInvoices.reduce(
-          (sum, inv) => sum + Number(inv.discountAmount),
-          0,
-        );
-
-        const dayDate = new Date(`${dStr}T12:00:00+07:00`);
-        let dayOfWeek = dayDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-        if (dayOfWeek === 0) dayOfWeek = 7; // Map Sunday to 7
-
-        const formattedInvoices = dayInvoices.map((inv) => {
-          const timeLocal = new Date(
-            inv.createdAt.getTime() + 7 * 60 * 60 * 1000,
+          const finalAmount = dayInvoices.reduce(
+            (sum, inv) => sum + Number(inv.finalAmount),
+            0,
           );
-          const timeStr = timeLocal.toISOString().substr(11, 5); // HH:MM
+          const discountAmount = dayInvoices.reduce(
+            (sum, inv) => sum + Number(inv.discountAmount),
+            0,
+          );
 
-          return {
-            id: inv.id,
-            invoiceNumber: inv.id.substring(0, 8).toUpperCase(),
-            totalPrice: Number(inv.totalPrice),
-            discountAmount: Number(inv.discountAmount),
-            finalAmount: Number(inv.finalAmount),
-            paymentMethod: inv.paymentMethod,
-            paymentStatus: inv.paymentStatus,
-            time: timeStr,
-            customerName: inv.customer?.name || "Khách vãng lai",
-            cashierName: inv.cashier?.name || "Hệ thống",
-            note: inv.note || "",
-            items: inv.items.map((item) => ({
-              id: item.id,
-              name: itemNames.get(item.itemId) || "Sản phẩm/Dịch vụ đã xóa",
-              itemType: item.itemType,
-              price: Number(item.price),
-              quantity: item.quantity,
-              totalPrice: Number(item.totalPrice),
-              discountAmount: Number(item.discountAmount),
-              finalAmount: Number(item.finalAmount),
-            })),
-          };
-        });
+          const dayDate = new Date(`${dStr}T12:00:00+07:00`);
+          let dayOfWeek = dayDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+          if (dayOfWeek === 0) dayOfWeek = 7; // Map Sunday to 7
 
-        dailyRevenues.push({
-          date: dateLabel,
-          dateRaw: dStr,
-          day: d,
-          dayOfWeek,
-          totalPrice,
-          finalAmount,
-          discountAmount,
-          invoices: formattedInvoices,
-        });
+          const formattedInvoices = dayInvoices.map((inv) => {
+            const timeLocal = new Date(
+              inv.createdAt.getTime() + 7 * 60 * 60 * 1000,
+            );
+            const timeStr = timeLocal.toISOString().substr(11, 5); // HH:MM
+
+            return {
+              id: inv.id,
+              invoiceNumber: inv.id.substring(0, 8).toUpperCase(),
+              totalPrice: Number(inv.totalPrice),
+              discountAmount: Number(inv.discountAmount),
+              finalAmount: Number(inv.finalAmount),
+              paymentMethod: inv.paymentMethod,
+              paymentStatus: inv.paymentStatus,
+              time: timeStr,
+              customerName: inv.customer?.name || "Khách vãng lai",
+              cashierName: inv.cashier?.name || "Hệ thống",
+              note: inv.note || "",
+              items: inv.items.map((item) => ({
+                id: item.id,
+                itemId: item.itemId,
+                name: itemNames.get(item.itemId) || "Sản phẩm/Dịch vụ đã xóa",
+                itemType: item.itemType,
+                price: Number(item.price),
+                quantity: item.quantity,
+                totalPrice: Number(item.totalPrice),
+                discountAmount: Number(item.discountAmount),
+                finalAmount: Number(item.finalAmount),
+                staffId: item.staffId,
+              })),
+            };
+          });
+
+          dailyRevenues.push({
+            date: dateLabel,
+            dateRaw: dStr,
+            day: d,
+            dayOfWeek,
+            totalPrice,
+            finalAmount,
+            discountAmount,
+            invoices: formattedInvoices,
+          });
+        }
       }
+      dailyRevenues.sort((a, b) => a.dateRaw.localeCompare(b.dateRaw));
 
       // 6. Aggregate Payment Methods (from last 7 days invoices)
       const paymentMethodTotals: Record<string, number> = {
@@ -455,7 +554,18 @@ export class DashboardController {
       );
 
       // 7. Aggregate Top Services & Staff Performance (from target month completed invoices)
-      const completedInvoiceIds = invoicesTargetMonth.map((i) => i.id);
+      const invoicesForStats =
+        selectedDaysList.length > 0
+          ? targetInvoices.filter((inv) => {
+              const invLocal = new Date(
+                inv.createdAt.getTime() + 7 * 60 * 60 * 1000,
+              );
+              const dateStr = invLocal.toISOString().split("T")[0];
+              return selectedDaysList.includes(dateStr);
+            })
+          : targetInvoices;
+
+      const completedInvoiceIds = invoicesForStats.map((i) => i.id);
 
       // Load all users to resolve staff names
       const allUsers = await prisma.user.findMany({
@@ -475,7 +585,7 @@ export class DashboardController {
         }
       >();
 
-      for (const inv of invoicesTargetMonth) {
+      for (const inv of invoicesForStats) {
         const custId = inv.customerId || `guest-${inv.id}`;
         for (const item of inv.items) {
           if (item.staffId) {
@@ -526,15 +636,28 @@ export class DashboardController {
             itemId: true,
             quantity: true,
             finalAmount: true,
+            staffId: true,
           },
         });
+
+        let filteredInvoiceItems = invoiceItemsThisMonth;
+        if (selectedStaffList.length > 0) {
+          filteredInvoiceItems = filteredInvoiceItems.filter(
+            (item) => item.staffId && selectedStaffList.includes(item.staffId),
+          );
+        }
+        if (selectedServicesList.length > 0) {
+          filteredInvoiceItems = filteredInvoiceItems.filter((item) =>
+            selectedServicesList.includes(item.itemId),
+          );
+        }
 
         const serviceNameMap = new Map(allServices.map((s) => [s.id, s.name]));
         const serviceStats = new Map<
           string,
           { count: number; revenue: number }
         >();
-        for (const item of invoiceItemsThisMonth) {
+        for (const item of filteredInvoiceItems) {
           const serviceId = item.itemId;
           const qty = item.quantity;
           const revenue = Number(item.finalAmount);

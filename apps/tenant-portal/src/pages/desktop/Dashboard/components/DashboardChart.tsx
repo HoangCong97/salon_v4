@@ -35,12 +35,16 @@ interface DashboardChartProps {
   charts: DashboardCharts;
   selectedMonth: string;
   onSelectMonth: (month: string) => void;
+  selectedDays: string;
+  onSelectDays: (days: string) => void;
 }
 
 export function DashboardChart({
   charts,
   selectedMonth,
   onSelectMonth,
+  selectedDays,
+  onSelectDays,
 }: DashboardChartProps) {
   const { monthlyTrends = [], dailyRevenues = [] } = charts;
 
@@ -54,32 +58,28 @@ export function DashboardChart({
   useEffect(() => {
     if (tableWrapperRef.current && dailyRevenues.length > 0) {
       const todayLocal = new Date();
-      const currentYearMonth = `${todayLocal.getFullYear()}-${String(
+      const todayDateStr = `${todayLocal.getFullYear()}-${String(
         todayLocal.getMonth() + 1,
-      ).padStart(2, "0")}`;
+      ).padStart(2, "0")}-${String(todayLocal.getDate()).padStart(2, "0")}`;
 
-      const isCurrentMonth = selectedMonth === currentYearMonth;
-      if (isCurrentMonth) {
-        const todayDay = todayLocal.getDate();
-        const todayRow = tableWrapperRef.current.querySelector(
-          `[data-day="${todayDay}"]`,
-        ) as HTMLElement;
+      const todayRow = tableWrapperRef.current.querySelector(
+        `[data-date="${todayDateStr}"]`,
+      ) as HTMLElement;
 
-        if (todayRow) {
-          const containerHeight = tableWrapperRef.current.clientHeight;
-          const rowTop = todayRow.offsetTop;
-          const rowHeight = todayRow.clientHeight;
-          // Center the row in viewport
-          tableWrapperRef.current.scrollTop =
-            rowTop - containerHeight / 2 + rowHeight / 2;
-          return;
-        }
+      if (todayRow) {
+        const containerHeight = tableWrapperRef.current.clientHeight;
+        const rowTop = todayRow.offsetTop;
+        const rowHeight = todayRow.clientHeight;
+        // Center the row in viewport
+        tableWrapperRef.current.scrollTop =
+          rowTop - containerHeight / 2 + rowHeight / 2;
+        return;
       }
 
       // Fallback: scroll to bottom
       tableWrapperRef.current.scrollTop = tableWrapperRef.current.scrollHeight;
     }
-  }, [dailyRevenues, selectedMonth]);
+  }, [dailyRevenues]);
 
   // If no selectedMonth is set yet, choose the latest month from trends
   useEffect(() => {
@@ -88,6 +88,120 @@ export function DashboardChart({
       onSelectMonth(latest.yearMonth);
     }
   }, [monthlyTrends, selectedMonth, onSelectMonth]);
+
+  const anchorMonthRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!anchorMonthRef.current && selectedMonth) {
+      const parts = selectedMonth.split(",");
+      anchorMonthRef.current = parts[parts.length - 1];
+    }
+  }, [selectedMonth]);
+
+  const handleMonthClick = (e: React.MouseEvent, clickedMonth: string) => {
+    const allMonths = monthlyTrends.map((m) => m.yearMonth);
+    const selectedList = selectedMonth ? selectedMonth.split(",") : [];
+
+    let newSelected: string[] = [];
+
+    if (e.ctrlKey || e.metaKey) {
+      if (selectedList.includes(clickedMonth)) {
+        newSelected = selectedList.filter((m) => m !== clickedMonth);
+      } else {
+        newSelected = [...selectedList, clickedMonth];
+      }
+      anchorMonthRef.current = clickedMonth;
+    } else if (e.shiftKey && anchorMonthRef.current) {
+      const anchorIndex = allMonths.indexOf(anchorMonthRef.current);
+      const clickedIndex = allMonths.indexOf(clickedMonth);
+
+      if (anchorIndex !== -1 && clickedIndex !== -1) {
+        const start = Math.min(anchorIndex, clickedIndex);
+        const end = Math.max(anchorIndex, clickedIndex);
+        newSelected = allMonths.slice(start, end + 1);
+      } else {
+        newSelected = [clickedMonth];
+        anchorMonthRef.current = clickedMonth;
+      }
+    } else {
+      newSelected = [clickedMonth];
+      anchorMonthRef.current = clickedMonth;
+    }
+
+    if (newSelected.length === 0) {
+      newSelected = [clickedMonth];
+      anchorMonthRef.current = clickedMonth;
+    }
+
+    onSelectMonth(newSelected.join(","));
+  };
+
+  const formatSelectedMonthsLabel = (selectedMonthStr: string) => {
+    if (!selectedMonthStr) return "Tháng này";
+    const parts = selectedMonthStr.split(",");
+    if (parts.length === 1) {
+      const [year, month] = parts[0].split("-");
+      return `${month}/${year}`;
+    }
+    return parts
+      .map((p) => {
+        const [year, month] = p.split("-");
+        return `${month}/${year}`;
+      })
+      .join(", ");
+  };
+
+  const anchorDayRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!anchorDayRef.current && selectedDays) {
+      const parts = selectedDays.split(",");
+      anchorDayRef.current = parts[parts.length - 1];
+    }
+  }, [selectedDays]);
+
+  const handleDayClick = (e: React.MouseEvent, clickedDay: string) => {
+    const allDays = dailyRevenues.map((d) => d.dateRaw);
+    const selectedList = selectedDays ? selectedDays.split(",") : [];
+
+    let newSelected: string[] = [];
+
+    if (e.ctrlKey || e.metaKey) {
+      if (selectedList.includes(clickedDay)) {
+        newSelected = selectedList.filter((d) => d !== clickedDay);
+      } else {
+        newSelected = [...selectedList, clickedDay];
+      }
+      anchorDayRef.current = clickedDay;
+    } else if (e.shiftKey && anchorDayRef.current) {
+      const anchorIndex = allDays.indexOf(anchorDayRef.current);
+      const clickedIndex = allDays.indexOf(clickedDay);
+
+      if (anchorIndex !== -1 && clickedIndex !== -1) {
+        const start = Math.min(anchorIndex, clickedIndex);
+        const end = Math.max(anchorIndex, clickedIndex);
+        newSelected = allDays.slice(start, end + 1);
+      } else {
+        newSelected = [clickedDay];
+        anchorDayRef.current = clickedDay;
+      }
+    } else {
+      newSelected = [clickedDay];
+      anchorDayRef.current = clickedDay;
+    }
+
+    if (
+      !e.ctrlKey &&
+      !e.shiftKey &&
+      selectedList.length === 1 &&
+      selectedList[0] === clickedDay
+    ) {
+      newSelected = [];
+      anchorDayRef.current = null;
+    }
+
+    onSelectDays(newSelected.join(","));
+  };
 
   // Formatter helpers
   const formatMonthLabel = (monthStr: string) => {
@@ -203,7 +317,8 @@ export function DashboardChart({
         {/* Combined Horizontal Stacked Bar Chart */}
         <div className={styles.horizontalChartContainer}>
           {monthlyTrends.map((item) => {
-            const isActive = selectedMonth === item.yearMonth;
+            const selectedList = selectedMonth ? selectedMonth.split(",") : [];
+            const isActive = selectedList.includes(item.yearMonth);
 
             // Total price represents length of the stacked bar
             const totalBarWidth = (item.totalPrice / niceMax) * 80; // max 80% width
@@ -224,8 +339,13 @@ export function DashboardChart({
                 className={`${styles.horizontalBarRow} ${
                   isActive ? styles.activeMonthRow : ""
                 }`}
-                onClick={() => onSelectMonth(item.yearMonth)}
-                title="Bấm để lọc doanh thu theo ngày"
+                onMouseDown={(e) => {
+                  if (e.shiftKey || e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                  }
+                }}
+                onClick={(e) => handleMonthClick(e, item.yearMonth)}
+                title="Bấm để lọc. Giữ Ctrl hoặc Shift để chọn nhiều tháng"
               >
                 {/* Month label in single line MM/YYYY */}
                 <div className={styles.monthLabelCol}>
@@ -309,17 +429,7 @@ export function DashboardChart({
 
       {/* RIGHT COLUMN: Daily Revenues Table */}
       <div className={styles.splitRightCard}>
-        <TableSectionHeader
-          title={
-            <>
-              Doanh số theo ngày (
-              {selectedMonth
-                ? `${selectedMonth.split("-")[1]}/${selectedMonth.split("-")[0]}`
-                : "Tháng này"}
-              )
-            </>
-          }
-        />
+        <TableSectionHeader title={<>Doanh số theo ngày</>} />
 
         <div className={styles.dailyTableWrapper} ref={tableWrapperRef}>
           <table className={styles.excelDailyTable}>
@@ -339,9 +449,21 @@ export function DashboardChart({
               {dailyRevenues.map((d, index) => (
                 <tr
                   key={d.dateRaw}
-                  className={styles.clickableTableRow}
-                  onClick={() => setSelectedDay(d)}
+                  className={`${styles.clickableTableRow} ${
+                    selectedDays.split(",").includes(d.dateRaw)
+                      ? styles.activeDailyRow
+                      : ""
+                  }`}
+                  onMouseDown={(e) => {
+                    if (e.shiftKey || e.ctrlKey || e.metaKey) {
+                      e.preventDefault();
+                    }
+                  }}
+                  onClick={(e) => handleDayClick(e, d.dateRaw)}
+                  onDoubleClick={() => setSelectedDay(d)}
                   data-day={d.day}
+                  data-date={d.dateRaw}
+                  title="Bấm để lọc. Giữ Ctrl hoặc Shift để chọn nhiều ngày. Nháy đúp để xem chi tiết hóa đơn."
                 >
                   <td style={{ fontWeight: "500", textAlign: "center" }}>
                     {formatDayLabel(d.dateRaw)}
@@ -372,9 +494,7 @@ export function DashboardChart({
             <tfoot>
               <tr>
                 <td style={{ fontWeight: "700" }}>Tổng cộng</td>
-                <td style={{ textAlign: "center", fontWeight: "700" }}>
-                  {dailyRevenues.length} ngày
-                </td>
+                <td style={{ textAlign: "center", fontWeight: "700" }}></td>
                 <td
                   style={{
                     textAlign: "right",

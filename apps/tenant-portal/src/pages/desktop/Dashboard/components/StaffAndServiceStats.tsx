@@ -1,14 +1,131 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { DashboardCharts } from "../types";
 import { TableSectionHeader } from "./TableSectionHeader";
 import styles from "../Dashboard.module.css";
 
 interface StaffAndServiceStatsProps {
   charts: DashboardCharts;
+  selectedStaff: string;
+  onSelectStaff: (staff: string) => void;
+  selectedServices: string;
+  onSelectServices: (services: string) => void;
 }
 
-export function StaffAndServiceStats({ charts }: StaffAndServiceStatsProps) {
+export function StaffAndServiceStats({
+  charts,
+  selectedStaff,
+  onSelectStaff,
+  selectedServices,
+  onSelectServices,
+}: StaffAndServiceStatsProps) {
   const { staffPerformance = [], topServices = [] } = charts;
+
+  const anchorStaffRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!anchorStaffRef.current && selectedStaff) {
+      const parts = selectedStaff.split(",");
+      anchorStaffRef.current = parts[parts.length - 1];
+    }
+  }, [selectedStaff]);
+
+  const handleStaffClick = (e: React.MouseEvent, clickedStaffId: string) => {
+    const allStaff = staffPerformance.map((s) => s.staffId);
+    const selectedList = selectedStaff ? selectedStaff.split(",") : [];
+
+    let newSelected: string[] = [];
+
+    if (e.ctrlKey || e.metaKey) {
+      if (selectedList.includes(clickedStaffId)) {
+        newSelected = selectedList.filter((id) => id !== clickedStaffId);
+      } else {
+        newSelected = [...selectedList, clickedStaffId];
+      }
+      anchorStaffRef.current = clickedStaffId;
+    } else if (e.shiftKey && anchorStaffRef.current) {
+      const anchorIndex = allStaff.indexOf(anchorStaffRef.current);
+      const clickedIndex = allStaff.indexOf(clickedStaffId);
+
+      if (anchorIndex !== -1 && clickedIndex !== -1) {
+        const start = Math.min(anchorIndex, clickedIndex);
+        const end = Math.max(anchorIndex, clickedIndex);
+        newSelected = allStaff.slice(start, end + 1);
+      } else {
+        newSelected = [clickedStaffId];
+        anchorStaffRef.current = clickedStaffId;
+      }
+    } else {
+      newSelected = [clickedStaffId];
+      anchorStaffRef.current = clickedStaffId;
+    }
+
+    if (
+      !e.ctrlKey &&
+      !e.shiftKey &&
+      selectedList.length === 1 &&
+      selectedList[0] === clickedStaffId
+    ) {
+      newSelected = [];
+      anchorStaffRef.current = null;
+    }
+
+    onSelectStaff(newSelected.join(","));
+  };
+
+  const anchorServiceRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!anchorServiceRef.current && selectedServices) {
+      const parts = selectedServices.split(",");
+      anchorServiceRef.current = parts[parts.length - 1];
+    }
+  }, [selectedServices]);
+
+  const handleServiceClick = (
+    e: React.MouseEvent,
+    clickedServiceId: string,
+  ) => {
+    const allServicesList = topServices.map((s) => s.id);
+    const selectedList = selectedServices ? selectedServices.split(",") : [];
+
+    let newSelected: string[] = [];
+
+    if (e.ctrlKey || e.metaKey) {
+      if (selectedList.includes(clickedServiceId)) {
+        newSelected = selectedList.filter((id) => id !== clickedServiceId);
+      } else {
+        newSelected = [...selectedList, clickedServiceId];
+      }
+      anchorServiceRef.current = clickedServiceId;
+    } else if (e.shiftKey && anchorServiceRef.current) {
+      const anchorIndex = allServicesList.indexOf(anchorServiceRef.current);
+      const clickedIndex = allServicesList.indexOf(clickedServiceId);
+
+      if (anchorIndex !== -1 && clickedIndex !== -1) {
+        const start = Math.min(anchorIndex, clickedIndex);
+        const end = Math.max(anchorIndex, clickedIndex);
+        newSelected = allServicesList.slice(start, end + 1);
+      } else {
+        newSelected = [clickedServiceId];
+        anchorServiceRef.current = clickedServiceId;
+      }
+    } else {
+      newSelected = [clickedServiceId];
+      anchorServiceRef.current = clickedServiceId;
+    }
+
+    if (
+      !e.ctrlKey &&
+      !e.shiftKey &&
+      selectedList.length === 1 &&
+      selectedList[0] === clickedServiceId
+    ) {
+      newSelected = [];
+      anchorServiceRef.current = null;
+    }
+
+    onSelectServices(newSelected.join(","));
+  };
 
   // Color palette matching the mockup exactly
   const sliceColors = [
@@ -140,54 +257,83 @@ export function StaffAndServiceStats({ charts }: StaffAndServiceStatsProps) {
                 </tr>
               </thead>
               <tbody>
-                {paddedStaff.map((staff) => (
-                  <tr key={staff.staffId} className={styles.clickableTableRow}>
-                    <td
-                      style={{
-                        fontWeight: "500",
-                        textAlign: "left",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
+                {paddedStaff.map((staff) => {
+                  const isEmpty = !staff.staffName;
+                  const isRowActive =
+                    !isEmpty &&
+                    selectedStaff.split(",").includes(staff.staffId);
+
+                  return (
+                    <tr
+                      key={staff.staffId}
+                      className={`${styles.clickableTableRow} ${
+                        isRowActive ? styles.activeDailyRow : ""
+                      }`}
+                      onMouseDown={(e) => {
+                        if (
+                          !isEmpty &&
+                          (e.shiftKey || e.ctrlKey || e.metaKey)
+                        ) {
+                          e.preventDefault();
+                        }
                       }}
+                      onClick={(e) =>
+                        !isEmpty && handleStaffClick(e, staff.staffId)
+                      }
+                      style={isEmpty ? { cursor: "default" } : undefined}
+                      title={
+                        isEmpty
+                          ? undefined
+                          : "Bấm để lọc. Giữ Ctrl hoặc Shift để chọn nhiều nhân viên."
+                      }
                     >
-                      {staff.staffName || "\u00A0"}
-                    </td>
-                    <td
-                      style={{
-                        textAlign: "right",
-                        color: "var(--color-primary-dark)",
-                        fontWeight: "500",
-                      }}
-                    >
-                      {staff.staffName
-                        ? staff.revenue > 0
-                          ? formatNumber(staff.revenue)
-                          : "-"
-                        : "\u00A0"}
-                    </td>
-                    <td
-                      style={{
-                        textAlign: "right",
-                        color: "var(--text-secondary)",
-                        fontWeight: "500",
-                      }}
-                    >
-                      {staff.staffName
-                        ? staff.customers > 0
-                          ? formatNumber(staff.customers)
-                          : "-"
-                        : "\u00A0"}
-                    </td>
-                    <td style={{ textAlign: "right", fontWeight: "700" }}>
-                      {staff.staffName
-                        ? staff.recordCount > 0
-                          ? formatNumber(staff.recordCount)
-                          : "-"
-                        : "\u00A0"}
-                    </td>
-                  </tr>
-                ))}
+                      <td
+                        style={{
+                          fontWeight: "500",
+                          textAlign: "left",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {staff.staffName || "\u00A0"}
+                      </td>
+                      <td
+                        style={{
+                          textAlign: "right",
+                          color: "var(--color-primary-dark)",
+                          fontWeight: "500",
+                        }}
+                      >
+                        {staff.staffName
+                          ? staff.revenue > 0
+                            ? formatNumber(staff.revenue)
+                            : "-"
+                          : "\u00A0"}
+                      </td>
+                      <td
+                        style={{
+                          textAlign: "right",
+                          color: "var(--text-secondary)",
+                          fontWeight: "500",
+                        }}
+                      >
+                        {staff.staffName
+                          ? staff.customers > 0
+                            ? formatNumber(staff.customers)
+                            : "-"
+                          : "\u00A0"}
+                      </td>
+                      <td style={{ textAlign: "right", fontWeight: "700" }}>
+                        {staff.staffName
+                          ? staff.recordCount > 0
+                            ? formatNumber(staff.recordCount)
+                            : "-"
+                          : "\u00A0"}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
               <tfoot>
                 <tr>
@@ -241,41 +387,70 @@ export function StaffAndServiceStats({ charts }: StaffAndServiceStatsProps) {
                 </tr>
               </thead>
               <tbody>
-                {paddedServices.map((service) => (
-                  <tr key={service.id} className={styles.clickableTableRow}>
-                    <td
-                      style={{
-                        fontWeight: "500",
-                        textAlign: "left",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
+                {paddedServices.map((service) => {
+                  const isEmpty = !service.name;
+                  const isRowActive =
+                    !isEmpty &&
+                    selectedServices.split(",").includes(service.id);
+
+                  return (
+                    <tr
+                      key={service.id}
+                      className={`${styles.clickableTableRow} ${
+                        isRowActive ? styles.activeDailyRow : ""
+                      }`}
+                      onMouseDown={(e) => {
+                        if (
+                          !isEmpty &&
+                          (e.shiftKey || e.ctrlKey || e.metaKey)
+                        ) {
+                          e.preventDefault();
+                        }
                       }}
+                      onClick={(e) =>
+                        !isEmpty && handleServiceClick(e, service.id)
+                      }
+                      style={isEmpty ? { cursor: "default" } : undefined}
+                      title={
+                        isEmpty
+                          ? undefined
+                          : "Bấm để lọc. Giữ Ctrl hoặc Shift để chọn nhiều dịch vụ."
+                      }
                     >
-                      {service.name || "\u00A0"}
-                    </td>
-                    <td
-                      style={{
-                        textAlign: "right",
-                        color: "var(--text-secondary)",
-                        fontWeight: "500",
-                      }}
-                    >
-                      {service.name
-                        ? service.count > 0
-                          ? formatNumber(service.count)
-                          : "-"
-                        : "\u00A0"}
-                    </td>
-                    <td style={{ textAlign: "right", fontWeight: "700" }}>
-                      {service.name
-                        ? service.revenue > 0
-                          ? formatNumber(service.revenue)
-                          : "-"
-                        : "\u00A0"}
-                    </td>
-                  </tr>
-                ))}
+                      <td
+                        style={{
+                          fontWeight: "500",
+                          textAlign: "left",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {service.name || "\u00A0"}
+                      </td>
+                      <td
+                        style={{
+                          textAlign: "right",
+                          color: "var(--text-secondary)",
+                          fontWeight: "500",
+                        }}
+                      >
+                        {service.name
+                          ? service.count > 0
+                            ? formatNumber(service.count)
+                            : "-"
+                          : "\u00A0"}
+                      </td>
+                      <td style={{ textAlign: "right", fontWeight: "700" }}>
+                        {service.name
+                          ? service.revenue > 0
+                            ? formatNumber(service.revenue)
+                            : "-"
+                          : "\u00A0"}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
               <tfoot>
                 <tr>

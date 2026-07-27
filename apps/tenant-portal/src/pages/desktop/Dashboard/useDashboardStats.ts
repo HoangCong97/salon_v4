@@ -6,7 +6,12 @@ import { queryKeys } from "../../../utils/queryKeys";
 
 import { DashboardStatsResponse } from "./types";
 
-export function useDashboardStats(selectedMonth?: string) {
+export function useDashboardStats(
+  selectedMonth?: string,
+  selectedDays?: string,
+  selectedStaff?: string,
+  selectedServices?: string,
+) {
   const { currentTenantId, currentBranchId } = useAuthStore();
 
   const {
@@ -18,10 +23,19 @@ export function useDashboardStats(selectedMonth?: string) {
     queryKey: [
       ...queryKeys.dashboard.stats(currentTenantId!, currentBranchId!),
       selectedMonth || "current",
+      selectedDays || "",
+      selectedStaff || "",
+      selectedServices || "",
     ],
     queryFn: () => {
+      const params = new URLSearchParams();
+      if (selectedMonth) params.append("month", selectedMonth);
+      if (selectedDays) params.append("days", selectedDays);
+      if (selectedStaff) params.append("staff", selectedStaff);
+      if (selectedServices) params.append("services", selectedServices);
+      const queryStr = params.toString();
       const url = `/tenants/${currentTenantId}/branches/${currentBranchId}/dashboard-stats${
-        selectedMonth ? `?month=${selectedMonth}` : ""
+        queryStr ? `?${queryStr}` : ""
       }`;
       return api.get(url);
     },

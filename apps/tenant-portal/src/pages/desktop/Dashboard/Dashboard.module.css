@@ -700,6 +700,10 @@
   padding: 4px 6px;
   border-radius: 6px;
   transition: all 0.15s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .horizontalBarRow:hover {
@@ -906,6 +910,10 @@
 
 .clickableTableRow:hover {
   background-color: hsl(210, 50%, 94%) !important;
+}
+
+.activeDailyRow {
+  background-color: hsl(187, 85%, 93%) !important;
 }
 
 .clickableTableRow:nth-child(even) {
