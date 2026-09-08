@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { api } from "../utils/apiClient";
 import * as XLSX from "xlsx";
 
 export interface TargetField {
@@ -178,19 +179,12 @@ export function useImportWizard(targetSchema: TargetField[]) {
     setError(null);
 
     try {
-      const url = `http://localhost:3000/api/import/execute/${entity}?tenantId=${tenantId}${branchId ? `&branchId=${branchId}` : ""}`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rawData,
-          mappings,
-          defaultValues,
-        }),
+      const endpoint = `/import/execute/${entity}?tenantId=${tenantId}${branchId ? `&branchId=${branchId}` : ""}`;
+      const resultData = await api.post(endpoint, {
+        rawData,
+        mappings,
+        defaultValues,
       });
-
-      if (!res.ok) throw new Error("Lỗi kết nối máy chủ khi import.");
-      const resultData = await res.json();
 
       setReport(resultData);
       setStep(3); // Go to Step 3 (Report)

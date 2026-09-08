@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuthStore } from "../../store/useAuthStore";
+import { api } from "../../utils/apiClient";
 import {
   Loader2,
   CalendarDays,
@@ -74,13 +75,10 @@ export default function ShiftTasks() {
       if (!currentTenantId || !user?.id) return;
       setLoading(true);
       try {
-        const res = await fetch(
-          `http://localhost:3000/api/tenants/${currentTenantId}/staff/${user.id}/shifts?startDate=${startDateStr}&endDate=${endDateStr}`,
+        const data = await api.get(
+          `/tenants/${currentTenantId}/staff/${user.id}/shifts?startDate=${startDateStr}&endDate=${endDateStr}`,
         );
-        if (res.ok) {
-          const data = await res.json();
-          setWeeklyShifts(data);
-        }
+        setWeeklyShifts(data);
       } catch (err) {
         console.error("Lỗi khi tải lịch làm việc", err);
       } finally {
@@ -98,11 +96,10 @@ export default function ShiftTasks() {
       if (!currentTenantId || !currentBranchId) return;
       if (showLoading) setTurnsLoading(true);
       try {
-        const res = await fetch(
-          `http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns`,
+        const data = await api.get(
+          `/tenants/${currentTenantId}/branches/${currentBranchId}/daily-turns`,
         );
-        if (res.ok && active) {
-          const data = await res.json();
+        if (active) {
           setDailyTurns(data);
         }
       } catch (err) {

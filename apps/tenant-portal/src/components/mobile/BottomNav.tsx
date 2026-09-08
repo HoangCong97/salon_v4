@@ -13,15 +13,17 @@ export default function BottomNav() {
     <div
       className="glass"
       style={{
-        height: "64px",
+        height: "calc(64px + env(safe-area-inset-bottom))",
+        paddingBottom: "env(safe-area-inset-bottom)",
         display: "flex",
         borderTop: "1px solid var(--border-color)",
         position: "fixed",
         bottom: 0,
         left: 0,
         width: "100%",
-        zIndex: 100,
+        zIndex: 1000,
         boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.03)",
+        boxSizing: "border-box",
       }}
     >
       {navItems.map((item) => (

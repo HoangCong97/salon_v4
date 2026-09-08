@@ -8,7 +8,10 @@
  * - Hỗ trợ GET, POST, PUT, DELETE
  */
 
-const API_BASE = "http://localhost:3000/api";
+const getApiBase = () => {
+  const host = typeof window !== "undefined" && window.location.hostname ? window.location.hostname : "localhost";
+  return `http://${host}:3000/api`;
+};
 
 interface ApiError extends Error {
   status: number;
@@ -50,7 +53,7 @@ export async function apiClient<T = any>(
     ...(options?.headers as Record<string, string>),
   };
 
-  const res = await fetch(`${API_BASE}${endpoint}`, {
+  const res = await fetch(`${getApiBase()}${endpoint}`, {
     ...options,
     headers,
   });

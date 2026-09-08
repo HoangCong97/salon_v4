@@ -80,4 +80,14 @@
 .excel-multiple-select-trigger:hover {
   background-color: hsl(210, 40%, 96%) !important;
 }
+
+/* PWA Fullscreen Safe Area Insets for iOS Notch & Android Display Cutouts */
+@supports (padding-top: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
 

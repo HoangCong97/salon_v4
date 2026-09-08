@@ -95,6 +95,14 @@ interface AuthState {
   hasPermission: (permission: string) => boolean;
 }
 
+const getApiBaseUrl = () => {
+  const host =
+    typeof window !== "undefined" && window.location.hostname
+      ? window.location.hostname
+      : "localhost";
+  return `http://${host}:3000/api`;
+};
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null, // Null on startup to show login screen
   tenants: [],
@@ -114,7 +122,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ subscriptionLoading: true });
     try {
       const res = await fetch(
-        `http://localhost:3000/api/tenants/${currentTenantId}/subscription`,
+        `${getApiBaseUrl()}/tenants/${currentTenantId}/subscription`,
       );
       if (res.ok) {
         const data = await res.json();
@@ -140,7 +148,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   fetchPlans: async () => {
     set({ plansLoading: true });
     try {
-      const res = await fetch("http://localhost:3000/api/tenants/plans");
+      const res = await fetch(`${getApiBaseUrl()}/tenants/plans`);
       if (res.ok) {
         const data = await res.json();
         set({ plans: data });
@@ -160,7 +168,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isBuying: true });
     try {
       const res = await fetch(
-        `http://localhost:3000/api/tenants/${currentTenantId}/buy-plan`,
+        `${getApiBaseUrl()}/tenants/${currentTenantId}/buy-plan`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -184,7 +192,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (tenantRef, loginId, password, rememberMe = true) => {
     set({ isLoading: true });
     try {
-      const res = await fetch("http://localhost:3000/api/auth/login", {
+      const res = await fetch(`${getApiBaseUrl()}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tenantRef, loginId, password }),
@@ -202,7 +210,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       // Fetch branches for logged in tenant
       const branchesRes = await fetch(
-        `http://localhost:3000/api/tenants/${userData.tenantId}/branches`,
+        `${getApiBaseUrl()}/tenants/${userData.tenantId}/branches`,
       );
       let mappedBranches: BranchInfo[] = [];
       let currentBranchId: string | null = null;
@@ -274,7 +282,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       // 1. Fetch all roles of the tenant
       const rolesRes = await fetch(
-        `http://localhost:3000/api/tenants/${tenantId}/roles`,
+        `${getApiBaseUrl()}/tenants/${tenantId}/roles`,
       );
       if (!rolesRes.ok) throw new Error();
       const roles = await rolesRes.json();
@@ -286,11 +294,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (matchedRole) {
         // 2. Fetch role permission IDs
         const rolePermsRes = await fetch(
-          `http://localhost:3000/api/tenants/${tenantId}/roles/${matchedRole.id}/permissions`,
+          `${getApiBaseUrl()}/tenants/${tenantId}/roles/${matchedRole.id}/permissions`,
         );
         // 3. Fetch all system permissions (to map IDs to slugs)
         const allPermsRes = await fetch(
-          `http://localhost:3000/api/tenants/${tenantId}/permissions`,
+          `${getApiBaseUrl()}/tenants/${tenantId}/permissions`,
         );
 
         if (rolePermsRes.ok && allPermsRes.ok) {
@@ -333,7 +341,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ currentTenantId: tenantId, isLoading: true });
     try {
       const res = await fetch(
-        `http://localhost:3000/api/tenants/${tenantId}/branches`,
+        `${getApiBaseUrl()}/tenants/${tenantId}/branches`,
       );
       if (res.ok) {
         const branchData = await res.json();
@@ -392,7 +400,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       // If no stored user, do default tenant list fetch
       const tenantsRes = await fetch(
-        "http://localhost:3000/api/super-admin/tenants",
+        `${getApiBaseUrl()}/super-admin/tenants`,
       );
       if (tenantsRes.ok) {
         const tenantData = await tenantsRes.json();
@@ -415,7 +423,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
           // Fetch branches for selected tenant
           const branchesRes = await fetch(
-            `http://localhost:3000/api/tenants/${activeTenant.id}/branches`,
+            `${getApiBaseUrl()}/tenants/${activeTenant.id}/branches`,
           );
           if (branchesRes.ok) {
             const branchData = await branchesRes.json();
@@ -456,7 +464,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!currentTenantId) return;
     try {
       const res = await fetch(
-        `http://localhost:3000/api/tenants/${currentTenantId}`,
+        `${getApiBaseUrl()}/tenants/${currentTenantId}`,
       );
       if (res.ok) {
         const data = await res.json();

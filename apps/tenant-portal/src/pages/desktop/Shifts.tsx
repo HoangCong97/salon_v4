@@ -365,11 +365,9 @@ export default function Shifts() {
 
     setCopying(true);
     try {
-      const res = await fetch(
-        `http://localhost:3000/api/tenants/${currentTenantId}/branches/${currentBranchId}/shifts?startDate=${lastWeekMondayStr}&endDate=${lastWeekSundayStr}`,
+      const lastWeekShifts: ShiftData[] = await api.get(
+        `/tenants/${currentTenantId}/branches/${currentBranchId}/shifts?startDate=${lastWeekMondayStr}&endDate=${lastWeekSundayStr}`,
       );
-      if (!res.ok) throw new Error();
-      const lastWeekShifts: ShiftData[] = await res.json();
 
       if (lastWeekShifts.length === 0) {
         toast.info("Tuần trước chưa được xếp ca để sao chép!");

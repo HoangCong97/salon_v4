@@ -32,15 +32,20 @@ export default function Header() {
     <div
       className="glass"
       style={{
-        height: "64px",
+        height: "calc(64px + env(safe-area-inset-top))",
+        paddingTop: "env(safe-area-inset-top)",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "0 16px",
+        paddingLeft: "16px",
+        paddingRight: "16px",
         borderBottom: "1px solid var(--border-color)",
-        position: "sticky",
+        position: "fixed",
         top: 0,
-        zIndex: 100,
+        left: 0,
+        width: "100%",
+        zIndex: 1000,
+        boxSizing: "border-box",
       }}
     >
       <div style={{ display: "flex", flexDirection: "column" }}>

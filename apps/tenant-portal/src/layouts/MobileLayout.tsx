@@ -9,28 +9,30 @@ export default function MobileLayout() {
       style={{
         display: "flex",
         flexDirection: "column",
-        minHeight: "100vh",
+        height: "100vh",
         background: "var(--bg-app)",
         width: "100%",
-        overflowX: "hidden",
+        overflow: "hidden",
       }}
     >
-      {/* Header bar */}
+      {/* Fixed Header bar at top */}
       <Header />
 
       {/* Scrollable page content */}
       <div
         style={{
           flexGrow: 1,
+          marginTop: "calc(64px + env(safe-area-inset-top))",
           padding: "16px",
-          paddingBottom: "80px", // Margin to prevent content from being covered by the Bottom Nav
+          paddingBottom: "calc(80px + env(safe-area-inset-bottom))",
           overflowY: "auto",
+          WebkitOverflowScrolling: "touch",
         }}
       >
         <Outlet />
       </div>
 
-      {/* Fixed bottom navigation */}
+      {/* Fixed bottom navigation with Safe Area Bottom */}
       <BottomNav />
     </div>
   );

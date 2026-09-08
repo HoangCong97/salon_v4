@@ -21,9 +21,9 @@ export default function MobileInvoicesPage() {
       style={{
         display: "flex",
         flexDirection: "column",
-        height: "calc(100vh - 120px)",
+        height: "calc(100vh - 64px - env(safe-area-inset-top) - 64px - env(safe-area-inset-bottom))",
         margin: "-16px",
-        marginBottom: "-80px",
+        marginBottom: "calc(-80px - env(safe-area-inset-bottom))",
         gap: 0,
         position: "relative",
         background: "#ffffff",
