@@ -289,11 +289,11 @@ export default function MobileInvoiceList({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  padding: "12px 14px",
+                  padding: "9px 12px",
                   borderBottom: "1px solid var(--border-color)",
                   background: "white",
                   cursor: "pointer",
-                  gap: "12px",
+                  gap: "10px",
                   transition: "background-color 0.15s ease",
                 }}
                 onMouseEnter={(e) =>
@@ -304,7 +304,7 @@ export default function MobileInvoiceList({
                 }
               >
                 {/* Left Side: Multi-staff Avatar collage */}
-                <MultiStaffAvatar staffList={invoiceStaff} size={54} />
+                <MultiStaffAvatar staffList={invoiceStaff} size={44} />
 
                 {/* Right Side: 2-Line Layout */}
                 <div
@@ -313,11 +313,11 @@ export default function MobileInvoiceList({
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "center",
-                    gap: "4px",
+                    gap: "3px",
                     overflow: "hidden",
                   }}
                 >
-                  {/* Line 1: [HH:mm - Staff Names] | [Amount] */}
+                  {/* Line 1: [HH:mm - Staff Names] | [Amount / Summary] */}
                   <div
                     style={{
                       display: "flex",
@@ -328,7 +328,7 @@ export default function MobileInvoiceList({
                   >
                     <div
                       style={{
-                        fontSize: "14px",
+                        fontSize: "12.5px",
                         fontWeight: "600",
                         color: "#2563eb",
                         whiteSpace: "nowrap",
@@ -341,28 +341,28 @@ export default function MobileInvoiceList({
 
                     <div
                       style={{
-                        fontSize: "14px",
+                        fontSize: "12.5px",
                         fontWeight: "600",
                         color: "#16a34a",
                         whiteSpace: "nowrap",
                         display: "flex",
                         alignItems: "center",
-                        gap: "4px",
+                        gap: "3px",
                         flexShrink: 0,
                       }}
                     >
                       {inv.paymentMethod === "BANK_TRANSFER" && (
-                        <span style={{ fontSize: "12px" }}>💳</span>
+                        <span style={{ fontSize: "11px" }}>💳</span>
                       )}
                       <span>{formatShortCurrency(inv.finalAmount)}</span>
                     </div>
                   </div>
 
-                  {/* Line 2: [Service Names] */}
+                  {/* Line 2: [Secondary: Service Names] */}
                   <div
                     style={{
-                      fontSize: "13px",
-                      color: "#334155",
+                      fontSize: "11.5px",
+                      color: "#475569",
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",

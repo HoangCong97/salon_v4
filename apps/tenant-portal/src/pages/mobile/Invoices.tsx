@@ -42,8 +42,8 @@ export default function MobileInvoicesPage() {
         </div>
       )}
 
-      {/* TOP SECTION: 4/10 ratio (40% height) - Staff Revenue Table */}
-      <div style={{ flex: 4, minHeight: 0 }}>
+      {/* TOP SECTION: Equal 1:1 ratio (50% height) - Staff Revenue Table */}
+      <div style={{ flex: 1, minHeight: 0 }}>
         <StaffDailyRevenueCard
           staffList={activeStaff}
           todayInvoices={resolvedInvoices}
@@ -54,7 +54,7 @@ export default function MobileInvoicesPage() {
       {/* Visual Separator Bar */}
       <div
         style={{
-          height: "10px",
+          height: "8px",
           background: "#f1f5f9",
           borderTop: "1px solid #e2e8f0",
           borderBottom: "1px solid #e2e8f0",
@@ -62,8 +62,8 @@ export default function MobileInvoicesPage() {
         }}
       />
 
-      {/* BOTTOM SECTION: 6/10 ratio (60% height) - Invoice List */}
-      <div style={{ flex: 6, minHeight: 0 }}>
+      {/* BOTTOM SECTION: Equal 1:1 ratio (50% height) - Invoice List */}
+      <div style={{ flex: 1, minHeight: 0 }}>
         <MobileInvoiceList
           invoices={resolvedInvoices}
           isLoading={loading}
