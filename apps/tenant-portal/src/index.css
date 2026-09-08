@@ -90,4 +90,35 @@
     padding-right: env(safe-area-inset-right);
   }
 }
+
+/* Mobile PWA: Prevent text selection & long-press copy context menu */
+.no-select,
+.mobile-layout-root {
+  -webkit-touch-callout: none; /* Disable iOS long-press callout menu */
+  -webkit-user-select: none;   /* Disable Safari/Chrome text selection */
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection inside inputs, textareas, and explicitly selectable elements */
+input,
+textarea,
+[contenteditable="true"],
+.selectable,
+.user-select-text {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Prevent image callout menu and drag on long press */
+img {
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
+
 

@@ -4,8 +4,21 @@ import Header from "../components/mobile/Header";
 import BottomNav from "../components/mobile/BottomNav";
 
 export default function MobileLayout() {
+  const handleContextMenu = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const isInput =
+      target.tagName === "INPUT" ||
+      target.tagName === "TEXTAREA" ||
+      target.isContentEditable;
+    if (!isInput) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <div
+      className="mobile-layout-root"
+      onContextMenu={handleContextMenu}
       style={{
         display: "flex",
         flexDirection: "column",
