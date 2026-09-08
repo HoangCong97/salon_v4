@@ -77,6 +77,8 @@ const tenantAdminCache = new Map<string, string | null>();
 
 // Helper function to ensure standard roles exist for a tenant and link them to default permissions
 export async function ensureStandardRolesAndPermissions(tenantId: string) {
+  if (!tenantId) return [];
+
   if (initializedTenants.has(tenantId)) {
     return prisma.role.findMany({
       where: {
@@ -84,6 +86,16 @@ export async function ensureStandardRolesAndPermissions(tenantId: string) {
         deletedAt: null,
       },
     });
+  }
+
+  // Verify tenant exists in DB first to prevent FK constraint violation
+  const tenantExists = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { id: true },
+  });
+
+  if (!tenantExists) {
+    return [];
   }
 
   // Ensure permissions exist in DB first
