@@ -84,10 +84,10 @@ export default function MobileInvoiceList({
             justifyContent: "space-between",
           }}
         >
-          {/* Title size matching 'Hôm nay' header (17px, bold) */}
+          {/* Title size */}
           <div
             style={{
-              fontSize: "17px",
+              fontSize: "15px",
               fontWeight: "700",
               color: "#1e293b",
             }}
@@ -328,7 +328,7 @@ export default function MobileInvoiceList({
                   >
                     <div
                       style={{
-                        fontSize: "13.5px",
+                        fontSize: "13px",
                         fontWeight: "600",
                         color: "#2563eb",
                         whiteSpace: "nowrap",
@@ -341,7 +341,7 @@ export default function MobileInvoiceList({
 
                     <div
                       style={{
-                        fontSize: "13.5px",
+                        fontSize: "13px",
                         fontWeight: "600",
                         color: "#16a34a",
                         whiteSpace: "nowrap",
@@ -352,7 +352,7 @@ export default function MobileInvoiceList({
                       }}
                     >
                       {inv.paymentMethod === "BANK_TRANSFER" && (
-                        <span style={{ fontSize: "12px" }}>💳</span>
+                        <span style={{ fontSize: "11px" }}>💳</span>
                       )}
                       <span>{formatShortCurrency(inv.finalAmount)}</span>
                     </div>
@@ -361,7 +361,7 @@ export default function MobileInvoiceList({
                   {/* Line 2: [Secondary: Service Names] */}
                   <div
                     style={{
-                      fontSize: "12px",
+                      fontSize: "11.5px",
                       color: "#64748b",
                       whiteSpace: "nowrap",
                       overflow: "hidden",
