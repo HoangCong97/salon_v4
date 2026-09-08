@@ -14,6 +14,7 @@ import {
   Printer,
   Users,
   AlertCircle,
+  ShoppingCart,
 } from "lucide-react";
 import { useAuthStore } from "../../../store/useAuthStore";
 import { api } from "../../../utils/apiClient";
@@ -817,243 +818,147 @@ export default function MobilePOS() {
       </div>
 
       {/* ========================================================================= */}
-      {/* PHẦN 3: GIỎ HÀNG DẠNG TABLE (20% chiều cao)                               */}
-      {/* Thứ tự mới nhất xếp đầu, nút mở rộng hiển thị tinh tế ở mép trên          */}
+      {/* PHẦN 3: GIỎ HÀNG (20% chiều cao thu nhỏ, có nút mở rộng xem & thanh toán)  */}
       {/* ========================================================================= */}
       <div
         style={{
           flex: "0 0 20%",
           maxHeight: "20%",
-          minHeight: "125px",
+          minHeight: "110px",
           background: "#ffffff",
-          borderTop: "1px solid #cbd5e1",
-          position: "relative",
+          borderTop: "2px solid #2563eb",
+          boxShadow: "0 -4px 16px rgba(15, 23, 42, 0.08)",
           display: "flex",
           flexDirection: "column",
+          justifyContent: "space-between",
+          padding: "8px 12px 10px",
           boxSizing: "border-box",
           zIndex: 40,
         }}
       >
-        {/* NÚT MỞ RỘNG HIỂN THỊ TINH TẾ Ở MÉP TRÊN */}
-        <button
-          onClick={() => setIsCartExpanded(true)}
-          style={{
-            position: "absolute",
-            top: "-11px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "#2563eb",
-            color: "#ffffff",
-            border: "1.5px solid #ffffff",
-            borderRadius: "20px",
-            padding: "2px 14px",
-            fontSize: "11px",
-            fontWeight: "700",
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            boxShadow: "0 2px 8px rgba(37, 99, 235, 0.35)",
-            cursor: "pointer",
-            zIndex: 50,
-            whiteSpace: "nowrap",
-          }}
-        >
-          <ChevronUp size={13} />
-          <span>Chi tiết & Giảm giá</span>
-        </button>
-
-        {/* BẢNG TABLE HIỂN THỊ TỪNG ITEM (MỚI NHẤT XẾP ĐẦU) */}
+        {/* Top Summary Bar with Expand Button */}
         <div
           style={{
-            flexGrow: 1,
-            overflowY: "auto",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          {cart.length === 0 ? (
-            <div
-              style={{
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#94a3b8",
-                fontSize: "11.5px",
-                fontStyle: "italic",
-              }}
-            >
-              Chưa có món nào. Chạm vào dịch vụ ở trên để thêm.
-            </div>
-          ) : (
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: "11.5px",
-                textAlign: "left",
-                tableLayout: "fixed",
-              }}
-            >
-              <thead>
-                <tr
-                  style={{
-                    background: "#f8fafc",
-                    borderBottom: "1px solid #e2e8f0",
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 10,
-                  }}
-                >
-                  <th style={{ padding: "4px 8px", width: "48%", color: "#64748b", fontWeight: "600" }}>
-                    Món ({totalItemsCount})
-                  </th>
-                  <th style={{ padding: "4px 6px", width: "26%", color: "#64748b", fontWeight: "600" }}>
-                    Thợ
-                  </th>
-                  <th style={{ padding: "4px 8px", width: "26%", textAlign: "right", color: "#64748b", fontWeight: "600" }}>
-                    Tiền
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {cart.map((c) => {
-                  const staffObj = staffList.find((s) => s.id === c.staffId);
-                  const staffShortName = staffObj?.name ? staffObj.name.split(" ").pop() : "-";
-                  const lineTotal = c.price * c.quantity;
-
-                  return (
-                    <tr
-                      key={c.cartId}
-                      style={{
-                        borderBottom: "1px solid #f1f5f9",
-                        background: "#ffffff",
-                      }}
-                    >
-                      {/* Name + Quantity Badge */}
-                      <td
-                        style={{
-                          padding: "5px 8px",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          fontWeight: "600",
-                          color: "#1e293b",
-                        }}
-                        title={c.name}
-                      >
-                        <span>{c.name}</span>
-                        {c.quantity > 1 && (
-                          <span
-                            style={{
-                              marginLeft: "4px",
-                              color: "#2563eb",
-                              fontSize: "10.5px",
-                              fontWeight: "700",
-                            }}
-                          >
-                            x{c.quantity}
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Staff Name */}
-                      <td
-                        style={{
-                          padding: "5px 6px",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          color: "#2563eb",
-                          fontWeight: "600",
-                        }}
-                      >
-                        {staffShortName}
-                      </td>
-
-                      {/* Price */}
-                      <td
-                        style={{
-                          padding: "5px 8px",
-                          textAlign: "right",
-                          fontWeight: "700",
-                          color: "#16a34a",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {formatShortNumber(lineTotal)}đ
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        {/* Bottom bar inside Panel 3: Total amount & quick payment buttons */}
-        <div
-          style={{
-            padding: "4px 8px",
-            background: "#ffffff",
-            borderTop: "1px solid #e2e8f0",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            gap: "8px",
-            flexShrink: 0,
           }}
         >
-          <div style={{ minWidth: 0, flexShrink: 1 }}>
-            <div style={{ fontSize: "10px", color: "#64748b" }}>Tổng ({totalItemsCount} món):</div>
-            <div style={{ fontSize: "14px", fontWeight: "800", color: "#16a34a", whiteSpace: "nowrap" }}>
-              {formatCurrency(finalPayAmount)}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "8px",
+                background: "#dbeafe",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#2563eb",
+                position: "relative",
+              }}
+            >
+              <ShoppingCart size={17} />
+              {totalItemsCount > 0 && (
+                <span
+                  style={{
+                    position: "absolute",
+                    top: "-4px",
+                    right: "-4px",
+                    background: "#ef4444",
+                    color: "#ffffff",
+                    fontSize: "9.5px",
+                    fontWeight: "800",
+                    width: "16px",
+                    height: "16px",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {totalItemsCount}
+                </span>
+              )}
+            </div>
+            <div>
+              <div style={{ fontSize: "11.5px", color: "#64748b" }}>
+                Giỏ hàng ({totalItemsCount} món)
+              </div>
+              <div style={{ fontSize: "15px", fontWeight: "800", color: "#16a34a" }}>
+                {formatCurrency(finalPayAmount)}
+              </div>
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: "6px", flexShrink: 0 }}>
-            <button
-              disabled={cart.length === 0 || isProcessingPayment}
-              onClick={() => handleCheckout("CASH")}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                padding: "6px 10px",
-                background: cart.length === 0 ? "#e2e8f0" : "#15803d",
-                color: cart.length === 0 ? "#94a3b8" : "#ffffff",
-                border: "none",
-                borderRadius: "6px",
-                fontWeight: "700",
-                fontSize: "11.5px",
-                cursor: cart.length === 0 ? "not-allowed" : "pointer",
-              }}
-            >
-              <Banknote size={13} />
-              <span>Tiền mặt</span>
-            </button>
+          <button
+            onClick={() => setIsCartExpanded(true)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              padding: "6px 12px",
+              background: "#eff6ff",
+              border: "1px solid #bfdbfe",
+              borderRadius: "8px",
+              color: "#2563eb",
+              fontSize: "12px",
+              fontWeight: "700",
+              cursor: "pointer",
+            }}
+          >
+            <span>Chi tiết</span>
+            <ChevronUp size={15} />
+          </button>
+        </div>
 
-            <button
-              disabled={cart.length === 0 || isProcessingPayment}
-              onClick={() => handleCheckout("BANK_TRANSFER")}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                padding: "6px 10px",
-                background: cart.length === 0 ? "#e2e8f0" : "#2563eb",
-                color: cart.length === 0 ? "#94a3b8" : "#ffffff",
-                border: "none",
-                borderRadius: "6px",
-                fontWeight: "700",
-                fontSize: "11.5px",
-                cursor: cart.length === 0 ? "not-allowed" : "pointer",
-              }}
-            >
-              <CreditCard size={13} />
-              <span>Tài khoản</span>
-            </button>
-          </div>
+        {/* Action Buttons in Collapsed Mode */}
+        <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
+          <button
+            disabled={cart.length === 0 || isProcessingPayment}
+            onClick={() => handleCheckout("CASH")}
+            style={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
+              padding: "9px 0",
+              background: cart.length === 0 ? "#e2e8f0" : "#15803d",
+              color: cart.length === 0 ? "#94a3b8" : "#ffffff",
+              border: "none",
+              borderRadius: "8px",
+              fontWeight: "700",
+              fontSize: "12.5px",
+              cursor: cart.length === 0 ? "not-allowed" : "pointer",
+            }}
+          >
+            <Banknote size={15} />
+            <span>Tiền mặt</span>
+          </button>
+
+          <button
+            disabled={cart.length === 0 || isProcessingPayment}
+            onClick={() => handleCheckout("BANK_TRANSFER")}
+            style={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
+              padding: "9px 0",
+              background: cart.length === 0 ? "#e2e8f0" : "#2563eb",
+              color: cart.length === 0 ? "#94a3b8" : "#ffffff",
+              border: "none",
+              borderRadius: "8px",
+              fontWeight: "700",
+              fontSize: "12.5px",
+              cursor: cart.length === 0 ? "not-allowed" : "pointer",
+            }}
+          >
+            <CreditCard size={15} />
+            <span>Tài khoản</span>
+          </button>
         </div>
       </div>
 
