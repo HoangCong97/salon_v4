@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   User,
@@ -106,6 +106,242 @@ const getServiceCategoryColor = (categoryName: string, colorName?: string) => {
   }
   return { bg: "#f8fafc", border: "#cbd5e1", text: "#334155" };
 };
+
+// Employee color presets identical to Desktop POS
+export const getEmployeeColor = (id: string, activeStaff?: any[]) => {
+  const colors = [
+    { color: "#0d9488" }, // Teal 600
+    { color: "#0284c7" }, // Sky Blue 600
+    { color: "#4f46e5" }, // Indigo 600
+    { color: "#7c3aed" }, // Violet 600
+    { color: "#e11d48" }, // Rose 600
+    { color: "#ea580c" }, // Orange 600
+    { color: "#d97706" }, // Amber 600
+  ];
+  if (activeStaff && activeStaff.length > 0) {
+    const idx = activeStaff.findIndex((s) => s.id === id);
+    if (idx !== -1) {
+      return colors[idx % colors.length];
+    }
+  }
+  let sum = 0;
+  const safeId = id || "default";
+  for (let i = 0; i < safeId.length; i++) {
+    sum += safeId.charCodeAt(i);
+  }
+  return colors[sum % colors.length];
+};
+
+// Remove Vietnamese accents/diacritics for flexible fuzzy search
+const removeVietnameseTones = (str: string): string => {
+  return (str || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D");
+};
+
+const matchesSearch = (target: string, query: string): boolean => {
+  if (!query || !query.trim()) return true;
+  const rawTarget = (target || "").toLowerCase().trim();
+  const rawQuery = query.toLowerCase().trim();
+
+  // 1. Exact match with accents
+  if (rawTarget.includes(rawQuery)) return true;
+
+  // 2. Accent-stripped match
+  const cleanTarget = removeVietnameseTones(rawTarget);
+  const cleanQuery = removeVietnameseTones(rawQuery);
+  if (cleanTarget.includes(cleanQuery)) return true;
+
+  // 3. Multi-word match: every word in query must appear in target
+  const words = cleanQuery.split(/\s+/).filter(Boolean);
+  if (words.length > 1 && words.every((w) => cleanTarget.includes(w))) {
+    return true;
+  }
+
+  return false;
+};
+
+interface CatalogCardProps {
+  item: {
+    id: string;
+    name: string;
+    price: number;
+    type: "SERVICE" | "PRODUCT" | "PACKAGE";
+    color: { bg: string; border: string; text: string };
+  };
+  onAddToCart: () => void;
+  onRemoveFromCart: () => void;
+  isInCart: boolean;
+  cartBadges: React.ReactNode;
+}
+
+function CatalogItemCard({
+  item,
+  onAddToCart,
+  onRemoveFromCart,
+  isInCart,
+  cartBadges,
+}: CatalogCardProps) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isLongPressRef = useRef(false);
+  const lastLongPressTimeRef = useRef(0);
+  const startCoordsRef = useRef<{ x: number; y: number } | null>(null);
+  const [isPressing, setIsPressing] = useState(false);
+
+  const clearTimer = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setIsPressing(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    isLongPressRef.current = false;
+    if (e.touches.length > 0) {
+      startCoordsRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+      };
+    }
+    if (isInCart) {
+      setIsPressing(true);
+      timerRef.current = setTimeout(() => {
+        isLongPressRef.current = true;
+        lastLongPressTimeRef.current = Date.now();
+        setIsPressing(false);
+        if (typeof navigator !== "undefined" && navigator.vibrate) {
+          try {
+            navigator.vibrate(50);
+          } catch {}
+        }
+        onRemoveFromCart();
+      }, 480);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!startCoordsRef.current || !e.touches[0]) return;
+    const dx = Math.abs(e.touches[0].clientX - startCoordsRef.current.x);
+    const dy = Math.abs(e.touches[0].clientY - startCoordsRef.current.y);
+    if (dx > 8 || dy > 8) {
+      clearTimer();
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (isLongPressRef.current || Date.now() - lastLongPressTimeRef.current < 800) {
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+    }
+    clearTimer();
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    isLongPressRef.current = false;
+    startCoordsRef.current = { x: e.clientX, y: e.clientY };
+    if (isInCart) {
+      setIsPressing(true);
+      timerRef.current = setTimeout(() => {
+        isLongPressRef.current = true;
+        lastLongPressTimeRef.current = Date.now();
+        setIsPressing(false);
+        onRemoveFromCart();
+      }, 480);
+    }
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (isLongPressRef.current || Date.now() - lastLongPressTimeRef.current < 800) {
+      e.preventDefault();
+    }
+    clearTimer();
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (isLongPressRef.current || Date.now() - lastLongPressTimeRef.current < 800) {
+      e.preventDefault();
+      e.stopPropagation();
+      isLongPressRef.current = false;
+      return;
+    }
+    onAddToCart();
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isInCart) {
+      lastLongPressTimeRef.current = Date.now();
+      isLongPressRef.current = true;
+      onRemoveFromCart();
+    }
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      onContextMenu={handleContextMenu}
+      style={{
+        background: item.color.bg,
+        border: `1.5px solid ${item.color.border}`,
+        color: item.color.text,
+        borderRadius: "8px",
+        padding: "0 8px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        cursor: "pointer",
+        transition: "transform 0.1s ease, box-shadow 0.1s ease",
+        boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
+        outline: "none",
+        position: "relative",
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        transform: isPressing ? "scale(0.94)" : "none",
+      }}
+    >
+      {/* Absolute top-right corner badge */}
+      {cartBadges && (
+        <div
+          style={{
+            position: "absolute",
+            top: "-5px",
+            right: "-4px",
+            zIndex: 10,
+          }}
+        >
+          {cartBadges}
+        </div>
+      )}
+
+      <span
+        style={{
+          fontSize: "12px",
+          fontWeight: "700",
+          lineHeight: 1.25,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}
+      >
+        {item.name}
+      </span>
+    </button>
+  );
+}
 
 export default function MobilePOS() {
   const { currentTenantId, currentBranchId, branches, user } = useAuthStore();
@@ -230,6 +466,7 @@ export default function MobilePOS() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchCatalogQuery, setSearchCatalogQuery] = useState<string>("");
   const [staffAlert, setStaffAlert] = useState<boolean>(false);
+  const [quickToast, setQuickToast] = useState<string | null>(null);
 
   // Receipt Modal State
   const [showReceipt, setShowReceipt] = useState<boolean>(false);
@@ -286,9 +523,70 @@ export default function MobilePOS() {
     );
   };
 
-  // Remove cart item
+  // Remove single cart item by cartId
   const handleRemoveItem = (cartId: string) => {
     setCart((prev) => prev.filter((c) => c.cartId !== cartId));
+  };
+
+  // Quick remove all instances of an item from cart (via long-press on catalog card)
+  const handleRemoveFromCart = (itemId: string, itemName: string) => {
+    setCart((prev) => {
+      const exists = prev.some((c) => c.itemId === itemId);
+      if (!exists) return prev;
+      setQuickToast(`Đã xóa "${itemName}" khỏi giỏ hàng`);
+      setTimeout(() => setQuickToast(null), 1800);
+      return prev.filter((c) => c.itemId !== itemId);
+    });
+  };
+
+  // Helper: Render active cart assignment badges on item card
+  const renderItemCartBadges = (itemId: string) => {
+    const assignments = cart.filter((c) => c.itemId === itemId);
+    if (assignments.length === 0) return null;
+
+    // Group assignments by staffId and sum quantities
+    const groupedAssignments: { staffId: string; quantity: number }[] = [];
+    assignments.forEach((asg) => {
+      const existing = groupedAssignments.find((x) => x.staffId === asg.staffId);
+      if (existing) {
+        existing.quantity += asg.quantity;
+      } else {
+        groupedAssignments.push({
+          staffId: asg.staffId,
+          quantity: asg.quantity,
+        });
+      }
+    });
+
+    return (
+      <div style={{ display: "flex", gap: "2px", pointerEvents: "none" }}>
+        {groupedAssignments.map((ga) => {
+          const empColor = getEmployeeColor(ga.staffId, staffList).color;
+          return (
+            <span
+              key={ga.staffId}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minWidth: "17px",
+                height: "17px",
+                padding: "0 3px",
+                borderRadius: "9px",
+                fontSize: "10px",
+                fontWeight: "800",
+                backgroundColor: empColor,
+                color: "#ffffff",
+                border: "1.5px solid #ffffff",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+              }}
+            >
+              {ga.quantity}
+            </span>
+          );
+        })}
+      </div>
+    );
   };
 
   // Change staff for single cart item
@@ -384,10 +682,13 @@ export default function MobilePOS() {
       });
     }
 
-    // Search filter
+    // Search filter with flexible Vietnamese matching
     if (searchCatalogQuery.trim()) {
-      const q = searchCatalogQuery.toLowerCase().trim();
-      list = list.filter((item) => item.name.toLowerCase().includes(q));
+      list = list.filter(
+        (item) =>
+          matchesSearch(item.name, searchCatalogQuery) ||
+          matchesSearch(item.categoryName, searchCatalogQuery),
+      );
     }
 
     return list;
@@ -480,6 +781,17 @@ export default function MobilePOS() {
         padding: 0,
       }}
     >
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+          width: 0;
+          height: 0;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
       {/* Alert toast if user clicked item without staff selected */}
       {staffAlert && (
         <div
@@ -500,10 +812,39 @@ export default function MobilePOS() {
             alignItems: "center",
             gap: "6px",
             boxShadow: "0 4px 12px rgba(239, 68, 68, 0.35)",
+            whiteSpace: "nowrap",
           }}
         >
           <AlertCircle size={15} />
           <span>Vui lòng chọn nhân viên ở phần trên trước!</span>
+        </div>
+      )}
+
+      {/* Toast alert when item is quick-deleted by long-press */}
+      {quickToast && (
+        <div
+          className="animate-fade-in"
+          style={{
+            position: "absolute",
+            top: "8px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 100,
+            background: "#1e293b",
+            color: "#ffffff",
+            padding: "6px 14px",
+            borderRadius: "30px",
+            fontSize: "12px",
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.25)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <Trash2 size={13} color="#f87171" />
+          <span>{quickToast}</span>
         </div>
       )}
 
@@ -556,6 +897,7 @@ export default function MobilePOS() {
         >
           {staffList.map((staff) => {
             const isSelected = selectedStaffId === staff.id;
+            const empColor = getEmployeeColor(staff.id, staffList).color;
             return (
               <button
                 key={staff.id}
@@ -566,17 +908,15 @@ export default function MobilePOS() {
                   justifyContent: "space-between",
                   padding: "0 8px",
                   borderRadius: "6px",
-                  border: isSelected ? "2px solid #2563eb" : "1px solid #e2e8f0",
-                  background: isSelected
-                    ? "linear-gradient(135deg, #2563eb, #1d4ed8)"
-                    : "#f8fafc",
-                  color: isSelected ? "#ffffff" : "#1e293b",
+                  border: isSelected ? `2px solid ${empColor}` : `1.5px solid ${empColor}80`,
+                  background: isSelected ? empColor : "#ffffff",
+                  color: isSelected ? "#ffffff" : empColor,
                   fontWeight: isSelected ? "700" : "600",
                   fontSize: "12px",
                   cursor: "pointer",
                   transition: "all 0.15s ease",
                   textAlign: "left",
-                  boxShadow: isSelected ? "0 2px 6px rgba(37, 99, 235, 0.2)" : "none",
+                  boxShadow: isSelected ? `0 2px 8px ${empColor}40` : "none",
                 }}
               >
                 <span
@@ -626,22 +966,22 @@ export default function MobilePOS() {
         {/* Filter bar: Search box + Horizontal Category Chips */}
         <div
           style={{
-            padding: "6px 8px",
+            padding: "8px 10px",
             background: "#ffffff",
             borderBottom: "1px solid #f1f5f9",
             display: "flex",
             flexDirection: "column",
-            gap: "5px",
+            gap: "7px",
             flexShrink: 0,
           }}
         >
           {/* Quick Search input */}
           <div style={{ position: "relative", width: "100%" }}>
             <Search
-              size={13}
+              size={14}
               style={{
                 position: "absolute",
-                left: "10px",
+                left: "11px",
                 top: "50%",
                 transform: "translateY(-50%)",
                 color: "#94a3b8",
@@ -654,10 +994,10 @@ export default function MobilePOS() {
               value={searchCatalogQuery}
               onChange={(e) => setSearchCatalogQuery(e.target.value)}
               style={{
-                height: "30px",
-                fontSize: "12px",
+                height: "34px",
+                fontSize: "12.5px",
                 borderRadius: "var(--radius-full)",
-                padding: "0 10px 0 28px",
+                padding: "0 12px 0 32px",
                 width: "100%",
                 background: "#f8fafc",
                 border: "1px solid #cbd5e1",
@@ -667,28 +1007,34 @@ export default function MobilePOS() {
 
           {/* Group Category Filters from Desktop POS */}
           <div
+            className="no-scrollbar"
             style={{
               display: "flex",
-              gap: "5px",
+              gap: "6px",
               overflowX: "auto",
               paddingBottom: "2px",
               WebkitOverflowScrolling: "touch",
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
             }}
           >
             {/* Tất cả */}
             <button
               onClick={() => setSelectedCategory("All")}
               style={{
-                padding: "3px 10px",
+                height: "30px",
+                padding: "0 12px",
                 borderRadius: "var(--radius-full)",
                 border: selectedCategory === "All" ? "1px solid #2563eb" : "1px solid #e2e8f0",
                 background: selectedCategory === "All" ? "#2563eb" : "#f8fafc",
                 color: selectedCategory === "All" ? "#ffffff" : "#475569",
-                fontSize: "11px",
-                fontWeight: selectedCategory === "All" ? "700" : "500",
+                fontSize: "12px",
+                fontWeight: selectedCategory === "All" ? "700" : "600",
                 cursor: "pointer",
                 whiteSpace: "nowrap",
                 flexShrink: 0,
+                display: "inline-flex",
+                alignItems: "center",
               }}
             >
               Tất cả
@@ -703,16 +1049,19 @@ export default function MobilePOS() {
                   key={catName}
                   onClick={() => setSelectedCategory(filterVal)}
                   style={{
-                    padding: "3px 10px",
+                    height: "30px",
+                    padding: "0 12px",
                     borderRadius: "var(--radius-full)",
                     border: isActive ? "1px solid #2563eb" : "1px solid #e2e8f0",
                     background: isActive ? "#2563eb" : "#f8fafc",
                     color: isActive ? "#ffffff" : "#475569",
-                    fontSize: "11px",
-                    fontWeight: isActive ? "700" : "500",
+                    fontSize: "12px",
+                    fontWeight: isActive ? "700" : "600",
                     cursor: "pointer",
                     whiteSpace: "nowrap",
                     flexShrink: 0,
+                    display: "inline-flex",
+                    alignItems: "center",
                   }}
                 >
                   {catName}
@@ -724,16 +1073,19 @@ export default function MobilePOS() {
             <button
               onClick={() => setSelectedCategory("Product")}
               style={{
-                padding: "3px 10px",
+                height: "30px",
+                padding: "0 12px",
                 borderRadius: "var(--radius-full)",
                 border: selectedCategory === "Product" ? "1px solid #0d9488" : "1px solid #e2e8f0",
                 background: selectedCategory === "Product" ? "#0d9488" : "#f8fafc",
                 color: selectedCategory === "Product" ? "#ffffff" : "#475569",
-                fontSize: "11px",
-                fontWeight: selectedCategory === "Product" ? "700" : "500",
+                fontSize: "12px",
+                fontWeight: selectedCategory === "Product" ? "700" : "600",
                 cursor: "pointer",
                 whiteSpace: "nowrap",
                 flexShrink: 0,
+                display: "inline-flex",
+                alignItems: "center",
               }}
             >
               Sản phẩm
@@ -743,16 +1095,19 @@ export default function MobilePOS() {
             <button
               onClick={() => setSelectedCategory("Package")}
               style={{
-                padding: "3px 10px",
+                height: "30px",
+                padding: "0 12px",
                 borderRadius: "var(--radius-full)",
                 border: selectedCategory === "Package" ? "1px solid #7c3aed" : "1px solid #e2e8f0",
                 background: selectedCategory === "Package" ? "#7c3aed" : "#f8fafc",
                 color: selectedCategory === "Package" ? "#ffffff" : "#475569",
-                fontSize: "11px",
-                fontWeight: selectedCategory === "Package" ? "700" : "500",
+                fontSize: "12px",
+                fontWeight: selectedCategory === "Package" ? "700" : "600",
                 cursor: "pointer",
                 whiteSpace: "nowrap",
                 flexShrink: 0,
+                display: "inline-flex",
+                alignItems: "center",
               }}
             >
               Gói combo
@@ -786,40 +1141,16 @@ export default function MobilePOS() {
             </div>
           ) : (
             filteredCatalogItems.map((item) => {
+              const isInCart = cart.some((c) => c.itemId === item.id);
               return (
-                <button
+                <CatalogItemCard
                   key={`${item.type}-${item.id}`}
-                  onClick={() => handleAddToCart(item, item.type)}
-                  style={{
-                    background: item.color.bg,
-                    border: `1.5px solid ${item.color.border}`,
-                    color: item.color.text,
-                    borderRadius: "8px",
-                    padding: "0 8px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    textAlign: "center",
-                    cursor: "pointer",
-                    transition: "transform 0.1s ease, box-shadow 0.1s ease",
-                    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
-                    outline: "none",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "700",
-                      lineHeight: 1.25,
-                      display: "-webkit-box",
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {item.name}
-                  </span>
-                </button>
+                  item={item}
+                  onAddToCart={() => handleAddToCart(item, item.type)}
+                  onRemoveFromCart={() => handleRemoveFromCart(item.id, item.name)}
+                  isInCart={isInCart}
+                  cartBadges={renderItemCartBadges(item.id)}
+                />
               );
             })
           )}
@@ -833,12 +1164,12 @@ export default function MobilePOS() {
         style={{
           flexShrink: 0,
           background: "#ffffff",
-          borderTop: "2px solid #2563eb",
-          boxShadow: "0 -4px 16px rgba(15, 23, 42, 0.08)",
+          borderTop: "none",
+          boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.08), 0 -1px 4px rgba(0, 0, 0, 0.04)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "8px 12px",
+          padding: "9px 12px",
           boxSizing: "border-box",
           zIndex: 40,
         }}
@@ -897,18 +1228,19 @@ export default function MobilePOS() {
             display: "flex",
             alignItems: "center",
             gap: "4px",
-            padding: "6px 12px",
+            padding: "5px 11px",
             background: "#eff6ff",
             border: "1px solid #bfdbfe",
             borderRadius: "8px",
             color: "#2563eb",
             fontSize: "12px",
-            fontWeight: "700",
+            fontWeight: "600",
             cursor: "pointer",
+            transition: "all 0.15s ease",
           }}
         >
           <span>Chi tiết</span>
-          <ChevronUp size={15} />
+          <ChevronUp size={14} />
         </button>
       </div>
 
@@ -980,15 +1312,16 @@ export default function MobilePOS() {
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "3px",
-                  padding: "4px 8px",
-                  background: "#e2e8f0",
-                  border: "none",
-                  borderRadius: "20px",
-                  fontSize: "11.5px",
+                  gap: "4px",
+                  padding: "5px 11px",
+                  background: "#eff6ff",
+                  border: "1px solid #bfdbfe",
+                  borderRadius: "8px",
+                  color: "#2563eb",
+                  fontSize: "12px",
                   fontWeight: "600",
-                  color: "#334155",
                   cursor: "pointer",
+                  transition: "all 0.15s ease",
                 }}
               >
                 <span>Thu nhỏ</span>
