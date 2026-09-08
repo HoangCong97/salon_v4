@@ -5,7 +5,7 @@ import BottomNav from "../components/mobile/BottomNav";
 
 export default function MobileLayout() {
   const location = useLocation();
-  const isFullBleed = location.pathname === "/invoices";
+  const isFullBleed = location.pathname === "/invoices" || location.pathname === "/pos";
 
   const handleContextMenu = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
