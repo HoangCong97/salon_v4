@@ -516,7 +516,6 @@ export default function MobilePOS() {
           maxHeight: "20%",
           minHeight: "115px",
           background: "#ffffff",
-          borderBottom: "1px solid #e2e8f0",
           display: "flex",
           flexDirection: "column",
           padding: "6px 8px",
@@ -597,19 +596,29 @@ export default function MobilePOS() {
         </div>
       </div>
 
+      {/* Phân cách giữa Panel 1 và Panel 2 */}
+      <div
+        style={{
+          height: "6px",
+          background: "#f1f5f9",
+          borderTop: "1px solid #e2e8f0",
+          borderBottom: "1px solid #e2e8f0",
+          flexShrink: 0,
+        }}
+      />
+
       {/* ========================================================================= */}
-      {/* PHẦN 2: CHỌN DỊCH VỤ, HÀNG HÓA,... (60% chiều cao)                        */}
+      {/* PHẦN 2: CHỌN DỊCH VỤ, HÀNG HÓA,...                                         */}
       {/* Bộ lọc refer desktop: Tất cả, từng nhóm DV riêng, Sản phẩm, Combo         */}
       {/* Card chỉ hiện TÊN và MÀU NHÓM giống Desktop, không hiện giá/thời gian/SL  */}
       {/* ========================================================================= */}
       <div
         style={{
-          flex: "0 0 60%",
-          maxHeight: "60%",
+          flex: "1 1 0%",
+          minHeight: 0,
           display: "flex",
           flexDirection: "column",
           background: "#ffffff",
-          borderBottom: "1px solid #e2e8f0",
           overflow: "hidden",
           boxSizing: "border-box",
         }}
@@ -818,148 +827,89 @@ export default function MobilePOS() {
       </div>
 
       {/* ========================================================================= */}
-      {/* PHẦN 3: GIỎ HÀNG (20% chiều cao thu nhỏ, có nút mở rộng xem & thanh toán)  */}
+      {/* PHẦN 3: GIỎ HÀNG (Thu gọn vừa khít nội dung, có nút mở rộng xem & TT)       */}
       {/* ========================================================================= */}
       <div
         style={{
-          flex: "0 0 20%",
-          maxHeight: "20%",
-          minHeight: "110px",
+          flexShrink: 0,
           background: "#ffffff",
           borderTop: "2px solid #2563eb",
           boxShadow: "0 -4px 16px rgba(15, 23, 42, 0.08)",
           display: "flex",
-          flexDirection: "column",
+          alignItems: "center",
           justifyContent: "space-between",
-          padding: "8px 12px 10px",
+          padding: "8px 12px",
           boxSizing: "border-box",
           zIndex: 40,
         }}
       >
-        {/* Top Summary Bar with Expand Button */}
-        <div
+        {/* Summary Bar with Expand Button */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div
+            style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "8px",
+              background: "#dbeafe",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#2563eb",
+              position: "relative",
+            }}
+          >
+            <ShoppingCart size={17} />
+            {totalItemsCount > 0 && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: "-4px",
+                  right: "-4px",
+                  background: "#ef4444",
+                  color: "#ffffff",
+                  fontSize: "9.5px",
+                  fontWeight: "800",
+                  width: "16px",
+                  height: "16px",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {totalItemsCount}
+              </span>
+            )}
+          </div>
+          <div>
+            <div style={{ fontSize: "11.5px", color: "#64748b" }}>
+              Giỏ hàng ({totalItemsCount} món)
+            </div>
+            <div style={{ fontSize: "15px", fontWeight: "800", color: "#16a34a" }}>
+              {formatCurrency(finalPayAmount)}
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setIsCartExpanded(true)}
           style={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
+            gap: "4px",
+            padding: "6px 12px",
+            background: "#eff6ff",
+            border: "1px solid #bfdbfe",
+            borderRadius: "8px",
+            color: "#2563eb",
+            fontSize: "12px",
+            fontWeight: "700",
+            cursor: "pointer",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div
-              style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "8px",
-                background: "#dbeafe",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#2563eb",
-                position: "relative",
-              }}
-            >
-              <ShoppingCart size={17} />
-              {totalItemsCount > 0 && (
-                <span
-                  style={{
-                    position: "absolute",
-                    top: "-4px",
-                    right: "-4px",
-                    background: "#ef4444",
-                    color: "#ffffff",
-                    fontSize: "9.5px",
-                    fontWeight: "800",
-                    width: "16px",
-                    height: "16px",
-                    borderRadius: "50%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  {totalItemsCount}
-                </span>
-              )}
-            </div>
-            <div>
-              <div style={{ fontSize: "11.5px", color: "#64748b" }}>
-                Giỏ hàng ({totalItemsCount} món)
-              </div>
-              <div style={{ fontSize: "15px", fontWeight: "800", color: "#16a34a" }}>
-                {formatCurrency(finalPayAmount)}
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={() => setIsCartExpanded(true)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              padding: "6px 12px",
-              background: "#eff6ff",
-              border: "1px solid #bfdbfe",
-              borderRadius: "8px",
-              color: "#2563eb",
-              fontSize: "12px",
-              fontWeight: "700",
-              cursor: "pointer",
-            }}
-          >
-            <span>Chi tiết</span>
-            <ChevronUp size={15} />
-          </button>
-        </div>
-
-        {/* Action Buttons in Collapsed Mode */}
-        <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
-          <button
-            disabled={cart.length === 0 || isProcessingPayment}
-            onClick={() => handleCheckout("CASH")}
-            style={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "6px",
-              padding: "9px 0",
-              background: cart.length === 0 ? "#e2e8f0" : "#15803d",
-              color: cart.length === 0 ? "#94a3b8" : "#ffffff",
-              border: "none",
-              borderRadius: "8px",
-              fontWeight: "700",
-              fontSize: "12.5px",
-              cursor: cart.length === 0 ? "not-allowed" : "pointer",
-            }}
-          >
-            <Banknote size={15} />
-            <span>Tiền mặt</span>
-          </button>
-
-          <button
-            disabled={cart.length === 0 || isProcessingPayment}
-            onClick={() => handleCheckout("BANK_TRANSFER")}
-            style={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "6px",
-              padding: "9px 0",
-              background: cart.length === 0 ? "#e2e8f0" : "#2563eb",
-              color: cart.length === 0 ? "#94a3b8" : "#ffffff",
-              border: "none",
-              borderRadius: "8px",
-              fontWeight: "700",
-              fontSize: "12.5px",
-              cursor: cart.length === 0 ? "not-allowed" : "pointer",
-            }}
-          >
-            <CreditCard size={15} />
-            <span>Tài khoản</span>
-          </button>
-        </div>
+          <span>Chi tiết</span>
+          <ChevronUp size={15} />
+        </button>
       </div>
 
       {/* ========================================================================= */}
