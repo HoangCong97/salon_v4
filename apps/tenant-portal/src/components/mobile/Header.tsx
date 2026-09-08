@@ -29,10 +29,12 @@ export default function Header() {
   });
 
   return (
-    <div
+    <header
       className="glass"
+      onTouchMove={(e) => e.stopPropagation()}
       style={{
-        height: "calc(64px + env(safe-area-inset-top))",
+        flexShrink: 0,
+        height: "calc(60px + env(safe-area-inset-top))",
         paddingTop: "env(safe-area-inset-top)",
         display: "flex",
         alignItems: "center",
@@ -40,12 +42,10 @@ export default function Header() {
         paddingLeft: "16px",
         paddingRight: "16px",
         borderBottom: "1px solid var(--border-color)",
-        position: "fixed",
-        top: 0,
-        left: 0,
         width: "100%",
-        zIndex: 1000,
+        zIndex: 100,
         boxSizing: "border-box",
+        background: "rgba(255, 255, 255, 0.92)",
       }}
     >
       <div style={{ display: "flex", flexDirection: "column" }}>
@@ -123,6 +123,6 @@ export default function Header() {
           <LogOut size={18} />
         </button>
       </div>
-    </div>
+    </header>
   );
 }

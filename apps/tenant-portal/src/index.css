@@ -81,14 +81,83 @@
   background-color: hsl(210, 40%, 96%) !important;
 }
 
-/* PWA Fullscreen Safe Area Insets for iOS Notch & Android Display Cutouts */
-@supports (padding-top: env(safe-area-inset-top)) {
-  body {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
+/* PWA Fullscreen Viewport & Outer Scroll Locking */
+html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  height: var(--app-height, 100vh);
+  overflow: hidden;
+  overscroll-behavior: none;
+  background-color: var(--bg-app);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  height: var(--app-height, 100vh);
+  overflow: hidden;
+  overscroll-behavior: none;
+  background-color: var(--bg-app);
+  -webkit-overflow-scrolling: auto;
+}
+
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  height: var(--app-height, 100vh);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-app);
+}
+
+/* Mobile App Shell Layout (Fixes iOS PWA Rubber-banding & Jumping Footer) */
+.mobile-layout-root {
+  width: 100%;
+  height: 100%;
+  height: var(--app-height, 100vh);
+  max-height: var(--app-height, 100vh);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-app);
+  overscroll-behavior: none;
+  touch-action: pan-y;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.mobile-content-area {
+  flex: 1 1 0%;
+  min-height: 0;
+  width: 100%;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.mobile-bottom-nav {
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* Seamless background extension below bottom nav to ensure 0 gap on iPhone home bar */
+.mobile-bottom-nav::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.94);
+  pointer-events: none;
 }
 
 /* Mobile PWA: Prevent text selection & long-press copy context menu */

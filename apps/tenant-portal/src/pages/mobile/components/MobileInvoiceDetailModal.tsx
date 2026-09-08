@@ -55,6 +55,7 @@ export default function MobileInvoiceDetailModal({
           borderTopLeftRadius: "24px",
           borderTopRightRadius: "24px",
           padding: "20px",
+          paddingBottom: "calc(20px + env(safe-area-inset-bottom))",
           display: "flex",
           flexDirection: "column",
           gap: "16px",

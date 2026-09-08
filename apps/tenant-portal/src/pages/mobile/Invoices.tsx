@@ -21,12 +21,12 @@ export default function MobileInvoicesPage() {
       style={{
         display: "flex",
         flexDirection: "column",
-        height: "calc(100vh - 64px - env(safe-area-inset-top) - 64px - env(safe-area-inset-bottom))",
-        margin: "-16px",
-        marginBottom: "calc(-80px - env(safe-area-inset-bottom))",
+        height: "100%",
+        width: "100%",
         gap: 0,
         position: "relative",
         background: "#ffffff",
+        overflow: "hidden",
       }}
     >
       {error && (

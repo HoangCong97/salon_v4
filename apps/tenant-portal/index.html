@@ -23,6 +23,41 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- iOS Standalone PWA Viewport Height Engine -->
+  <script>
+    (function () {
+      function syncAppHeight() {
+        var isIOS =
+          /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        var isStandalone =
+          window.navigator.standalone ||
+          window.matchMedia('(display-mode: standalone)').matches;
+
+        var h = window.innerHeight;
+        if (isIOS && isStandalone) {
+          var isPortrait = window.matchMedia('(orientation: portrait)').matches;
+          h = isPortrait
+            ? Math.max(window.screen.height, window.screen.width)
+            : Math.min(window.screen.height, window.screen.width);
+        }
+        document.documentElement.style.setProperty('--app-height', h + 'px');
+      }
+
+      syncAppHeight();
+      window.addEventListener('resize', syncAppHeight);
+      window.addEventListener('orientationchange', syncAppHeight);
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', syncAppHeight);
+      }
+      window.addEventListener('scroll', function () {
+        if (window.scrollY !== 0 || window.scrollX !== 0) {
+          window.scrollTo(0, 0);
+        }
+      });
+    })();
+  </script>
 </head>
 
 <body>

@@ -206,7 +206,7 @@ export default function MobileInvoiceList({
           overflowY: "auto",
           display: "flex",
           flexDirection: "column",
-          paddingBottom: "140px",
+          paddingBottom: "80px",
         }}
       >
         {isLoading ? (

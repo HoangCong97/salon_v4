@@ -1,9 +1,12 @@
 import React from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import Header from "../components/mobile/Header";
 import BottomNav from "../components/mobile/BottomNav";
 
 export default function MobileLayout() {
+  const location = useLocation();
+  const isFullBleed = location.pathname === "/invoices";
+
   const handleContextMenu = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     const isInput =
@@ -16,37 +19,27 @@ export default function MobileLayout() {
   };
 
   return (
-    <div
-      className="mobile-layout-root"
-      onContextMenu={handleContextMenu}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        background: "var(--bg-app)",
-        width: "100%",
-        overflow: "hidden",
-      }}
-    >
-      {/* Fixed Header bar at top */}
+    <div className="mobile-layout-root" onContextMenu={handleContextMenu}>
+      {/* Fixed top Header (Flex item, flex-shrink: 0, covers Safe Area Top) */}
       <Header />
 
-      {/* Scrollable page content */}
-      <div
+      {/* Main App Content Area (Flex: 1, scrollable, trapped momentum scroll) */}
+      <main
+        className="mobile-content-area"
         style={{
-          flexGrow: 1,
-          marginTop: "calc(64px + env(safe-area-inset-top))",
-          padding: "16px",
-          paddingBottom: "calc(80px + env(safe-area-inset-bottom))",
-          overflowY: "auto",
+          overflowY: isFullBleed ? "hidden" : "auto",
+          overflowX: "hidden",
           WebkitOverflowScrolling: "touch",
+          overscrollBehaviorY: "contain",
+          padding: isFullBleed ? "0" : "16px",
         }}
       >
         <Outlet />
-      </div>
+      </main>
 
-      {/* Fixed bottom navigation with Safe Area Bottom */}
+      {/* Fixed bottom Navigation (Flex item, flex-shrink: 0, covers Safe Area Bottom) */}
       <BottomNav />
     </div>
   );
 }
+

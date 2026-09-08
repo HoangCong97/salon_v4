@@ -10,20 +10,21 @@ export default function BottomNav() {
   ];
 
   return (
-    <div
-      className="glass"
+    <nav
+      className="glass mobile-bottom-nav"
+      onTouchMove={(e) => e.stopPropagation()}
       style={{
-        height: "calc(64px + env(safe-area-inset-bottom))",
+        flexShrink: 0,
+        height: "calc(60px + env(safe-area-inset-bottom))",
         paddingBottom: "env(safe-area-inset-bottom)",
         display: "flex",
+        alignItems: "stretch",
         borderTop: "1px solid var(--border-color)",
-        position: "fixed",
-        bottom: 0,
-        left: 0,
         width: "100%",
-        zIndex: 1000,
+        zIndex: 100,
         boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.03)",
         boxSizing: "border-box",
+        background: "rgba(255, 255, 255, 0.94)",
       }}
     >
       {navItems.map((item) => (
@@ -31,23 +32,23 @@ export default function BottomNav() {
           key={item.path}
           to={item.path}
           style={({ isActive }) => ({
-            flexGrow: 1,
+            flex: 1,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            gap: "4px",
+            gap: "3px",
             color: isActive ? "var(--color-primary)" : "var(--text-secondary)",
             transition: "all 0.15s ease",
             fontWeight: isActive ? "600" : "500",
             fontSize: "11px",
-            padding: "8px 0",
+            padding: "6px 0",
           })}
         >
-          <span style={{ fontSize: "20px" }}>{item.icon}</span>
-          <span>{item.label}</span>
+          <span style={{ fontSize: "20px", lineHeight: 1 }}>{item.icon}</span>
+          <span style={{ lineHeight: 1 }}>{item.label}</span>
         </NavLink>
       ))}
-    </div>
+    </nav>
   );
 }

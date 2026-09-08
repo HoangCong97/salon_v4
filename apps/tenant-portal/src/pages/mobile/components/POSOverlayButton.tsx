@@ -8,8 +8,8 @@ export default function POSOverlayButton() {
     <button
       onClick={() => navigate("/pos")}
       style={{
-        position: "fixed",
-        bottom: "calc(80px + env(safe-area-inset-bottom))",
+        position: "absolute",
+        bottom: "16px",
         right: "16px",
         zIndex: 99,
         display: "flex",
