@@ -5,19 +5,21 @@ import App from "./App";
 import "./index.css";
 
 /**
- * TanStack Query Client - Cấu hình cache mặc định cho toàn bộ app.
- * - staleTime: 30s — dữ liệu "tươi" trong 30 giây, không refetch lại
- * - gcTime: 5 phút — cache giữ trong memory 5 phút sau khi component unmount
- * - refetchOnWindowFocus: false — không tự refetch khi user chuyển tab
- * - retry: 1 — thử lại 1 lần nếu API thất bại
+ * TanStack Query Client - Cấu hình cache tối ưu cho PWA Mobile & Desktop.
+ * - staleTime: 5 phút — dữ liệu giữ trạng thái tươi 5 phút, không refetch lại gây mất dữ liệu khi chuyển app
+ * - gcTime: 24 giờ — giữ cache trong bộ nhớ suốt phiên làm việc
+ * - refetchOnWindowFocus: false — không tự refetch gây giật/chớp màn hình khi user chuyển qua app khác
+ * - refetchOnReconnect: true — tự động đồng bộ khi có kết nối mạng trở lại
+ * - retry: 2 — thử lại 2 lần nếu mạng chập chờn
  */
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,
-      gcTime: 5 * 60_000,
+      staleTime: 5 * 60_000,
+      gcTime: 24 * 60 * 60_000,
       refetchOnWindowFocus: false,
-      retry: 1,
+      refetchOnReconnect: true,
+      retry: 2,
     },
   },
 });

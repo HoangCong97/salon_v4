@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "../../../store/useAuthStore";
 import { api } from "../../../utils/apiClient";
@@ -93,43 +93,153 @@ export function useInvoices() {
     enabled: !!currentTenantId && !!currentBranchId,
   });
 
-  // Fallback lists directly derived without useState/useEffect sync
-  const activeStaff = useMemo(() => staffData || [], [staffData]);
+  // Persist fetched lists to localStorage for instant recovery when app resumes
+  useEffect(() => {
+    if (currentTenantId && currentBranchId) {
+      if (invoicesData && invoicesData.length > 0) {
+        try {
+          localStorage.setItem(
+            `cached_invoices_${currentTenantId}_${currentBranchId}`,
+            JSON.stringify(invoicesData),
+          );
+        } catch {}
+      }
+      if (staffData && staffData.length > 0) {
+        try {
+          localStorage.setItem(
+            `cached_staff_${currentTenantId}_${currentBranchId}`,
+            JSON.stringify(staffData),
+          );
+        } catch {}
+      }
+      if (servicesData && servicesData.length > 0) {
+        try {
+          localStorage.setItem(
+            `cached_services_${currentTenantId}_${currentBranchId}`,
+            JSON.stringify(servicesData),
+          );
+        } catch {}
+      }
+      if (inventoriesData && inventoriesData.length > 0) {
+        try {
+          localStorage.setItem(
+            `cached_inventories_${currentTenantId}_${currentBranchId}`,
+            JSON.stringify(inventoriesData),
+          );
+        } catch {}
+      }
+      if (packagesData && packagesData.length > 0) {
+        try {
+          localStorage.setItem(
+            `cached_packages_${currentTenantId}_${currentBranchId}`,
+            JSON.stringify(packagesData),
+          );
+        } catch {}
+      }
+    }
+  }, [
+    currentTenantId,
+    currentBranchId,
+    invoicesData,
+    staffData,
+    servicesData,
+    inventoriesData,
+    packagesData,
+  ]);
+
+  // Helper to read cached array from localStorage
+  const getCachedArray = <T>(key: string): T[] | null => {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) && parsed.length > 0 ? (parsed as T[]) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Fallback lists with persistent local cache support
+  const activeStaff = useMemo(() => {
+    if (staffData && staffData.length > 0) return staffData;
+    if (currentTenantId && currentBranchId) {
+      const cached = getCachedArray<Staff>(
+        `cached_staff_${currentTenantId}_${currentBranchId}`,
+      );
+      if (cached) return cached;
+    }
+    return staffData || [];
+  }, [staffData, currentTenantId, currentBranchId]);
 
   const customers = useMemo(() => {
-    if (dbCustomers) return dbCustomers;
+    if (dbCustomers && dbCustomers.length > 0) return dbCustomers;
     const customerSaved = localStorage.getItem("pos_customers");
     if (customerSaved) {
       try {
         const parsed = JSON.parse(customerSaved);
-        if (Array.isArray(parsed)) return parsed as Customer[];
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed as Customer[];
       } catch {}
     }
-    return [];
+    return dbCustomers || [];
   }, [dbCustomers]);
 
-  const services = useMemo(() => servicesData || [], [servicesData]);
-  const products = useMemo(() => inventoriesData || [], [inventoriesData]);
-  const packages = useMemo(() => packagesData || [], [packagesData]);
-  const invoices = useMemo(() => invoicesData || [], [invoicesData]);
+  const services = useMemo(() => {
+    if (servicesData && servicesData.length > 0) return servicesData;
+    if (currentTenantId && currentBranchId) {
+      const cached = getCachedArray<SimpleItem>(
+        `cached_services_${currentTenantId}_${currentBranchId}`,
+      );
+      if (cached) return cached;
+    }
+    return servicesData || [];
+  }, [servicesData, currentTenantId, currentBranchId]);
 
-  // Derived loading state
-  const loading =
-    staffLoading ||
-    customersLoading ||
-    invoicesLoading ||
-    servicesLoading ||
-    inventoriesLoading ||
-    packagesLoading;
+  const products = useMemo(() => {
+    if (inventoriesData && inventoriesData.length > 0) return inventoriesData;
+    if (currentTenantId && currentBranchId) {
+      const cached = getCachedArray<SimpleItem>(
+        `cached_inventories_${currentTenantId}_${currentBranchId}`,
+      );
+      if (cached) return cached;
+    }
+    return inventoriesData || [];
+  }, [inventoriesData, currentTenantId, currentBranchId]);
 
-  // Composite error message
+  const packages = useMemo(() => {
+    if (packagesData && packagesData.length > 0) return packagesData;
+    if (currentTenantId && currentBranchId) {
+      const cached = getCachedArray<SimpleItem>(
+        `cached_packages_${currentTenantId}_${currentBranchId}`,
+      );
+      if (cached) return cached;
+    }
+    return packagesData || [];
+  }, [packagesData, currentTenantId, currentBranchId]);
+
+  const invoices = useMemo(() => {
+    if (invoicesData && invoicesData.length > 0) return invoicesData;
+    if (currentTenantId && currentBranchId) {
+      const cached = getCachedArray<Invoice>(
+        `cached_invoices_${currentTenantId}_${currentBranchId}`,
+      );
+      if (cached) return cached;
+    }
+    return invoicesData || [];
+  }, [invoicesData, currentTenantId, currentBranchId]);
+
+  // If cached data already exists, DO NOT show blocking loading UI when refetching in background
+  const hasCachedData = invoices.length > 0 || activeStaff.length > 0;
+  const loading = !hasCachedData && (invoicesLoading || staffLoading);
+
+  // Composite error message - only show if there is truly no data to present
   const error =
-    staffError ||
-    customersError ||
-    invoicesError ||
-    servicesError ||
-    inventoriesError ||
-    packagesError
+    !hasCachedData &&
+    (staffError ||
+      customersError ||
+      invoicesError ||
+      servicesError ||
+      inventoriesError ||
+      packagesError)
       ? "Lỗi tải dữ liệu hóa đơn hoặc thông tin liên quan từ hệ thống."
       : null;
 

@@ -103,14 +103,52 @@ const getApiBaseUrl = () => {
   return `http://${host}:3000/api`;
 };
 
+// Synchronous session helper to prevent screen flicker or login bounce on app resume
+const getStoredItem = (key: string): string | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(key) || sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+
+const getInitialUser = (): UserSession | null => {
+  const raw = getStoredItem("user");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+};
+
+const getInitialBranches = (): BranchInfo[] => {
+  const raw = getStoredItem("branches");
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const initialUser = getInitialUser();
+const initialTenantId = getStoredItem("tenantId") || initialUser?.tenantId || null;
+const initialBranches = getInitialBranches();
+const initialBranchId =
+  getStoredItem("branchId") ||
+  (initialBranches.length > 0 ? initialBranches[0].id : null);
+
 export const useAuthStore = create<AuthState>((set, get) => ({
-  user: null, // Null on startup to show login screen
+  user: initialUser,
   tenants: [],
-  currentTenantId: null,
-  branches: [],
-  currentBranchId: null,
-  brandName: null,
-  logoUrl: null,
+  currentTenantId: initialTenantId,
+  branches: initialBranches,
+  currentBranchId: initialBranchId,
+  brandName: getStoredItem("brandName") || null,
+  logoUrl: getStoredItem("logoUrl") || null,
   isLoading: false,
 
   // Subscription states
@@ -236,17 +274,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await get().fetchBrandInfo();
       await get().fetchSubscription();
 
-      // Duy trì đăng nhập (Remember login)
-      const storage = rememberMe ? localStorage : sessionStorage;
-      storage.setItem("user", JSON.stringify(userData));
+      // Duy trì đăng nhập (Always persist in localStorage for mobile/PWA resilience)
+      localStorage.setItem("user", JSON.stringify(userData));
+      sessionStorage.setItem("user", JSON.stringify(userData));
       if (userData.tenantId) {
-        storage.setItem("tenantId", userData.tenantId);
+        localStorage.setItem("tenantId", userData.tenantId);
+        sessionStorage.setItem("tenantId", userData.tenantId);
       }
       if (currentBranchId) {
-        storage.setItem("branchId", currentBranchId);
+        localStorage.setItem("branchId", currentBranchId);
+        sessionStorage.setItem("branchId", currentBranchId);
       }
-      storage.setItem("branches", JSON.stringify(mappedBranches));
-      storage.setItem("rememberMe", String(rememberMe));
+      localStorage.setItem("branches", JSON.stringify(mappedBranches));
+      sessionStorage.setItem("branches", JSON.stringify(mappedBranches));
+      localStorage.setItem("rememberMe", String(rememberMe));
+      sessionStorage.setItem("rememberMe", String(rememberMe));
 
       return true;
     } catch (e: any) {
@@ -260,12 +302,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     localStorage.removeItem("tenantId");
     localStorage.removeItem("branchId");
     localStorage.removeItem("branches");
+    localStorage.removeItem("brandName");
+    localStorage.removeItem("logoUrl");
     localStorage.removeItem("rememberMe");
 
     sessionStorage.removeItem("user");
     sessionStorage.removeItem("tenantId");
     sessionStorage.removeItem("branchId");
     sessionStorage.removeItem("branches");
+    sessionStorage.removeItem("brandName");
+    sessionStorage.removeItem("logoUrl");
     sessionStorage.removeItem("rememberMe");
 
     set({
@@ -273,6 +319,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       currentBranchId: null,
       currentTenantId: null,
       branches: [],
+      brandName: null,
+      logoUrl: null,
     });
   },
   setRole: async (role) => {
@@ -310,32 +358,46 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             .filter((p: any) => assignedIds.includes(p.id))
             .map((p: any) => p.slug);
 
-          set((state) => ({
-            user: state.user
-              ? {
-                  ...state.user,
-                  role,
-                  permissions: permissionSlugs,
-                }
-              : null,
-          }));
+          const updatedUser = get().user
+            ? {
+                ...get().user!,
+                role,
+                permissions: permissionSlugs,
+              }
+            : null;
+
+          if (updatedUser) {
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            sessionStorage.setItem("user", JSON.stringify(updatedUser));
+          }
+
+          set({ user: updatedUser });
           return;
         }
       }
     } catch (e) {
       console.error("Failed to fetch role permissions dynamically", e);
-      set((state) => ({
-        user: state.user
-          ? {
-              ...state.user,
-              role,
-              permissions: [],
-            }
-          : null,
-      }));
+      const updatedUser = get().user
+        ? {
+            ...get().user!,
+            role,
+            permissions: [],
+          }
+        : null;
+
+      if (updatedUser) {
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        sessionStorage.setItem("user", JSON.stringify(updatedUser));
+      }
+
+      set({ user: updatedUser });
     }
   },
-  setBranch: (currentBranchId) => set({ currentBranchId }),
+  setBranch: (currentBranchId) => {
+    localStorage.setItem("branchId", currentBranchId);
+    sessionStorage.setItem("branchId", currentBranchId);
+    set({ currentBranchId });
+  },
 
   setTenant: async (tenantId) => {
     set({ currentTenantId: tenantId, isLoading: true });
@@ -351,9 +413,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             name: b.name,
             address: b.address || "",
           }));
+          const newBranchId = mappedBranches[0].id;
+          localStorage.setItem("tenantId", tenantId);
+          localStorage.setItem("branchId", newBranchId);
+          localStorage.setItem("branches", JSON.stringify(mappedBranches));
+          sessionStorage.setItem("tenantId", tenantId);
+          sessionStorage.setItem("branchId", newBranchId);
+          sessionStorage.setItem("branches", JSON.stringify(mappedBranches));
+
           set({
             branches: mappedBranches,
-            currentBranchId: mappedBranches[0].id,
+            currentBranchId: newBranchId,
             isLoading: false,
           });
           await get().fetchBrandInfo();
@@ -372,7 +442,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   initializeSession: async () => {
-    set({ isLoading: true });
     try {
       // 1. Check if there is stored session
       const storedUser =
@@ -385,20 +454,45 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         localStorage.getItem("branches") || sessionStorage.getItem("branches");
 
       if (storedUser) {
-        const parsedBranches = storedBranches ? JSON.parse(storedBranches) : [];
-        set({
-          user: JSON.parse(storedUser),
-          currentTenantId: storedTenantId,
-          currentBranchId: storedBranchId,
-          branches: parsedBranches,
-          isLoading: false,
-        });
-        await get().fetchBrandInfo();
-        await get().fetchSubscription();
-        return;
+        let parsedBranches: BranchInfo[] = [];
+        try {
+          parsedBranches = storedBranches ? JSON.parse(storedBranches) : [];
+        } catch {}
+
+        let parsedUser: UserSession | null = null;
+        try {
+          parsedUser = JSON.parse(storedUser);
+        } catch {}
+
+        if (parsedUser) {
+          set({
+            user: parsedUser,
+            currentTenantId: storedTenantId || parsedUser.tenantId || null,
+            currentBranchId:
+              storedBranchId ||
+              (parsedBranches.length > 0 ? parsedBranches[0].id : null),
+            branches: parsedBranches,
+            isLoading: false,
+          });
+
+          // Fetch brand info and subscription gracefully in the background without clearing session on error
+          try {
+            await get().fetchBrandInfo();
+          } catch (e) {
+            console.warn("Background fetchBrandInfo non-critical error:", e);
+          }
+
+          try {
+            await get().fetchSubscription();
+          } catch (e) {
+            console.warn("Background fetchSubscription non-critical error:", e);
+          }
+          return;
+        }
       }
 
       // If no stored user, do default tenant list fetch
+      set({ isLoading: true });
       const tenantsRes = await fetch(
         `${getApiBaseUrl()}/super-admin/tenants`,
       );
@@ -438,8 +532,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                 currentBranchId: mappedBranches[0].id,
                 isLoading: false,
               });
-              await get().fetchBrandInfo();
-              await get().fetchSubscription();
+              try {
+                await get().fetchBrandInfo();
+                await get().fetchSubscription();
+              } catch {}
               return;
             }
           }
@@ -447,13 +543,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     } catch (e) {
       console.error("Failed to initialize session from backend", e);
-      set({
-        tenants: [],
-        currentTenantId: null,
-        branches: [],
-        currentBranchId: null,
-        isLoading: false,
-      });
+      if (!get().user) {
+        set({
+          tenants: [],
+          currentTenantId: null,
+          branches: [],
+          currentBranchId: null,
+          isLoading: false,
+        });
+      }
+    } finally {
+      set({ isLoading: false });
     }
   },
 
