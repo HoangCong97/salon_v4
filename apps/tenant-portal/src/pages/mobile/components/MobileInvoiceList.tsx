@@ -289,11 +289,11 @@ export default function MobileInvoiceList({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  padding: "9px 12px",
+                  padding: "10px 14px",
                   borderBottom: "1px solid var(--border-color)",
                   background: "white",
                   cursor: "pointer",
-                  gap: "10px",
+                  gap: "12px",
                   transition: "background-color 0.15s ease",
                 }}
                 onMouseEnter={(e) =>
@@ -304,7 +304,7 @@ export default function MobileInvoiceList({
                 }
               >
                 {/* Left Side: Multi-staff Avatar collage */}
-                <MultiStaffAvatar staffList={invoiceStaff} size={44} />
+                <MultiStaffAvatar staffList={invoiceStaff} size={48} />
 
                 {/* Right Side: 2-Line Layout */}
                 <div
@@ -313,7 +313,7 @@ export default function MobileInvoiceList({
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "center",
-                    gap: "3px",
+                    gap: "4px",
                     overflow: "hidden",
                   }}
                 >
@@ -328,7 +328,7 @@ export default function MobileInvoiceList({
                   >
                     <div
                       style={{
-                        fontSize: "12.5px",
+                        fontSize: "13.5px",
                         fontWeight: "600",
                         color: "#2563eb",
                         whiteSpace: "nowrap",
@@ -341,18 +341,18 @@ export default function MobileInvoiceList({
 
                     <div
                       style={{
-                        fontSize: "12.5px",
+                        fontSize: "13.5px",
                         fontWeight: "600",
                         color: "#16a34a",
                         whiteSpace: "nowrap",
                         display: "flex",
                         alignItems: "center",
-                        gap: "3px",
+                        gap: "4px",
                         flexShrink: 0,
                       }}
                     >
                       {inv.paymentMethod === "BANK_TRANSFER" && (
-                        <span style={{ fontSize: "11px" }}>💳</span>
+                        <span style={{ fontSize: "12px" }}>💳</span>
                       )}
                       <span>{formatShortCurrency(inv.finalAmount)}</span>
                     </div>
@@ -361,8 +361,8 @@ export default function MobileInvoiceList({
                   {/* Line 2: [Secondary: Service Names] */}
                   <div
                     style={{
-                      fontSize: "11.5px",
-                      color: "#475569",
+                      fontSize: "12px",
+                      color: "#64748b",
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
