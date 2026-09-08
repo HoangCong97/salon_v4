@@ -17,9 +17,12 @@ interface StaffRevenueItem {
   serviceCount: number;
 }
 
-interface DateGroup {
+interface SelectedDaySummary {
+  title: string;
+  isToday: boolean;
   dateStr: string;
   rawDate: string;
+  totalGrossRevenue: number;
   totalNetRevenue: number;
   staffList: StaffRevenueItem[];
 }
@@ -50,39 +53,47 @@ export default function StaffDailyRevenueCard({
     return new Intl.NumberFormat("vi-VN").format(val);
   };
 
-  // Aggregate revenue data & calculate totals
-  const dateGroups = useMemo((): {
-    groups: DateGroup[];
-    grandTotalGross: number;
-    grandTotalNet: number;
-  } => {
-    const groupMap = new Map<
+  // Aggregate revenue data for the selected day:
+  // If today has invoices -> show today
+  // If today has NO invoices -> show the most recent day with invoices
+  const selectedDayData = useMemo((): SelectedDaySummary => {
+    const now = new Date();
+    const nowDay = String(now.getDate()).padStart(2, "0");
+    const nowMonth = String(now.getMonth() + 1).padStart(2, "0");
+    const nowYear = now.getFullYear();
+    const todayRaw = `${nowYear}-${nowMonth}-${nowDay}`;
+    const todayDateStr = `${nowDay}/${nowMonth}/${nowYear}`;
+
+    // Group invoices by rawDate (YYYY-MM-DD)
+    const dayMap = new Map<
       string,
       {
         rawDate: string;
+        dateStr: string;
         staffMap: Map<string, StaffRevenueItem>;
       }
     >();
 
-    let grandTotalGross = 0;
-    let grandTotalNet = 0;
-
     todayInvoices.forEach((inv) => {
+      if (!inv.createdAt) return;
       const d = new Date(inv.createdAt);
+      if (isNaN(d.getTime())) return;
+
       const day = String(d.getDate()).padStart(2, "0");
       const month = String(d.getMonth() + 1).padStart(2, "0");
       const year = d.getFullYear();
       const dateDisplay = `${day}/${month}/${year}`;
       const rawDate = `${year}-${month}-${day}`;
 
-      if (!groupMap.has(dateDisplay)) {
-        groupMap.set(dateDisplay, {
+      if (!dayMap.has(rawDate)) {
+        dayMap.set(rawDate, {
           rawDate,
+          dateStr: dateDisplay,
           staffMap: new Map<string, StaffRevenueItem>(),
         });
       }
 
-      const { staffMap } = groupMap.get(dateDisplay)!;
+      const { staffMap } = dayMap.get(rawDate)!;
 
       if (inv.items && inv.items.length > 0) {
         inv.items.forEach((item) => {
@@ -128,8 +139,8 @@ export default function StaffDailyRevenueCard({
       } else {
         const cashierId = inv.cashierId || "UNKNOWN";
         const cashierName = inv.cashier?.name || "Thu ngân";
-        const gross = Number(inv.totalPrice || inv.finalAmount);
-        const net = Number(inv.finalAmount);
+        const gross = Number(inv.totalPrice || inv.finalAmount || 0);
+        const net = Number(inv.finalAmount || 0);
 
         const existing = staffMap.get(cashierId);
         if (existing) {
@@ -148,31 +159,72 @@ export default function StaffDailyRevenueCard({
       }
     });
 
-    const result: DateGroup[] = [];
-    Array.from(groupMap.entries()).forEach(([dateStr, { rawDate, staffMap }]) => {
+    // Build list of day summaries
+    const dayGroups: {
+      rawDate: string;
+      dateStr: string;
+      totalGrossRevenue: number;
+      totalNetRevenue: number;
+      staffList: StaffRevenueItem[];
+    }[] = [];
+
+    dayMap.forEach(({ rawDate, dateStr, staffMap }) => {
       const staffArr = Array.from(staffMap.values()).sort(
         (a, b) => b.netRevenue - a.netRevenue,
       );
       const totalNetRevenue = staffArr.reduce((sum, s) => sum + s.netRevenue, 0);
       const totalGrossRevenue = staffArr.reduce((sum, s) => sum + s.grossRevenue, 0);
 
-      grandTotalNet += totalNetRevenue;
-      grandTotalGross += totalGrossRevenue;
-
-      result.push({
-        dateStr,
+      dayGroups.push({
         rawDate,
+        dateStr,
+        totalGrossRevenue,
         totalNetRevenue,
         staffList: staffArr,
       });
     });
 
-    result.sort((a, b) => (b.rawDate > a.rawDate ? 1 : -1));
+    // Sort descending by rawDate (most recent first)
+    dayGroups.sort((a, b) => b.rawDate.localeCompare(a.rawDate));
 
+    // Check if today has any invoices
+    const todayGroup = dayGroups.find((g) => g.rawDate === todayRaw);
+
+    if (todayGroup) {
+      return {
+        title: "Hôm nay",
+        isToday: true,
+        dateStr: todayGroup.dateStr,
+        rawDate: todayGroup.rawDate,
+        totalGrossRevenue: todayGroup.totalGrossRevenue,
+        totalNetRevenue: todayGroup.totalNetRevenue,
+        staffList: todayGroup.staffList,
+      };
+    }
+
+    // If today has NO invoices, select the most recent day with invoices
+    if (dayGroups.length > 0) {
+      const mostRecent = dayGroups[0];
+      return {
+        title: `Ngày ${mostRecent.dateStr}`,
+        isToday: false,
+        dateStr: mostRecent.dateStr,
+        rawDate: mostRecent.rawDate,
+        totalGrossRevenue: mostRecent.totalGrossRevenue,
+        totalNetRevenue: mostRecent.totalNetRevenue,
+        staffList: mostRecent.staffList,
+      };
+    }
+
+    // Default empty state
     return {
-      groups: result,
-      grandTotalGross,
-      grandTotalNet,
+      title: "Hôm nay",
+      isToday: true,
+      dateStr: todayDateStr,
+      rawDate: todayRaw,
+      totalGrossRevenue: 0,
+      totalNetRevenue: 0,
+      staffList: [],
     };
   }, [todayInvoices]);
 
@@ -198,17 +250,20 @@ export default function StaffDailyRevenueCard({
           flexShrink: 0,
         }}
       >
-        {/* Column 1 (45%): Title 'Hôm nay' */}
+        {/* Column 1 (45%): Title ('Hôm nay' or 'Ngày dd/MM/yyyy') */}
         <div
           style={{
             width: "45%",
             paddingLeft: "14px",
-            fontSize: "17px",
+            fontSize: selectedDayData.isToday ? "17px" : "15px",
             fontWeight: "700",
             color: "#1e293b",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
-          Hôm nay
+          {selectedDayData.title}
         </div>
 
         {/* Column 2 (27.5%): Total Gross Revenue Badge (Doanh thu) */}
@@ -233,7 +288,7 @@ export default function StaffDailyRevenueCard({
             }}
             title="Tổng Doanh thu (chưa giảm giá)"
           >
-            {formatShortCurrency(dateGroups.grandTotalGross)}
+            {formatShortCurrency(selectedDayData.totalGrossRevenue)}
           </span>
         </div>
 
@@ -259,7 +314,7 @@ export default function StaffDailyRevenueCard({
             }}
             title="Thu thực tế (đã trừ giảm giá)"
           >
-            {formatShortCurrency(dateGroups.grandTotalNet)}
+            {formatShortCurrency(selectedDayData.totalNetRevenue)}
           </span>
         </div>
       </div>
@@ -343,7 +398,7 @@ export default function StaffDailyRevenueCard({
                   Đang tải thống kê doanh thu...
                 </td>
               </tr>
-            ) : dateGroups.groups.length === 0 ? (
+            ) : selectedDayData.staffList.length === 0 ? (
               <tr>
                 <td
                   colSpan={3}
@@ -357,104 +412,99 @@ export default function StaffDailyRevenueCard({
                 </td>
               </tr>
             ) : (
-              dateGroups.groups.map((group) => (
-                <React.Fragment key={group.dateStr}>
-                  {/* Staff Rows */}
-                  {group.staffList.map((staff) => {
-                    const nameColor = getNameColor(staff.name);
-                    const matchingStaffObj = staffList.find(
-                      (s) => s.id === staff.id,
-                    );
-                    const avatarUrl = matchingStaffObj?.avatar;
+              selectedDayData.staffList.map((staff) => {
+                const nameColor = getNameColor(staff.name);
+                const matchingStaffObj = staffList.find(
+                  (s) => s.id === staff.id,
+                );
+                const avatarUrl = matchingStaffObj?.avatar;
 
-                    return (
-                      <tr
-                        key={staff.id}
+                return (
+                  <tr
+                    key={staff.id}
+                    style={{
+                      borderBottom: "1px solid var(--border-color)",
+                      background: "white",
+                    }}
+                  >
+                    {/* Staff Column: Avatar + Name */}
+                    <td
+                      style={{
+                        padding: "8px 14px",
+                        verticalAlign: "middle",
+                        borderRight: "1px solid var(--border-color)",
+                        overflow: "hidden",
+                        width: "45%",
+                      }}
+                    >
+                      <div
                         style={{
-                          borderBottom: "1px solid var(--border-color)",
-                          background: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          overflow: "hidden",
+                          minWidth: 0,
                         }}
                       >
-                        {/* Staff Column: Avatar + Name */}
-                        <td
+                        <MultiStaffAvatar
+                          staffList={[
+                            {
+                              id: staff.id,
+                              name: staff.name,
+                              avatar: avatarUrl,
+                            },
+                          ]}
+                          size={28}
+                        />
+                        <span
                           style={{
-                            padding: "8px 14px",
-                            verticalAlign: "middle",
-                            borderRight: "1px solid var(--border-color)",
-                            overflow: "hidden",
-                            width: "45%",
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "8px",
-                              overflow: "hidden",
-                              minWidth: 0,
-                            }}
-                          >
-                            <MultiStaffAvatar
-                              staffList={[
-                                {
-                                  id: staff.id,
-                                  name: staff.name,
-                                  avatar: avatarUrl,
-                                },
-                              ]}
-                              size={28}
-                            />
-                            <span
-                              style={{
-                                fontWeight: "600",
-                                color: nameColor,
-                                fontSize: "13px",
-                                whiteSpace: "nowrap",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                minWidth: 0,
-                                flexShrink: 1,
-                              }}
-                              title={staff.name}
-                            >
-                              {staff.name}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Gross Revenue Column (Doanh thu) */}
-                        <td
-                          style={{
-                            padding: "8px 12px",
-                            color: "#2563eb",
-                            fontWeight: "500",
-                            fontSize: "13px",
-                            verticalAlign: "middle",
-                            borderRight: "1px solid var(--border-color)",
-                            width: "27.5%",
-                          }}
-                        >
-                          {formatShortCurrency(staff.grossRevenue)}
-                        </td>
-
-                        {/* Net Revenue Column (Thu thực tế) */}
-                        <td
-                          style={{
-                            padding: "8px 12px",
-                            color: "#2563eb",
                             fontWeight: "600",
+                            color: nameColor,
                             fontSize: "13px",
-                            verticalAlign: "middle",
-                            width: "27.5%",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            minWidth: 0,
+                            flexShrink: 1,
                           }}
+                          title={staff.name}
                         >
-                          {formatShortCurrency(staff.netRevenue)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </React.Fragment>
-              ))
+                          {staff.name}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Gross Revenue Column (Doanh thu) */}
+                    <td
+                      style={{
+                        padding: "8px 12px",
+                        color: "#2563eb",
+                        fontWeight: "500",
+                        fontSize: "13px",
+                        verticalAlign: "middle",
+                        borderRight: "1px solid var(--border-color)",
+                        width: "27.5%",
+                      }}
+                    >
+                      {formatShortCurrency(staff.grossRevenue)}
+                    </td>
+
+                    {/* Net Revenue Column (Thu thực tế) */}
+                    <td
+                      style={{
+                        padding: "8px 12px",
+                        color: "#2563eb",
+                        fontWeight: "600",
+                        fontSize: "13px",
+                        verticalAlign: "middle",
+                        width: "27.5%",
+                      }}
+                    >
+                      {formatShortCurrency(staff.netRevenue)}
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
