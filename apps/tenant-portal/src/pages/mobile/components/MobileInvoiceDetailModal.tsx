@@ -1,4 +1,5 @@
 import React from "react";
+import { Banknote, CreditCard } from "lucide-react";
 import { Invoice } from "../../desktop/Invoices/types";
 
 interface MobileInvoiceDetailModalProps {
@@ -154,11 +155,24 @@ export default function MobileInvoiceDetailModal({
                     ? "badge-success"
                     : "badge-info"
                 }`}
-                style={{ fontSize: "11px" }}
+                style={{
+                  fontSize: "11px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
               >
-                {invoice.paymentMethod === "CASH"
-                  ? "💵 Tiền mặt"
-                  : "💳 Chuyển khoản"}
+                {invoice.paymentMethod === "CASH" ? (
+                  <>
+                    <Banknote size={12} />
+                    <span>Tiền mặt</span>
+                  </>
+                ) : (
+                  <>
+                    <CreditCard size={12} />
+                    <span>Tài khoản</span>
+                  </>
+                )}
               </span>
             </div>
           </div>

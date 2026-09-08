@@ -133,7 +133,7 @@ export default function Header() {
                 <span
                   style={{
                     fontWeight: "700",
-                    fontSize: "17px",
+                    fontSize: "16px",
                     color: "#ffffff",
                     maxWidth: "130px",
                     overflow: "hidden",
@@ -410,7 +410,7 @@ export default function Header() {
             >
               <span
                 style={{
-                  fontSize: "17px",
+                  fontSize: "16px",
                   color: "#ffffff",
                   fontWeight: "700",
                   whiteSpace: "nowrap",
@@ -434,7 +434,7 @@ export default function Header() {
           ) : (
             <span
               style={{
-                fontSize: "17px",
+                fontSize: "16px",
                 color: "#ffffff",
                 fontWeight: "700",
                 whiteSpace: "nowrap",

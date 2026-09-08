@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { Filter, Banknote, CreditCard, Search } from "lucide-react";
 import { Invoice } from "../../desktop/Invoices/types";
 import MultiStaffAvatar from "./MultiStaffAvatar";
 
@@ -119,7 +120,8 @@ export default function MobileInvoiceList({
               transition: "all 0.15s ease",
             }}
           >
-            <span>🔍 {showFilters ? "Ẩn lọc" : "Lọc"}</span>
+            <Filter size={13} />
+            <span>{showFilters ? "Ẩn lọc" : "Lọc"}</span>
             {hasActiveFilters && (
               <span
                 style={{
@@ -145,27 +147,48 @@ export default function MobileInvoiceList({
               animation: "fadeIn 0.2s ease-out",
             }}
           >
-            {/* Search input */}
-            <input
-              type="text"
-              className="form-input"
-              placeholder="🔍 Tìm theo tên nhân viên, dịch vụ, SĐT..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                height: "34px",
-                fontSize: "12.5px",
-                borderRadius: "var(--radius-full)",
-                padding: "0 14px",
-              }}
-            />
+            {/* Search input with Lucide Search */}
+            <div style={{ position: "relative", width: "100%" }}>
+              <Search
+                size={14}
+                style={{
+                  position: "absolute",
+                  left: "12px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#94a3b8",
+                }}
+              />
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Tìm theo tên nhân viên, dịch vụ, SĐT..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  height: "34px",
+                  fontSize: "12.5px",
+                  borderRadius: "var(--radius-full)",
+                  padding: "0 14px 0 34px",
+                  width: "100%",
+                }}
+              />
+            </div>
 
-            {/* Quick Filter chips */}
+            {/* Quick Filter chips with Lucide icons */}
             <div style={{ display: "flex", gap: "6px" }}>
               {[
-                { key: "ALL", label: "Tất cả" },
-                { key: "CASH", label: "💵 Tiền mặt" },
-                { key: "BANK_TRANSFER", label: "💳 Chuyển khoản" },
+                { key: "ALL", label: "Tất cả", icon: null },
+                {
+                  key: "CASH",
+                  label: "Tiền mặt",
+                  icon: <Banknote size={13} />,
+                },
+                {
+                  key: "BANK_TRANSFER",
+                  label: "Tài khoản",
+                  icon: <CreditCard size={13} />,
+                },
               ].map((item) => {
                 const isActive = filterPayment === item.key;
                 return (
@@ -174,7 +197,7 @@ export default function MobileInvoiceList({
                     onClick={() => setFilterPayment(item.key as any)}
                     style={{
                       fontSize: "11px",
-                      padding: "3px 10px",
+                      padding: "4px 10px",
                       borderRadius: "var(--radius-full)",
                       border: isActive
                         ? "1px solid var(--color-primary)"
@@ -187,10 +210,14 @@ export default function MobileInvoiceList({
                         : "var(--text-secondary)",
                       fontWeight: isActive ? "600" : "500",
                       cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "5px",
                       transition: "all 0.15s ease",
                     }}
                   >
-                    {item.label}
+                    {item.icon}
+                    <span>{item.label}</span>
                   </button>
                 );
               })}
@@ -351,8 +378,10 @@ export default function MobileInvoiceList({
                         flexShrink: 0,
                       }}
                     >
-                      {inv.paymentMethod === "BANK_TRANSFER" && (
-                        <span style={{ fontSize: "11px" }}>💳</span>
+                      {inv.paymentMethod === "BANK_TRANSFER" ? (
+                        <CreditCard size={13} color="#16a34a" />
+                      ) : (
+                        <Banknote size={13} color="#16a34a" />
                       )}
                       <span>{formatShortCurrency(inv.finalAmount)}</span>
                     </div>
