@@ -43,9 +43,20 @@ export class InvoiceController {
             select: {
               id: true,
               name: true,
+              avatar: true,
             },
           },
-          items: true,
+          items: {
+            include: {
+              stylist: {
+                select: {
+                  id: true,
+                  name: true,
+                  avatar: true,
+                },
+              },
+            },
+          },
         },
         orderBy: {
           createdAt: "desc",

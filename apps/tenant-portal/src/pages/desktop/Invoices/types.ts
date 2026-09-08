@@ -37,6 +37,7 @@ export interface InvoiceItem {
   stylist?: {
     id: string;
     name: string;
+    avatar?: string;
   };
 }
 

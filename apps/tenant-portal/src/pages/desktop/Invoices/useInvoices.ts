@@ -210,28 +210,39 @@ export function useInvoices() {
   // Selected Detail Invoice Modal
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
-  // Resolve item names from DB item ID & Type
+  // Resolve item names & staff details from DB item ID & Type
   const resolvedInvoices = useMemo((): Invoice[] => {
     return invoices.map((inv) => {
       const resolvedItems = inv.items?.map((item: InvoiceItem): InvoiceItem => {
-        if (item.name) return item;
-
-        let name = "Mặt hàng";
-        if (item.itemType === "SERVICE") {
-          const s = services.find((x) => x.id === item.itemId);
-          name = s ? s.name : "Dịch vụ";
-        } else if (item.itemType === "PRODUCT") {
-          const p = products.find((x) => x.id === item.itemId);
-          name = p ? p.name : "Sản phẩm";
-        } else if (item.itemType === "PACKAGE") {
-          const pkg = packages.find((x) => x.id === item.itemId);
-          name = pkg ? pkg.name : "Gói combo";
+        let name = item.name;
+        if (!name) {
+          if (item.itemType === "SERVICE") {
+            const s = services.find((x) => x.id === item.itemId);
+            name = s ? s.name : "Dịch vụ";
+          } else if (item.itemType === "PRODUCT") {
+            const p = products.find((x) => x.id === item.itemId);
+            name = p ? p.name : "Sản phẩm";
+          } else if (item.itemType === "PACKAGE") {
+            const pkg = packages.find((x) => x.id === item.itemId);
+            name = pkg ? pkg.name : "Gói combo";
+          } else {
+            name = "Mặt hàng";
+          }
         }
-        return { ...item, name };
+
+        let stylist = item.stylist;
+        if (!stylist && item.staffId) {
+          const st = activeStaff.find((s) => s.id === item.staffId);
+          if (st) {
+            stylist = { id: st.id, name: st.name, avatar: st.avatar };
+          }
+        }
+
+        return { ...item, name, stylist };
       });
       return { ...inv, items: resolvedItems || [] };
     });
-  }, [invoices, services, products, packages]);
+  }, [invoices, services, products, packages, activeStaff]);
 
   // Apply filters on the invoices list
   const filteredInvoices = useMemo(() => {

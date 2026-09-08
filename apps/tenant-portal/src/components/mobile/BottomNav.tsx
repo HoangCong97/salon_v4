@@ -4,6 +4,7 @@ import { NavLink } from "react-router-dom";
 export default function BottomNav() {
   const navItems = [
     { path: "/", label: "Lịch hẹn", icon: "📅" },
+    { path: "/invoices", label: "Hóa đơn", icon: "🧾" },
     { path: "/shifts", label: "Chấm công", icon: "⏰" },
     { path: "/profile", label: "Cá nhân", icon: "👤" },
   ];
