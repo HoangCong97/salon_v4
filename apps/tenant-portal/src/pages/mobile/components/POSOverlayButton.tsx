@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { ShoppingCart } from "lucide-react";
 
 export default function POSOverlayButton() {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ export default function POSOverlayButton() {
         e.currentTarget.style.transform = "scale(1)";
       }}
     >
-      <span style={{ fontSize: "18px" }}>🛒</span>
+      <ShoppingCart size={18} />
       <span>POS Bán hàng</span>
     </button>
   );

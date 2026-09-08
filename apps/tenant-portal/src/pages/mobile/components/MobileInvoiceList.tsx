@@ -378,10 +378,8 @@ export default function MobileInvoiceList({
                         flexShrink: 0,
                       }}
                     >
-                      {inv.paymentMethod === "BANK_TRANSFER" ? (
+                      {inv.paymentMethod === "BANK_TRANSFER" && (
                         <CreditCard size={13} color="#16a34a" />
-                      ) : (
-                        <Banknote size={13} color="#16a34a" />
                       )}
                       <span>{formatShortCurrency(inv.finalAmount)}</span>
                     </div>
