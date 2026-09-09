@@ -75,6 +75,8 @@ export interface InvoiceItemDetail {
   discountAmount: number;
   finalAmount: number;
   staffId: string | null;
+  staffName?: string | null;
+  staffAvatar?: string | null;
 }
 
 export interface InvoiceDetailItem {
@@ -87,6 +89,7 @@ export interface InvoiceDetailItem {
   paymentStatus: string;
   time: string;
   customerName: string;
+  cashierId?: string | null;
   cashierName: string;
   note: string;
   items: InvoiceItemDetail[];

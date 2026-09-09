@@ -1,11 +1,20 @@
 import React, { useMemo } from "react";
+import { X } from "lucide-react";
 import { Invoice, Staff } from "../../desktop/Invoices/types";
 import MultiStaffAvatar from "./MultiStaffAvatar";
 
 interface StaffDailyRevenueProps {
-  staffList: Staff[];
+  staffList?: Staff[];
   todayInvoices: Invoice[];
   isLoading?: boolean;
+  targetDateRaw?: string;
+  selectedStaffId?: string | null;
+  onSelectStaff?: (staffId: string | null) => void;
+  maxHeight?: string | number;
+  title?: string;
+  totalGross?: number;
+  totalNet?: number;
+  onClose?: () => void;
 }
 
 interface StaffRevenueItem {
@@ -48,14 +57,20 @@ export default function StaffDailyRevenueCard({
   staffList,
   todayInvoices,
   isLoading = false,
+  targetDateRaw,
+  selectedStaffId,
+  onSelectStaff,
+  maxHeight,
+  title,
+  totalGross,
+  totalNet,
+  onClose,
 }: StaffDailyRevenueProps) {
   const formatShortCurrency = (val: number) => {
     return new Intl.NumberFormat("vi-VN").format(val);
   };
 
-  // Aggregate revenue data for the selected day:
-  // If today has invoices -> show today
-  // If today has NO invoices -> show the most recent day with invoices
+  // Aggregate revenue data for the selected day or month:
   const selectedDayData = useMemo((): SelectedDaySummary => {
     const now = new Date();
     const nowDay = String(now.getDate()).padStart(2, "0");
@@ -64,7 +79,109 @@ export default function StaffDailyRevenueCard({
     const todayRaw = `${nowYear}-${nowMonth}-${nowDay}`;
     const todayDateStr = `${nowDay}/${nowMonth}/${nowYear}`;
 
-    // Group invoices by rawDate (YYYY-MM-DD)
+    // 1. Direct aggregation mode when title or targetDateRaw is explicitly given
+    if (title || targetDateRaw) {
+      const staffMap = new Map<string, StaffRevenueItem>();
+
+      todayInvoices.forEach((inv) => {
+        if (inv.items && inv.items.length > 0) {
+          inv.items.forEach((item) => {
+            const sId = item.staffId || item.stylist?.id;
+            const sName = item.stylist?.name || (item as any).staffName || "Nhân viên";
+
+            const gross = Number(item.price * item.quantity);
+            const net = Number(item.finalAmount ?? (gross - (item.discountAmount || 0)));
+
+            if (sId) {
+              const existing = staffMap.get(sId);
+              if (existing) {
+                existing.grossRevenue += gross;
+                existing.netRevenue += net;
+                existing.serviceCount += item.quantity || 1;
+              } else {
+                staffMap.set(sId, {
+                  id: sId,
+                  name: sName,
+                  avatar: item.stylist?.avatar || (item as any).staffAvatar || undefined,
+                  grossRevenue: gross,
+                  netRevenue: net,
+                  serviceCount: item.quantity || 1,
+                });
+              }
+            } else if (inv.cashierId) {
+              const cashierName = inv.cashier?.name || "Thu ngân";
+              const existing = staffMap.get(inv.cashierId);
+              if (existing) {
+                existing.grossRevenue += gross;
+                existing.netRevenue += net;
+                existing.serviceCount += item.quantity || 1;
+              } else {
+                staffMap.set(inv.cashierId, {
+                  id: inv.cashierId,
+                  name: cashierName,
+                  grossRevenue: gross,
+                  netRevenue: net,
+                  serviceCount: item.quantity || 1,
+                });
+              }
+            }
+          });
+        } else {
+          const cashierId = inv.cashierId || "UNKNOWN";
+          const cashierName = inv.cashier?.name || "Thu ngân";
+          const gross = Number(inv.totalPrice || inv.finalAmount || 0);
+          const net = Number(inv.finalAmount || 0);
+
+          const existing = staffMap.get(cashierId);
+          if (existing) {
+            existing.grossRevenue += gross;
+            existing.netRevenue += net;
+            existing.serviceCount += 1;
+          } else {
+            staffMap.set(cashierId, {
+              id: cashierId,
+              name: cashierName,
+              grossRevenue: gross,
+              netRevenue: net,
+              serviceCount: 1,
+            });
+          }
+        }
+      });
+
+      const staffArr = Array.from(staffMap.values()).sort(
+        (a, b) => b.netRevenue - a.netRevenue,
+      );
+
+      const computedGross = todayInvoices.reduce(
+        (sum, i) => sum + Number(i.totalPrice || 0),
+        0,
+      );
+      const computedNet = todayInvoices.reduce(
+        (sum, i) => sum + Number(i.finalAmount || 0),
+        0,
+      );
+
+      let resolvedTitle = title;
+      if (!resolvedTitle && targetDateRaw) {
+        const parts = targetDateRaw.split("-");
+        const dStr =
+          parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : targetDateRaw;
+        resolvedTitle = targetDateRaw === todayRaw ? "Hôm nay" : `Ngày ${dStr}`;
+      }
+
+      return {
+        title: resolvedTitle || "Hôm nay",
+        isToday: targetDateRaw === todayRaw,
+        dateStr: targetDateRaw || todayRaw,
+        rawDate: targetDateRaw || todayRaw,
+        totalGrossRevenue: totalGross !== undefined ? totalGross : computedGross,
+        totalNetRevenue: totalNet !== undefined ? totalNet : computedNet,
+        staffList: staffArr,
+      };
+    }
+
+    // 2. Default Invoices.tsx mode: group invoices by rawDate (YYYY-MM-DD)
     const dayMap = new Map<
       string,
       {
@@ -98,7 +215,7 @@ export default function StaffDailyRevenueCard({
       if (inv.items && inv.items.length > 0) {
         inv.items.forEach((item) => {
           const sId = item.staffId || item.stylist?.id;
-          const sName = item.stylist?.name || "Nhân viên";
+          const sName = item.stylist?.name || (item as any).staffName || "Nhân viên";
 
           const gross = Number(item.price * item.quantity);
           const net = Number(item.finalAmount ?? (gross - (item.discountAmount || 0)));
@@ -113,6 +230,7 @@ export default function StaffDailyRevenueCard({
               staffMap.set(sId, {
                 id: sId,
                 name: sName,
+                avatar: item.stylist?.avatar || (item as any).staffAvatar || undefined,
                 grossRevenue: gross,
                 netRevenue: net,
                 serviceCount: item.quantity || 1,
@@ -226,7 +344,7 @@ export default function StaffDailyRevenueCard({
       totalNetRevenue: 0,
       staffList: [],
     };
-  }, [todayInvoices]);
+  }, [todayInvoices, targetDateRaw, title, totalGross, totalNet]);
 
   return (
     <div
@@ -250,7 +368,7 @@ export default function StaffDailyRevenueCard({
           flexShrink: 0,
         }}
       >
-        {/* Column 1 (45%): Title ('Hôm nay' or 'Ngày dd/MM/yyyy') */}
+        {/* Column 1 (45%): Title ('Hôm nay' or 'Ngày dd/MM/yyyy' or 'Tháng MM/yyyy') */}
         <div
           style={{
             width: "45%",
@@ -292,14 +410,14 @@ export default function StaffDailyRevenueCard({
           </span>
         </div>
 
-        {/* Column 3 (27.5%): Total Net Revenue Badge (Thu thực tế) */}
+        {/* Column 3 (27.5%): Total Net Revenue Badge (Thu thực tế) + Optional [X] Close button */}
         <div
           style={{
             width: "27.5%",
             padding: "0 12px",
             display: "flex",
             alignItems: "center",
-            justifyContent: "flex-start",
+            justifyContent: onClose ? "space-between" : "flex-start",
           }}
         >
           <span
@@ -316,6 +434,32 @@ export default function StaffDailyRevenueCard({
           >
             {formatShortCurrency(selectedDayData.totalNetRevenue)}
           </span>
+
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                width: "24px",
+                height: "24px",
+                borderRadius: "9999px",
+                border: "none",
+                outline: "none",
+                background: "#f1f5f9",
+                color: "#64748b",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                padding: 0,
+                flexShrink: 0,
+                marginLeft: "4px",
+              }}
+              aria-label="Đóng modal"
+            >
+              <X size={14} strokeWidth={2.5} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -326,6 +470,7 @@ export default function StaffDailyRevenueCard({
           overflowY: "auto",
           display: "flex",
           flexDirection: "column",
+          maxHeight: maxHeight || undefined,
         }}
       >
         <table
@@ -414,17 +559,25 @@ export default function StaffDailyRevenueCard({
             ) : (
               selectedDayData.staffList.map((staff) => {
                 const nameColor = getNameColor(staff.name);
-                const matchingStaffObj = staffList.find(
+                const matchingStaffObj = staffList?.find(
                   (s) => s.id === staff.id,
                 );
-                const avatarUrl = matchingStaffObj?.avatar;
+                const avatarUrl = matchingStaffObj?.avatar || staff.avatar;
+                const isSelected = selectedStaffId === staff.id;
 
                 return (
                   <tr
                     key={staff.id}
+                    onClick={() => {
+                      if (onSelectStaff) {
+                        onSelectStaff(isSelected ? null : staff.id);
+                      }
+                    }}
                     style={{
                       borderBottom: "1px solid var(--border-color)",
-                      background: "white",
+                      background: isSelected ? "#eff6ff" : "white",
+                      cursor: onSelectStaff ? "pointer" : "default",
+                      transition: "background-color 0.15s ease",
                     }}
                   >
                     {/* Staff Column: Avatar + Name */}
@@ -456,21 +609,43 @@ export default function StaffDailyRevenueCard({
                           ]}
                           size={28}
                         />
-                        <span
+                        <div
                           style={{
-                            fontWeight: "600",
-                            color: nameColor,
-                            fontSize: "13px",
-                            whiteSpace: "nowrap",
+                            display: "flex",
+                            flexDirection: "column",
                             overflow: "hidden",
-                            textOverflow: "ellipsis",
                             minWidth: 0,
                             flexShrink: 1,
                           }}
-                          title={staff.name}
                         >
-                          {staff.name}
-                        </span>
+                          <span
+                            style={{
+                              fontWeight: "600",
+                              color: isSelected ? "#1d4ed8" : nameColor,
+                              fontSize: "13px",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              minWidth: 0,
+                            }}
+                            title={staff.name}
+                          >
+                            {staff.name}
+                          </span>
+                          {isSelected && (
+                            <span
+                              style={{
+                                fontSize: "10px",
+                                color: "#2563eb",
+                                fontWeight: "600",
+                                lineHeight: "1",
+                                marginTop: "2px",
+                              }}
+                            >
+                              ✓ Đang lọc
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
 

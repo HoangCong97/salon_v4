@@ -234,7 +234,11 @@ export class DashboardController {
           include: {
             customer: { select: { id: true, name: true, phone: true } },
             cashier: { select: { id: true, name: true } },
-            items: true,
+            items: {
+              include: {
+                stylist: { select: { id: true, name: true, avatar: true } },
+              },
+            },
           },
           orderBy: { createdAt: "asc" }, // Order asc to align with daily aggregation order
         }),
@@ -498,6 +502,7 @@ export class DashboardController {
               paymentStatus: inv.paymentStatus,
               time: timeStr,
               customerName: inv.customer?.name || "Khách vãng lai",
+              cashierId: inv.staffId || inv.cashier?.id || null,
               cashierName: inv.cashier?.name || "Hệ thống",
               note: inv.note || "",
               items: inv.items.map((item) => ({
@@ -511,6 +516,8 @@ export class DashboardController {
                 discountAmount: Number(item.discountAmount),
                 finalAmount: Number(item.finalAmount),
                 staffId: item.staffId,
+                staffName: (item as any).stylist?.name || null,
+                staffAvatar: (item as any).stylist?.avatar || null,
               })),
             };
           });

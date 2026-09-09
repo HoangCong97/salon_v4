@@ -452,6 +452,7 @@ export default function MobilePOS() {
   useEffect(() => {
     try {
       localStorage.setItem("pos_mobile_cart", JSON.stringify(cart));
+      window.dispatchEvent(new Event("pos_cart_updated"));
     } catch {}
   }, [cart]);
 
@@ -873,13 +874,13 @@ export default function MobilePOS() {
             flexShrink: 0,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            <Users size={13} color="#2563eb" />
-            <span style={{ fontSize: "12px", fontWeight: "700", color: "#1e293b" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <Users size={16} color="#2563eb" />
+            <span style={{ fontSize: "15px", fontWeight: "700", color: "#1e293b" }}>
               Nhân viên phục vụ
             </span>
           </div>
-          <span style={{ fontSize: "11px", color: "#64748b" }}>
+          <span style={{ fontSize: "12px", color: "#64748b" }}>
             {staffList.length} thợ
           </span>
         </div>
@@ -912,7 +913,7 @@ export default function MobilePOS() {
                   background: isSelected ? empColor : "#ffffff",
                   color: isSelected ? "#ffffff" : empColor,
                   fontWeight: isSelected ? "700" : "600",
-                  fontSize: "12px",
+                  fontSize: "13px",
                   cursor: "pointer",
                   transition: "all 0.15s ease",
                   textAlign: "left",

@@ -2,6 +2,7 @@ Folder PATH listing with descriptions
 C:.
 +---.agents  <-- Thư mục cấu hình và tài liệu quy chuẩn cho AI Agent
 |   +---AI_CONTEXT.md  <-- Bản đồ tổng quan dự án và các luồng nghiệp vụ chính
+|   +---project_structure.txt
 |   +---rules  <-- Tập hợp các quy chuẩn lập trình chuyên sâu (Backend, Frontend, Database, Monorepo)
 |   |   +---backend_rule.md
 |   |   +---database_rule.md
@@ -120,6 +121,8 @@ C:.
 |       +---.env
 |       +---index.html
 |       +---package.json
+|       +---postcss.config.cjs
+|       +---postcss.config.js
 |       +---public
 |       |   +---favicon.png
 |       |   \---manifest.json
@@ -288,17 +291,28 @@ C:.
 |       |   |       |   +---index.tsx
 |       |   |       |   \---MobilePOSReceiptModal.tsx
 |       |   |       +---Profile.tsx
+|       |   |       +---Revenue
+|       |   |       |   +---components
+|       |   |       |   |   +---DailyInvoicesModal.tsx
+|       |   |       |   |   +---RevenueCalendarPanel.tsx
+|       |   |       |   |   \---RevenueMonthlyChartPanel.tsx
+|       |   |       |   +---index.tsx
+|       |   |       |   +---types.ts
+|       |   |       |   \---useMobileRevenue.ts
 |       |   |       +---Schedule.tsx
 |       |   |       \---ShiftTasks.tsx
 |       |   +---routes
 |       |   |   \---AdaptiveRouter.tsx
 |       |   +---store
 |       |   |   \---useAuthStore.ts
+|       |   +---tailwind.css
 |       |   +---utils
 |       |   |   +---apiClient.ts
 |       |   |   +---exportData.ts
 |       |   |   \---queryKeys.ts
 |       |   \---vite-env.d.ts
+|       +---tailwind.config.cjs
+|       +---tailwind.config.js
 |       +---tsconfig.json
 |       \---vite.config.ts
 +---GEMINI.md  <-- Quy tắc chỉ dẫn toàn cục cho AI Agent tại workspace root

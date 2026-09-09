@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import "./index.css";
+import "./tailwind.css";
 
 /**
  * TanStack Query Client - Cấu hình cache tối ưu cho PWA Mobile & Desktop.

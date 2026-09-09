@@ -37,6 +37,7 @@ import ShiftTasks from "../pages/mobile/ShiftTasks";
 import Profile from "../pages/mobile/Profile";
 import MobileInvoicesPage from "../pages/mobile/Invoices";
 import MobilePOS from "../pages/mobile/POS";
+import MobileRevenuePage from "../pages/mobile/Revenue";
 
 // Custom Screen Size Hook
 function useWindowWidth() {
@@ -77,6 +78,7 @@ export default function AdaptiveRouter() {
           <Route element={<MobileLayout />}>
             <Route path="/" element={<Schedule />} />
             <Route path="/invoices" element={<MobileInvoicesPage />} />
+            <Route path="/revenue" element={<MobileRevenuePage />} />
             <Route path="/pos" element={<MobilePOS />} />
             <Route path="/shifts" element={<ShiftTasks />} />
             <Route path="/profile" element={<Profile />} />

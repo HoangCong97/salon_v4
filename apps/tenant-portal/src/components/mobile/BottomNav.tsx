@@ -1,11 +1,12 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Calendar, Receipt, Clock, User } from "lucide-react";
+import { Calendar, Receipt, TrendingUp, Clock, User } from "lucide-react";
 
 export default function BottomNav() {
   const navItems = [
     { path: "/", label: "Lịch hẹn", icon: Calendar },
     { path: "/invoices", label: "Hóa đơn", icon: Receipt },
+    { path: "/revenue", label: "Doanh thu", icon: TrendingUp },
     { path: "/shifts", label: "Chấm công", icon: Clock },
     { path: "/profile", label: "Cá nhân", icon: User },
   ];
