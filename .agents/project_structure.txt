@@ -1,10 +1,29 @@
 Folder PATH listing with descriptions
 C:.
++---.agents  <-- Thư mục cấu hình và tài liệu quy chuẩn cho AI Agent
+|   +---AI_CONTEXT.md  <-- Bản đồ tổng quan dự án và các luồng nghiệp vụ chính
+|   +---rules  <-- Tập hợp các quy chuẩn lập trình chuyên sâu (Backend, Frontend, Database, Monorepo)
+|   |   +---backend_rule.md
+|   |   +---database_rule.md
+|   |   +---frontend_rule.md
+|   |   \---monorepo_rule.md
+|   +---scripts
+|   |   \---generate_tree.js
+|   \---skills  <-- Tập hợp các kỹ năng và quy trình tự động hóa tác vụ cho AI Agent
+|       +---salon-db-migration
+|       |   \---SKILL.md
+|       +---salon-feature-builder
+|       |   \---SKILL.md
+|       +---salon-realtime-sync
+|       |   \---SKILL.md
+|       \---salon-ui-atomic
+|           \---SKILL.md
 +---.cursorrules
 +---.env
 +---.gitignore
-+---apps  <-- Thư mục chứa các ứng dụng độc lập trong hệ thống
-|   +---backend-api  <-- Dịch vụ Backend API sử dụng NestJS và Prisma
++---apps  <-- Thư mục chứa các ứng dụng độc lập trong hệ thống Monorepo
+|   +---backend-api  <-- Dịch vụ Backend API Gateway sử dụng NestJS và Prisma
+|   |   +---.env
 |   |   +---nest-cli.json
 |   |   +---package.json
 |   |   +---src  <-- Mã nguồn chính của backend NestJS
@@ -16,8 +35,9 @@ C:.
 |   |   |   +---branch.controller.ts
 |   |   |   +---customer-portal.controller.ts
 |   |   |   +---customer.controller.ts
+|   |   |   +---dashboard.controller.ts
 |   |   |   +---file-utils.ts
-|   |   |   +---import-engine  <-- Module import dữ liệu từ Excel/CSV
+|   |   |   +---import-engine
 |   |   |   |   +---import-engine.controller.ts
 |   |   |   |   +---import-engine.module.ts
 |   |   |   |   +---import-engine.service.ts
@@ -26,6 +46,7 @@ C:.
 |   |   |   |   \---strategies
 |   |   |   |       +---base-import.strategy.ts
 |   |   |   |       +---customer-import.strategy.ts
+|   |   |   |       +---inventory-import.strategy.ts
 |   |   |   |       +---payroll-import.strategy.ts
 |   |   |   |       +---service-import.strategy.ts
 |   |   |   |       \---staff-import.strategy.ts
@@ -34,176 +55,18 @@ C:.
 |   |   |   +---load-env.ts
 |   |   |   +---main.ts
 |   |   |   +---notification.gateway.ts
+|   |   |   +---notification.module.ts
 |   |   |   +---payroll.controller.ts
 |   |   |   +---service-category.controller.ts
 |   |   |   +---service.controller.ts
 |   |   |   +---shifts.controller.ts
-|   |   |   +---staff.controller.ts  <-- API quản lý nhân viên và phân quyền chức vụ
+|   |   |   +---staff.controller.ts
 |   |   |   +---super-admin.controller.ts
 |   |   |   +---tenant-subscription.controller.ts
-|   |   |   \---turns.controller.ts  <-- API quản lý hàng đợi và lượt xoay tua thợ
-|   |   +---tsconfig.json
-|   |   \---uploads
-|   +---customer-booking  <-- Cổng đặt lịch hẹn online cho khách hàng (React/Next.js)
-|   |   +---.next
-|   |   |   +---app-build-manifest.json
-|   |   |   +---app-path-routes-manifest.json
-|   |   |   +---build-manifest.json
-|   |   |   +---BUILD_ID
-|   |   |   +---cache
-|   |   |   |   +---.tsbuildinfo
-|   |   |   |   +---swc
-|   |   |   |   |   \---plugins
-|   |   |   |   |       \---v7_windows_x86_64_0.106.15
-|   |   |   |   \---webpack
-|   |   |   |       +---client-development
-|   |   |   |       |   +---0.pack.gz
-|   |   |   |       |   +---1.pack.gz
-|   |   |   |       |   +---2.pack.gz
-|   |   |   |       |   +---index.pack.gz
-|   |   |   |       |   \---index.pack.gz.old
-|   |   |   |       +---client-production
-|   |   |   |       |   +---0.pack
-|   |   |   |       |   +---1.pack
-|   |   |   |       |   +---2.pack
-|   |   |   |       |   +---3.pack
-|   |   |   |       |   +---4.pack
-|   |   |   |       |   +---5.pack
-|   |   |   |       |   +---6.pack
-|   |   |   |       |   +---7.pack
-|   |   |   |       |   +---8.pack
-|   |   |   |       |   +---index.pack
-|   |   |   |       |   \---index.pack.old
-|   |   |   |       +---edge-server-production
-|   |   |   |       |   +---0.pack
-|   |   |   |       |   \---index.pack
-|   |   |   |       +---server-development
-|   |   |   |       |   +---0.pack.gz
-|   |   |   |       |   +---1.pack.gz
-|   |   |   |       |   +---index.pack.gz
-|   |   |   |       |   \---index.pack.gz.old
-|   |   |   |       \---server-production
-|   |   |   |           +---0.pack
-|   |   |   |           +---1.pack
-|   |   |   |           +---2.pack
-|   |   |   |           +---index.pack
-|   |   |   |           \---index.pack.old
-|   |   |   +---export-marker.json
-|   |   |   +---images-manifest.json
-|   |   |   +---next-minimal-server.js.nft.json
-|   |   |   +---next-server.js.nft.json
-|   |   |   +---package.json
-|   |   |   +---prerender-manifest.json
-|   |   |   +---react-loadable-manifest.json
-|   |   |   +---required-server-files.json
-|   |   |   +---routes-manifest.json
-|   |   |   +---server
-|   |   |   |   +---app
-|   |   |   |   |   +---booking
-|   |   |   |   |   |   +---page.js
-|   |   |   |   |   |   +---page.js.nft.json
-|   |   |   |   |   |   \---page_client-reference-manifest.js
-|   |   |   |   |   +---booking.html
-|   |   |   |   |   +---booking.meta
-|   |   |   |   |   +---booking.rsc
-|   |   |   |   |   +---index.html
-|   |   |   |   |   +---index.meta
-|   |   |   |   |   +---index.rsc
-|   |   |   |   |   +---page.js
-|   |   |   |   |   +---page.js.nft.json
-|   |   |   |   |   +---page_client-reference-manifest.js
-|   |   |   |   |   +---profile
-|   |   |   |   |   |   +---page.js
-|   |   |   |   |   |   +---page.js.nft.json
-|   |   |   |   |   |   \---page_client-reference-manifest.js
-|   |   |   |   |   +---profile.html
-|   |   |   |   |   +---profile.meta
-|   |   |   |   |   +---profile.rsc
-|   |   |   |   |   +---reviews
-|   |   |   |   |   |   \---[bookingId]
-|   |   |   |   |   |       +---page.js
-|   |   |   |   |   |       +---page.js.nft.json
-|   |   |   |   |   |       \---page_client-reference-manifest.js
-|   |   |   |   |   +---_not-found
-|   |   |   |   |   |   +---page.js
-|   |   |   |   |   |   +---page.js.nft.json
-|   |   |   |   |   |   \---page_client-reference-manifest.js
-|   |   |   |   |   +---_not-found.html
-|   |   |   |   |   +---_not-found.meta
-|   |   |   |   |   \---_not-found.rsc
-|   |   |   |   +---app-paths-manifest.json
-|   |   |   |   +---chunks
-|   |   |   |   |   +---192.js
-|   |   |   |   |   +---817.js
-|   |   |   |   |   \---font-manifest.json
-|   |   |   |   +---font-manifest.json
-|   |   |   |   +---functions-config-manifest.json
-|   |   |   |   +---interception-route-rewrite-manifest.js
-|   |   |   |   +---middleware-build-manifest.js
-|   |   |   |   +---middleware-manifest.json
-|   |   |   |   +---middleware-react-loadable-manifest.js
-|   |   |   |   +---next-font-manifest.js
-|   |   |   |   +---next-font-manifest.json
-|   |   |   |   +---pages
-|   |   |   |   |   +---404.html
-|   |   |   |   |   +---500.html
-|   |   |   |   |   +---_app.js
-|   |   |   |   |   +---_app.js.nft.json
-|   |   |   |   |   +---_document.js
-|   |   |   |   |   +---_document.js.nft.json
-|   |   |   |   |   +---_error.js
-|   |   |   |   |   \---_error.js.nft.json
-|   |   |   |   +---pages-manifest.json
-|   |   |   |   +---server-reference-manifest.js
-|   |   |   |   +---server-reference-manifest.json
-|   |   |   |   \---webpack-runtime.js
-|   |   |   +---static
-|   |   |   |   +---chunks
-|   |   |   |   |   +---5b8f0dd8-ad9fed7343be880c.js
-|   |   |   |   |   +---650-22fec19037a4a49c.js
-|   |   |   |   |   +---749-a20ba88926d9cd60.js
-|   |   |   |   |   +---app
-|   |   |   |   |   |   +---booking
-|   |   |   |   |   |   |   \---page-87bce4090d40db56.js
-|   |   |   |   |   |   +---layout-6418c0031f70a84c.js
-|   |   |   |   |   |   +---page-69efb36c8e402285.js
-|   |   |   |   |   |   +---profile
-|   |   |   |   |   |   |   \---page-34765a908607253c.js
-|   |   |   |   |   |   +---reviews
-|   |   |   |   |   |   |   \---[bookingId]
-|   |   |   |   |   |   |       \---page-abfdd472ebf02f17.js
-|   |   |   |   |   |   \---_not-found
-|   |   |   |   |   |       \---page-68e911df6dea8e73.js
-|   |   |   |   |   +---framework-bef83a85c94ff7de.js
-|   |   |   |   |   +---main-430350b09e6c3664.js
-|   |   |   |   |   +---main-app-6271999a8dce74f8.js
-|   |   |   |   |   +---pages
-|   |   |   |   |   |   +---_app-32ee63fa91347547.js
-|   |   |   |   |   |   \---_error-79ee453ce9bad74d.js
-|   |   |   |   |   +---polyfills-42372ed130431b0a.js
-|   |   |   |   |   +---polyfills.js
-|   |   |   |   |   \---webpack-ea02740f160b546a.js
-|   |   |   |   +---CJMd94EjVjFUk3S69_oX4
-|   |   |   |   |   +---_buildManifest.js
-|   |   |   |   |   \---_ssgManifest.js
-|   |   |   |   +---css
-|   |   |   |   |   \---528a41e3cf0a0946.css
-|   |   |   |   \---development
-|   |   |   |       +---_buildManifest.js
-|   |   |   |       \---_ssgManifest.js
-|   |   |   +---trace
-|   |   |   \---types
-|   |   |       +---app
-|   |   |       |   +---booking
-|   |   |       |   |   \---page.ts
-|   |   |       |   +---layout.ts
-|   |   |       |   +---page.ts
-|   |   |       |   +---profile
-|   |   |       |   |   \---page.ts
-|   |   |       |   \---reviews
-|   |   |       |       \---[bookingId]
-|   |   |       |           \---page.ts
-|   |   |       \---package.json
+|   |   |   \---turns.controller.ts
+|   |   \---tsconfig.json
+|   +---customer-booking  <-- Cổng đặt lịch hẹn online cho khách hàng (React / Next.js App Router)
+|   |   +---.env
 |   |   +---next-env.d.ts
 |   |   +---next.config.js
 |   |   +---package.json
@@ -222,7 +85,8 @@ C:.
 |   |   |           \---[bookingId]
 |   |   |               \---page.tsx
 |   |   \---tsconfig.json
-|   +---internal-admin  <-- Trang quản trị SaaS dành cho Super Admin quản lý gói đăng ký
+|   +---internal-admin  <-- Trang quản trị SaaS dành cho Super Admin
+|   |   +---.env
 |   |   +---index.html
 |   |   +---package.json
 |   |   +---src
@@ -252,9 +116,13 @@ C:.
 |   |   |           \---types.ts
 |   |   +---tsconfig.json
 |   |   \---vite.config.ts
-|   \---tenant-portal  <-- Ứng dụng quản trị Salon cho chủ salon/quản lý (React + Vite)
+|   \---tenant-portal  <-- Ứng dụng quản trị Salon cho Chủ salon / Quản lý / Thu ngân (React + Vite)
+|       +---.env
 |       +---index.html
 |       +---package.json
+|       +---public
+|       |   +---favicon.png
+|       |   \---manifest.json
 |       +---src
 |       |   +---App.tsx
 |       |   +---components
@@ -262,6 +130,7 @@ C:.
 |       |   |   |   +---AlertDialog.tsx
 |       |   |   |   +---ConfirmDialog.tsx
 |       |   |   |   +---ExportButton.tsx
+|       |   |   |   +---ImportButton.tsx
 |       |   |   |   +---ImportWizard
 |       |   |   |   |   +---ColumnMapper.tsx
 |       |   |   |   |   +---FileUploader.tsx
@@ -271,15 +140,25 @@ C:.
 |       |   |   |   +---TableComponents.tsx
 |       |   |   |   +---ToastProvider.tsx
 |       |   |   |   +---Topbar.tsx
-|       |   |   |   \---ui  <-- Thư mục chứa các component nguyên tử dùng chung cho Desktop (Button, Input, Modal, Tooltip)
+|       |   |   |   \---ui
 |       |   |   |       +---Button.module.css
-|       |   |   |       +---Button.tsx  <-- Component Button tái sử dụng dùng CSS Modules
+|       |   |   |       +---Button.tsx
+|       |   |   |       +---DragOverlay.module.css
+|       |   |   |       +---DragOverlay.tsx
+|       |   |   |       +---EmptyState.module.css
+|       |   |   |       +---EmptyState.tsx
+|       |   |   |       +---ErrorState.module.css
+|       |   |   |       +---ErrorState.tsx
 |       |   |   |       +---Input.module.css
-|       |   |   |       +---Input.tsx  <-- Component Input tái sử dụng dùng CSS Modules
+|       |   |   |       +---Input.tsx
+|       |   |   |       +---LoadingState.module.css
+|       |   |   |       +---LoadingState.tsx
 |       |   |   |       +---Modal.module.css
-|       |   |   |       +---Modal.tsx  <-- Component Modal tái sử dụng dùng CSS Modules
+|       |   |   |       +---Modal.tsx
+|       |   |   |       +---PageHeader.module.css
+|       |   |   |       +---PageHeader.tsx
 |       |   |   |       +---Tooltip.module.css
-|       |   |   |       \---Tooltip.tsx  <-- Component Tooltip tái sử dụng dùng CSS Modules
+|       |   |   |       \---Tooltip.tsx
 |       |   |   \---mobile
 |       |   |       +---BottomNav.tsx
 |       |   |       \---Header.tsx
@@ -296,61 +175,82 @@ C:.
 |       |   +---pages
 |       |   |   +---desktop
 |       |   |   |   +---Appointments
+|       |   |   |   |   +---Appointments.module.css
 |       |   |   |   |   +---constants.ts
 |       |   |   |   |   +---GridServiceCard.tsx
 |       |   |   |   |   +---helpers.ts
 |       |   |   |   |   +---index.tsx
 |       |   |   |   |   +---ServiceModal.tsx
-|       |   |   |   |   \---types.ts
+|       |   |   |   |   +---types.ts
+|       |   |   |   |   \---useAppointments.ts
 |       |   |   |   +---AttendanceCalendar
+|       |   |   |   |   +---AttendanceCalendar.module.css
 |       |   |   |   |   +---components
 |       |   |   |   |   |   +---AttendanceGrid.tsx
 |       |   |   |   |   |   +---AttendanceHeader.tsx
 |       |   |   |   |   |   +---AttendanceLegend.tsx
 |       |   |   |   |   |   \---AttendanceModal.tsx
 |       |   |   |   |   +---index.tsx
-|       |   |   |   |   \---types.ts
+|       |   |   |   |   +---types.ts
+|       |   |   |   |   \---useAttendance.ts
 |       |   |   |   +---Branches
 |       |   |   |   |   +---BranchCard.tsx
+|       |   |   |   |   +---Branches.module.css
 |       |   |   |   |   +---BranchModal.tsx
 |       |   |   |   |   +---BrandCard.tsx
 |       |   |   |   |   +---BrandModal.tsx
 |       |   |   |   |   +---index.tsx
-|       |   |   |   |   \---types.ts
+|       |   |   |   |   +---types.ts
+|       |   |   |   |   \---useBranches.ts
 |       |   |   |   +---Customers
 |       |   |   |   |   +---CustomerFormModal.tsx
+|       |   |   |   |   +---Customers.module.css
 |       |   |   |   |   +---CustomerTable.tsx
 |       |   |   |   |   +---index.tsx
-|       |   |   |   |   \---types.ts
+|       |   |   |   |   +---types.ts
+|       |   |   |   |   \---useCustomers.ts
 |       |   |   |   +---Dashboard
 |       |   |   |   |   +---components
 |       |   |   |   |   |   +---DailyTurns.tsx
+|       |   |   |   |   |   +---DashboardChart.tsx
 |       |   |   |   |   |   +---DashboardStats.tsx
 |       |   |   |   |   |   +---PricingModal.tsx
 |       |   |   |   |   |   +---RecentBookings.tsx
-|       |   |   |   |   |   \---SubscriptionCard.tsx
-|       |   |   |   |   \---index.tsx
+|       |   |   |   |   |   +---StaffAndServiceStats.tsx
+|       |   |   |   |   |   +---SubscriptionCard.tsx
+|       |   |   |   |   |   \---TableSectionHeader.tsx
+|       |   |   |   |   +---Dashboard.module.css
+|       |   |   |   |   +---index.tsx
+|       |   |   |   |   +---types.ts
+|       |   |   |   |   \---useDashboardStats.ts
 |       |   |   |   +---Inventories
 |       |   |   |   |   +---components
 |       |   |   |   |   |   +---InventoryHeader.tsx
 |       |   |   |   |   |   +---InventoryModal.tsx
 |       |   |   |   |   |   \---InventoryTable.tsx
 |       |   |   |   |   +---index.tsx
-|       |   |   |   |   \---types.ts
+|       |   |   |   |   +---Inventories.module.css
+|       |   |   |   |   +---types.ts
+|       |   |   |   |   \---useInventories.ts
 |       |   |   |   +---Invoices
 |       |   |   |   |   +---index.tsx
 |       |   |   |   |   +---InvoiceDetailModal.tsx
 |       |   |   |   |   +---InvoiceFilter.tsx
+|       |   |   |   |   +---Invoices.module.css
 |       |   |   |   |   +---InvoiceSummary.tsx
-|       |   |   |   |   \---InvoiceTable.tsx
+|       |   |   |   |   +---InvoiceTable.tsx
+|       |   |   |   |   +---types.ts
+|       |   |   |   |   \---useInvoices.ts
 |       |   |   |   +---Payroll
 |       |   |   |   |   +---components
 |       |   |   |   |   |   +---PayrollHeader.tsx
 |       |   |   |   |   |   \---PayrollTable.tsx
 |       |   |   |   |   +---index.tsx
+|       |   |   |   |   +---Payroll.module.css
 |       |   |   |   |   \---types.ts
 |       |   |   |   +---POS
 |       |   |   |   |   +---index.tsx
+|       |   |   |   |   +---POS.module.css
 |       |   |   |   |   +---POSLeftPanel.tsx
 |       |   |   |   |   +---POSReceiptModal.tsx
 |       |   |   |   |   \---POSRightPanel.tsx
@@ -360,21 +260,33 @@ C:.
 |       |   |   |   |   +---CustomNumberInput.tsx
 |       |   |   |   |   +---index.tsx
 |       |   |   |   |   +---ServiceFormModal.tsx
+|       |   |   |   |   +---Services.module.css
 |       |   |   |   |   +---ServiceTable.tsx
 |       |   |   |   |   \---types.ts
 |       |   |   |   +---Shifts.tsx
-|       |   |   |   \---StaffManagement  <-- Trang quản lý nhân viên, chức vụ, xoay tua thợ
+|       |   |   |   \---StaffManagement
 |       |   |   |       +---AddStaffToQueueModal.tsx
 |       |   |   |       +---DailyTurnsTable.tsx
-|       |   |   |       +---index.tsx  <-- Giao diện chính hiển thị StaffManagement (đã refactor tinh gọn)
+|       |   |   |       +---index.tsx
 |       |   |   |       +---RoleModal.tsx
 |       |   |   |       +---RolePermissionPanel.tsx
 |       |   |   |       +---StaffFormModal.tsx
+|       |   |   |       +---StaffManagement.module.css
 |       |   |   |       +---StaffTable.tsx
 |       |   |   |       +---types.ts
-|       |   |   |       \---useStaffManagement.ts  <-- Custom Hook chứa logic nghiệp vụ và state của StaffManagement
+|       |   |   |       \---useStaffManagement.ts
 |       |   |   +---Login.tsx
 |       |   |   \---mobile
+|       |   |       +---components
+|       |   |       |   +---MobileInvoiceDetailModal.tsx
+|       |   |       |   +---MobileInvoiceList.tsx
+|       |   |       |   +---MultiStaffAvatar.tsx
+|       |   |       |   +---POSOverlayButton.tsx
+|       |   |       |   \---StaffDailyRevenueCard.tsx
+|       |   |       +---Invoices.tsx
+|       |   |       +---POS
+|       |   |       |   +---index.tsx
+|       |   |       |   \---MobilePOSReceiptModal.tsx
 |       |   |       +---Profile.tsx
 |       |   |       +---Schedule.tsx
 |       |   |       \---ShiftTasks.tsx
@@ -389,9 +301,10 @@ C:.
 |       |   \---vite-env.d.ts
 |       +---tsconfig.json
 |       \---vite.config.ts
++---GEMINI.md  <-- Quy tắc chỉ dẫn toàn cục cho AI Agent tại workspace root
 +---package.json
 +---packages  <-- Thư mục chứa các package dùng chung toàn dự án
-|   +---database  <-- Package quản lý kết nối cơ sở dữ liệu và Schema Prisma
+|   +---database  <-- Package quản lý kết nối CSDL và Prisma Schema (@salon/database)
 |   |   +---.env
 |   |   +---package.json
 |   |   +---prisma
@@ -400,12 +313,12 @@ C:.
 |   |   +---src
 |   |   |   \---index.ts
 |   |   \---tsconfig.json
-|   +---shared-types  <-- Các kiểu dữ liệu (TypeScript Interfaces) dùng chung
+|   +---shared-types  <-- Các khai báo kiểu dữ liệu (TypeScript Interfaces) dùng chung (@salon/shared-types)
 |   |   +---package.json
 |   |   +---src
 |   |   |   \---index.ts
 |   |   \---tsconfig.json
-|   \---shared-utils  <-- Các hàm tiện ích chia sẻ toàn hệ thống
+|   \---shared-utils  <-- Các hàm tiện ích chia sẻ toàn hệ thống (@salon/shared-utils)
 |       +---package.json
 |       +---src
 |       |   +---index.ts
