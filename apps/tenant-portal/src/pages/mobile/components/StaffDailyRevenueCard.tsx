@@ -467,6 +467,7 @@ export default function StaffDailyRevenueCard({
       <div
         style={{
           flexGrow: 1,
+          minHeight: 0,
           overflowY: "auto",
           display: "flex",
           flexDirection: "column",

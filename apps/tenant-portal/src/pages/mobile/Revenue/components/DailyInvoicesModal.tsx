@@ -198,18 +198,15 @@ export const DailyInvoicesModal: React.FC<DailyInvoicesModalProps> = ({
             isClosing ? "animate-revenue-slide-down" : "animate-revenue-slide-up"
           }`}
         >
-          {/* Header Bar with Title, Pill Handle and Close button */}
-          <div className="relative shrink-0 flex items-center justify-between px-3.5 py-2 bg-slate-50 border-b border-slate-200">
-            <div className="flex items-center gap-1">
-              <span className="text-[13.5px] font-bold text-slate-800">
+          {/* Header Bar with Title and Close button */}
+          <div className="shrink-0 flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+            <div className="flex items-center gap-1.5 min-w-0 pr-2">
+              <span className="text-[16px] sm:text-[17px] font-bold text-slate-800 truncate">
                 {selectedDay
                   ? `Chi tiết ngày ${formatDayLabel(selectedDay.dateRaw)}`
                   : `Chi tiết tháng ${formatMonthLabel(selectedMonth?.yearMonth)}`}
               </span>
             </div>
-
-            {/* Centered pill handle */}
-            <div className="w-9 h-1 rounded-full bg-slate-300 mx-auto" />
 
             {/* Circular close button */}
             <button
@@ -237,11 +234,11 @@ export const DailyInvoicesModal: React.FC<DailyInvoicesModalProps> = ({
             </div>
           )}
 
-          {/* ================= TRƯỜNG HỢP 2: CHI TIẾT NGÀY (HIỆN CẢ BẢNG NHÂN VIÊN VÀ DANH SÁCH HÓA ĐƠN) ================= */}
+          {/* ================= TRƯỜNG HỢP 2: CHI TIẾT NGÀY (LAYOUT 2 PANEL CHIA 5/5) ================= */}
           {selectedDay && (
             <>
-              {/* TOP SECTION: Kế thừa StaffDailyRevenueCard */}
-              <div className="shrink-0 flex flex-col bg-white">
+              {/* TOP SECTION (5/5): StaffDailyRevenueCard */}
+              <div className="flex-1 min-h-0 flex flex-col bg-white overflow-hidden">
                 <StaffDailyRevenueCard
                   title={modalTitle}
                   todayInvoices={allInvoices}
@@ -250,38 +247,39 @@ export const DailyInvoicesModal: React.FC<DailyInvoicesModalProps> = ({
                   staffList={staffList}
                   selectedStaffId={selectedStaffId}
                   onSelectStaff={setSelectedStaffId}
-                  maxHeight="160px"
                 />
               </div>
 
               {/* Visual Separator Bar (8px bar identical to Invoices page) */}
               <div className="h-2 bg-[#f1f5f9] border-t border-b border-[#e2e8f0] shrink-0" />
 
-              {/* Staff Filter Active Notice (if any) */}
-              {selectedStaffId && (
-                <div className="flex items-center justify-between px-3 py-1.5 bg-blue-50 border-b border-blue-100 text-xs text-blue-800 shrink-0">
-                  <span className="flex items-center gap-1.5 truncate pr-2">
-                    <Filter size={12} className="text-blue-600 shrink-0" />
-                    <span className="truncate">
-                      Đang lọc theo: <strong>{selectedStaffName}</strong> ({filteredInvoices.length} HĐ)
+              {/* BOTTOM SECTION (5/5): MobileInvoiceList */}
+              <div className="flex-1 min-h-0 flex flex-col bg-white overflow-hidden">
+                {/* Staff Filter Active Notice (if any) */}
+                {selectedStaffId && (
+                  <div className="flex items-center justify-between px-3 py-1.5 bg-blue-50 border-b border-blue-100 text-xs text-blue-800 shrink-0">
+                    <span className="flex items-center gap-1.5 truncate pr-2">
+                      <Filter size={12} className="text-blue-600 shrink-0" />
+                      <span className="truncate">
+                        Đang lọc theo: <strong>{selectedStaffName}</strong> ({filteredInvoices.length} HĐ)
+                      </span>
                     </span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedStaffId(null)}
-                    className="text-[11px] font-bold text-blue-600 hover:underline px-1 py-0.5 rounded shrink-0 border-0 bg-transparent cursor-pointer"
-                  >
-                    Bỏ lọc ✕
-                  </button>
-                </div>
-              )}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedStaffId(null)}
+                      className="text-[11px] font-bold text-blue-600 hover:underline px-1 py-0.5 rounded shrink-0 border-0 bg-transparent cursor-pointer"
+                    >
+                      Bỏ lọc ✕
+                    </button>
+                  </div>
+                )}
 
-              {/* BOTTOM SECTION: Kế thừa MobileInvoiceList */}
-              <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-                <MobileInvoiceList
-                  invoices={filteredInvoices}
-                  onSelectInvoice={(inv) => setSelectedDetailInvoice(inv)}
-                />
+                <div className="flex-1 min-h-0">
+                  <MobileInvoiceList
+                    invoices={filteredInvoices}
+                    onSelectInvoice={(inv) => setSelectedDetailInvoice(inv)}
+                  />
+                </div>
               </div>
             </>
           )}
