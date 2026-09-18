@@ -358,6 +358,7 @@ export default function StaffDailyRevenueCard({
     >
       {/* Header section: Columns aligned 100% with the table below (45%, 27.5%, 27.5%) */}
       <div
+        onTouchMove={(e) => e.stopPropagation()}
         style={{
           padding: "10px 0",
           background: "white",
@@ -366,6 +367,8 @@ export default function StaffDailyRevenueCard({
           alignItems: "center",
           width: "100%",
           flexShrink: 0,
+          touchAction: "pan-x",
+          userSelect: "none",
         }}
       >
         {/* Column 1 (45%): Title ('Hôm nay' or 'Ngày dd/MM/yyyy' or 'Tháng MM/yyyy') */}
@@ -384,7 +387,7 @@ export default function StaffDailyRevenueCard({
           {selectedDayData.title}
         </div>
 
-        {/* Column 2 (27.5%): Total Gross Revenue Badge (Doanh thu) */}
+        {/* Column 2 (27.5%): Total Gross Revenue Badge (Doanh thu: 🔵 #2563EB) */}
         <div
           style={{
             width: "27.5%",
@@ -399,9 +402,10 @@ export default function StaffDailyRevenueCard({
               fontSize: "12px",
               padding: "3px 10px",
               borderRadius: "12px",
-              background: "#e2e8f0",
-              color: "#334155",
-              fontWeight: "600",
+              background: "#eff6ff",
+              color: "#2563eb",
+              border: "1px solid #bfdbfe",
+              fontWeight: "700",
               whiteSpace: "nowrap",
             }}
             title="Tổng Doanh thu (chưa giảm giá)"
@@ -410,7 +414,7 @@ export default function StaffDailyRevenueCard({
           </span>
         </div>
 
-        {/* Column 3 (27.5%): Total Net Revenue Badge (Thu thực tế) + Optional [X] Close button */}
+        {/* Column 3 (27.5%): Total Net Revenue Badge (Thu thực tế: 🌊 #0891B2) + Optional [X] Close button */}
         <div
           style={{
             width: "27.5%",
@@ -425,8 +429,9 @@ export default function StaffDailyRevenueCard({
               fontSize: "12px",
               padding: "3px 10px",
               borderRadius: "12px",
-              background: "#dbeafe",
-              color: "#2563eb",
+              background: "#ecfeff",
+              color: "#0891b2",
+              border: "1px solid #a5f3fc",
               fontWeight: "700",
               whiteSpace: "nowrap",
             }}
@@ -469,6 +474,8 @@ export default function StaffDailyRevenueCard({
           flexGrow: 1,
           minHeight: 0,
           overflowY: "auto",
+          overscrollBehavior: "contain",
+          WebkitOverflowScrolling: "touch",
           display: "flex",
           flexDirection: "column",
           maxHeight: maxHeight || undefined,
@@ -665,12 +672,12 @@ export default function StaffDailyRevenueCard({
                       {formatShortCurrency(staff.grossRevenue)}
                     </td>
 
-                    {/* Net Revenue Column (Thu thực tế) */}
+                    {/* Net Revenue Column (Thu thực tế: 🌊 #0891B2) */}
                     <td
                       style={{
                         padding: "8px 12px",
-                        color: "#2563eb",
-                        fontWeight: "600",
+                        color: "#0891b2",
+                        fontWeight: "700",
                         fontSize: "13px",
                         verticalAlign: "middle",
                         width: "27.5%",

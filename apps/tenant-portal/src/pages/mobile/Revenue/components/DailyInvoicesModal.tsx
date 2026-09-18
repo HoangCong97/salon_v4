@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Filter } from "lucide-react";
 import { DailyRevenueItem, InvoiceDetailItem } from "../types";
 import { Invoice, Staff } from "../../../desktop/Invoices/types";
@@ -21,6 +22,7 @@ interface DailyInvoicesModalProps {
   formatShortCurrency?: (val: number) => string;
 }
 
+
 export const DailyInvoicesModal: React.FC<DailyInvoicesModalProps> = ({
   selectedDay,
   selectedMonth,
@@ -30,6 +32,16 @@ export const DailyInvoicesModal: React.FC<DailyInvoicesModalProps> = ({
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [selectedDetailInvoice, setSelectedDetailInvoice] = useState<Invoice | null>(null);
   const [isClosing, setIsClosing] = useState(false);
+
+  // Lock body scroll and prevent background scroll leakage on mobile
+  useEffect(() => {
+    const originalBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+    };
+  }, []);
 
   const formatDayLabel = (dateRaw?: string) => {
     if (!dateRaw || typeof dateRaw !== "string") return "";
@@ -128,23 +140,23 @@ export const DailyInvoicesModal: React.FC<DailyInvoicesModalProps> = ({
         createdAt: isoCreatedAt,
         items: Array.isArray(inv.items)
           ? inv.items.map((it) => ({
-              id: it.id,
-              itemId: it.itemId || it.id,
-              itemType: (it.itemType as any) || "SERVICE",
-              name: it.name || "Dịch vụ",
-              price: Number(it.price || 0),
-              quantity: Number(it.quantity || 1),
-              discountAmount: Number(it.discountAmount || 0),
-              finalAmount: Number(it.finalAmount || 0),
-              staffId: it.staffId || undefined,
-              stylist: it.staffName
-                ? {
-                    id: it.staffId || "",
-                    name: it.staffName,
-                    avatar: it.staffAvatar || undefined,
-                  }
-                : undefined,
-            }))
+            id: it.id,
+            itemId: it.itemId || it.id,
+            itemType: (it.itemType as any) || "SERVICE",
+            name: it.name || "Dịch vụ",
+            price: Number(it.price || 0),
+            quantity: Number(it.quantity || 1),
+            discountAmount: Number(it.discountAmount || 0),
+            finalAmount: Number(it.finalAmount || 0),
+            staffId: it.staffId || undefined,
+            stylist: it.staffName
+              ? {
+                id: it.staffId || "",
+                name: it.staffName,
+                avatar: it.staffAvatar || undefined,
+              }
+              : undefined,
+          }))
           : [],
       };
     });
@@ -182,24 +194,31 @@ export const DailyInvoicesModal: React.FC<DailyInvoicesModalProps> = ({
   // Safe early return ONLY AFTER all hooks are evaluated
   if (!selectedDay && !selectedMonth) return null;
 
-  return (
+  return createPortal(
     <>
       {/* Modal Backdrop Container */}
       <div
         onClick={handleClose}
-        className={`fixed inset-x-0 bottom-0 top-[calc(60px+env(safe-area-inset-top,0px))] z-[105] flex flex-col justify-end bg-black/45 backdrop-blur-xs ${
-          isClosing ? "animate-revenue-fade-out pointer-events-none" : "animate-revenue-fade-in"
-        }`}
+        onTouchMove={(e) => {
+          // Block gesture propagation to background page
+          if (e.target === e.currentTarget) {
+            e.preventDefault();
+          }
+        }}
+        className={`fixed inset-x-0 bottom-0 top-[calc(60px+env(safe-area-inset-top,0px))] z-[105] flex flex-col justify-end bg-black/45 backdrop-blur-xs touch-none overscroll-contain ${isClosing ? "animate-revenue-fade-out pointer-events-none" : "animate-revenue-fade-in"
+          }`}
       >
         {/* Modal Full-body Sheet */}
         <div
           onClick={(e) => e.stopPropagation()}
-          className={`w-full max-w-2xl mx-auto bg-white rounded-t-2xl h-full flex flex-col shadow-2xl overflow-hidden ${
-            isClosing ? "animate-revenue-slide-down" : "animate-revenue-slide-up"
-          }`}
+          className={`w-full max-w-2xl mx-auto bg-white rounded-t-2xl h-full flex flex-col shadow-2xl overflow-hidden overscroll-contain ${isClosing ? "animate-revenue-slide-down" : "animate-revenue-slide-up"
+            }`}
         >
           {/* Header Bar with Title and Close button */}
-          <div className="shrink-0 flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+          <div
+            onTouchMove={(e) => e.stopPropagation()}
+            className="shrink-0 flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-200 touch-none select-none"
+          >
             <div className="flex items-center gap-1.5 min-w-0 pr-2">
               <span className="text-[16px] sm:text-[17px] font-bold text-slate-800 truncate">
                 {selectedDay
@@ -221,7 +240,7 @@ export const DailyInvoicesModal: React.FC<DailyInvoicesModalProps> = ({
 
           {/* ================= TRƯỜNG HỢP 1: CHI TIẾT THÁNG (CHỈ CẦN DANH SÁCH NHÂN VIÊN, KHÔNG CẦN HÓA ĐƠN) ================= */}
           {selectedMonth && (
-            <div className="flex-1 min-h-0 flex flex-col bg-white overflow-hidden">
+            <div className="flex-1 min-h-0 flex flex-col bg-white overflow-hidden overscroll-contain">
               <StaffDailyRevenueCard
                 title={modalTitle}
                 todayInvoices={allInvoices}
@@ -238,7 +257,7 @@ export const DailyInvoicesModal: React.FC<DailyInvoicesModalProps> = ({
           {selectedDay && (
             <>
               {/* TOP SECTION (5/5): StaffDailyRevenueCard */}
-              <div className="flex-1 min-h-0 flex flex-col bg-white overflow-hidden">
+              <div className="flex-1 min-h-0 flex flex-col bg-white overflow-hidden overscroll-contain">
                 <StaffDailyRevenueCard
                   title={modalTitle}
                   todayInvoices={allInvoices}
@@ -251,13 +270,19 @@ export const DailyInvoicesModal: React.FC<DailyInvoicesModalProps> = ({
               </div>
 
               {/* Visual Separator Bar (8px bar identical to Invoices page) */}
-              <div className="h-2 bg-[#f1f5f9] border-t border-b border-[#e2e8f0] shrink-0" />
+              <div
+                onTouchMove={(e) => e.stopPropagation()}
+                className="h-2 bg-[#f1f5f9] border-t border-b border-[#e2e8f0] shrink-0 touch-none select-none"
+              />
 
               {/* BOTTOM SECTION (5/5): MobileInvoiceList */}
-              <div className="flex-1 min-h-0 flex flex-col bg-white overflow-hidden">
+              <div className="flex-1 min-h-0 flex flex-col bg-white overflow-hidden overscroll-contain">
                 {/* Staff Filter Active Notice (if any) */}
                 {selectedStaffId && (
-                  <div className="flex items-center justify-between px-3 py-1.5 bg-blue-50 border-b border-blue-100 text-xs text-blue-800 shrink-0">
+                  <div
+                    onTouchMove={(e) => e.stopPropagation()}
+                    className="flex items-center justify-between px-3 py-1.5 bg-blue-50 border-b border-blue-100 text-xs text-blue-800 shrink-0 touch-none select-none"
+                  >
                     <span className="flex items-center gap-1.5 truncate pr-2">
                       <Filter size={12} className="text-blue-600 shrink-0" />
                       <span className="truncate">
@@ -274,7 +299,7 @@ export const DailyInvoicesModal: React.FC<DailyInvoicesModalProps> = ({
                   </div>
                 )}
 
-                <div className="flex-1 min-h-0">
+                <div className="flex-1 min-h-0 overscroll-contain">
                   <MobileInvoiceList
                     invoices={filteredInvoices}
                     onSelectInvoice={(inv) => setSelectedDetailInvoice(inv)}
@@ -291,7 +316,8 @@ export const DailyInvoicesModal: React.FC<DailyInvoicesModalProps> = ({
         invoice={selectedDetailInvoice}
         onClose={() => setSelectedDetailInvoice(null)}
       />
-    </>
+    </>,
+    document.body,
   );
 };
 

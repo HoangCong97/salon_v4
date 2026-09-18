@@ -101,6 +101,9 @@ export const useWebSocketSync = () => {
           queryClient.invalidateQueries({
             queryKey: queryKeys.invoices.all(currentTenantId, invBranchId),
           });
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.dashboard.all(currentTenantId),
+          });
           if (isOtherUser && invBranchId === currentBranchId) {
             toast.success(
               "Một hóa đơn POS vừa được thanh toán thành công bởi người dùng khác.",

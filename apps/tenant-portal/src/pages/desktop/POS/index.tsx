@@ -907,6 +907,9 @@ export default function POS() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.invoices.all(currentTenantId!, currentBranchId!),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.dashboard.all(currentTenantId!),
+      });
     } catch (e: any) {
       // Offline fallback
       const mockInvoice = {

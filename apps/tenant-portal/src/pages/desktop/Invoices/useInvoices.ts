@@ -440,6 +440,9 @@ export function useInvoices() {
         await queryClient.invalidateQueries({
           queryKey: queryKeys.invoices.all(currentTenantId, currentBranchId),
         });
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.dashboard.all(currentTenantId),
+        });
         setSelectedInvoice(null);
       } catch (err) {
         alert(`Lỗi xóa hóa đơn: ${(err as any).message}`);

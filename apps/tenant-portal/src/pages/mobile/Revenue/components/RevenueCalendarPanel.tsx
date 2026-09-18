@@ -55,6 +55,18 @@ export const RevenueCalendarPanel: React.FC<RevenueCalendarPanelProps> = ({
 }) => {
   const monthDisplayStr = `Tháng ${String(currentMonthIndex + 1).padStart(2, "0")}/${currentYear}`;
 
+  // Find the highest daily net revenue in the current month to calculate relative color intensity
+  const maxDailyRevenue = React.useMemo(() => {
+    let max = 0;
+    calendarCells.forEach((c) => {
+      if (c.isCurrentMonth) {
+        const amt = Number(c.finalAmount || c.totalPrice || 0);
+        if (amt > max) max = amt;
+      }
+    });
+    return max;
+  }, [calendarCells]);
+
   // Helper for Thứ labels
   const weekDays = [
     { label: "T2", isWeekend: false },
@@ -170,21 +182,21 @@ export const RevenueCalendarPanel: React.FC<RevenueCalendarPanelProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Gross Revenue Pill */}
+          {/* Gross Revenue Pill (🔵 #2563EB) */}
           <div
-            className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-200/90 text-slate-700 font-semibold text-[11px]"
+            className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold text-[11px] border border-blue-200"
             title="Tổng Doanh thu (chưa giảm giá)"
           >
-            <span className="text-[10px] text-slate-500 font-normal">DT:</span>
+            <span className="text-[10px] text-blue-600 font-bold">DT:</span>
             <span>{formatCurrencyK(monthSummary.gross)}</span>
           </div>
 
-          {/* Net Revenue Pill */}
+          {/* Net Revenue Pill (🌊 Cyan #0891B2) */}
           <div
-            className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold text-[11px]"
-            title="Thu thực tế (đã trừ giảm giá)"
+            className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-700 font-bold text-[11px] border border-cyan-200"
+            title="Tiền thực tế thu được (đã trừ giảm giá)"
           >
-            <span className="text-[10px] text-blue-500 font-normal">Thu:</span>
+            <span className="text-[10px] text-cyan-600 font-bold">Thu:</span>
             <span>{formatCurrencyK(monthSummary.net)}</span>
           </div>
         </div>
@@ -218,11 +230,24 @@ export const RevenueCalendarPanel: React.FC<RevenueCalendarPanelProps> = ({
               ))}
             </div>
 
-            {/* 42 Calendar Cells (7 cols x 6 rows) */}
+            {/* Dynamic Calendar Cells Grid (Flexible rows: 4, 5, or 6 weeks) */}
             <div className="grid grid-cols-7 auto-rows-fr border-b border-slate-200">
               {calendarCells.map((cell, idx) => {
-                const hasRevenue = cell.totalPrice > 0 || cell.finalAmount > 0;
-                const isSelected = false;
+                const cellAmount = Number(cell.finalAmount || cell.totalPrice || 0);
+                const hasRevenue = cellAmount > 0;
+                const revenueRatio =
+                  maxDailyRevenue > 0 && cell.isCurrentMonth && cellAmount > 0
+                    ? Math.min(Math.max(cellAmount / maxDailyRevenue, 0), 1)
+                    : 0;
+
+                // Continuous heatmap intensity based on Net Amount (🌊 Cyan #0891B2): from 0.08 (subtle) to 0.42 (vibrant cyan)
+                let cellBgStyle: React.CSSProperties | undefined;
+                if (cell.isCurrentMonth && cellAmount > 0) {
+                  const alpha = 0.08 + Math.pow(revenueRatio, 0.75) * 0.38;
+                  cellBgStyle = {
+                    backgroundColor: `rgba(8, 145, 178, ${alpha.toFixed(3)})`,
+                  };
+                }
 
                 return (
                   <button
@@ -242,14 +267,17 @@ export const RevenueCalendarPanel: React.FC<RevenueCalendarPanelProps> = ({
                         });
                       }
                     }}
+                    style={cellBgStyle}
                     className={`min-h-[62px] p-1 border-r border-b border-slate-100 flex flex-col justify-between text-left transition-colors relative ${
                       !cell.isCurrentMonth
                         ? "bg-slate-50/50 opacity-40"
                         : cell.isToday
-                          ? "bg-blue-50/40"
+                          ? hasRevenue
+                            ? "ring-2 ring-cyan-600 ring-inset z-1 hover:brightness-95 active:brightness-90 cursor-pointer"
+                            : "bg-cyan-50/60 ring-2 ring-cyan-500 ring-inset z-1 hover:bg-cyan-100/60"
                           : hasRevenue
-                            ? "hover:bg-blue-50/20 active:bg-blue-100/40 cursor-pointer"
-                            : "hover:bg-slate-50/50"
+                            ? "hover:brightness-95 active:brightness-90 cursor-pointer"
+                            : "bg-white hover:bg-slate-50/60"
                     } ${idx % 7 === 6 ? "border-r-0" : ""}`}
                   >
                     {/* Top Row: Day Number + Weekend indicator */}
@@ -257,14 +285,16 @@ export const RevenueCalendarPanel: React.FC<RevenueCalendarPanelProps> = ({
                       <span
                         className={`text-[11px] leading-none ${
                           cell.isToday
-                            ? "w-4 h-4 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-[10px]"
-                            : cell.dayOfWeek === 7
-                              ? "font-bold text-emerald-700"
-                              : cell.dayOfWeek === 6
-                                ? "font-semibold text-emerald-600"
-                                : cell.isCurrentMonth
-                                  ? "font-medium text-slate-700"
-                                  : "text-slate-400"
+                            ? "w-4 h-4 rounded-full bg-cyan-600 text-white font-bold flex items-center justify-center text-[10px]"
+                            : revenueRatio >= 0.5
+                              ? "font-bold text-cyan-950"
+                              : cell.dayOfWeek === 7
+                                ? "font-bold text-emerald-800"
+                                : cell.dayOfWeek === 6
+                                  ? "font-semibold text-emerald-700"
+                                  : cell.isCurrentMonth
+                                    ? "font-medium text-slate-800"
+                                    : "text-slate-400"
                         }`}
                       >
                         {cell.day}
@@ -272,27 +302,39 @@ export const RevenueCalendarPanel: React.FC<RevenueCalendarPanelProps> = ({
 
                       {/* Small invoice count badge if any */}
                       {cell.invoices.length > 0 && (
-                        <span className="min-w-[15px] h-[15px] px-1 rounded-full bg-blue-100 text-blue-700 font-bold text-[9px] flex items-center justify-center leading-none">
+                        <span
+                          className={`min-w-[15px] h-[15px] px-1 rounded-full font-bold text-[9px] flex items-center justify-center leading-none ${
+                            revenueRatio >= 0.4
+                              ? "bg-white/95 text-cyan-900 shadow-2xs"
+                              : "bg-cyan-100 text-cyan-800"
+                          }`}
+                        >
                           {cell.invoices.length}
                         </span>
                       )}
                     </div>
 
-                    {/* Middle: Doanh thu (Gross) & Thu thực tế (Net) */}
+                    {/* Middle: Doanh thu (🔵 #2563EB) & Thu thực tế (🌊 Cyan #0891B2) */}
                     <div className="flex flex-col mt-0.5 w-full overflow-hidden items-end text-right">
                       {hasRevenue ? (
                         <>
-                          {/* Doanh thu (Gross) */}
+                          {/* Doanh thu (Gross: 🔵 #2563EB) */}
                           <span
-                            className="text-[11px] text-slate-500 font-semibold truncate leading-tight tracking-tight text-right w-full"
+                            className={`text-[11px] font-semibold truncate leading-tight tracking-tight text-right w-full ${
+                              revenueRatio >= 0.5 ? "text-blue-900 font-bold" : "text-[#2563eb]"
+                            }`}
                             title={`Doanh thu: ${formatShortCurrency(cell.totalPrice)} đ`}
                           >
                             {formatCurrencyK(cell.totalPrice)}
                           </span>
 
-                          {/* Thu thực tế (Net) */}
+                          {/* Thu thực tế (Net: 🌊 Cyan #0891B2) */}
                           <span
-                            className="text-[12px] font-bold text-blue-700 truncate leading-tight tracking-tight text-right w-full"
+                            className={`text-[12px] truncate leading-tight tracking-tight text-right w-full ${
+                              revenueRatio >= 0.5
+                                ? "font-black text-cyan-950"
+                                : "font-bold text-[#0891b2]"
+                            }`}
                             title={`Thu thực tế: ${formatShortCurrency(cell.finalAmount)} đ`}
                           >
                             {formatCurrencyK(cell.finalAmount)}
@@ -345,22 +387,22 @@ export const RevenueCalendarPanel: React.FC<RevenueCalendarPanelProps> = ({
 
                   {/* Right: Gross & Net Revenue Badges */}
                   <div className="flex items-center gap-2 flex-shrink-0 text-right">
-                    {/* Gross Revenue */}
+                    {/* Gross Revenue (🔵 #2563EB) */}
                     <div className="flex flex-col items-end">
-                      <span className="text-[10px] text-slate-400 font-medium">
+                      <span className="text-[10px] text-blue-600 font-bold">
                         Doanh thu
                       </span>
-                      <span className="text-[12px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
+                      <span className="text-[12px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
                         {formatShortCurrency(item.totalPrice)}
                       </span>
                     </div>
 
-                    {/* Net Revenue */}
+                    {/* Net Revenue (🌊 Cyan #0891B2) */}
                     <div className="flex flex-col items-end">
-                      <span className="text-[10px] text-blue-500 font-semibold">
+                      <span className="text-[10px] text-cyan-600 font-bold">
                         Thu thực tế
                       </span>
-                      <span className="text-[12px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                      <span className="text-[12px] font-bold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded-full border border-cyan-100">
                         {formatShortCurrency(item.finalAmount)}
                       </span>
                     </div>
@@ -375,19 +417,26 @@ export const RevenueCalendarPanel: React.FC<RevenueCalendarPanelProps> = ({
       {/* 4. Legend Footer */}
       <div className="px-3 py-1.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-slate-400" />
-            <span>Doanh thu</span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#2563EB]" />
+            <span className="font-semibold text-blue-700">Doanh thu</span>
           </div>
-          <div className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-blue-600" />
-            <span className="font-medium text-blue-700">Thu thực tế</span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#0891B2]" />
+            <span className="font-bold text-cyan-700">Thu thực tế</span>
           </div>
         </div>
 
-        <span className="text-[10px] text-slate-400 italic">
-          Bấm ngày để xem hóa đơn
-        </span>
+        {/* Heatmap intensity indicator based on Net Amount (🌊 Cyan #0891B2) */}
+        <div
+          className="flex items-center gap-1.5"
+          title="Màu nền ngày đậm nhạt theo lượng tiền thực tế thu được so với cả tháng"
+        >
+          <span className="text-[10px] text-slate-400">Đậm nhạt:</span>
+          <span className="text-[9px] text-slate-400">Ít</span>
+          <div className="h-2 w-9 rounded-full bg-gradient-to-r from-cyan-100 via-cyan-300 to-cyan-600" />
+          <span className="text-[9px] text-cyan-700 font-bold">Nhiều</span>
+        </div>
       </div>
     </div>
   );

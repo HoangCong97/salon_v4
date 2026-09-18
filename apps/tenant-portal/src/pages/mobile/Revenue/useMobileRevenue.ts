@@ -151,7 +151,30 @@ export function useMobileRevenue() {
     }
   }, [pendingMonthModal, selectedYearMonth, loading, dailyRevenues, monthSummary]);
 
-  // Generate 42 calendar cells for matrix grid (6 weeks x 7 days: T2 to CN)
+  // Synchronize open daily modal with real-time revenue updates
+  useEffect(() => {
+    if (selectedDay) {
+      const updatedDay = dailyRevenues.find((d) => d.dateRaw === selectedDay.dateRaw);
+      if (updatedDay) {
+        setSelectedDay(updatedDay);
+      }
+    }
+  }, [dailyRevenues]);
+
+  // Synchronize open monthly detail modal with real-time revenue updates
+  useEffect(() => {
+    if (selectedMonthDetail && selectedMonthDetail.yearMonth === selectedYearMonth) {
+      const allInvoices = dailyRevenues.flatMap((d) => d.invoices || []);
+      setSelectedMonthDetail({
+        yearMonth: selectedMonthDetail.yearMonth,
+        gross: monthSummary.gross,
+        net: monthSummary.net,
+        invoices: allInvoices,
+      });
+    }
+  }, [dailyRevenues, monthSummary, selectedYearMonth]);
+
+  // Generate calendar cells for matrix grid (flexible rows: 4, 5 or 6 weeks depending on the month)
   const calendarCells = useMemo((): CalendarDayCell[] => {
     const cells: CalendarDayCell[] = [];
     const firstDayOfMonth = new Date(currentYear, currentMonthIndex, 1);
@@ -226,8 +249,9 @@ export function useMobileRevenue() {
       });
     }
 
-    // 3. Next month padding to fill out 42 cells (6 rows x 7 cols)
-    const remaining = 42 - cells.length;
+    // 3. Next month padding: Chỉ bù đủ cho hết tuần cuối cùng của tháng (linh hoạt 4, 5 hoặc 6 hàng, không cố định 6 hàng)
+    const remainder = cells.length % 7;
+    const remaining = remainder === 0 ? 0 : 7 - remainder;
     for (let i = 1; i <= remaining; i++) {
       const cellDate = new Date(
         currentMonthIndex === 11 ? currentYear + 1 : currentYear,

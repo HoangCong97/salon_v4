@@ -32,8 +32,14 @@ export default function MobileRevenuePage() {
     error,
   } = useMobileRevenue();
 
+  const isModalOpen = Boolean(selectedDay || selectedMonthDetail);
+
   return (
-    <div className="flex flex-col h-full w-full bg-white overflow-y-auto overscroll-contain relative pb-6">
+    <div
+      className={`flex flex-col h-full w-full bg-white relative pb-6 ${
+        isModalOpen ? "overflow-hidden" : "overflow-y-auto overscroll-contain"
+      }`}
+    >
       {/* Error Banner if any */}
       {error && (
         <div className="px-3 py-2 bg-rose-50 text-rose-700 border-b border-rose-200 text-xs flex items-center gap-1.5 flex-shrink-0">

@@ -226,20 +226,30 @@ export default function MultiStaffAvatar({
             </div>
           </div>
 
-          {/* White diagonal separator */}
-          <div
+          {/* White diagonal separator - clean 1px line matching 3 & 4 staff split */}
+          <svg
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
             style={{
               position: "absolute",
               top: 0,
               left: 0,
               width: "100%",
               height: "100%",
-              background:
-                "linear-gradient(135deg, transparent 48.5%, #ffffff 48.5%, #ffffff 51.5%, transparent 51.5%)",
               pointerEvents: "none",
               zIndex: 3,
             }}
-          />
+          >
+            <line
+              x1="100"
+              y1="0"
+              x2="0"
+              y2="100"
+              stroke="#ffffff"
+              strokeWidth="1"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
         </>
       )}
 

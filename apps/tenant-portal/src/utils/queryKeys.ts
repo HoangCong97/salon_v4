@@ -120,6 +120,7 @@ export const queryKeys = {
 
   /** Thống kê tổng quan (Dashboard Stats) */
   dashboard: {
+    all: (tenantId: string) => ["dashboard", tenantId] as const,
     stats: (tenantId: string, branchId: string) =>
       ["dashboard", tenantId, branchId, "stats"] as const,
   },

@@ -761,6 +761,9 @@ export default function MobilePOS() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.invoices.all(currentTenantId!, currentBranchId!),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.dashboard.all(currentTenantId!),
+      });
     } catch (e: any) {
       alert("Lỗi thanh toán: " + (e.message || "Không thể hoàn tất thanh toán"));
     } finally {

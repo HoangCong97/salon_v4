@@ -30,6 +30,18 @@ module.exports = {
           DEFAULT: "hsl(346, 84%, 61%)",
           light: "hsl(346, 84%, 95%)",
         },
+        financial: {
+          revenue: "#2563EB",
+          "revenue-light": "#EFF6FF",
+          net: "#0891B2",
+          "net-light": "#ECFEFF",
+          expense: "#DC2626",
+          "expense-light": "#FEF2F2",
+          profit: "#7C3AED",
+          "profit-light": "#F5F3FF",
+          pending: "#EA580C",
+          "pending-light": "#FFF7ED",
+        },
       },
       keyframes: {
         "revenue-slide-up": {

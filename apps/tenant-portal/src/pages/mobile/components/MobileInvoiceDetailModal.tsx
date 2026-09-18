@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Banknote, CreditCard } from "lucide-react";
 import { Invoice } from "../../desktop/Invoices/types";
 
@@ -13,6 +14,15 @@ export default function MobileInvoiceDetailModal({
   onClose,
   onDelete,
 }: MobileInvoiceDetailModalProps) {
+  useEffect(() => {
+    if (!invoice) return;
+    const originalBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalBodyOverflow;
+    };
+  }, [invoice]);
+
   if (!invoice) return null;
 
   const formatCurrency = (val: number) =>
@@ -29,7 +39,7 @@ export default function MobileInvoiceDetailModal({
     year: "numeric",
   });
 
-  return (
+  return createPortal(
     <div
       style={{
         position: "fixed",
@@ -44,8 +54,15 @@ export default function MobileInvoiceDetailModal({
         alignItems: "flex-end", // Bottom sheet effect on mobile
         justifyContent: "center",
         animation: "fadeIn 0.2s ease-out",
+        touchAction: "none",
+        overscrollBehavior: "contain",
       }}
       onClick={onClose}
+      onTouchMove={(e) => {
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+        }
+      }}
     >
       <div
         style={{
@@ -55,145 +72,179 @@ export default function MobileInvoiceDetailModal({
           backgroundColor: "var(--bg-card)",
           borderTopLeftRadius: "24px",
           borderTopRightRadius: "24px",
-          padding: "20px",
-          paddingBottom: "calc(20px + env(safe-area-inset-bottom))",
           display: "flex",
           flexDirection: "column",
-          gap: "16px",
-          overflowY: "auto",
+          overflow: "hidden",
           boxShadow: "0 -10px 25px rgba(0, 0, 0, 0.15)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Handle Header */}
+        {/* 1. TOP FIXED SECTION: Header & Customer/Time Info */}
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+            padding: "16px 18px 12px 18px",
             borderBottom: "1px solid var(--border-color)",
-            paddingBottom: "12px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+            flexShrink: 0,
+            background: "var(--bg-card)",
           }}
         >
-          <div>
-            <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
-              Chi tiết hóa đơn
-            </div>
-            <div
-              style={{
-                fontSize: "16px",
-                fontWeight: "700",
-                color: "var(--text-primary)",
-              }}
-            >
-              #{invoice.id.substring(0, 8).toUpperCase()}
-            </div>
-          </div>
-          <button
-            onClick={onClose}
+          {/* Modal Handle Header */}
+          <div
             style={{
-              background: "hsl(210, 40%, 96%)",
-              border: "none",
-              borderRadius: "50%",
-              width: "32px",
-              height: "32px",
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              fontSize: "16px",
-              cursor: "pointer",
-              color: "var(--text-secondary)",
+              justifyContent: "space-between",
             }}
           >
-            ✕
-          </button>
-        </div>
-
-        {/* Customer & General Info */}
-        <div
-          style={{
-            background: "hsl(210, 40%, 98%)",
-            borderRadius: "var(--radius-sm)",
-            padding: "12px",
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "10px",
-            fontSize: "13px",
-          }}
-        >
-          <div>
-            <span style={{ color: "var(--text-secondary)", fontSize: "11px" }}>
-              Khách hàng
-            </span>
-            <div style={{ fontWeight: "600" }}>
-              {invoice.customer?.name || "Khách vãng lai"}
-            </div>
-            {invoice.customer?.phone && (
-              <div
-                style={{ fontSize: "11px", color: "var(--text-secondary)" }}
-              >
-                {invoice.customer.phone}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <span style={{ color: "var(--text-secondary)", fontSize: "11px" }}>
-              Thời gian
-            </span>
-            <div style={{ fontWeight: "500" }}>{formattedDate}</div>
-          </div>
-
-          <div>
-            <span style={{ color: "var(--text-secondary)", fontSize: "11px" }}>
-              Thanh toán
-            </span>
             <div>
-              <span
-                className={`badge ${
-                  invoice.paymentMethod === "CASH"
-                    ? "badge-success"
-                    : "badge-info"
-                }`}
+              <div style={{ fontSize: "12px", color: "var(--text-secondary)" }}>
+                Chi tiết hóa đơn
+              </div>
+              <div
                 style={{
-                  fontSize: "11px",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "4px",
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  color: "var(--text-primary)",
                 }}
               >
-                {invoice.paymentMethod === "CASH" ? (
-                  <>
-                    <Banknote size={12} />
-                    <span>Tiền mặt</span>
-                  </>
-                ) : (
-                  <>
-                    <CreditCard size={12} />
-                    <span>Tài khoản</span>
-                  </>
-                )}
-              </span>
+                #{invoice.id.substring(0, 8).toUpperCase()}
+              </div>
             </div>
+            <button
+              onClick={onClose}
+              style={{
+                background: "hsl(210, 40%, 96%)",
+                border: "none",
+                borderRadius: "50%",
+                width: "32px",
+                height: "32px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "16px",
+                cursor: "pointer",
+                color: "var(--text-secondary)",
+              }}
+            >
+              ✕
+            </button>
           </div>
 
-          <div>
-            <span style={{ color: "var(--text-secondary)", fontSize: "11px" }}>
-              Thu ngân
-            </span>
-            <div style={{ fontWeight: "500" }}>
-              {invoice.cashier?.name || "N/A"}
+          {/* Customer & General Info */}
+          <div
+            style={{
+              background: "hsl(210, 40%, 98%)",
+              borderRadius: "var(--radius-sm)",
+              padding: "10px 12px",
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "8px 12px",
+              fontSize: "13px",
+            }}
+          >
+            <div>
+              <span style={{ color: "var(--text-secondary)", fontSize: "11px" }}>
+                Khách hàng
+              </span>
+              <div
+                style={{
+                  fontWeight: "600",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {invoice.customer?.name || "Khách vãng lai"}
+              </div>
+              {invoice.customer?.phone && (
+                <div
+                  style={{ fontSize: "11px", color: "var(--text-secondary)" }}
+                >
+                  {invoice.customer.phone}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <span style={{ color: "var(--text-secondary)", fontSize: "11px" }}>
+                Thời gian
+              </span>
+              <div style={{ fontWeight: "500", fontSize: "12px" }}>{formattedDate}</div>
+            </div>
+
+            <div>
+              <span style={{ color: "var(--text-secondary)", fontSize: "11px" }}>
+                Thanh toán
+              </span>
+              <div>
+                <span
+                  className={`badge ${
+                    invoice.paymentMethod === "CASH"
+                      ? "badge-success"
+                      : "badge-info"
+                  }`}
+                  style={{
+                    fontSize: "11px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  {invoice.paymentMethod === "CASH" ? (
+                    <>
+                      <Banknote size={12} />
+                      <span>Tiền mặt</span>
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard size={12} />
+                      <span>Tài khoản</span>
+                    </>
+                  )}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <span style={{ color: "var(--text-secondary)", fontSize: "11px" }}>
+                Thu ngân
+              </span>
+              <div
+                style={{
+                  fontWeight: "500",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {invoice.cashier?.name || "N/A"}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Invoice items list */}
-        <div>
+        {/* 2. MIDDLE SCROLLABLE SECTION: Services / Items list */}
+        <div
+          style={{
+            flex: 1,
+            minHeight: "100px",
+            overflowY: "auto",
+            overscrollBehavior: "contain",
+            WebkitOverflowScrolling: "touch",
+            padding: "12px 18px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
+          }}
+        >
           <div
             style={{
               fontSize: "13px",
               fontWeight: "600",
-              marginBottom: "8px",
+              marginBottom: "2px",
               color: "var(--text-primary)",
             }}
           >
@@ -221,8 +272,16 @@ export default function MobileInvoiceDetailModal({
                     background: "white",
                   }}
                 >
-                  <div>
-                    <div style={{ fontWeight: "600", fontSize: "13px" }}>
+                  <div style={{ minWidth: 0, flex: 1, paddingRight: "8px" }}>
+                    <div
+                      style={{
+                        fontWeight: "600",
+                        fontSize: "13px",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
                       {item.name || "Dịch vụ/Sản phẩm"}
                     </div>
                     <div
@@ -241,6 +300,7 @@ export default function MobileInvoiceDetailModal({
                       fontWeight: "700",
                       fontSize: "13px",
                       color: "var(--text-primary)",
+                      flexShrink: 0,
                     }}
                   >
                     {formatCurrency(
@@ -265,72 +325,84 @@ export default function MobileInvoiceDetailModal({
           </div>
         </div>
 
-        {/* Pricing Summary */}
+        {/* 3. BOTTOM FIXED SECTION: Pricing Summary & Actions */}
         <div
           style={{
             borderTop: "1px solid var(--border-color)",
-            paddingTop: "12px",
+            padding: "12px 18px calc(14px + env(safe-area-inset-bottom)) 18px",
             display: "flex",
             flexDirection: "column",
-            gap: "6px",
-            fontSize: "13px",
+            gap: "10px",
+            flexShrink: 0,
+            background: "var(--bg-card)",
+            boxShadow: "0 -4px 12px rgba(0, 0, 0, 0.04)",
           }}
         >
-          {invoice.discountAmount > 0 && (
+          {/* Pricing Summary */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "4px",
+              fontSize: "13px",
+            }}
+          >
+            {invoice.discountAmount > 0 && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  color: "var(--color-danger)",
+                  fontWeight: "500",
+                }}
+              >
+                <span>Giảm giá:</span>
+                <span>-{formatCurrency(invoice.discountAmount)}</span>
+              </div>
+            )}
+
             <div
               style={{
                 display: "flex",
                 justifyContent: "space-between",
-                color: "var(--color-danger)",
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "var(--color-primary)",
               }}
             >
-              <span>Giảm giá:</span>
-              <span>-{formatCurrency(invoice.discountAmount)}</span>
+              <span>Tổng thanh toán:</span>
+              <span>{formatCurrency(invoice.finalAmount)}</span>
             </div>
-          )}
+          </div>
 
+          {/* Action Buttons */}
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
-              fontSize: "16px",
-              fontWeight: "700",
-              color: "var(--color-primary)",
-              marginTop: "4px",
+              gap: "10px",
             }}
           >
-            <span>Tổng thanh toán:</span>
-            <span>{formatCurrency(invoice.finalAmount)}</span>
-          </div>
-        </div>
+            {onDelete && (
+              <button
+                className="btn btn-danger-light"
+                onClick={() => onDelete(invoice.id)}
+                style={{ flex: 1, padding: "10px" }}
+              >
+                🗑️ Xóa hóa đơn
+              </button>
+            )}
 
-        {/* Action Buttons */}
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            marginTop: "8px",
-          }}
-        >
-          {onDelete && (
             <button
-              className="btn btn-danger-light"
-              onClick={() => onDelete(invoice.id)}
+              className="btn btn-secondary"
+              onClick={onClose}
               style={{ flex: 1, padding: "10px" }}
             >
-              🗑️ Xóa hóa đơn
+              Đóng
             </button>
-          )}
-
-          <button
-            className="btn btn-secondary"
-            onClick={onClose}
-            style={{ flex: 1, padding: "10px" }}
-          >
-            Đóng
-          </button>
+          </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

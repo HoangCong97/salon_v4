@@ -53,14 +53,14 @@ export const RevenueMonthlyChartPanel: React.FC<RevenueMonthlyChartPanelProps> =
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-2 text-[11px]">
+        <div className="flex items-center gap-2.5 text-[11px]">
           <div className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-xs bg-blue-600" />
-            <span className="text-slate-600 font-medium">Thu thực tế</span>
+            <span className="w-2.5 h-2.5 rounded-xs bg-[#0891B2]" />
+            <span className="text-cyan-700 font-bold">Thu thực tế</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-xs bg-rose-500" />
-            <span className="text-slate-600 font-medium">Giảm giá</span>
+            <span className="w-2.5 h-2.5 rounded-xs bg-[#DC2626]" />
+            <span className="text-red-600 font-medium">Giảm giá</span>
           </div>
         </div>
       </div>
@@ -108,7 +108,7 @@ export const RevenueMonthlyChartPanel: React.FC<RevenueMonthlyChartPanelProps> =
                 }}
                 className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-all border ${
                   isSelected
-                    ? "bg-blue-50/70 border-blue-400 shadow-xs"
+                    ? "bg-cyan-50/70 border-cyan-400 shadow-xs"
                     : "bg-white hover:bg-slate-50 active:bg-slate-100 border-slate-100"
                 }`}
                 title={`Tháng ${item.month}: Bấm để xem bảng doanh thu nhân viên`}
@@ -117,13 +117,13 @@ export const RevenueMonthlyChartPanel: React.FC<RevenueMonthlyChartPanelProps> =
                 <div className="w-14 flex-shrink-0 flex items-center gap-1">
                   <span
                     className={`text-[12px] font-bold ${
-                      isSelected ? "text-blue-700" : "text-slate-700"
+                      isSelected ? "text-cyan-800" : "text-slate-700"
                     }`}
                   >
                     {formatMonthDisplay(item.month, item.yearMonth)}
                   </span>
                   {isSelected && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#0891B2] animate-pulse" />
                   )}
                 </div>
 
@@ -135,15 +135,15 @@ export const RevenueMonthlyChartPanel: React.FC<RevenueMonthlyChartPanelProps> =
                         className="h-5 rounded-md overflow-hidden flex shadow-2xs transition-all duration-300"
                         style={{ width: `${Math.max(barWidthPercent, 8)}%` }}
                       >
-                        {/* Net Revenue Segment (Corporate Blue) */}
+                        {/* Net Revenue Segment (🌊 #0891B2) */}
                         <div
-                          className="h-full bg-blue-600 transition-all duration-300 flex items-center justify-end pr-1"
+                          className="h-full bg-[#0891B2] transition-all duration-300 flex items-center justify-end pr-1"
                           style={{ width: `${netPercent}%` }}
                         />
-                        {/* Discount Segment (Coral Red) */}
+                        {/* Discount Segment (🔴 #DC2626) */}
                         {discount > 0 && (
                           <div
-                            className="h-full bg-rose-500 transition-all duration-300"
+                            className="h-full bg-[#DC2626] transition-all duration-300"
                             style={{ width: `${discountPercent}%` }}
                           />
                         )}
@@ -161,13 +161,13 @@ export const RevenueMonthlyChartPanel: React.FC<RevenueMonthlyChartPanelProps> =
                   <div className="flex flex-col items-end">
                     <span
                       className={`text-[12px] font-bold ${
-                        isSelected ? "text-blue-700" : "text-slate-800"
+                        isSelected ? "text-cyan-800" : "text-[#0891b2]"
                       }`}
                     >
                       {formatShortCurrency(net)}
                     </span>
                     {discount > 0 && (
-                      <span className="text-[9px] text-rose-500 font-medium leading-none">
+                      <span className="text-[9px] text-[#dc2626] font-medium leading-none">
                         -{formatCompactNumber(discount)}
                       </span>
                     )}
@@ -175,7 +175,7 @@ export const RevenueMonthlyChartPanel: React.FC<RevenueMonthlyChartPanelProps> =
                   <ChevronRight
                     size={13}
                     className={`transition-transform ${
-                      isSelected ? "text-blue-600 translate-x-0.5" : "text-slate-300"
+                      isSelected ? "text-cyan-700 translate-x-0.5" : "text-slate-300"
                     }`}
                   />
                 </div>
@@ -188,7 +188,7 @@ export const RevenueMonthlyChartPanel: React.FC<RevenueMonthlyChartPanelProps> =
       {/* 3. Panel Footer Summary */}
       <div className="px-3 py-1.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500 flex-shrink-0">
         <span>Cao nhất: {formatShortCurrency(maxRevenue)} đ</span>
-        <span className="text-blue-600 font-semibold">
+        <span className="text-cyan-700 font-semibold">
           Đang xem: {selectedYearMonth}
         </span>
       </div>

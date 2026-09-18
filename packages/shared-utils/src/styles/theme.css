@@ -45,6 +45,18 @@
   /* Sky Blue */
   --color-info-light: hsl(200, 85%, 95%);
 
+  /* Standardized Financial Colors (Hệ thống màu tài chính chuẩn Salon) */
+  --financial-revenue: #2563EB;       /* 🔵 Doanh thu: Giá trị kinh doanh / tổng doanh số */
+  --financial-revenue-light: #EFF6FF;
+  --financial-net: #0891B2;           /* 🌊 Tiền thực tế: Tiền thực tế thu được / dòng tiền (Cyan) */
+  --financial-net-light: #ECFEFF;
+  --financial-expense: #DC2626;       /* 🔴 Chi phí: Tiền đi ra */
+  --financial-expense-light: #FEF2F2;
+  --financial-profit: #7C3AED;        /* 🟣 Lợi nhuận: Giá trị sau khi trừ chi phí */
+  --financial-profit-light: #F5F3FF;
+  --financial-pending: #EA580C;       /* 🟠 Chưa thu: Khoản cần thu / công nợ */
+  --financial-pending-light: #FFF7ED;
+
   /* Borders & Shadows */
   --border-color: hsl(215, 15%, 90%);
   --border-focus: hsl(221, 83%, 85%);

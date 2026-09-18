@@ -56,6 +56,95 @@ export default function MobileInvoiceList({
     });
   }, [invoices, filterPayment, searchQuery]);
 
+  // Group invoices into date sections for Sticky Section Headers
+  const groupedSections = useMemo(() => {
+    const map = new Map<string, { totalNet: number; invoices: Invoice[] }>();
+
+    filteredList.forEach((inv) => {
+      let dateKey = "UNKNOWN";
+      if (inv.createdAt) {
+        const d = new Date(inv.createdAt);
+        if (!isNaN(d.getTime())) {
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+          dateKey = `${year}-${month}-${day}`;
+        }
+      }
+
+      if (!map.has(dateKey)) {
+        map.set(dateKey, { totalNet: 0, invoices: [] });
+      }
+      const group = map.get(dateKey)!;
+      group.totalNet += Number(inv.finalAmount || 0);
+      group.invoices.push(inv);
+    });
+
+    // Sort sections descending (newest date first)
+    const sortedKeys = Array.from(map.keys()).sort((a, b) => {
+      if (a === "UNKNOWN") return 1;
+      if (b === "UNKNOWN") return -1;
+      return b.localeCompare(a);
+    });
+
+    const now = new Date();
+    const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`;
+
+    const dayOfWeekNames = [
+      "Chủ Nhật",
+      "Thứ Hai",
+      "Thứ Ba",
+      "Thứ Tư",
+      "Thứ Năm",
+      "Thứ Sáu",
+      "Thứ Bảy",
+    ];
+
+    return sortedKeys.map((key) => {
+      const group = map.get(key)!;
+      // Sort invoices within section descending by createdAt time
+      group.invoices.sort((a, b) => {
+        const timeA = new Date(a.createdAt).getTime() || 0;
+        const timeB = new Date(b.createdAt).getTime() || 0;
+        return timeB - timeA;
+      });
+
+      let title = key;
+      if (key === "UNKNOWN") {
+        title = "Khác";
+      } else {
+        const parts = key.split("-");
+        if (parts.length === 3) {
+          const year = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10);
+          const day = parseInt(parts[2], 10);
+          const dateObj = new Date(year, month - 1, day);
+          const formattedDate = `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
+
+          if (key === todayKey) {
+            title = `Hôm nay, ${formattedDate}`;
+          } else if (key === yesterdayKey) {
+            title = `Hôm qua, ${formattedDate}`;
+          } else {
+            const dayOfWeek = dayOfWeekNames[dateObj.getDay()] || "Ngày";
+            title = `${dayOfWeek}, ${formattedDate}`;
+          }
+        }
+      }
+
+      return {
+        dateKey: key,
+        title,
+        count: group.invoices.length,
+        totalNet: group.totalNet,
+        invoices: group.invoices,
+      };
+    });
+  }, [filteredList]);
+
   return (
     <div
       style={{
@@ -68,6 +157,7 @@ export default function MobileInvoiceList({
     >
       {/* Header with Title and Toggle Filter Button */}
       <div
+        onTouchMove={(e) => e.stopPropagation()}
         style={{
           padding: "10px 14px",
           borderBottom: "1px solid var(--border-color)",
@@ -76,6 +166,8 @@ export default function MobileInvoiceList({
           gap: "8px",
           flexShrink: 0,
           background: "#ffffff",
+          touchAction: "pan-x",
+          userSelect: "none",
         }}
       >
         <div
@@ -231,6 +323,8 @@ export default function MobileInvoiceList({
         style={{
           flexGrow: 1,
           overflowY: "auto",
+          overscrollBehavior: "contain",
+          WebkitOverflowScrolling: "touch",
           display: "flex",
           flexDirection: "column",
           paddingBottom: "80px",
@@ -267,140 +361,230 @@ export default function MobileInvoiceList({
             <span>Không tìm thấy hóa đơn nào</span>
           </div>
         ) : (
-          filteredList.map((inv) => {
-            // Format time: HH:mm
-            const dateObj = new Date(inv.createdAt);
-            const timeStr = dateObj.toLocaleTimeString("vi-VN", {
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: false,
-            });
-
-            // Extract unique staff members involved in this invoice
-            const invoiceStaff: Array<{ id?: string; name: string; avatar?: string }> = [];
-            const staffSeen = new Set<string>();
-
-            if (inv.items && inv.items.length > 0) {
-              inv.items.forEach((item) => {
-                if (item.stylist?.name && !staffSeen.has(item.stylist.name)) {
-                  staffSeen.add(item.stylist.name);
-                  invoiceStaff.push({
-                    id: item.stylist.id || item.staffId,
-                    name: item.stylist.name,
-                  });
-                }
-              });
-            }
-
-            // Fallback to cashier if no item staff
-            if (invoiceStaff.length === 0 && inv.cashier?.name) {
-              invoiceStaff.push({
-                id: inv.cashierId,
-                name: inv.cashier.name,
-              });
-            }
-
-            const staffNamesStr =
-              invoiceStaff.map((s) => s.name).join(", ") || "H&T Barber";
-
-            // Format Line 2: List of services
-            const serviceNamesStr =
-              inv.items && inv.items.length > 0
-                ? inv.items.map((i) => i.name || "Dịch vụ").join(", ")
-                : "Hóa đơn dịch vụ";
-
-            return (
+          groupedSections.map((section) => (
+            <div key={section.dateKey} style={{ position: "relative" }}>
+              {/* Sticky Section Header */}
               <div
-                key={inv.id}
-                onClick={() => onSelectInvoice(inv)}
                 style={{
+                  position: "sticky",
+                  top: 0,
+                  zIndex: 10,
+                  backgroundColor: "rgba(248, 250, 252, 0.96)",
+                  backdropFilter: "blur(8px)",
+                  WebkitBackdropFilter: "blur(8px)",
+                  borderTop: "1px solid #e2e8f0",
+                  borderBottom: "1px solid #e2e8f0",
+                  padding: "7px 14px",
                   display: "flex",
                   alignItems: "center",
-                  padding: "10px 14px",
-                  borderBottom: "1px solid var(--border-color)",
-                  background: "white",
-                  cursor: "pointer",
-                  gap: "12px",
-                  transition: "background-color 0.15s ease",
+                  justifyContent: "space-between",
+                  userSelect: "none",
+                  boxShadow: "0 1px 2px rgba(0, 0, 0, 0.03)",
                 }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#f8fafc")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor = "white")
-                }
               >
-                {/* Left Side: Multi-staff Avatar collage */}
-                <MultiStaffAvatar staffList={invoiceStaff} size={48} />
-
-                {/* Right Side: 2-Line Layout */}
                 <div
                   style={{
-                    flexGrow: 1,
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    color: "#334155",
                     display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    gap: "4px",
-                    overflow: "hidden",
+                    alignItems: "center",
+                    gap: "6px",
                   }}
                 >
-                  {/* Line 1: [HH:mm - Staff Names] | [Amount / Summary] */}
-                  <div
+                  <span
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: "8px",
+                      width: "6px",
+                      height: "6px",
+                      borderRadius: "50%",
+                      background: "#0891b2",
+                      display: "inline-block",
                     }}
-                  >
-                    <div
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: "600",
-                        color: "#2563eb",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {timeStr} - {staffNamesStr}
-                    </div>
+                  />
+                  <span>{section.title}</span>
+                </div>
 
-                    <div
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: "600",
-                        color: "#16a34a",
-                        whiteSpace: "nowrap",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "4px",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {inv.paymentMethod === "BANK_TRANSFER" && (
-                        <CreditCard size={13} color="#16a34a" />
-                      )}
-                      <span>{formatShortCurrency(inv.finalAmount)}</span>
-                    </div>
-                  </div>
-
-                  {/* Line 2: [Secondary: Service Names] */}
-                  <div
-                    style={{
-                      fontSize: "11.5px",
-                      color: "#64748b",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {serviceNamesStr}
-                  </div>
+                <div
+                  style={{
+                    fontSize: "11.5px",
+                    fontWeight: "600",
+                    color: "#64748b",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}
+                >
+                  <span>{section.count} HĐ</span>
+                  <span style={{ color: "#cbd5e1" }}>•</span>
+                  <span style={{ color: "#0891b2", fontWeight: "700" }}>
+                    {formatShortCurrency(section.totalNet)}
+                  </span>
                 </div>
               </div>
-            );
-          })
+
+              {/* Invoices belonging to this date section */}
+              <div>
+                {section.invoices.map((inv) => {
+                  // Format time: HH:mm
+                  const dateObj = new Date(inv.createdAt);
+                  const timeStr = dateObj.toLocaleTimeString("vi-VN", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                  });
+
+                  // Extract unique staff members involved in this invoice
+                  const invoiceStaff: Array<{ id?: string; name: string; avatar?: string }> = [];
+                  const staffSeen = new Set<string>();
+
+                  if (inv.items && inv.items.length > 0) {
+                    inv.items.forEach((item) => {
+                      if (item.stylist?.name && !staffSeen.has(item.stylist.name)) {
+                        staffSeen.add(item.stylist.name);
+                        invoiceStaff.push({
+                          id: item.stylist.id || item.staffId,
+                          name: item.stylist.name,
+                        });
+                      }
+                    });
+                  }
+
+                  // Fallback to cashier if no item staff
+                  if (invoiceStaff.length === 0 && inv.cashier?.name) {
+                    invoiceStaff.push({
+                      id: inv.cashierId,
+                      name: inv.cashier.name,
+                    });
+                  }
+
+                  const staffNamesStr =
+                    invoiceStaff.map((s) => s.name).join(", ") || "H&T Barber";
+
+                  // Format Line 2: List of services
+                  const serviceNamesStr =
+                    inv.items && inv.items.length > 0
+                      ? inv.items.map((i) => i.name || "Dịch vụ").join(", ")
+                      : "Hóa đơn dịch vụ";
+
+                  return (
+                    <div
+                      key={inv.id}
+                      onClick={() => onSelectInvoice(inv)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "10px 14px",
+                        borderBottom: "1px solid var(--border-color)",
+                        background: "white",
+                        cursor: "pointer",
+                        gap: "12px",
+                        transition: "background-color 0.15s ease",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.backgroundColor = "#f8fafc")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.backgroundColor = "white")
+                      }
+                    >
+                      {/* Left Side: Multi-staff Avatar collage */}
+                      <MultiStaffAvatar staffList={invoiceStaff} size={48} />
+
+                      {/* Right Side: 2-Line Layout */}
+                      <div
+                        style={{
+                          flexGrow: 1,
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "center",
+                          gap: "4px",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {/* Line 1: [HH:mm - Staff Names] | [Amount / Summary] */}
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: "8px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "13px",
+                              fontWeight: "600",
+                              color: "#2563eb",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {timeStr} - {staffNamesStr}
+                          </div>
+
+                          <div
+                            style={{
+                              fontSize: "13px",
+                              fontWeight: "600",
+                              color: "#0891b2",
+                              whiteSpace: "nowrap",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {inv.paymentMethod === "BANK_TRANSFER" && (
+                              <CreditCard size={13} color="#0891b2" />
+                            )}
+                            <span>{formatShortCurrency(inv.finalAmount)}</span>
+                          </div>
+                        </div>
+
+                        {/* Line 2: [Secondary: Service Names] & [Discount Amount if any] */}
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: "8px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "11.5px",
+                              color: "#64748b",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              flexGrow: 1,
+                            }}
+                          >
+                            {serviceNamesStr}
+                          </div>
+
+                          {inv.discountAmount > 0 && (
+                            <div
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: "600",
+                                color: "#dc2626",
+                                whiteSpace: "nowrap",
+                                flexShrink: 0,
+                              }}
+                            >
+                              -{formatShortCurrency(inv.discountAmount)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>
