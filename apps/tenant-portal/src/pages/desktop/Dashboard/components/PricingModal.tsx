@@ -79,7 +79,7 @@ export function PricingModal({
 
   return (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-4xl max-h-[90vh] bg-white rounded-2xl shadow-2xl p-6 sm:p-8 flex flex-col relative overflow-y-auto border border-slate-200 select-none">
+      <div className="w-full max-w-4xl max-h-[90vh] bg-white rounded-2xl shadow-2xl p-6 sm:p-8 flex flex-col relative overflow-y-auto border border-slate-300 select-none">
         {/* Close Button */}
         <button
           type="button"
@@ -277,7 +277,7 @@ export function PricingModal({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
               {/* Bank Transfer Specs */}
-              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 flex flex-col gap-3.5 text-xs">
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-300 flex flex-col gap-3.5 text-xs">
                 <h3 className="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2 m-0">
                   <CreditCard size={16} className="text-blue-600" />
                   Thông tin tài khoản nhận
@@ -297,7 +297,7 @@ export function PricingModal({
                     <span className="text-[11px] font-bold text-slate-500">
                       Số tài khoản:
                     </span>
-                    <div className="flex items-center gap-2 font-mono font-black text-sm text-blue-900 bg-white p-2 rounded-lg border border-slate-200 mt-0.5">
+                    <div className="flex items-center gap-2 font-mono font-black text-sm text-blue-900 bg-white p-2 rounded-lg border border-slate-300 mt-0.5">
                       <span>1023456789</span>
                       <Tooltip content="Sao chép số tài khoản">
                         <button
@@ -326,7 +326,7 @@ export function PricingModal({
                     </div>
                   </div>
 
-                  <div className="border-t border-slate-200 pt-2.5">
+                  <div className="border-t border-slate-300 pt-2.5">
                     <span className="text-[11px] font-bold text-slate-500">
                       Số tiền chuyển khoản:
                     </span>
@@ -365,14 +365,14 @@ export function PricingModal({
               </div>
 
               {/* Dynamic VietQR display */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 flex flex-col items-center justify-center text-center shadow-2xs">
+              <div className="bg-white p-5 rounded-2xl border border-slate-300 flex flex-col items-center justify-center text-center shadow-2xs">
                 <div className="text-xs font-extrabold text-slate-900 mb-3">
                   Quét mã QR để thanh toán nhanh
                 </div>
                 <img
                   src={`https://img.vietqr.io/image/vietinbank-1023456789-compact2.png?amount=${checkoutInvoice.amount}&addInfo=${checkoutInvoice.invoiceNumber}&accountName=CONG%20TY%20CO%20PHAN%20TECH%20SALON`}
                   alt="VietQR Chuyển khoản"
-                  className="max-w-[210px] w-full rounded-xl border border-slate-200 shadow-xs"
+                  className="max-w-[210px] w-full rounded-xl border border-slate-300 shadow-xs"
                 />
                 <div className="text-[11px] text-slate-500 mt-3 font-medium">
                   Hỗ trợ tất cả ứng dụng ngân hàng và ví điện tử

@@ -74,9 +74,9 @@ export function MonthlyRevenueChart({
   );
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-[14px] border border-slate-200 shadow-sm overflow-hidden select-none">
+    <div className="flex flex-col h-full bg-white rounded-[14px] border border-slate-300 shadow-sm overflow-hidden select-none">
       {/* 1. Header - Fixed exact height h-[60px] to match DailyRevenueCalendar */}
-      <div className="h-[60px] flex items-center justify-between px-4 border-b border-slate-200 bg-slate-100 flex-shrink-0">
+      <div className="h-[60px] flex items-center justify-between px-4 border-b border-slate-300 bg-slate-100 flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold shadow-xs flex-shrink-0">
             <BarChart3 size={18} />
@@ -110,11 +110,11 @@ export function MonthlyRevenueChart({
             </div>
           ) : (
             <>
-              <div className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg bg-white border border-slate-200 text-slate-800 font-bold shadow-2xs">
+              <div className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg bg-white border border-slate-300 text-slate-800 font-bold shadow-2xs">
                 <span className="w-2.5 h-2.5 rounded-xs bg-blue-600 inline-block flex-shrink-0" />
                 <span className="text-xs">Thành tiền</span>
               </div>
-              <div className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg bg-white border border-slate-200 text-slate-800 font-bold shadow-2xs">
+              <div className="h-8 flex items-center gap-1.5 px-2.5 rounded-lg bg-white border border-slate-300 text-slate-800 font-bold shadow-2xs">
                 <span className="w-2.5 h-2.5 rounded-xs bg-rose-600 inline-block flex-shrink-0" />
                 <span className="text-xs">Giảm giá</span>
               </div>
@@ -161,7 +161,7 @@ export function MonthlyRevenueChart({
                   className={`group flex items-center gap-2.5 px-2.5 py-0.5 rounded-lg cursor-pointer transition-all duration-150 border shadow-2xs h-8 flex-shrink-0 ${
                     isActive
                       ? "bg-blue-100 border-blue-600 ring-2 ring-blue-400/60 shadow-xs"
-                      : "bg-white border-slate-200 hover:border-blue-400 hover:bg-blue-50/40"
+                      : "bg-white border-slate-300 hover:border-blue-400 hover:bg-blue-50/40"
                   }`}
                 >
                   {/* Month Label (12px) */}
@@ -238,7 +238,7 @@ export function MonthlyRevenueChart({
       </div>
 
       {/* 3. Footer - Fixed exact height h-[46px] to match DailyRevenueCalendar */}
-      <div className="h-[46px] flex items-center justify-between px-4 bg-slate-100 border-t border-slate-200 text-xs flex-shrink-0">
+      <div className="h-[46px] flex items-center justify-between px-4 bg-slate-100 border-t border-slate-300 text-xs flex-shrink-0">
         <div className="flex items-center gap-1.5 text-xs text-slate-800 font-semibold">
           <Calendar size={14} className="text-slate-600 flex-shrink-0" />
           <span>

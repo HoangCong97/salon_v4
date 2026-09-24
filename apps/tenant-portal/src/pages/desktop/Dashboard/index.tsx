@@ -23,12 +23,18 @@ export default function Dashboard() {
 
   const handleSelectMonth = (month: string) => {
     setSelectedMonth(month);
-    setSelectedDays("");
-    setSelectedStaff("");
-    setSelectedServices("");
+    // Persist selectedStaff and selectedServices across month switches.
+    // Only keep selectedDays if they belong to the newly selected month(s).
+    if (selectedDays) {
+      const newMonthList = month ? month.split(",").filter(Boolean) : [];
+      const validDays = selectedDays
+        .split(",")
+        .filter((d) => newMonthList.some((m) => d.startsWith(m)));
+      setSelectedDays(validDays.join(","));
+    }
   };
 
-  // Perform filtering and aggregations client-side for instantaneous filtering speed
+  // Perform bi-directional cross-filtering client-side for instantaneous filtering speed
   const filteredCharts = React.useMemo(() => {
     if (!stats || !stats.charts) return null;
     const rawCharts = stats.charts;
@@ -43,16 +49,21 @@ export default function Dashboard() {
       ? selectedServices.split(",").filter((id) => id.trim().length > 0)
       : [];
 
-    // 1. Filter daily revenues based on selected staff/services
+    const isDayFiltered = selectedDaysList.length > 0;
+    const isStaffFiltered = selectedStaffList.length > 0;
+    const isServiceFiltered = selectedServicesList.length > 0;
+
+    // 1. Filter daily revenues:
+    // Narrow each day's invoices and items by selected staff and selected services
     const dailyRevenues = (rawCharts.dailyRevenues || []).map((d) => {
       const filteredInvoices = (d.invoices || [])
         .map((inv) => {
           const filteredItems = (inv.items || []).filter((item) => {
             const matchesStaff =
-              selectedStaffList.length === 0 ||
+              !isStaffFiltered ||
               (item.staffId && selectedStaffList.includes(item.staffId));
             const matchesService =
-              selectedServicesList.length === 0 ||
+              !isServiceFiltered ||
               (item.itemType === "SERVICE" &&
                 selectedServicesList.includes(item.itemId));
             return matchesStaff && matchesService;
@@ -105,16 +116,15 @@ export default function Dashboard() {
       };
     });
 
-    // 2. Gather invoices for date stats (scoped ONLY to selectedDays, NOT narrowed by staff or service)
-    // This ensures selecting a staff/service highlights that entity without wiping out or hiding other rows!
-    const invoicesForDateStats = (rawCharts.dailyRevenues || [])
-      .filter(
-        (d) =>
-          selectedDaysList.length === 0 || selectedDaysList.includes(d.dateRaw),
-      )
-      .flatMap((d) => d.invoices || []);
+    // 2. Base daily list scoped by selectedDays (if active)
+    const baseDailyList = isDayFiltered
+      ? (rawCharts.dailyRevenues || []).filter((d) =>
+          selectedDaysList.includes(d.dateRaw),
+        )
+      : (rawCharts.dailyRevenues || []);
 
-    // 3. Aggregate Staff Performance (starts at 0 to avoid double counting)
+    // 3. Aggregate Staff Performance:
+    // Scoped by selectedDays AND filtered by selectedServices (selecting a service updates staff amounts!)
     const staffMap = new Map<
       string,
       {
@@ -126,6 +136,7 @@ export default function Dashboard() {
       }
     >();
 
+    // Initialize map with all known staff from rawCharts
     (rawCharts.staffPerformance || []).forEach((s) => {
       staffMap.set(s.staffId, {
         staffName: s.staffName,
@@ -136,24 +147,36 @@ export default function Dashboard() {
       });
     });
 
-    for (const inv of invoicesForDateStats) {
-      const custId = inv.customerName || `guest-${inv.id}`;
-      for (const item of (inv.items || [])) {
-        if (item.staffId) {
-          const existing = staffMap.get(item.staffId);
-          if (existing) {
-            existing.totalPrice += item.totalPrice ?? (item.price * (item.quantity || 1));
-            existing.actualRevenue += item.finalAmount;
-            existing.customers.add(custId);
-            existing.recordCount += 1;
-          } else {
-            staffMap.set(item.staffId, {
-              staffName: item.staffName || "Nhân viên khác",
-              totalPrice: item.totalPrice ?? (item.price * (item.quantity || 1)),
-              actualRevenue: item.finalAmount,
-              customers: new Set([custId]),
-              recordCount: 1,
-            });
+    for (const d of baseDailyList) {
+      for (const inv of (d.invoices || [])) {
+        const custId = inv.customerName || `guest-${inv.id}`;
+        for (const item of (inv.items || [])) {
+          // Check if item matches selected service
+          const matchesService =
+            !isServiceFiltered ||
+            (item.itemType === "SERVICE" &&
+              selectedServicesList.includes(item.itemId));
+
+          if (item.staffId && matchesService) {
+            const itemGross =
+              item.totalPrice ?? (item.price * (item.quantity || 1));
+            const itemNet = item.finalAmount;
+
+            const existing = staffMap.get(item.staffId);
+            if (existing) {
+              existing.totalPrice += itemGross;
+              existing.actualRevenue += itemNet;
+              existing.customers.add(custId);
+              existing.recordCount += 1;
+            } else {
+              staffMap.set(item.staffId, {
+                staffName: item.staffName || "Nhân viên khác",
+                totalPrice: itemGross,
+                actualRevenue: itemNet,
+                customers: new Set([custId]),
+                recordCount: 1,
+              });
+            }
           }
         }
       }
@@ -171,7 +194,8 @@ export default function Dashboard() {
       }))
       .sort((a, b) => (b.actualRevenue || 0) - (a.actualRevenue || 0));
 
-    // 4. Aggregate Top Services (starts at 0, keeps all service rows visible)
+    // 4. Aggregate Top Services:
+    // Scoped by selectedDays AND filtered by selectedStaff (selecting staff updates service amounts!)
     const servicesMap = new Map<
       string,
       {
@@ -181,6 +205,7 @@ export default function Dashboard() {
       }
     >();
 
+    // Initialize with all known services from rawCharts
     (rawCharts.topServices || []).forEach((s) => {
       servicesMap.set(s.id, {
         name: s.name,
@@ -189,19 +214,28 @@ export default function Dashboard() {
       });
     });
 
-    for (const inv of invoicesForDateStats) {
-      for (const item of (inv.items || [])) {
-        if (item.itemType === "SERVICE") {
-          const existing = servicesMap.get(item.itemId);
-          if (existing) {
-            existing.count += item.quantity || 1;
-            existing.revenue += item.finalAmount;
-          } else if (item.itemId) {
-            servicesMap.set(item.itemId, {
-              name: item.name || "Dịch vụ khác",
-              count: item.quantity || 1,
-              revenue: item.finalAmount,
-            });
+    for (const d of baseDailyList) {
+      for (const inv of (d.invoices || [])) {
+        for (const item of (inv.items || [])) {
+          if (item.itemType === "SERVICE" && item.itemId) {
+            // Check if item matches selected staff
+            const matchesStaff =
+              !isStaffFiltered ||
+              (item.staffId && selectedStaffList.includes(item.staffId));
+
+            if (matchesStaff) {
+              const existing = servicesMap.get(item.itemId);
+              if (existing) {
+                existing.count += item.quantity || 1;
+                existing.revenue += item.finalAmount;
+              } else {
+                servicesMap.set(item.itemId, {
+                  name: item.name || "Dịch vụ khác",
+                  count: item.quantity || 1,
+                  revenue: item.finalAmount,
+                });
+              }
+            }
           }
         }
       }
@@ -216,11 +250,40 @@ export default function Dashboard() {
       }))
       .sort((a, b) => b.revenue - a.revenue);
 
+    // 5. Update monthlyTrends based on filtered dailyRevenues
+    // When staff, service, or day is selected, the matching month dynamically reflects that filter,
+    // while other historical months keep their baseline data so the 12-month trend remains interactive!
+    const monthlyTrends = (rawCharts.monthlyTrends || []).map((m) => {
+      const daysOfThisMonth = dailyRevenues.filter((d) =>
+        d.dateRaw.startsWith(m.yearMonth),
+      );
+
+      if (daysOfThisMonth.length > 0) {
+        const matchingDays = isDayFiltered
+          ? daysOfThisMonth.filter((d) => selectedDaysList.includes(d.dateRaw))
+          : daysOfThisMonth;
+
+        const totalPrice = matchingDays.reduce((sum, d) => sum + d.totalPrice, 0);
+        const finalAmount = matchingDays.reduce((sum, d) => sum + d.finalAmount, 0);
+        const discountAmount = matchingDays.reduce((sum, d) => sum + d.discountAmount, 0);
+
+        return {
+          ...m,
+          totalPrice,
+          finalAmount,
+          discountAmount,
+        };
+      }
+
+      return m;
+    });
+
     return {
       ...rawCharts,
       dailyRevenues,
       staffPerformance,
       topServices,
+      monthlyTrends,
     };
   }, [stats, selectedDays, selectedStaff, selectedServices]);
 
@@ -284,13 +347,13 @@ export default function Dashboard() {
       <div className="space-y-4 animate-fade-in">
         {/* Skeleton for 1-2-1 Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 xl:h-[calc(100vh-120px)] xl:min-h-[580px]">
-          <div className="xl:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-sm h-full min-h-[500px] xl:min-h-0 flex items-center justify-center">
+          <div className="xl:col-span-1 bg-white rounded-2xl border border-slate-300 shadow-sm h-full min-h-[500px] xl:min-h-0 flex items-center justify-center">
             <div className="w-3/4 h-64 bg-slate-100 rounded-lg animate-pulse" />
           </div>
-          <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm h-full min-h-[500px] xl:min-h-0 flex items-center justify-center">
+          <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-300 shadow-sm h-full min-h-[500px] xl:min-h-0 flex items-center justify-center">
             <div className="w-5/6 h-72 bg-slate-100 rounded-lg animate-pulse" />
           </div>
-          <div className="xl:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-sm h-full min-h-[500px] xl:min-h-0 flex items-center justify-center">
+          <div className="xl:col-span-1 bg-white rounded-2xl border border-slate-300 shadow-sm h-full min-h-[500px] xl:min-h-0 flex items-center justify-center">
             <div className="w-3/4 h-64 bg-slate-100 rounded-lg animate-pulse" />
           </div>
         </div>
@@ -301,7 +364,7 @@ export default function Dashboard() {
   if (error || !stats) {
     return (
       <div className="flex items-center justify-center min-h-[400px] p-6 animate-fade-in">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm max-w-md w-full p-8 text-center flex flex-col items-center gap-4">
+        <div className="bg-white rounded-2xl border border-slate-300 shadow-sm max-w-md w-full p-8 text-center flex flex-col items-center gap-4">
           <div className="w-14 h-14 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center text-2xl border border-amber-200">
             ⚠️
           </div>

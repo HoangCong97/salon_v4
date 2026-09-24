@@ -103,9 +103,9 @@ export function StaffAndServiceColumn({
   return (
     <div className="flex flex-col gap-3.5 h-full select-none">
       {/* 1. TOP CARD: BẢNG NHÂN VIÊN - Co giãn theo số lượng nhân viên, tối đa 50% của cả panel */}
-      <div className="flex-shrink-0 flex flex-col bg-white rounded-[14px] border border-slate-200 shadow-sm overflow-hidden max-h-[calc(50%-7px)]">
+      <div className="flex-shrink-0 flex flex-col bg-white rounded-[14px] border border-slate-300 shadow-sm overflow-hidden max-h-[calc(50%-7px)]">
         {/* Header */}
-        <div className="h-[46px] flex items-center justify-between px-3.5 border-b border-slate-200 bg-slate-100 flex-shrink-0">
+        <div className="h-[46px] flex items-center justify-between px-3.5 border-b border-slate-300 bg-slate-100 flex-shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold shadow-xs flex-shrink-0">
               <Users size={16} />
@@ -139,12 +139,12 @@ export function StaffAndServiceColumn({
         {/* Scrollable Table with Sharp Cell Borders */}
         <div className="overflow-x-auto overflow-y-auto min-h-0 text-xs bg-slate-50/30">
           <table className="w-full border-collapse text-left whitespace-nowrap">
-            <thead className="sticky top-0 bg-slate-200 text-slate-900 border-b border-slate-200 text-xs font-extrabold z-10">
+            <thead className="sticky top-0 bg-slate-200 text-slate-900 border-b border-slate-300 text-xs font-extrabold z-10">
               <tr>
-                <th className="py-2 px-2 border-r border-slate-200 font-extrabold">Tên NV</th>
-                <th className="py-2 px-2 text-right border-r border-slate-200 font-extrabold">Khách</th>
-                <th className="py-2 px-2 text-right border-r border-slate-200 font-extrabold">Đơn</th>
-                <th className="py-2 px-2 text-right border-r border-slate-200 font-extrabold">Doanh thu</th>
+                <th className="py-2 px-2 border-r border-slate-300 font-extrabold">Tên NV</th>
+                <th className="py-2 px-2 text-right border-r border-slate-300 font-extrabold">Khách</th>
+                <th className="py-2 px-2 text-right border-r border-slate-300 font-extrabold">Đơn</th>
+                <th className="py-2 px-2 text-right border-r border-slate-300 font-extrabold">Doanh thu</th>
                 <th className="py-2 px-2 text-right font-extrabold">Thu thực tế</th>
               </tr>
             </thead>
@@ -168,7 +168,7 @@ export function StaffAndServiceColumn({
                       onMouseDown={(e) => {
                         if (e.shiftKey || e.ctrlKey || e.metaKey) e.preventDefault();
                       }}
-                      className={`cursor-pointer transition-colors duration-100 border-b border-slate-200 ${
+                      className={`cursor-pointer transition-colors duration-100 border-b border-slate-300 ${
                         isRowActive
                           ? "bg-blue-100 text-blue-900 font-extrabold border-l-4 border-l-blue-600"
                           : "even:bg-slate-50/70 hover:bg-blue-50/60 text-slate-800"
@@ -176,22 +176,22 @@ export function StaffAndServiceColumn({
                       title="Bấm để lọc. Giữ Ctrl hoặc Shift để chọn nhiều"
                     >
                       {/* 1. Tên NV */}
-                      <td className="py-2 px-2 truncate max-w-[85px] font-bold border-r border-slate-200 text-slate-900">
+                      <td className="py-2 px-2 truncate max-w-[85px] font-bold border-r border-slate-300 text-slate-900">
                         {staff.staffName}
                       </td>
 
                       {/* 2. Khách */}
-                      <td className="py-2 px-2 text-right text-amber-800 font-bold border-r border-slate-200">
+                      <td className="py-2 px-2 text-right text-amber-800 font-bold border-r border-slate-300">
                         {staff.customers > 0 ? staff.customers : "-"}
                       </td>
 
                       {/* 3. Đơn */}
-                      <td className="py-2 px-2 text-right font-bold text-slate-900 border-r border-slate-200">
+                      <td className="py-2 px-2 text-right font-bold text-slate-900 border-r border-slate-300">
                         {staff.recordCount > 0 ? staff.recordCount : "-"}
                       </td>
 
                       {/* 4. Doanh thu (Giá DV ban đầu) */}
-                      <td className="py-2 px-2 text-right text-blue-700 font-bold border-r border-slate-200">
+                      <td className="py-2 px-2 text-right text-blue-700 font-bold border-r border-slate-300">
                         {grossRevenue > 0 ? formatNumber(grossRevenue) : "-"}
                       </td>
 
@@ -205,18 +205,18 @@ export function StaffAndServiceColumn({
               )}
             </tbody>
             {staffPerformance.length > 0 && (
-              <tfoot className="sticky bottom-0 bg-slate-200 border-t border-slate-200 font-extrabold text-xs text-slate-900 z-10 shadow-2xs">
+              <tfoot className="sticky bottom-0 bg-slate-200 border-t border-slate-300 font-extrabold text-xs text-slate-900 z-10 shadow-2xs">
                 <tr>
-                  <td className="py-2 px-2 border-r border-slate-200 font-extrabold">
+                  <td className="py-2 px-2 border-r border-slate-300 font-extrabold">
                     {selectedStaffList.length > 0 ? `Tổng (${selectedStaffList.length} NV)` : "Tổng"}
                   </td>
-                  <td className="py-2 px-2 text-right text-amber-800 border-r border-slate-200 font-black">
+                  <td className="py-2 px-2 text-right text-amber-800 border-r border-slate-300 font-black">
                     {formatNumber(staffTotalCustomers)}
                   </td>
-                  <td className="py-2 px-2 text-right text-slate-900 border-r border-slate-200 font-black">
+                  <td className="py-2 px-2 text-right text-slate-900 border-r border-slate-300 font-black">
                     {formatNumber(staffTotalRecords)}
                   </td>
-                  <td className="py-2 px-2 text-right text-blue-700 border-r border-slate-200 font-black">
+                  <td className="py-2 px-2 text-right text-blue-700 border-r border-slate-300 font-black">
                     {formatNumber(staffTotalGross)}
                   </td>
                   <td className="py-2 px-2 text-right text-emerald-700 font-black">
@@ -230,9 +230,9 @@ export function StaffAndServiceColumn({
       </div>
 
       {/* 2. BOTTOM CARD: BẢNG DỊCH VỤ - Chiếm toàn bộ phần chiều cao còn lại của panel */}
-      <div className="flex-1 min-h-0 flex flex-col bg-white rounded-[14px] border border-slate-200 shadow-sm overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col bg-white rounded-[14px] border border-slate-300 shadow-sm overflow-hidden">
         {/* Header */}
-        <div className="h-[46px] flex items-center justify-between px-3.5 border-b border-slate-200 bg-slate-100 flex-shrink-0">
+        <div className="h-[46px] flex items-center justify-between px-3.5 border-b border-slate-300 bg-slate-100 flex-shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold shadow-xs flex-shrink-0">
               <Scissors size={16} />
@@ -266,10 +266,10 @@ export function StaffAndServiceColumn({
         {/* Scrollable Table with Sharp Cell Borders */}
         <div className="flex-1 overflow-y-auto min-h-0 text-xs bg-slate-50/30">
           <table className="w-full border-collapse text-left table-fixed">
-            <thead className="sticky top-0 bg-slate-200 text-slate-900 border-b border-slate-200 text-xs font-extrabold z-10">
+            <thead className="sticky top-0 bg-slate-200 text-slate-900 border-b border-slate-300 text-xs font-extrabold z-10">
               <tr>
-                <th className="py-2 px-2.5 border-r border-slate-200 font-extrabold">Tên dịch vụ</th>
-                <th className="py-2 px-2.5 text-right border-r border-slate-200 font-extrabold w-16">SL</th>
+                <th className="py-2 px-2.5 border-r border-slate-300 font-extrabold">Tên dịch vụ</th>
+                <th className="py-2 px-2.5 text-right border-r border-slate-300 font-extrabold w-16">SL</th>
                 <th className="py-2 px-2.5 text-right font-extrabold w-28">Thành tiền</th>
               </tr>
             </thead>
@@ -290,17 +290,17 @@ export function StaffAndServiceColumn({
                       onMouseDown={(e) => {
                         if (e.shiftKey || e.ctrlKey || e.metaKey) e.preventDefault();
                       }}
-                      className={`cursor-pointer transition-colors duration-100 border-b border-slate-200 ${
+                      className={`cursor-pointer transition-colors duration-100 border-b border-slate-300 ${
                         isRowActive
                           ? "bg-blue-100 text-blue-900 font-extrabold border-l-4 border-l-blue-600"
                           : "even:bg-slate-50/70 hover:bg-blue-50/60 text-slate-800"
                       }`}
                       title="Bấm để lọc. Giữ Ctrl hoặc Shift để chọn nhiều"
                     >
-                      <td className="py-2 px-2.5 truncate font-bold border-r border-slate-200 text-slate-900">
+                      <td className="py-2 px-2.5 truncate font-bold border-r border-slate-300 text-slate-900">
                         {service.name}
                       </td>
-                      <td className="py-2 px-2.5 text-right font-bold text-amber-800 border-r border-slate-200 w-16">
+                      <td className="py-2 px-2.5 text-right font-bold text-amber-800 border-r border-slate-300 w-16">
                         {service.count > 0 ? service.count : "-"}
                       </td>
                       <td className="py-2 px-2.5 text-right font-black text-emerald-700 w-28">
@@ -316,14 +316,14 @@ export function StaffAndServiceColumn({
 
         {/* Ô TỔNG DỊCH VỤ CỐ ĐỊNH DƯỚI CÙNG CARD */}
         {topServices.length > 0 && (
-          <div className="flex-shrink-0 bg-slate-200 border-t border-slate-200 font-extrabold text-xs text-slate-900 z-10 shadow-2xs">
+          <div className="flex-shrink-0 bg-slate-200 border-t border-slate-300 font-extrabold text-xs text-slate-900 z-10 shadow-2xs">
             <table className="w-full border-collapse text-left table-fixed">
               <tfoot>
                 <tr>
-                  <td className="py-2 px-2.5 border-r border-slate-200 font-extrabold">
+                  <td className="py-2 px-2.5 border-r border-slate-300 font-extrabold">
                     {selectedServicesList.length > 0 ? `Tổng (${selectedServicesList.length} DV)` : "Tổng"}
                   </td>
-                  <td className="py-2 px-2.5 text-right text-amber-800 border-r border-slate-200 font-black w-16">
+                  <td className="py-2 px-2.5 text-right text-amber-800 border-r border-slate-300 font-black w-16">
                     {formatNumber(serviceTotalQty)}
                   </td>
                   <td className="py-2 px-2.5 text-right text-emerald-700 font-black w-28">

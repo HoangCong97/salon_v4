@@ -345,9 +345,9 @@ export function DailyRevenueCalendar({
   }, [dailyRevenues, selectedList, currentMonthTotalInvoices]);
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-[14px] border border-slate-200 shadow-sm overflow-hidden select-none">
+    <div className="flex flex-col h-full bg-white rounded-[14px] border border-slate-300 shadow-sm overflow-hidden select-none">
       {/* 1. Header - Fixed exact height h-[60px] to match MonthlyRevenueChart */}
-      <div className="h-[60px] flex items-center justify-between px-4 border-b border-slate-200 bg-slate-100 flex-shrink-0">
+      <div className="h-[60px] flex items-center justify-between px-4 border-b border-slate-300 bg-slate-100 flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold shadow-xs flex-shrink-0">
             <CalendarIcon size={18} />
@@ -419,14 +419,22 @@ export function DailyRevenueCalendar({
                 <X size={12} strokeWidth={2.5} />
               </button>
             </div>
-          ) : selectedStaffList.length === 0 && selectedServicesList.length === 0 ? (
-            <div className="h-8 flex items-center gap-2 bg-slate-100 px-3 rounded-lg border border-slate-200 shadow-2xs">
-              <span className="text-slate-700 font-bold text-xs">Tổng thu:</span>
-              <span className="font-black text-[#047857] text-xs">
-                {formatCompactVND(currentMonthRevenue)}
-              </span>
-            </div>
           ) : null}
+
+          <div className="h-8 flex items-center gap-2 bg-slate-100 px-3 rounded-lg border border-slate-300 shadow-2xs">
+            <span className="text-slate-700 font-bold text-xs">
+              {selectedList.length > 0 || selectedStaffList.length > 0 || selectedServicesList.length > 0
+                ? "Đã lọc:"
+                : "Tổng thu:"}
+            </span>
+            <span className="font-black text-[#047857] text-xs">
+              {formatCompactVND(
+                selectedList.length > 0
+                  ? selectedDaysFinalAmount
+                  : currentMonthRevenue,
+              )}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -448,10 +456,10 @@ export function DailyRevenueCalendar({
                   key={wd.key}
                   className={`py-1.5 text-xs font-extrabold rounded-lg border shadow-2xs ${
                     wd.isSunday
-                      ? "text-rose-700 bg-rose-50/80 border-slate-200"
+                      ? "text-rose-700 bg-rose-50/80 border-slate-300"
                       : wd.isSaturday
-                        ? "text-blue-700 bg-blue-50/80 border-slate-200"
-                        : "text-slate-800 bg-white border-slate-200"
+                        ? "text-blue-700 bg-blue-50/80 border-slate-300"
+                        : "text-slate-800 bg-white border-slate-300"
                   }`}
                   title={wd.fullName}
                 >
@@ -466,7 +474,7 @@ export function DailyRevenueCalendar({
               {leadingDays.map((dayNum, idx) => (
                 <div
                   key={`blank-lead-${idx}`}
-                  className="min-h-[50px] rounded-lg border border-slate-200 bg-slate-200/70 p-2 flex flex-col justify-between select-none shadow-sm opacity-80"
+                  className="min-h-[50px] rounded-lg border border-slate-300 bg-slate-200/70 p-2 flex flex-col justify-between select-none shadow-sm opacity-80"
                 >
                   <span className="text-xs font-bold text-slate-400">
                     {dayNum}
@@ -531,10 +539,10 @@ export function DailyRevenueCalendar({
                         isCellHighlighted
                           ? "bg-blue-100/90 border-blue-600 ring-2 ring-blue-500 shadow-md z-10"
                           : isSunday
-                            ? "bg-rose-50/40 border-slate-200 hover:border-blue-400 hover:bg-rose-50/70 hover:shadow-xs"
+                            ? "bg-rose-50/40 border-slate-300 hover:border-blue-400 hover:bg-rose-50/70 hover:shadow-xs"
                             : isSaturday
-                              ? "bg-blue-50/40 border-slate-200 hover:border-blue-400 hover:bg-blue-50/70 hover:shadow-xs"
-                              : "bg-white border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 hover:shadow-xs"
+                              ? "bg-blue-50/40 border-slate-300 hover:border-blue-400 hover:bg-blue-50/70 hover:shadow-xs"
+                              : "bg-white border-slate-300 hover:border-blue-400 hover:bg-blue-50/30 hover:shadow-xs"
                       }`}
                     >
                       {/* Top Header Row of Cell: Day Number & Invoice Badge */}
@@ -567,7 +575,7 @@ export function DailyRevenueCalendar({
                             className={`text-[9.5px] font-extrabold px-1.5 py-0.2 rounded-full border transition-colors ${
                               isSelected
                                 ? "bg-blue-200 border-blue-400 text-blue-900"
-                                : "bg-slate-100 border-slate-200 text-slate-700 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600"
+                                : "bg-slate-100 border-slate-300 text-slate-700 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600"
                             }`}
                           >
                             {invoiceCount} HĐ
@@ -597,7 +605,7 @@ export function DailyRevenueCalendar({
                           </div>
 
                           {/* 3. Thu thực tế: rgb(4 120 87) / text-[#047857] */}
-                          <div className="flex items-baseline justify-end pt-0.5 border-t border-slate-200">
+                          <div className="flex items-baseline justify-end pt-0.5 border-t border-slate-300">
                             <span className="font-black text-[#047857] text-xs truncate">
                               {formatCompactVND(d.finalAmount)}
                             </span>
@@ -617,7 +625,7 @@ export function DailyRevenueCalendar({
               {trailingDays.map((dayNum, idx) => (
                 <div
                   key={`blank-trail-${idx}`}
-                  className="min-h-[50px] rounded-lg border border-slate-200 bg-slate-200/70 p-2 flex flex-col justify-between select-none shadow-sm opacity-80"
+                  className="min-h-[50px] rounded-lg border border-slate-300 bg-slate-200/70 p-2 flex flex-col justify-between select-none shadow-sm opacity-80"
                 >
                   <span className="text-xs font-bold text-slate-400">
                     {dayNum}
@@ -630,7 +638,7 @@ export function DailyRevenueCalendar({
       </div>
 
       {/* 3. Footer - Fixed exact height h-[46px] to match MonthlyRevenueChart */}
-      <div className="h-[46px] relative flex items-center justify-between px-4 bg-slate-100 border-t border-slate-200 text-xs flex-shrink-0">
+      <div className="h-[46px] relative flex items-center justify-between px-4 bg-slate-100 border-t border-slate-300 text-xs flex-shrink-0">
         <div className="flex items-center gap-2.5 text-xs text-slate-800 font-semibold z-10">
           <div className="flex items-center gap-1.5">
             <Receipt size={14} className="text-slate-600 flex-shrink-0" />
@@ -653,7 +661,7 @@ export function DailyRevenueCalendar({
         {/* Ô thay đổi tháng CỐ ĐỊNH TUYỆT ĐỐI TẠI TRUNG TÂM (không bị dịch chuyển khi đối tượng bên phải đổi độ dài) */}
         <div
           style={{ position: "absolute", left: "50%", transform: "translateX(-50%)" }}
-          className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm z-20 pointer-events-auto"
+          className="flex items-center bg-white border border-slate-300 rounded-lg p-0.5 shadow-sm z-20 pointer-events-auto"
         >
           <button
             type="button"

@@ -41,7 +41,7 @@ export function RecentBookings({ bookings }: RecentBookingsProps) {
         );
       default:
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-50 text-slate-700 border border-slate-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-50 text-slate-700 border border-slate-300">
             {status}
           </span>
         );
@@ -49,9 +49,9 @@ export function RecentBookings({ bookings }: RecentBookingsProps) {
   };
 
   return (
-    <div className="bg-white rounded-[14px] border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-[300px]">
+    <div className="bg-white rounded-[14px] border border-slate-300 shadow-sm overflow-hidden flex flex-col min-h-[300px]">
       {/* Header */}
-      <div className="h-[46px] flex items-center justify-between px-4 border-b border-slate-200 bg-slate-100 flex-shrink-0">
+      <div className="h-[46px] flex items-center justify-between px-4 border-b border-slate-300 bg-slate-100 flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold shadow-xs flex-shrink-0">
             <CalendarCheck2 size={16} />
@@ -76,37 +76,37 @@ export function RecentBookings({ bookings }: RecentBookingsProps) {
           </div>
         ) : (
           <table className="w-full border-collapse text-left text-xs whitespace-nowrap">
-            <thead className="bg-slate-200 text-slate-900 border-b border-slate-200 font-extrabold sticky top-0 z-10">
+            <thead className="bg-slate-200 text-slate-900 border-b border-slate-300 font-extrabold sticky top-0 z-10">
               <tr>
-                <th className="py-2.5 px-3 border-r border-slate-200">Khách hàng</th>
-                <th className="py-2.5 px-3 border-r border-slate-200">Dịch vụ</th>
-                <th className="py-2.5 px-3 border-r border-slate-200">Kỹ thuật viên</th>
-                <th className="py-2.5 px-3 border-r border-slate-200">Thời gian</th>
+                <th className="py-2.5 px-3 border-r border-slate-300">Khách hàng</th>
+                <th className="py-2.5 px-3 border-r border-slate-300">Dịch vụ</th>
+                <th className="py-2.5 px-3 border-r border-slate-300">Kỹ thuật viên</th>
+                <th className="py-2.5 px-3 border-r border-slate-300">Thời gian</th>
                 <th className="py-2.5 px-3 text-center">Trạng thái</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-200">
               {bookings.map((b) => (
                 <tr
                   key={b.id}
                   className="hover:bg-blue-50/40 transition-colors duration-100 even:bg-slate-50/50"
                 >
-                  <td className="py-2.5 px-3 font-bold text-slate-900 border-r border-slate-200">
+                  <td className="py-2.5 px-3 font-bold text-slate-900 border-r border-slate-300">
                     <div className="flex items-center gap-1.5">
                       <User size={13} className="text-slate-400" />
                       <span>{b.customerName}</span>
                     </div>
                   </td>
-                  <td className="py-2.5 px-3 text-slate-700 border-r border-slate-200">
+                  <td className="py-2.5 px-3 text-slate-700 border-r border-slate-300">
                     <div className="flex items-center gap-1.5">
                       <Scissors size={13} className="text-slate-400" />
                       <span>{b.service}</span>
                     </div>
                   </td>
-                  <td className="py-2.5 px-3 font-medium text-slate-700 border-r border-slate-200">
+                  <td className="py-2.5 px-3 font-medium text-slate-700 border-r border-slate-300">
                     {b.staff}
                   </td>
-                  <td className="py-2.5 px-3 font-semibold text-slate-800 border-r border-slate-200">
+                  <td className="py-2.5 px-3 font-semibold text-slate-800 border-r border-slate-300">
                     <div className="flex items-center gap-1.5">
                       <Clock size={13} className="text-slate-400" />
                       <span>{b.time}</span>

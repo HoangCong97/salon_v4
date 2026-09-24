@@ -31,11 +31,11 @@ export function DailyInvoiceModal({ day, onClose }: DailyInvoiceModalProps) {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl max-h-[85vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 select-none"
+        className="w-full max-w-2xl max-h-[85vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-300 select-none"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 bg-slate-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-300 bg-slate-100">
           <div>
             <h4 className="text-base font-black text-slate-900 m-0">
               Chi tiết doanh thu ngày {day.date}
@@ -57,7 +57,7 @@ export function DailyInvoiceModal({ day, onClose }: DailyInvoiceModalProps) {
         <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4 bg-slate-50/50">
           {/* Summary 3 Cards */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs flex flex-col">
+            <div className="p-3.5 rounded-xl bg-white border border-slate-300 shadow-2xs flex flex-col">
               <span className="text-xs font-bold text-slate-600">Giá dịch vụ</span>
               <strong className="text-base font-black text-slate-900 mt-1">
                 {formatVND(day.totalPrice)}
@@ -86,7 +86,7 @@ export function DailyInvoiceModal({ day, onClose }: DailyInvoiceModalProps) {
             </h5>
 
             {day.invoices.length === 0 ? (
-              <div className="p-8 text-center text-slate-500 font-bold bg-white rounded-xl border border-dashed border-slate-200">
+              <div className="p-8 text-center text-slate-500 font-bold bg-white rounded-xl border border-dashed border-slate-300">
                 Không có hóa đơn nào phát sinh trong ngày này.
               </div>
             ) : (
@@ -94,7 +94,7 @@ export function DailyInvoiceModal({ day, onClose }: DailyInvoiceModalProps) {
                 {day.invoices.map((inv) => (
                   <div
                     key={inv.id}
-                    className="p-4 rounded-xl border border-slate-200 bg-white hover:border-blue-400 transition-colors shadow-2xs flex flex-col gap-3"
+                    className="p-4 rounded-xl border border-slate-300 bg-white hover:border-blue-400 transition-colors shadow-2xs flex flex-col gap-3"
                   >
                     {/* Invoice Header */}
                     <div className="flex items-center justify-between">
@@ -111,7 +111,7 @@ export function DailyInvoiceModal({ day, onClose }: DailyInvoiceModalProps) {
                         <span className="px-2.5 py-0.5 text-xs font-extrabold text-blue-900 bg-blue-100 border border-blue-300 rounded-full">
                           {inv.paymentStatus === "PAID" ? "Đã thu" : inv.paymentStatus}
                         </span>
-                        <span className="px-2.5 py-0.5 text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 rounded-full">
+                        <span className="px-2.5 py-0.5 text-xs font-bold text-slate-700 bg-slate-100 border border-slate-300 rounded-full">
                           {inv.paymentMethod === "CASH"
                             ? "Tiền mặt"
                             : inv.paymentMethod === "TRANSFER"
@@ -122,7 +122,7 @@ export function DailyInvoiceModal({ day, onClose }: DailyInvoiceModalProps) {
                     </div>
 
                     {/* Customer & Cashier */}
-                    <div className="flex items-center justify-between text-xs text-slate-700 border-t border-slate-200 pt-2 font-medium">
+                    <div className="flex items-center justify-between text-xs text-slate-700 border-t border-slate-300 pt-2 font-medium">
                       <span className="flex items-center gap-1.5">
                         <User size={13} className="text-slate-500" />
                         Khách: <strong className="text-slate-900 font-extrabold">{inv.customerName}</strong>
@@ -134,20 +134,20 @@ export function DailyInvoiceModal({ day, onClose }: DailyInvoiceModalProps) {
                     </div>
 
                     {/* Purchased Items Subtable */}
-                    <div className="rounded-lg border border-slate-200 overflow-hidden text-xs">
-                      <div className="grid grid-cols-12 bg-slate-200 px-3 py-1.5 font-black text-slate-900 border-b border-slate-200 text-xs">
-                        <span className="col-span-6 border-r border-slate-200">Mặt hàng</span>
-                        <span className="col-span-2 text-center border-r border-slate-200">SL</span>
-                        <span className="col-span-2 text-right border-r border-slate-200 pr-2">Đơn giá</span>
+                    <div className="rounded-lg border border-slate-300 overflow-hidden text-xs">
+                      <div className="grid grid-cols-12 bg-slate-200 px-3 py-1.5 font-black text-slate-900 border-b border-slate-300 text-xs">
+                        <span className="col-span-6 border-r border-slate-300">Mặt hàng</span>
+                        <span className="col-span-2 text-center border-r border-slate-300">SL</span>
+                        <span className="col-span-2 text-right border-r border-slate-300 pr-2">Đơn giá</span>
                         <span className="col-span-2 text-right">Thành tiền</span>
                       </div>
 
                       {inv.items.map((item) => (
                         <div
                           key={item.id}
-                          className="grid grid-cols-12 px-3 py-2 border-b border-slate-200 last:border-0 items-center text-slate-800 even:bg-slate-50"
+                          className="grid grid-cols-12 px-3 py-2 border-b border-slate-300 last:border-0 items-center text-slate-800 even:bg-slate-50"
                         >
-                          <div className="col-span-6 flex items-center gap-1.5 truncate border-r border-slate-200 pr-2">
+                          <div className="col-span-6 flex items-center gap-1.5 truncate border-r border-slate-300 pr-2">
                             <span className="truncate font-bold text-slate-900">{item.name}</span>
                             <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-slate-200 text-slate-700 flex-shrink-0">
                               {item.itemType === "SERVICE"
@@ -157,10 +157,10 @@ export function DailyInvoiceModal({ day, onClose }: DailyInvoiceModalProps) {
                                   : "Gói"}
                             </span>
                           </div>
-                          <span className="col-span-2 text-center font-bold border-r border-slate-200">
+                          <span className="col-span-2 text-center font-bold border-r border-slate-300">
                             {item.quantity}
                           </span>
-                          <span className="col-span-2 text-right font-medium text-slate-600 border-r border-slate-200 pr-2">
+                          <span className="col-span-2 text-right font-medium text-slate-600 border-r border-slate-300 pr-2">
                             {formatNumber(item.price)}
                           </span>
                           <span className="col-span-2 text-right font-black text-slate-900">
@@ -171,7 +171,7 @@ export function DailyInvoiceModal({ day, onClose }: DailyInvoiceModalProps) {
                     </div>
 
                     {/* Invoice Footer Line */}
-                    <div className="flex flex-col gap-1 border-t border-slate-200 pt-2 text-xs">
+                    <div className="flex flex-col gap-1 border-t border-slate-300 pt-2 text-xs">
                       {inv.discountAmount > 0 && (
                         <div className="flex justify-between text-rose-700 font-bold">
                           <span>Giảm giá hóa đơn:</span>

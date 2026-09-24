@@ -21,9 +21,9 @@ export function DailyTurns({ turns }: DailyTurnsProps) {
   };
 
   return (
-    <div className="bg-white rounded-[14px] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+    <div className="bg-white rounded-[14px] border border-slate-300 shadow-sm overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="h-[46px] flex items-center justify-between px-4 border-b border-slate-200 bg-slate-100 flex-shrink-0">
+      <div className="h-[46px] flex items-center justify-between px-4 border-b border-slate-300 bg-slate-100 flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold shadow-xs flex-shrink-0">
             <Award size={16} />
@@ -47,7 +47,7 @@ export function DailyTurns({ turns }: DailyTurnsProps) {
           turns.map((t) => (
             <div
               key={t.rank}
-              className="flex items-center gap-3 p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs hover:border-blue-300 transition-colors"
+              className="flex items-center gap-3 p-2.5 rounded-xl bg-white border border-slate-300 shadow-2xs hover:border-blue-300 transition-colors"
             >
               {/* Rank Badge */}
               <div
@@ -63,10 +63,10 @@ export function DailyTurns({ turns }: DailyTurnsProps) {
                 <img
                   src={t.avatar}
                   alt={t.name}
-                  className="w-8 h-8 rounded-full object-cover border border-slate-200 flex-shrink-0"
+                  className="w-8 h-8 rounded-full object-cover border border-slate-300 flex-shrink-0"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-xs font-bold border border-slate-200 flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-xs font-bold border border-slate-300 flex-shrink-0">
                   {t.name.slice(0, 1).toUpperCase()}
                 </div>
               )}

@@ -93,9 +93,9 @@ export function StaffRevenuePieChart({
   }, [selectedStaff]);
 
   return (
-    <div className="bg-white rounded-[14px] border border-slate-200 shadow-sm overflow-hidden select-none">
+    <div className="bg-white rounded-[14px] border border-slate-300 shadow-sm overflow-hidden select-none">
       {/* 1. High-Contrast Card Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-100 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-300 bg-slate-100 flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold shadow-xs flex-shrink-0">
             <PieChartIcon size={18} />
@@ -133,7 +133,7 @@ export function StaffRevenuePieChart({
       {/* 2. Card Content: Chart & Legend Side by Side */}
       <div className="p-5 flex flex-col md:flex-row items-center justify-around gap-6 bg-slate-50/50">
         {/* Left: SVG Pie Chart */}
-        <div className="w-[320px] h-[320px] flex-shrink-0 flex items-center justify-center relative p-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
+        <div className="w-[320px] h-[320px] flex-shrink-0 flex items-center justify-center relative p-3 bg-white rounded-2xl border border-slate-300 shadow-sm">
           {totalRevenue > 0 && pieSlices.length > 0 ? (
             <svg
               width="290"
@@ -209,7 +209,7 @@ export function StaffRevenuePieChart({
                     className={`flex items-center justify-between p-2.5 rounded-lg border transition-all text-xs cursor-pointer shadow-2xs ${
                       isSelected
                         ? "bg-blue-100 border-blue-600 ring-2 ring-blue-500 shadow-xs"
-                        : "border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/30"
+                        : "border-slate-300 bg-white hover:border-blue-400 hover:bg-blue-50/30"
                     }`}
                   >
                     <div className="flex items-center gap-2 truncate pr-2">
