@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Tooltip } from "../../../../components/desktop/ui/Tooltip";
 import { DailyRevenueItem } from "../types";
+import { formatNumber, formatVND, formatCompactVND } from "../utils";
 
 interface DailyRevenueCalendarProps {
   dailyRevenues: DailyRevenueItem[];
@@ -52,28 +53,6 @@ export function DailyRevenueCalendar({
   onClearServiceFilter,
   onViewDayDetails,
 }: DailyRevenueCalendarProps) {
-  // Formatters
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat("vi-VN").format(num);
-  };
-
-  const formatVND = (num: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(num);
-  };
-
-  const formatCompactVND = (amount: number) => {
-    if (amount === 0) return "-";
-    if (amount >= 1000000000) {
-      return `${(amount / 1000000000).toFixed(1)} Tỷ`;
-    }
-    if (amount >= 10000000) {
-      return `${(amount / 1000000).toFixed(1)} Tr`;
-    }
-    return formatNumber(amount);
-  };
 
   // Identify today's date in YYYY-MM-DD
   const todayDateStr = useMemo(() => {

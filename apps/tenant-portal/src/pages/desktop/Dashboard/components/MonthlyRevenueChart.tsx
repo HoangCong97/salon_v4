@@ -1,33 +1,7 @@
 import React, { useRef, useEffect, useMemo } from "react";
 import { BarChart3, Calendar, X } from "lucide-react";
 import { MonthlyTrendItem } from "../types";
-
-function getNiceTicks(maxVal: number, maxTicks = 5) {
-  const translationFactor = 1000000; // Millions
-  const maxValM = maxVal / translationFactor;
-  const roughStep = maxValM / maxTicks;
-  const log = Math.log10(roughStep);
-  const power = Math.floor(log);
-  const base = Math.pow(10, power);
-  const normalized = roughStep / base;
-
-  let niceNormalizedStep = 1;
-  if (normalized < 1.5) niceNormalizedStep = 1;
-  else if (normalized < 3) niceNormalizedStep = 2;
-  else if (normalized < 7) niceNormalizedStep = 5;
-  else niceNormalizedStep = 10;
-
-  const niceStepM = niceNormalizedStep * base;
-  const niceStep = niceStepM * translationFactor;
-  const niceMax = Math.ceil(maxVal / niceStep) * niceStep;
-
-  const ticks: number[] = [];
-  for (let val = 0; val <= niceMax; val += niceStep) {
-    ticks.push(val);
-  }
-
-  return { ticks, niceMax };
-}
+import { getNiceTicks, formatNumber, handleMultiRangeSelect } from "../utils";
 
 interface MonthlyRevenueChartProps {
   monthlyTrends: MonthlyTrendItem[];
@@ -73,50 +47,23 @@ export function MonthlyRevenueChart({
 
   const handleMonthClick = (e: React.MouseEvent, clickedMonth: string) => {
     const allMonths = monthlyTrends.map((m) => m.yearMonth);
-    const selectedList = selectedMonth ? selectedMonth.split(",").filter(Boolean) : [];
-
-    let newSelected: string[] = [];
-
-    if (e.ctrlKey || e.metaKey) {
-      if (selectedList.includes(clickedMonth)) {
-        newSelected = selectedList.filter((m) => m !== clickedMonth);
-      } else {
-        newSelected = [...selectedList, clickedMonth];
-      }
-      anchorMonthRef.current = clickedMonth;
-    } else if (e.shiftKey && anchorMonthRef.current) {
-      const anchorIndex = allMonths.indexOf(anchorMonthRef.current);
-      const clickedIndex = allMonths.indexOf(clickedMonth);
-
-      if (anchorIndex !== -1 && clickedIndex !== -1) {
-        const start = Math.min(anchorIndex, clickedIndex);
-        const end = Math.max(anchorIndex, clickedIndex);
-        newSelected = allMonths.slice(start, end + 1);
-      } else {
-        newSelected = [clickedMonth];
-        anchorMonthRef.current = clickedMonth;
-      }
-    } else {
-      if (selectedList.length === 1 && selectedList[0] === clickedMonth) {
-        newSelected = [];
-        anchorMonthRef.current = null;
-      } else {
-        newSelected = [clickedMonth];
-        anchorMonthRef.current = clickedMonth;
-      }
-    }
-
-    onSelectMonth(newSelected.join(","));
+    handleMultiRangeSelect({
+      event: e,
+      clickedKey: clickedMonth,
+      allKeys: allMonths,
+      currentSelected: selectedMonth,
+      anchorKey: anchorMonthRef.current,
+      onSelect: onSelectMonth,
+      setAnchorKey: (key) => {
+        anchorMonthRef.current = key;
+      },
+    });
   };
 
   const formatMonthLabel = (monthStr: string) => {
     let cleaned = monthStr.replace(/thg\s*/i, "").trim();
     cleaned = cleaned.replace(/\s+/g, "/");
     return cleaned;
-  };
-
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat("vi-VN").format(num);
   };
 
   const { niceMax } = getNiceTicks(

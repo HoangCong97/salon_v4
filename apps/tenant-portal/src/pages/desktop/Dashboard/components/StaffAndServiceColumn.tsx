@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import { Users, Scissors, X } from "lucide-react";
 import { StaffPerformanceItem, TopServiceData } from "../types";
+import { formatNumber, handleMultiRangeSelect } from "../utils";
 
 interface StaffAndServiceColumnProps {
   staffPerformance: StaffPerformanceItem[];
@@ -31,45 +32,17 @@ export function StaffAndServiceColumn({
 
   const handleStaffClick = (e: React.MouseEvent, clickedStaffId: string) => {
     const allStaff = staffPerformance.map((s) => s.staffId);
-    const selectedList = selectedStaff ? selectedStaff.split(",").filter(Boolean) : [];
-
-    let newSelected: string[] = [];
-
-    if (e.ctrlKey || e.metaKey) {
-      if (selectedList.includes(clickedStaffId)) {
-        newSelected = selectedList.filter((id) => id !== clickedStaffId);
-      } else {
-        newSelected = [...selectedList, clickedStaffId];
-      }
-      anchorStaffRef.current = clickedStaffId;
-    } else if (e.shiftKey && anchorStaffRef.current) {
-      const anchorIndex = allStaff.indexOf(anchorStaffRef.current);
-      const clickedIndex = allStaff.indexOf(clickedStaffId);
-
-      if (anchorIndex !== -1 && clickedIndex !== -1) {
-        const start = Math.min(anchorIndex, clickedIndex);
-        const end = Math.max(anchorIndex, clickedIndex);
-        newSelected = allStaff.slice(start, end + 1);
-      } else {
-        newSelected = [clickedStaffId];
-        anchorStaffRef.current = clickedStaffId;
-      }
-    } else {
-      newSelected = [clickedStaffId];
-      anchorStaffRef.current = clickedStaffId;
-    }
-
-    if (
-      !e.ctrlKey &&
-      !e.shiftKey &&
-      selectedList.length === 1 &&
-      selectedList[0] === clickedStaffId
-    ) {
-      newSelected = [];
-      anchorStaffRef.current = null;
-    }
-
-    onSelectStaff(newSelected.join(","));
+    handleMultiRangeSelect({
+      event: e,
+      clickedKey: clickedStaffId,
+      allKeys: allStaff,
+      currentSelected: selectedStaff,
+      anchorKey: anchorStaffRef.current,
+      onSelect: onSelectStaff,
+      setAnchorKey: (key) => {
+        anchorStaffRef.current = key;
+      },
+    });
   };
 
   // Service Selection handlers
@@ -87,49 +60,17 @@ export function StaffAndServiceColumn({
     clickedServiceId: string,
   ) => {
     const allServicesList = topServices.map((s) => s.id);
-    const selectedList = selectedServices ? selectedServices.split(",").filter(Boolean) : [];
-
-    let newSelected: string[] = [];
-
-    if (e.ctrlKey || e.metaKey) {
-      if (selectedList.includes(clickedServiceId)) {
-        newSelected = selectedList.filter((id) => id !== clickedServiceId);
-      } else {
-        newSelected = [...selectedList, clickedServiceId];
-      }
-      anchorServiceRef.current = clickedServiceId;
-    } else if (e.shiftKey && anchorServiceRef.current) {
-      const anchorIndex = allServicesList.indexOf(anchorServiceRef.current);
-      const clickedIndex = allServicesList.indexOf(clickedServiceId);
-
-      if (anchorIndex !== -1 && clickedIndex !== -1) {
-        const start = Math.min(anchorIndex, clickedIndex);
-        const end = Math.max(anchorIndex, clickedIndex);
-        newSelected = allServicesList.slice(start, end + 1);
-      } else {
-        newSelected = [clickedServiceId];
-        anchorServiceRef.current = clickedServiceId;
-      }
-    } else {
-      newSelected = [clickedServiceId];
-      anchorServiceRef.current = clickedServiceId;
-    }
-
-    if (
-      !e.ctrlKey &&
-      !e.shiftKey &&
-      selectedList.length === 1 &&
-      selectedList[0] === clickedServiceId
-    ) {
-      newSelected = [];
-      anchorServiceRef.current = null;
-    }
-
-    onSelectServices(newSelected.join(","));
-  };
-
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat("vi-VN").format(num);
+    handleMultiRangeSelect({
+      event: e,
+      clickedKey: clickedServiceId,
+      allKeys: allServicesList,
+      currentSelected: selectedServices,
+      anchorKey: anchorServiceRef.current,
+      onSelect: onSelectServices,
+      setAnchorKey: (key) => {
+        anchorServiceRef.current = key;
+      },
+    });
   };
 
   const selectedStaffList = selectedStaff ? selectedStaff.split(",").filter(Boolean) : [];

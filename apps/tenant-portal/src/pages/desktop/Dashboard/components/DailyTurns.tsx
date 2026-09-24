@@ -1,57 +1,93 @@
 import React from "react";
-
+import { Award, UserCheck, Flame } from "lucide-react";
 import { DailyTurnItem } from "../types";
-import styles from "../Dashboard.module.css";
 
 interface DailyTurnsProps {
   turns: DailyTurnItem[];
 }
 
 export function DailyTurns({ turns }: DailyTurnsProps) {
+  const getRankBadgeClass = (rank: number) => {
+    switch (rank) {
+      case 1:
+        return "bg-amber-500 text-white shadow-xs font-black ring-2 ring-amber-300";
+      case 2:
+        return "bg-slate-400 text-white shadow-xs font-bold ring-2 ring-slate-300";
+      case 3:
+        return "bg-amber-700 text-white shadow-xs font-bold ring-2 ring-amber-600/50";
+      default:
+        return "bg-slate-200 text-slate-700 font-semibold";
+    }
+  };
+
   return (
-    <div className="card">
-      <h3 className="card-title">Xếp hạng lượt phục vụ hôm nay</h3>
-      <div className={styles.turnsList}>
+    <div className="bg-white rounded-[14px] border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+      {/* Header */}
+      <div className="h-[46px] flex items-center justify-between px-4 border-b border-slate-200 bg-slate-100 flex-shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold shadow-xs flex-shrink-0">
+            <Award size={16} />
+          </div>
+          <h3 className="text-sm font-extrabold text-slate-900 m-0 leading-tight">
+            Xếp hạng lượt phục vụ hôm nay
+          </h3>
+        </div>
+      </div>
+
+      {/* List */}
+      <div className="p-3 flex flex-col gap-2 overflow-y-auto max-h-[380px] bg-slate-50/30">
         {turns.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              color: "var(--text-muted)",
-              padding: "20px 0",
-            }}
-          >
-            Không có ca trực nào được ghi nhận hôm nay.
+          <div className="flex flex-col items-center justify-center py-8 text-slate-400 gap-2">
+            <UserCheck size={32} className="text-slate-300" />
+            <span className="text-xs font-bold text-slate-500">
+              Không có ca trực nào được ghi nhận hôm nay.
+            </span>
           </div>
         ) : (
           turns.map((t) => (
-            <div key={t.rank} className={styles.turnItem}>
+            <div
+              key={t.rank}
+              className="flex items-center gap-3 p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs hover:border-blue-300 transition-colors"
+            >
+              {/* Rank Badge */}
               <div
-                className={`${styles.turnRank} ${t.rank === 1 ? styles.turnRankActive : styles.turnRankInactive}`}
+                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${getRankBadgeClass(
+                  t.rank,
+                )}`}
               >
-                {t.rank}
+                {t.rank === 1 ? <Flame size={14} className="fill-white" /> : t.rank}
               </div>
 
-              {t.avatar && (
+              {/* Avatar */}
+              {t.avatar ? (
                 <img
                   src={t.avatar}
                   alt={t.name}
-                  style={{
-                    width: "32px",
-                    height: "32px",
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                  }}
+                  className="w-8 h-8 rounded-full object-cover border border-slate-200 flex-shrink-0"
                 />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-xs font-bold border border-slate-200 flex-shrink-0">
+                  {t.name.slice(0, 1).toUpperCase()}
+                </div>
               )}
 
-              <div className={styles.turnInfo}>
-                <div className={styles.turnName}>{t.name}</div>
-                <div className={styles.turnServed}>
-                  Đã phục vụ: {t.served} khách
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-bold text-slate-900 truncate">
+                  {t.name}
+                </div>
+                <div className="text-[11px] text-slate-500">
+                  Đã phục vụ: <strong className="text-slate-800">{t.served}</strong> khách
                 </div>
               </div>
+
+              {/* Status Badge */}
               <span
-                className={`badge ${t.served > 0 ? "badge-success" : "badge-info"}`}
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                  t.served > 0
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    : "bg-blue-50 text-blue-700 border border-blue-200"
+                }`}
               >
                 {t.served > 0 ? "Hoạt động" : "Sẵn sàng"}
               </span>

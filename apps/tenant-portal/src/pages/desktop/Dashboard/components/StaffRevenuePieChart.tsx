@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { PieChart as PieChartIcon, Award } from "lucide-react";
 import { StaffPerformanceItem } from "../types";
+import { formatNumber, formatVND } from "../utils";
 
 const SLICE_COLORS = [
   "#2563eb", // Blue
@@ -28,17 +29,6 @@ export function StaffRevenuePieChart({
   selectedStaff = "",
   onSelectStaff,
 }: StaffRevenuePieChartProps) {
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat("vi-VN").format(num);
-  };
-
-  const formatVND = (num: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(num);
-  };
-
   const totalRevenue = useMemo(() => {
     return staffPerformance.reduce((sum, s) => sum + s.revenue, 0);
   }, [staffPerformance]);

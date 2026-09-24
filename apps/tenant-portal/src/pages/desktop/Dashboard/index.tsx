@@ -9,7 +9,7 @@ import { DailyTurns } from "./components/DailyTurns";
 import { RecentBookings } from "./components/RecentBookings";
 import { useDashboardStats } from "./useDashboardStats";
 import { DailyRevenueItem, DashboardCharts } from "./types";
-import styles from "./Dashboard.module.css";
+import { handleMultiRangeSelect } from "./utils";
 
 export default function Dashboard() {
   const [selectedMonth, setSelectedMonth] = useState<string>("");
@@ -252,45 +252,17 @@ export default function Dashboard() {
 
   const handleDayClick = (e: React.MouseEvent, clickedDay: string) => {
     const allDays = (chartsToDisplay?.dailyRevenues || []).map((d: DailyRevenueItem) => d.dateRaw);
-    const selectedList = selectedDays ? selectedDays.split(",").filter(Boolean) : [];
-
-    let newSelected: string[] = [];
-
-    if (e.ctrlKey || e.metaKey) {
-      if (selectedList.includes(clickedDay)) {
-        newSelected = selectedList.filter((d) => d !== clickedDay);
-      } else {
-        newSelected = [...selectedList, clickedDay];
-      }
-      anchorDayRef.current = clickedDay;
-    } else if (e.shiftKey && anchorDayRef.current) {
-      const anchorIndex = allDays.indexOf(anchorDayRef.current);
-      const clickedIndex = allDays.indexOf(clickedDay);
-
-      if (anchorIndex !== -1 && clickedIndex !== -1) {
-        const start = Math.min(anchorIndex, clickedIndex);
-        const end = Math.max(anchorIndex, clickedIndex);
-        newSelected = allDays.slice(start, end + 1);
-      } else {
-        newSelected = [clickedDay];
-        anchorDayRef.current = clickedDay;
-      }
-    } else {
-      newSelected = [clickedDay];
-      anchorDayRef.current = clickedDay;
-    }
-
-    if (
-      !e.ctrlKey &&
-      !e.shiftKey &&
-      selectedList.length === 1 &&
-      selectedList[0] === clickedDay
-    ) {
-      newSelected = [];
-      anchorDayRef.current = null;
-    }
-
-    setSelectedDays(newSelected.join(","));
+    handleMultiRangeSelect({
+      event: e,
+      clickedKey: clickedDay,
+      allKeys: allDays,
+      currentSelected: selectedDays,
+      anchorKey: anchorDayRef.current,
+      onSelect: setSelectedDays,
+      setAnchorKey: (key) => {
+        anchorDayRef.current = key;
+      },
+    });
   };
 
   const totalServicePrice = useMemo(() => {
@@ -309,16 +281,16 @@ export default function Dashboard() {
 
   if (loading && !stats) {
     return (
-      <div className={`${styles.container} animate-fade-in`}>
+      <div className="space-y-4 animate-fade-in">
         {/* Skeleton for 1-2-1 Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 xl:h-[calc(100vh-120px)] xl:min-h-[580px]">
-          <div className="xl:col-span-1 card h-full min-h-[500px] xl:min-h-0 flex items-center justify-center">
+          <div className="xl:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-sm h-full min-h-[500px] xl:min-h-0 flex items-center justify-center">
             <div className="w-3/4 h-64 bg-slate-100 rounded-lg animate-pulse" />
           </div>
-          <div className="xl:col-span-2 card h-full min-h-[500px] xl:min-h-0 flex items-center justify-center">
+          <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm h-full min-h-[500px] xl:min-h-0 flex items-center justify-center">
             <div className="w-5/6 h-72 bg-slate-100 rounded-lg animate-pulse" />
           </div>
-          <div className="xl:col-span-1 card h-full min-h-[500px] xl:min-h-0 flex items-center justify-center">
+          <div className="xl:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-sm h-full min-h-[500px] xl:min-h-0 flex items-center justify-center">
             <div className="w-3/4 h-64 bg-slate-100 rounded-lg animate-pulse" />
           </div>
         </div>
@@ -328,45 +300,21 @@ export default function Dashboard() {
 
   if (error || !stats) {
     return (
-      <div
-        className={`${styles.container} animate-fade-in`}
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "400px",
-        }}
-      >
-        <div
-          className="card"
-          style={{
-            maxWidth: "450px",
-            textAlign: "center",
-            padding: "30px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "16px",
-            alignItems: "center",
-          }}
-        >
-          <span style={{ fontSize: "48px" }}>⚠️</span>
-          <h3 style={{ fontSize: "18px", fontWeight: "700", margin: 0 }}>
+      <div className="flex items-center justify-center min-h-[400px] p-6 animate-fade-in">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm max-w-md w-full p-8 text-center flex flex-col items-center gap-4">
+          <div className="w-14 h-14 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center text-2xl border border-amber-200">
+            ⚠️
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 m-0">
             Không thể tải dữ liệu tổng quan
           </h3>
-          <p
-            style={{
-              color: "var(--text-secondary)",
-              fontSize: "14px",
-              lineHeight: "1.6",
-              margin: 0,
-            }}
-          >
+          <p className="text-sm text-slate-500 leading-relaxed m-0">
             {error || "Đã xảy ra lỗi không xác định khi kết nối với máy chủ."}
           </p>
           <button
-            className="btn btn-primary"
+            type="button"
+            className="mt-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors cursor-pointer"
             onClick={() => refetch()}
-            style={{ padding: "8px 24px", marginTop: "8px" }}
           >
             Thử tải lại
           </button>
@@ -376,7 +324,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className={`animate-fade-in ${styles.container}`}>
+    <div className="space-y-4 animate-fade-in">
       {/* 1. Main 1-2-1 Column Grid Layout - Responsive theo chiều dọc phủ kín màn hình */}
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 items-stretch xl:h-[calc(100vh-120px)] xl:min-h-[580px]">
         {/* Cột 1 (tỉ lệ 1): Doanh thu theo tháng */}
@@ -433,13 +381,14 @@ export default function Dashboard() {
       />
 
       {/* 3. Main content grid (Lịch hẹn gần đây & Lượt phục vụ) */}
-      <div className={styles.contentGrid}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Left Column: Recent Bookings */}
-        <RecentBookings bookings={stats.recentBookings} />
+        <div className="lg:col-span-2">
+          <RecentBookings bookings={stats.recentBookings} />
+        </div>
 
         {/* Right Column: Daily Turns */}
-        <div className={styles.rightColumn}>
-          {/* Daily Turns Card */}
+        <div className="lg:col-span-1 flex flex-col gap-4">
           <DailyTurns turns={stats.dailyTurns} />
         </div>
       </div>

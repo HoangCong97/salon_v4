@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Clock, User, ShieldCheck } from "lucide-react";
 import { DailyRevenueItem } from "../types";
+import { formatNumber, formatVND } from "../utils";
 
 interface DailyInvoiceModalProps {
   day: DailyRevenueItem;
@@ -9,16 +10,6 @@ interface DailyInvoiceModalProps {
 }
 
 export function DailyInvoiceModal({ day, onClose }: DailyInvoiceModalProps) {
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat("vi-VN").format(num);
-  };
-
-  const formatVND = (num: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(num);
-  };
 
   // Close on Escape & prevent body scroll
   useEffect(() => {
