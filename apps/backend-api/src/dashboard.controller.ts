@@ -495,6 +495,7 @@ export class DashboardController {
             return {
               id: inv.id,
               invoiceNumber: inv.id.substring(0, 8).toUpperCase(),
+              customerId: inv.customerId || null,
               totalPrice: Number(inv.totalPrice),
               discountAmount: Number(inv.discountAmount),
               finalAmount: Number(inv.finalAmount),
@@ -590,12 +591,24 @@ export class DashboardController {
           actualRevenue: number;
           revenue: number;
           customers: Set<string>;
-          recordCount: number;
+          invoices: Set<string>;
         }
       >();
 
       for (const inv of invoicesForStats) {
-        const custId = inv.customerId || `guest-${inv.id}`;
+        const rawName = (inv.customer?.name || "").trim();
+        const isWalkIn =
+          !inv.customerId &&
+          (!rawName ||
+            rawName.toLowerCase() === "khách vãng lai" ||
+            rawName.toLowerCase() === "khach vang lai");
+
+        const custId = inv.customerId
+          ? `cust-${inv.customerId}`
+          : isWalkIn
+            ? `guest-${inv.id}`
+            : `name-${rawName.toLowerCase()}`;
+
         for (const item of inv.items) {
           if (item.staffId) {
             const staffId = item.staffId;
@@ -607,7 +620,7 @@ export class DashboardController {
               actualRevenue: 0,
               revenue: 0,
               customers: new Set<string>(),
-              recordCount: 0,
+              invoices: new Set<string>(),
             };
 
             existing.totalPrice += Number(
@@ -616,7 +629,7 @@ export class DashboardController {
             existing.actualRevenue += Number(item.finalAmount);
             existing.revenue += Number(item.finalAmount);
             existing.customers.add(custId);
-            existing.recordCount += 1;
+            existing.invoices.add(inv.id);
 
             staffPerformanceMap.set(staffId, existing);
           }
@@ -631,7 +644,7 @@ export class DashboardController {
           actualRevenue: data.actualRevenue,
           revenue: data.revenue,
           customers: data.customers.size,
-          recordCount: data.recordCount,
+          recordCount: data.invoices.size,
         }))
         .sort((a, b) => b.revenue - a.revenue);
 

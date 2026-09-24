@@ -144,6 +144,12 @@ export function MonthlyRevenueChart({
               const discountPercent =
                 item.totalPrice > 0 ? (item.discountAmount / item.totalPrice) * 100 : 0;
 
+              // Effective width of the blue bar relative to container (range 0 to 62%)
+              const blueBarWidthPercent =
+                niceMax > 0 ? (item.finalAmount / niceMax) * 62 : 0;
+              // Text requires at least ~75-80px width (which is ~30% of this container width) to fit without ellipsis
+              const canFitInside = blueBarWidthPercent >= 30;
+
               return (
                 <div
                   key={item.month}
@@ -181,7 +187,7 @@ export function MonthlyRevenueChart({
                   <div className="flex-1 flex items-center h-full min-w-0">
                     {item.totalPrice > 0 ? (
                       <div className="flex items-center h-full w-full">
-                        {/* Contiguous Stacked Bar: Cột liền nhau như cũ (Cột xanh thành tiền + Cột đỏ giảm giá dính liền) */}
+                        {/* Contiguous Stacked Bar: Cột liền nhau (Cột xanh thành tiền + Cột đỏ giảm giá dính liền) */}
                         <div
                           className="h-full flex items-stretch rounded overflow-hidden shadow-2xs flex-shrink-0"
                           style={{ width: `${Math.max(totalBarWidth, 6)}%` }}
@@ -192,8 +198,8 @@ export function MonthlyRevenueChart({
                               className="h-full bg-blue-600 flex items-center justify-end transition-all text-white font-black text-xs"
                               style={{ width: `${finalPercent}%` }}
                             >
-                              {finalPercent > 25 && (
-                                <span className="truncate px-1.5">
+                              {canFitInside && (
+                                <span className="whitespace-nowrap px-1.5">
                                   {formatNumber(item.finalAmount)}
                                 </span>
                               )}
@@ -209,9 +215,9 @@ export function MonthlyRevenueChart({
                           )}
                         </div>
 
-                        {/* Right side: số tiền giảm giá ghi sang khoảng trống bên phải ngay khi kết thúc cột, không border */}
+                        {/* Right side: số tiền doanh thu thực tế được đẩy ra ngoài khi cột quá bé, kèm số tiền giảm giá */}
                         <div className="flex items-center flex-shrink-0">
-                          {finalPercent <= 25 && item.finalAmount > 0 && (
+                          {!canFitInside && item.finalAmount > 0 && (
                             <span className="text-xs text-blue-900 font-black whitespace-nowrap pl-1.5">
                               {formatNumber(item.finalAmount)}
                             </span>

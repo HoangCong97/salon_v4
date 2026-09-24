@@ -82,6 +82,7 @@ export interface InvoiceItemDetail {
 export interface InvoiceDetailItem {
   id: string;
   invoiceNumber: string;
+  customerId?: string | null;
   totalPrice: number;
   discountAmount: number;
   finalAmount: number;

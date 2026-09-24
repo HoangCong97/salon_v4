@@ -132,7 +132,7 @@ export default function Dashboard() {
         totalPrice: number;
         actualRevenue: number;
         customers: Set<string>;
-        recordCount: number;
+        invoices: Set<string>;
       }
     >();
 
@@ -143,13 +143,29 @@ export default function Dashboard() {
         totalPrice: 0,
         actualRevenue: 0,
         customers: new Set<string>(),
-        recordCount: 0,
+        invoices: new Set<string>(),
       });
     });
 
     for (const d of baseDailyList) {
       for (const inv of (d.invoices || [])) {
-        const custId = inv.customerName || `guest-${inv.id}`;
+        // Resolve customer identifier for this invoice:
+        // - If registered customer ID exists: use it
+        // - If customerName is a real specific name (not "Khách vãng lai"): use that name
+        // - If walk-in guest ("Khách vãng lai" or empty): each invoice is a distinct customer visit (guest-${inv.id})
+        const rawName = (inv.customerName || "").trim();
+        const isWalkIn =
+          !inv.customerId &&
+          (!rawName ||
+            rawName.toLowerCase() === "khách vãng lai" ||
+            rawName.toLowerCase() === "khach vang lai");
+
+        const custId = inv.customerId
+          ? `cust-${inv.customerId}`
+          : isWalkIn
+            ? `guest-${inv.id}`
+            : `name-${rawName.toLowerCase()}`;
+
         for (const item of (inv.items || [])) {
           // Check if item matches selected service
           const matchesService =
@@ -162,21 +178,22 @@ export default function Dashboard() {
               item.totalPrice ?? (item.price * (item.quantity || 1));
             const itemNet = item.finalAmount;
 
-            const existing = staffMap.get(item.staffId);
-            if (existing) {
-              existing.totalPrice += itemGross;
-              existing.actualRevenue += itemNet;
-              existing.customers.add(custId);
-              existing.recordCount += 1;
-            } else {
-              staffMap.set(item.staffId, {
+            let existing = staffMap.get(item.staffId);
+            if (!existing) {
+              existing = {
                 staffName: item.staffName || "Nhân viên khác",
-                totalPrice: itemGross,
-                actualRevenue: itemNet,
-                customers: new Set([custId]),
-                recordCount: 1,
-              });
+                totalPrice: 0,
+                actualRevenue: 0,
+                customers: new Set<string>(),
+                invoices: new Set<string>(),
+              };
+              staffMap.set(item.staffId, existing);
             }
+
+            existing.totalPrice += itemGross;
+            existing.actualRevenue += itemNet;
+            existing.customers.add(custId);
+            existing.invoices.add(inv.id);
           }
         }
       }
@@ -190,7 +207,7 @@ export default function Dashboard() {
         actualRevenue: data.actualRevenue,
         revenue: data.actualRevenue,
         customers: data.customers.size,
-        recordCount: data.recordCount,
+        recordCount: data.invoices.size,
       }))
       .sort((a, b) => (b.actualRevenue || 0) - (a.actualRevenue || 0));
 
