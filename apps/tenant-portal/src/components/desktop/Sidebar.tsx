@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuthStore, SubscriptionData } from "../../store/useAuthStore";
 import {
@@ -17,6 +17,8 @@ import {
   Sparkles,
   Award,
   Coins,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { Tooltip } from "./ui/Tooltip";
 import { useWebSocket } from "../../hooks/useWebSocket";
@@ -96,87 +98,47 @@ const SubscriptionTooltip = ({ subData }: { subData: SubscriptionData }) => {
   const config = getPlanConfig(subData.planCode);
 
   return (
-    <div
-      style={{
-        whiteSpace: "normal",
-        width: "220px",
-        padding: "6px 4px",
-        fontFamily: "Inter, sans-serif",
-        color: "#0f172a",
-      }}
-    >
-      <style>{`
-        .tooltip-row {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 6px;
-        }
-        .tooltip-label {
-          color: #64748b;
-        }
-        .tooltip-val {
-          font-weight: 600;
-        }
-      `}</style>
-      <div
-        style={{
-          fontWeight: "bold",
-          fontSize: "13px",
-          marginBottom: "8px",
-          borderBottom: "1px solid rgba(15, 23, 42, 0.1)",
-          paddingBottom: "6px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <span style={{ color: config.color, fontWeight: "700" }}>
+    <div className="w-[220px] p-1 font-sans text-slate-900 whitespace-normal">
+      <div className="font-bold text-[13px] mb-2 pb-1.5 border-b border-slate-900/10 flex items-center justify-between">
+        <span style={{ color: config.color }} className="font-bold">
           {config.name}
         </span>
         <span
-          style={{
-            fontSize: "10px",
-            padding: "2px 6px",
-            borderRadius: "100px",
-            background: isExpired ? "#fee2e2" : "#dcfce7",
-            color: isExpired ? "#991b1b" : "#166534",
-            fontWeight: "600",
-          }}
+          className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+            isExpired
+              ? "bg-red-100 text-red-800"
+              : "bg-emerald-100 text-emerald-800"
+          }`}
         >
           {isExpired ? "Hết hạn" : "Hoạt động"}
         </span>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "2px",
-          fontSize: "11.5px",
-        }}
-      >
-        <div className="tooltip-row">
-          <span className="tooltip-label">Thời hạn còn lại:</span>
-          <span className="tooltip-val">{daysRemaining} ngày</span>
+      <div className="flex flex-col gap-1 text-[11.5px]">
+        <div className="flex justify-between items-center text-slate-500">
+          <span>Thời hạn còn lại:</span>
+          <span className="font-semibold text-slate-900">
+            {daysRemaining} ngày
+          </span>
         </div>
-        <div className="tooltip-row">
-          <span className="tooltip-label">Ngày hết hạn:</span>
-          <span className="tooltip-val">
+        <div className="flex justify-between items-center text-slate-500">
+          <span>Ngày hết hạn:</span>
+          <span className="font-semibold text-slate-900">
             {formatDate(subData.planExpiresAt)}
           </span>
         </div>
-        <div className="tooltip-row">
-          <span className="tooltip-label">Số chi nhánh:</span>
-          <span className="tooltip-val">
+        <div className="flex justify-between items-center text-slate-500">
+          <span>Số chi nhánh:</span>
+          <span className="font-semibold text-slate-900">
             {subData.currentBranchesCount} /{" "}
             {subData.maxBranches === -1
               ? "Không giới hạn"
               : subData.maxBranches}
           </span>
         </div>
-        <div className="tooltip-row">
-          <span className="tooltip-label">Số nhân viên:</span>
-          <span className="tooltip-val">
+        <div className="flex justify-between items-center text-slate-500">
+          <span>Số nhân viên:</span>
+          <span className="font-semibold text-slate-900">
             {subData.currentStaffCount} /{" "}
             {subData.maxStaff === -1 ? "Không giới hạn" : subData.maxStaff}
           </span>
@@ -187,6 +149,44 @@ const SubscriptionTooltip = ({ subData }: { subData: SubscriptionData }) => {
 };
 
 export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isExpanded = !collapsed || isHovered;
+
+  useEffect(() => {
+    if (!collapsed) {
+      setIsHovered(false);
+    }
+  }, [collapsed]);
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    if (collapsed) {
+      setIsHovered(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 120);
+  };
+
   const {
     user,
     brandName,
@@ -321,453 +321,241 @@ export default function Sidebar({ collapsed, setCollapsed }: SidebarProps) {
 
   return (
     <div
-      style={{
-        width: collapsed ? "68px" : "260px",
-        backgroundColor: "var(--bg-sidebar)",
-        color: "var(--text-on-dark)",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: 0,
-        height: "100vh",
-        transition: "width 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-        overflow: "hidden",
-        zIndex: 50,
-        borderRight: "1px solid rgba(255, 255, 255, 0.05)",
-      }}
+      className={`h-screen shrink-0 relative z-50 transition-[width] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+        collapsed ? "w-[68px]" : "w-[260px]"
+      }`}
     >
-      {/* Sidebar Header */}
-      <div
-        style={{
-          height: "70px",
-          display: "flex",
-          alignItems: "center",
-          padding: collapsed ? "0" : "0 20px",
-          justifyContent: collapsed ? "center" : "flex-start",
-          borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
-          gap: "10px",
-          overflow: "hidden",
-          whiteSpace: "nowrap",
-        }}
+      <aside
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className={`absolute top-0 left-0 h-screen flex flex-col overflow-hidden bg-[var(--bg-sidebar)] text-[var(--text-on-dark)] border-r border-white/5 transition-[width,box-shadow] duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          isExpanded ? "w-[260px]" : "w-[68px]"
+        } ${
+          collapsed && isHovered
+            ? "shadow-[4px_0_24px_rgba(0,0,0,0.45)]"
+            : "shadow-none"
+        }`}
       >
-        {logoUrl ? (
-          <img
-            src={logoUrl}
-            alt="Logo"
-            style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "var(--radius-sm)",
-              objectFit: "cover",
-              flexShrink: 0,
-            }}
-          />
-        ) : (
-          <div
-            style={{
-              backgroundColor: "var(--color-primary)",
-              borderRadius: "var(--radius-sm)",
-              width: "36px",
-              height: "36px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ transform: "rotate(90deg)" }}
+        {/* Sidebar Header */}
+        <div
+          className={`h-[70px] flex items-center border-b border-white/5 gap-2.5 overflow-hidden whitespace-nowrap ${
+            isExpanded ? "px-5 justify-start" : "px-0 justify-center"
+          }`}
+        >
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt="Logo"
+              className="w-9 h-9 rounded-[var(--radius-sm)] object-cover shrink-0"
+            />
+          ) : (
+            <div className="w-9 h-9 rounded-[var(--radius-sm)] bg-[var(--color-primary)] flex items-center justify-center shrink-0">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="rotate-90"
+              >
+                <circle cx="6" cy="6" r="3" />
+                <circle cx="6" cy="18" r="3" />
+                <line x1="20" y1="4" x2="8.12" y2="15.88" />
+                <line x1="14.47" y1="14.48" x2="20" y2="20" />
+                <line x1="8.12" y1="8.12" x2="12" y2="12" />
+              </svg>
+            </div>
+          )}
+          {isExpanded && (
+            <span
+              title={brandName || "SALON Portal"}
+              className="font-bold text-sm tracking-[0.5px] text-[var(--text-on-dark)] whitespace-nowrap overflow-hidden text-ellipsis"
             >
-              <circle cx="6" cy="6" r="3" />
-              <circle cx="6" cy="18" r="3" />
-              <line x1="20" y1="4" x2="8.12" y2="15.88" />
-              <line x1="14.47" y1="14.48" x2="20" y2="20" />
-              <line x1="8.12" y1="8.12" x2="12" y2="12" />
-            </svg>
-          </div>
-        )}
-        {!collapsed && (
-          <span
-            title={brandName || "SALON Portal"}
-            style={{
-              fontWeight: 700,
-              fontSize: "14px",
-              letterSpacing: "0.5px",
-              color: "var(--text-on-dark)",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {brandName ? (
-              brandName.toUpperCase()
-            ) : (
-              <>
-                SALON
-                <span style={{ color: "var(--color-primary)" }}>Portal</span>
-              </>
-            )}
-          </span>
-        )}
-      </div>
-
-      {/* Navigation Links */}
-      <div
-        style={{
-          flexGrow: 1,
-          padding: "16px 8px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "4px",
-        }}
-      >
-        {allowedItems.map((item) => {
-          const Icon = item.icon;
-          const navLink = (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              style={({ isActive }) => ({
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                borderRadius: "var(--radius-sm)",
-                color: isActive ? "white" : "rgba(255, 255, 255, 0.7)",
-                background: isActive ? "var(--color-primary)" : "transparent",
-                transition: "all 0.15s ease",
-                fontWeight: isActive ? "600" : "500",
-                justifyContent: collapsed ? "center" : "flex-start",
-                height: "44px",
-                padding: "0 14px",
-                position: "relative",
-              })}
-            >
-              {({ isActive }) => (
+              {brandName ? (
+                brandName.toUpperCase()
+              ) : (
                 <>
-                  <Icon size={20} style={{ flexShrink: 0 }} />
-                  {!collapsed && (
-                    <span style={{ fontSize: "14px", whiteSpace: "nowrap" }}>
-                      {item.label}
-                    </span>
-                  )}
-
-                  {item.path === "/invoices" && todayInvoiceCount > 0 && (
-                    <span
-                      style={{
-                        position: collapsed ? "absolute" : "static",
-                        top: collapsed ? "4px" : "auto",
-                        right: collapsed ? "4px" : "auto",
-                        marginLeft: collapsed ? "0" : "auto",
-                        backgroundColor: "#ef4444",
-                        color: "white",
-                        fontSize: "10.5px",
-                        fontWeight: "700",
-                        borderRadius: "9999px",
-                        padding: "2px 6px",
-                        lineHeight: "1",
-                        minWidth: "18px",
-                        textAlign: "center",
-                      }}
-                    >
-                      {todayInvoiceCount}
-                    </span>
-                  )}
-
-                  {collapsed && isActive && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        left: 0,
-                        width: "4px",
-                        height: "20px",
-                        backgroundColor: "white",
-                        borderRadius: "0 var(--radius-sm) var(--radius-sm) 0",
-                      }}
-                    />
-                  )}
+                  SALON
+                  <span className="text-[var(--color-primary)]">Portal</span>
                 </>
               )}
-            </NavLink>
-          );
+            </span>
+          )}
+        </div>
 
-          return collapsed ? (
-            <Tooltip key={item.path} content={item.label} position="right">
-              {navLink}
-            </Tooltip>
-          ) : (
-            navLink
-          );
-        })}
-
-        {/* Spacer to push everything below to the bottom */}
-        <div style={{ flexGrow: 1 }} />
-
-        {/* Subscription loading skeleton */}
-        {subscriptionLoading && !subscription && (
-          <>
-            <style>{`
-              @keyframes pulse {
-                0%, 100% { opacity: 0.6; }
-                50% { opacity: 0.3; }
-              }
-            `}</style>
-            <div
-              style={{
-                margin: collapsed ? "8px auto" : "8px 8px",
-                width: collapsed ? "44px" : "auto",
-                height: collapsed ? "44px" : "56px",
-                borderRadius: collapsed ? "10px" : "12px",
-                background: "rgba(255, 255, 255, 0.05)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                animation: "pulse 1.5s infinite ease-in-out",
-              }}
-            />
-          </>
-        )}
-
-        {/* Subscription Info Card */}
-        {subscription && (
-          <Tooltip
-            content={<SubscriptionTooltip subData={subscription} />}
-            position={collapsed ? "right" : "top"}
-          >
-            {collapsed ? (
-              <div
-                onClick={() => setIsPricingModalOpen(true)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "44px",
-                  height: "44px",
-                  borderRadius: "10px",
-                  cursor: "pointer",
-                  background: getPlanConfig(subscription.planCode).background,
-                  border: getPlanConfig(subscription.planCode).border,
-                  boxShadow: getPlanConfig(subscription.planCode).glow,
-                  transition: "all 0.2s ease-in-out",
-                  margin: "8px auto",
-                  color: getPlanConfig(subscription.planCode).color,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "scale(1.08)";
-                  e.currentTarget.style.boxShadow = getPlanConfig(
-                    subscription.planCode,
-                  ).glowHover;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "scale(1)";
-                  e.currentTarget.style.boxShadow = getPlanConfig(
-                    subscription.planCode,
-                  ).glow;
-                }}
+        {/* Navigation Links */}
+        <div className="flex-1 px-2 py-4 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+          {allowedItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `relative flex items-center gap-3 h-11 px-3.5 rounded-[var(--radius-sm)] select-none cursor-pointer transition-all duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+                    isExpanded ? "justify-start" : "justify-center"
+                  } ${
+                    isActive
+                      ? "bg-[var(--color-primary)] text-white font-semibold shadow-md shadow-black/25 hover:brightness-110"
+                      : "text-white/70 font-medium hover:bg-white/[0.08] hover:text-white"
+                  }`
+                }
               >
-                {React.createElement(
-                  getPlanConfig(subscription.planCode).icon,
-                  { size: 20 },
+                {({ isActive }) => (
+                  <>
+                    <Icon size={20} className="shrink-0" />
+                    {isExpanded && (
+                      <span className="text-sm whitespace-nowrap overflow-hidden text-ellipsis">
+                        {item.label}
+                      </span>
+                    )}
+
+                    {item.path === "/invoices" && todayInvoiceCount > 0 && (
+                      <span
+                        className={`bg-red-500 text-white text-[10.5px] font-bold rounded-full px-1.5 leading-none min-w-[18px] text-center ${
+                          isExpanded
+                            ? "static ml-auto"
+                            : "absolute top-1 right-1 ml-0"
+                        }`}
+                      >
+                        {todayInvoiceCount}
+                      </span>
+                    )}
+
+                    {!isExpanded && isActive && (
+                      <div className="absolute left-0 w-1 h-5 bg-white rounded-r-[var(--radius-sm)]" />
+                    )}
+                  </>
                 )}
-              </div>
-            ) : (
-              <div
-                onClick={() => setIsPricingModalOpen(true)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  padding: "12px 14px",
-                  borderRadius: "12px",
-                  cursor: "pointer",
-                  background: getPlanConfig(subscription.planCode).background,
-                  border: getPlanConfig(subscription.planCode).border,
-                  boxShadow: getPlanConfig(subscription.planCode).glow,
-                  transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-                  margin: "8px 8px",
-                  position: "relative",
-                  overflow: "hidden",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow = getPlanConfig(
-                    subscription.planCode,
-                  ).glowHover;
-                  e.currentTarget.style.borderColor = getPlanConfig(
-                    subscription.planCode,
-                  ).borderHover;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = getPlanConfig(
-                    subscription.planCode,
-                  ).glow;
-                  e.currentTarget.style.borderColor = getPlanConfig(
-                    subscription.planCode,
-                  ).borderColor;
-                }}
-              >
-                {/* Glowing reflection/shine effect */}
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: "-50%",
-                    width: "200%",
-                    height: "100%",
-                    background:
-                      "linear-gradient(to right, transparent, rgba(255,255,255,0.03), transparent)",
-                    transform: "skewX(-30deg)",
-                    pointerEvents: "none",
-                  }}
-                />
+              </NavLink>
+            );
+          })}
 
+          {/* Spacer to push everything below to the bottom */}
+          <div className="flex-1" />
+
+          {/* Subscription loading skeleton */}
+          {subscriptionLoading && !subscription && (
+            <div
+              className={`animate-pulse bg-white/5 border border-white/[0.08] ${
+                isExpanded
+                  ? "mx-2 my-2 h-14 rounded-xl"
+                  : "mx-auto my-2 w-11 h-11 rounded-[10px]"
+              }`}
+            />
+          )}
+
+          {/* Subscription Info Card */}
+          {subscription && (
+            <Tooltip
+              content={<SubscriptionTooltip subData={subscription} />}
+              position={isExpanded ? "top" : "right"}
+            >
+              {!isExpanded ? (
                 <div
+                  onClick={() => setIsPricingModalOpen(true)}
+                  className="w-11 h-11 rounded-[10px] flex items-center justify-center cursor-pointer my-2 mx-auto transition-all duration-200 hover:scale-105"
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "32px",
-                    height: "32px",
-                    borderRadius: "8px",
-                    background: getPlanConfig(subscription.planCode).iconBg,
+                    background: getPlanConfig(subscription.planCode).background,
+                    border: getPlanConfig(subscription.planCode).border,
+                    boxShadow: getPlanConfig(subscription.planCode).glow,
                     color: getPlanConfig(subscription.planCode).color,
-                    flexShrink: 0,
                   }}
                 >
                   {React.createElement(
                     getPlanConfig(subscription.planCode).icon,
-                    { size: 18 },
+                    { size: 20 },
                   )}
                 </div>
-
+              ) : (
                 <div
+                  onClick={() => setIsPricingModalOpen(true)}
+                  className="relative overflow-hidden flex items-center gap-3 p-3 rounded-xl cursor-pointer my-2 mx-2 transition-all duration-250 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-0.5"
                   style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    minWidth: 0,
-                    flexGrow: 1,
+                    background: getPlanConfig(subscription.planCode).background,
+                    border: getPlanConfig(subscription.planCode).border,
+                    boxShadow: getPlanConfig(subscription.planCode).glow,
                   }}
                 >
-                  <span
+                  {/* Glowing reflection/shine effect */}
+                  <div className="absolute top-0 -left-1/2 w-[200%] h-full bg-gradient-to-r from-transparent via-white/[0.03] to-transparent -skew-x-[30deg] pointer-events-none" />
+
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                     style={{
-                      fontSize: "13px",
-                      fontWeight: "700",
-                      color: "white",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
+                      background: getPlanConfig(subscription.planCode).iconBg,
+                      color: getPlanConfig(subscription.planCode).color,
                     }}
                   >
-                    {subscription.planName}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      color: "rgba(255, 255, 255, 0.4)",
-                      fontWeight: "500",
-                      marginTop: "2px",
-                    }}
+                    {React.createElement(
+                      getPlanConfig(subscription.planCode).icon,
+                      { size: 18 },
+                    )}
+                  </div>
+
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="text-[13px] font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis">
+                      {subscription.planName}
+                    </span>
+                    <span className="text-[11px] text-white/40 font-medium mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                      {subscription.planStatus === "EXPIRED"
+                        ? "Đã hết hạn"
+                        : `Còn lại: ${Math.max(0, Math.ceil((new Date(subscription.planExpiresAt || "").getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))} ngày`}
+                    </span>
+                  </div>
+
+                  {/* Small indicator arrow */}
+                  <svg
+                    className="w-3 h-3 stroke-white/30 shrink-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   >
-                    {subscription.planStatus === "EXPIRED"
-                      ? "Đã hết hạn"
-                      : `Còn lại: ${Math.max(0, Math.ceil((new Date(subscription.planExpiresAt || "").getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))} ngày`}
-                  </span>
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
                 </div>
+              )}
+            </Tooltip>
+          )}
+        </div>
 
-                {/* Small indicator arrow */}
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.3)"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  style={{ flexShrink: 0 }}
-                >
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </div>
-            )}
-          </Tooltip>
-        )}
-      </div>
-
-      {/* Sidebar Footer */}
-      <div
-        style={{
-          padding: "16px",
-          borderTop: "1px solid rgba(255, 255, 255, 0.05)",
-          textAlign: "center",
-        }}
-      >
-        {collapsed ? (
-          <Tooltip content="Mở rộng" position="right">
-            <button
-              onClick={() => setCollapsed(!collapsed)}
-              style={{
-                background: "rgba(255, 255, 255, 0.05)",
-                border: "none",
-                color: "white",
-                padding: "8px 12px",
-                borderRadius: "var(--radius-sm)",
-                cursor: "pointer",
-                width: "100%",
-                fontSize: "12px",
-                fontWeight: "500",
-                transition: "all 0.15s ease",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.backgroundColor =
-                  "rgba(255, 255, 255, 0.1)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.backgroundColor =
-                  "rgba(255, 255, 255, 0.05)")
-              }
-            >
-              »
-            </button>
-          </Tooltip>
-        ) : (
+        {/* Sidebar Footer */}
+        <div className="p-3 border-t border-white/5 flex items-center">
           <button
-            onClick={() => setCollapsed(!collapsed)}
-            style={{
-              background: "rgba(255, 255, 255, 0.05)",
-              border: "none",
-              color: "white",
-              padding: "8px 12px",
-              borderRadius: "var(--radius-sm)",
-              cursor: "pointer",
-              width: "100%",
-              fontSize: "12px",
-              fontWeight: "500",
-              transition: "all 0.15s ease",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
+            onClick={() => {
+              setCollapsed(!collapsed);
             }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.backgroundColor =
-                "rgba(255, 255, 255, 0.1)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.backgroundColor =
-                "rgba(255, 255, 255, 0.05)")
-            }
+            className={`w-full h-10 flex items-center gap-2.5 rounded-[var(--radius-sm)] text-[12.5px] font-medium transition-all duration-150 whitespace-nowrap overflow-hidden cursor-pointer border ${
+              isExpanded ? "px-3.5 justify-start" : "px-0 justify-center"
+            } ${
+              !collapsed
+                ? "bg-white/[0.07] text-white border-white/15 hover:bg-white/[0.14] hover:border-white/25"
+                : "bg-white/[0.04] text-white/70 border-white/[0.08] hover:bg-white/10 hover:text-white hover:border-white/20"
+            }`}
           >
-            « Thu gọn
+            {collapsed ? (
+              <>
+                <Pin size={16} className="shrink-0 rotate-45" />
+                {isExpanded && <span>Cố định thanh điều hướng</span>}
+              </>
+            ) : (
+              <>
+                <PinOff
+                  size={16}
+                  className="shrink-0 text-[var(--color-primary)]"
+                />
+                {isExpanded && <span>Bỏ cố định thanh điều hướng</span>}
+              </>
+            )}
           </button>
-        )}
-      </div>
+        </div>
+      </aside>
     </div>
   );
 }

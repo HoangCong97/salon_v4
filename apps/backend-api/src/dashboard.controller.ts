@@ -586,6 +586,8 @@ export class DashboardController {
         string,
         {
           staffName: string;
+          totalPrice: number;
+          actualRevenue: number;
           revenue: number;
           customers: Set<string>;
           recordCount: number;
@@ -601,11 +603,17 @@ export class DashboardController {
 
             const existing = staffPerformanceMap.get(staffId) || {
               staffName,
+              totalPrice: 0,
+              actualRevenue: 0,
               revenue: 0,
               customers: new Set<string>(),
               recordCount: 0,
             };
 
+            existing.totalPrice += Number(
+              item.totalPrice ?? (Number(item.price) * (Number(item.quantity) || 1)),
+            );
+            existing.actualRevenue += Number(item.finalAmount);
             existing.revenue += Number(item.finalAmount);
             existing.customers.add(custId);
             existing.recordCount += 1;
@@ -619,6 +627,8 @@ export class DashboardController {
         .map(([staffId, data]) => ({
           staffId,
           staffName: data.staffName,
+          totalPrice: data.totalPrice,
+          actualRevenue: data.actualRevenue,
           revenue: data.revenue,
           customers: data.customers.size,
           recordCount: data.recordCount,

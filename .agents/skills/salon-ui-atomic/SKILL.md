@@ -48,11 +48,12 @@ Tất cả các components nguyên tử được đặt độc lập trong thư 
 
 Khi sinh mã cho component UI:
 
-1. **Vị trí file**: Đặt tại `src/components/ui/<ComponentName>/` gồm 2 file:
+1. **Vị trí file**: Đặt tại `src/components/ui/<ComponentName>/`:
    - `<ComponentName>.tsx`
-   - `<ComponentName>.module.css`
-2. **Sử dụng CSS Modules & CSS Variables**:
-   - Sử dụng các biến màu và kích thước toàn cục (ví dụ: `var(--color-primary)`, `var(--radius-md)`, `var(--font-base)`).
+   - `<ComponentName>.module.css` (đối với component Desktop sử dụng CSS Modules)
+2. **Quy chuẩn Styling**:
+   - **Mobile UI**: Bắt buộc sử dụng **TailwindCSS** (utility classes) trực tiếp trên JSX để tối ưu tính linh hoạt và đồng bộ giao diện thiết bị di động.
+   - **Desktop UI**: Hiện tại duy trì CSS Modules & CSS Variables toàn cục (ví dụ: `var(--color-primary)`, `var(--radius-md)`), nhưng **định hướng tương lai sẽ refactor toàn bộ về TailwindCSS**. Khi viết atomic component mới, khuyến khích ưu tiên TailwindCSS.
    - Không sử dụng inline style trực tiếp trừ khi là style tính toán động.
 3. **Tối ưu hóa thiết bị cảm ứng (Mobile & Tablet)**:
    - Mọi hiệu ứng `:hover` **bắt buộc** phải bọc trong `@media (hover: hover)`:

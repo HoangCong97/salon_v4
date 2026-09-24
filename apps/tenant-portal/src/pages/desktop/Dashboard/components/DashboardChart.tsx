@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 
 import { DashboardCharts, DailyRevenueItem, InvoiceDetailItem } from "../types";
 import { TableSectionHeader } from "./TableSectionHeader";
+import { DailyRevenueCalendar } from "./DailyRevenueCalendar";
 import styles from "../Dashboard.module.css";
 
 function getNiceTicks(maxVal: number, maxTicks = 5) {
@@ -51,35 +52,7 @@ export function DashboardChart({
   // Selected day for invoice details modal
   const [selectedDay, setSelectedDay] = useState<DailyRevenueItem | null>(null);
 
-  // Reference to the daily table wrapper for scrolling
-  const tableWrapperRef = useRef<HTMLDivElement>(null);
 
-  // Scroll table to today (vertically centered) or fallback to bottom
-  useEffect(() => {
-    if (tableWrapperRef.current && dailyRevenues.length > 0) {
-      const todayLocal = new Date();
-      const todayDateStr = `${todayLocal.getFullYear()}-${String(
-        todayLocal.getMonth() + 1,
-      ).padStart(2, "0")}-${String(todayLocal.getDate()).padStart(2, "0")}`;
-
-      const todayRow = tableWrapperRef.current.querySelector(
-        `[data-date="${todayDateStr}"]`,
-      ) as HTMLElement;
-
-      if (todayRow) {
-        const containerHeight = tableWrapperRef.current.clientHeight;
-        const rowTop = todayRow.offsetTop;
-        const rowHeight = todayRow.clientHeight;
-        // Center the row in viewport
-        tableWrapperRef.current.scrollTop =
-          rowTop - containerHeight / 2 + rowHeight / 2;
-        return;
-      }
-
-      // Fallback: scroll to bottom
-      tableWrapperRef.current.scrollTop = tableWrapperRef.current.scrollHeight;
-    }
-  }, [dailyRevenues]);
 
   // If no selectedMonth is set yet, choose the latest month from trends
   useEffect(() => {
@@ -210,13 +183,7 @@ export function DashboardChart({
     return cleaned;
   };
 
-  const formatDayLabel = (dateRaw: string) => {
-    const parts = dateRaw.split("-");
-    if (parts.length === 3) {
-      return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
-    return dateRaw;
-  };
+
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat("vi-VN").format(num);
@@ -247,37 +214,7 @@ export function DashboardChart({
     0,
   );
 
-  // Vietnamese day of week labels
-  const formatDayOfWeekText = (dayNum: number) => {
-    if (dayNum === 7) return "CN";
-    return `Thứ ${dayNum + 1}`;
-  };
 
-  // Helper for Thứ highlight background and text colors
-  const getDayOfWeekStyles = (dayOfWeek: number) => {
-    if (dayOfWeek === 7) {
-      // Sunday (CN) - Darker Green Highlight as requested
-      return {
-        backgroundColor: "rgba(16, 185, 129, 0.8)",
-        color: "white",
-        fontWeight: "700",
-      };
-    } else if (dayOfWeek === 6) {
-      // Saturday (Thứ 7) - Lighter Green Highlight
-      return {
-        backgroundColor: "rgba(16, 185, 129, 0.4)",
-        color: "hsl(161, 90%, 15%)",
-        fontWeight: "700",
-      };
-    } else {
-      // Weekdays (Thứ 2 - 6) - Gray Text / Transparent
-      return {
-        backgroundColor: "transparent",
-        color: "var(--text-secondary)",
-        border: "1px solid var(--border-color)",
-      };
-    }
-  };
 
   return (
     <div className={styles.dashboardSplitSection}>
@@ -427,96 +364,17 @@ export function DashboardChart({
         </div>
       </div>
 
-      {/* RIGHT COLUMN: Daily Revenues Table */}
+      {/* RIGHT COLUMN: Daily Revenues Calendar */}
       <div className={styles.splitRightCard}>
-        <TableSectionHeader title={<>Doanh số theo ngày</>} />
-
-        <div className={styles.dailyTableWrapper} ref={tableWrapperRef}>
-          <table className={styles.excelDailyTable}>
-            <thead>
-              <tr>
-                <th style={{ width: "80px", textAlign: "center" }}>Ngày</th>
-                <th style={{ width: "50px", textAlign: "center" }}>Thứ</th>
-                <th style={{ width: "85px", textAlign: "right" }}>
-                  Giá dịch vụ
-                </th>
-                <th style={{ width: "90px", textAlign: "right" }}>
-                  Thành tiền
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {dailyRevenues.map((d, index) => (
-                <tr
-                  key={d.dateRaw}
-                  className={`${styles.clickableTableRow} ${
-                    selectedDays.split(",").includes(d.dateRaw)
-                      ? styles.activeDailyRow
-                      : ""
-                  }`}
-                  onMouseDown={(e) => {
-                    if (e.shiftKey || e.ctrlKey || e.metaKey) {
-                      e.preventDefault();
-                    }
-                  }}
-                  onClick={(e) => handleDayClick(e, d.dateRaw)}
-                  onDoubleClick={() => setSelectedDay(d)}
-                  data-day={d.day}
-                  data-date={d.dateRaw}
-                  title="Bấm để lọc. Giữ Ctrl hoặc Shift để chọn nhiều ngày. Nháy đúp để xem chi tiết hóa đơn."
-                >
-                  <td style={{ fontWeight: "500", textAlign: "center" }}>
-                    {formatDayLabel(d.dateRaw)}
-                  </td>
-                  <td style={{ textAlign: "center", padding: "4px" }}>
-                    <div
-                      className={styles.dayOfWeekBadge}
-                      style={getDayOfWeekStyles(d.dayOfWeek)}
-                    >
-                      {formatDayOfWeekText(d.dayOfWeek)}
-                    </div>
-                  </td>
-                  <td
-                    style={{
-                      textAlign: "right",
-                      color: "var(--color-primary-dark)",
-                      fontWeight: "500",
-                    }}
-                  >
-                    {d.totalPrice > 0 ? formatNumber(d.totalPrice) : "-"}
-                  </td>
-                  <td style={{ textAlign: "right", fontWeight: "700" }}>
-                    {d.finalAmount > 0 ? formatNumber(d.finalAmount) : "-"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td style={{ fontWeight: "700" }}>Tổng cộng</td>
-                <td style={{ textAlign: "center", fontWeight: "700" }}></td>
-                <td
-                  style={{
-                    textAlign: "right",
-                    fontWeight: "700",
-                    color: "var(--color-primary)",
-                  }}
-                >
-                  {formatNumber(totalServicePrice)}
-                </td>
-                <td
-                  style={{
-                    textAlign: "right",
-                    fontWeight: "700",
-                    color: "var(--color-success)",
-                  }}
-                >
-                  {formatNumber(totalFinalAmount)}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+        <DailyRevenueCalendar
+          dailyRevenues={dailyRevenues}
+          selectedDays={selectedDays}
+          onDayClick={handleDayClick}
+          onClearDayFilter={() => onSelectDays("")}
+          onViewDayDetails={setSelectedDay}
+          totalServicePrice={totalServicePrice}
+          totalFinalAmount={totalFinalAmount}
+        />
       </div>
 
       {/* POPUP MODAL: Daily Invoices Details */}

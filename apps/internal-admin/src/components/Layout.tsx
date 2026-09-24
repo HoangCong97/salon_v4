@@ -19,7 +19,7 @@ const Layout: React.FC<LayoutProps> = ({
   searchTerm,
   setSearchTerm,
 }) => {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   // Lắng nghe các sự kiện WebSocket để hiển thị thông báo popup Toast toàn màn hình
   useWebSocket((event, data) => {

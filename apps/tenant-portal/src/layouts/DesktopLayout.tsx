@@ -6,7 +6,7 @@ import { PricingModal } from "../pages/desktop/Dashboard/components/PricingModal
 import { useAuthStore } from "../store/useAuthStore";
 
 export default function DesktopLayout() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const {
     isPricingModalOpen,
     setIsPricingModalOpen,

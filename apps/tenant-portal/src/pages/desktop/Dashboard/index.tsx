@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 
-import { DashboardChart } from "./components/DashboardChart";
+import { MonthlyRevenueChart } from "./components/MonthlyRevenueChart";
+import { DailyRevenueCalendar } from "./components/DailyRevenueCalendar";
+import { StaffAndServiceColumn } from "./components/StaffAndServiceColumn";
+import { StaffRevenuePieChart } from "./components/StaffRevenuePieChart";
+import { DailyInvoiceModal } from "./components/DailyInvoiceModal";
 import { DailyTurns } from "./components/DailyTurns";
-import { DashboardStats } from "./components/DashboardStats";
 import { RecentBookings } from "./components/RecentBookings";
-import { StaffAndServiceStats } from "./components/StaffAndServiceStats";
 import { useDashboardStats } from "./useDashboardStats";
-import { DashboardCharts } from "./types";
+import { DailyRevenueItem, DashboardCharts } from "./types";
 import styles from "./Dashboard.module.css";
 
 export default function Dashboard() {
@@ -14,6 +16,7 @@ export default function Dashboard() {
   const [selectedDays, setSelectedDays] = useState<string>("");
   const [selectedStaff, setSelectedStaff] = useState<string>("");
   const [selectedServices, setSelectedServices] = useState<string>("");
+  const [selectedDay, setSelectedDay] = useState<DailyRevenueItem | null>(null);
 
   // We only pass selectedMonth to the query hook so that day/staff/service changes don't trigger slow API roundtrips
   const { stats, loading, error, refetch } = useDashboardStats(selectedMonth);
@@ -39,14 +42,6 @@ export default function Dashboard() {
     const selectedServicesList = selectedServices
       ? selectedServices.split(",").filter((id) => id.trim().length > 0)
       : [];
-
-    if (
-      selectedDaysList.length === 0 &&
-      selectedStaffList.length === 0 &&
-      selectedServicesList.length === 0
-    ) {
-      return rawCharts;
-    }
 
     // 1. Filter daily revenues based on selected staff/services
     const dailyRevenues = (rawCharts.dailyRevenues || []).map((d) => {
@@ -110,20 +105,22 @@ export default function Dashboard() {
       };
     });
 
-    // 2. Gather invoices for selected days (or all if empty)
-    const invoicesForStats = dailyRevenues
+    // 2. Gather invoices for date stats (scoped ONLY to selectedDays, NOT narrowed by staff or service)
+    // This ensures selecting a staff/service highlights that entity without wiping out or hiding other rows!
+    const invoicesForDateStats = (rawCharts.dailyRevenues || [])
       .filter(
         (d) =>
           selectedDaysList.length === 0 || selectedDaysList.includes(d.dateRaw),
       )
-      .flatMap((d) => d.invoices);
+      .flatMap((d) => d.invoices || []);
 
-    // 3. Aggregate Staff Performance
+    // 3. Aggregate Staff Performance (starts at 0 to avoid double counting)
     const staffMap = new Map<
       string,
       {
         staffName: string;
-        revenue: number;
+        totalPrice: number;
+        actualRevenue: number;
         customers: Set<string>;
         recordCount: number;
       }
@@ -132,21 +129,31 @@ export default function Dashboard() {
     (rawCharts.staffPerformance || []).forEach((s) => {
       staffMap.set(s.staffId, {
         staffName: s.staffName,
-        revenue: 0,
+        totalPrice: 0,
+        actualRevenue: 0,
         customers: new Set<string>(),
         recordCount: 0,
       });
     });
 
-    for (const inv of invoicesForStats) {
+    for (const inv of invoicesForDateStats) {
       const custId = inv.customerName || `guest-${inv.id}`;
-      for (const item of inv.items) {
+      for (const item of (inv.items || [])) {
         if (item.staffId) {
           const existing = staffMap.get(item.staffId);
           if (existing) {
-            existing.revenue += item.finalAmount;
+            existing.totalPrice += item.totalPrice ?? (item.price * (item.quantity || 1));
+            existing.actualRevenue += item.finalAmount;
             existing.customers.add(custId);
             existing.recordCount += 1;
+          } else {
+            staffMap.set(item.staffId, {
+              staffName: item.staffName || "Nhân viên khác",
+              totalPrice: item.totalPrice ?? (item.price * (item.quantity || 1)),
+              actualRevenue: item.finalAmount,
+              customers: new Set([custId]),
+              recordCount: 1,
+            });
           }
         }
       }
@@ -156,13 +163,15 @@ export default function Dashboard() {
       .map(([staffId, data]) => ({
         staffId,
         staffName: data.staffName,
-        revenue: data.revenue,
+        totalPrice: data.totalPrice,
+        actualRevenue: data.actualRevenue,
+        revenue: data.actualRevenue,
         customers: data.customers.size,
         recordCount: data.recordCount,
       }))
-      .sort((a, b) => b.revenue - a.revenue);
+      .sort((a, b) => (b.actualRevenue || 0) - (a.actualRevenue || 0));
 
-    // 4. Aggregate Top Services
+    // 4. Aggregate Top Services (starts at 0, keeps all service rows visible)
     const servicesMap = new Map<
       string,
       {
@@ -180,13 +189,19 @@ export default function Dashboard() {
       });
     });
 
-    for (const inv of invoicesForStats) {
-      for (const item of inv.items) {
+    for (const inv of invoicesForDateStats) {
+      for (const item of (inv.items || [])) {
         if (item.itemType === "SERVICE") {
           const existing = servicesMap.get(item.itemId);
           if (existing) {
-            existing.count += item.quantity;
+            existing.count += item.quantity || 1;
             existing.revenue += item.finalAmount;
+          } else if (item.itemId) {
+            servicesMap.set(item.itemId, {
+              name: item.name || "Dịch vụ khác",
+              count: item.quantity || 1,
+              revenue: item.finalAmount,
+            });
           }
         }
       }
@@ -211,94 +226,101 @@ export default function Dashboard() {
 
   const chartsToDisplay = (filteredCharts || stats?.charts) as DashboardCharts;
 
+  // Auto-select latest month on initial mount (allows user to deselect and view whole year)
+  const hasInitializedMonthRef = useRef(false);
+  useEffect(() => {
+    if (
+      !hasInitializedMonthRef.current &&
+      stats?.charts?.monthlyTrends &&
+      stats.charts.monthlyTrends.length > 0
+    ) {
+      const latest = stats.charts.monthlyTrends[stats.charts.monthlyTrends.length - 1];
+      setSelectedMonth(latest.yearMonth);
+      hasInitializedMonthRef.current = true;
+    }
+  }, [stats?.charts?.monthlyTrends]);
+
+  // Day selection anchor and click handler
+  const anchorDayRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!anchorDayRef.current && selectedDays) {
+      const parts = selectedDays.split(",");
+      anchorDayRef.current = parts[parts.length - 1];
+    }
+  }, [selectedDays]);
+
+  const handleDayClick = (e: React.MouseEvent, clickedDay: string) => {
+    const allDays = (chartsToDisplay?.dailyRevenues || []).map((d: DailyRevenueItem) => d.dateRaw);
+    const selectedList = selectedDays ? selectedDays.split(",").filter(Boolean) : [];
+
+    let newSelected: string[] = [];
+
+    if (e.ctrlKey || e.metaKey) {
+      if (selectedList.includes(clickedDay)) {
+        newSelected = selectedList.filter((d) => d !== clickedDay);
+      } else {
+        newSelected = [...selectedList, clickedDay];
+      }
+      anchorDayRef.current = clickedDay;
+    } else if (e.shiftKey && anchorDayRef.current) {
+      const anchorIndex = allDays.indexOf(anchorDayRef.current);
+      const clickedIndex = allDays.indexOf(clickedDay);
+
+      if (anchorIndex !== -1 && clickedIndex !== -1) {
+        const start = Math.min(anchorIndex, clickedIndex);
+        const end = Math.max(anchorIndex, clickedIndex);
+        newSelected = allDays.slice(start, end + 1);
+      } else {
+        newSelected = [clickedDay];
+        anchorDayRef.current = clickedDay;
+      }
+    } else {
+      newSelected = [clickedDay];
+      anchorDayRef.current = clickedDay;
+    }
+
+    if (
+      !e.ctrlKey &&
+      !e.shiftKey &&
+      selectedList.length === 1 &&
+      selectedList[0] === clickedDay
+    ) {
+      newSelected = [];
+      anchorDayRef.current = null;
+    }
+
+    setSelectedDays(newSelected.join(","));
+  };
+
+  const totalServicePrice = useMemo(() => {
+    return (chartsToDisplay?.dailyRevenues || []).reduce(
+      (sum: number, d: DailyRevenueItem) => sum + d.totalPrice,
+      0,
+    );
+  }, [chartsToDisplay?.dailyRevenues]);
+
+  const totalFinalAmount = useMemo(() => {
+    return (chartsToDisplay?.dailyRevenues || []).reduce(
+      (sum: number, d: DailyRevenueItem) => sum + d.finalAmount,
+      0,
+    );
+  }, [chartsToDisplay?.dailyRevenues]);
+
   if (loading && !stats) {
     return (
       <div className={`${styles.container} animate-fade-in`}>
-        {/* Skeleton for Stats Grid */}
-        <div className={styles.statsGrid}>
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="card"
-              style={{
-                height: "135px",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <div
-                  style={{
-                    width: "100px",
-                    height: "16px",
-                    background: "rgba(15,23,42,0.08)",
-                    borderRadius: "4px",
-                    animation: "pulse 1.5s infinite",
-                  }}
-                ></div>
-                <div
-                  style={{
-                    width: "50px",
-                    height: "16px",
-                    background: "rgba(15,23,42,0.08)",
-                    borderRadius: "4px",
-                    animation: "pulse 1.5s infinite",
-                  }}
-                ></div>
-              </div>
-              <div
-                style={{
-                  width: "140px",
-                  height: "32px",
-                  background: "rgba(15,23,42,0.08)",
-                  borderRadius: "4px",
-                  animation: "pulse 1.5s infinite",
-                }}
-              ></div>
-              <div
-                style={{
-                  width: "180px",
-                  height: "12px",
-                  background: "rgba(15,23,42,0.08)",
-                  borderRadius: "4px",
-                  animation: "pulse 1.5s infinite",
-                }}
-              ></div>
-            </div>
-          ))}
-        </div>
-
-        {/* Skeleton for Chart */}
-        <div
-          className="card"
-          style={{
-            height: "450px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: "12px",
-          }}
-        >
-          <div
-            style={{
-              width: "200px",
-              height: "20px",
-              background: "rgba(15,23,42,0.08)",
-              borderRadius: "4px",
-              animation: "pulse 1.5s infinite",
-            }}
-          ></div>
-          <div
-            style={{
-              width: "90%",
-              height: "320px",
-              background: "rgba(15,23,42,0.08)",
-              borderRadius: "8px",
-              animation: "pulse 1.5s infinite",
-            }}
-          ></div>
+        {/* Skeleton for 1-2-1 Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 xl:h-[calc(100vh-120px)] xl:min-h-[580px]">
+          <div className="xl:col-span-1 card h-full min-h-[500px] xl:min-h-0 flex items-center justify-center">
+            <div className="w-3/4 h-64 bg-slate-100 rounded-lg animate-pulse" />
+          </div>
+          <div className="xl:col-span-2 card h-full min-h-[500px] xl:min-h-0 flex items-center justify-center">
+            <div className="w-5/6 h-72 bg-slate-100 rounded-lg animate-pulse" />
+          </div>
+          <div className="xl:col-span-1 card h-full min-h-[500px] xl:min-h-0 flex items-center justify-center">
+            <div className="w-3/4 h-64 bg-slate-100 rounded-lg animate-pulse" />
+          </div>
         </div>
       </div>
     );
@@ -355,31 +377,62 @@ export default function Dashboard() {
 
   return (
     <div className={`animate-fade-in ${styles.container}`}>
-      {/* Container chứa toàn bộ các biểu đồ chính gộp chung thành 1 Panel lớn thống nhất */}
-      <div className={`card ${styles.widgetsLayoutWrapper}`}>
-        {/* Thanh chỉ số hôm nay nhỏ gọn ghim ở trên cùng của panel */}
-        <DashboardStats stats={stats} />
+      {/* 1. Main 1-2-1 Column Grid Layout - Responsive theo chiều dọc phủ kín màn hình */}
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 items-stretch xl:h-[calc(100vh-120px)] xl:min-h-[580px]">
+        {/* Cột 1 (tỉ lệ 1): Doanh thu theo tháng */}
+        <div className="xl:col-span-1 flex flex-col h-full min-h-[500px] xl:min-h-0">
+          <MonthlyRevenueChart
+            monthlyTrends={chartsToDisplay?.monthlyTrends || []}
+            selectedMonth={selectedMonth}
+            onSelectMonth={handleSelectMonth}
+          />
+        </div>
 
-        {/* Biểu đồ gộp xếp chồng 12 tháng (trái) và Bảng chi tiết Excel cuộn dưới ghim tổng (phải) */}
-        <DashboardChart
-          charts={chartsToDisplay}
-          selectedMonth={selectedMonth}
-          onSelectMonth={handleSelectMonth}
-          selectedDays={selectedDays}
-          onSelectDays={setSelectedDays}
-        />
+        {/* Cột 2 (tỉ lệ 2): Doanh thu theo ngày */}
+        <div className="xl:col-span-2 flex flex-col h-full min-h-[500px] xl:min-h-0">
+          <DailyRevenueCalendar
+            dailyRevenues={chartsToDisplay?.dailyRevenues || []}
+            availableMonths={(chartsToDisplay?.monthlyTrends || []).map((m) => ({
+              month: m.month,
+              yearMonth: m.yearMonth,
+            }))}
+            selectedDays={selectedDays}
+            selectedMonth={selectedMonth}
+            onSelectMonth={handleSelectMonth}
+            onDayClick={handleDayClick}
+            onSelectDays={setSelectedDays}
+            onClearDayFilter={() => setSelectedDays("")}
+            onViewDayDetails={setSelectedDay}
+            totalServicePrice={totalServicePrice}
+            totalFinalAmount={totalFinalAmount}
+            selectedStaff={selectedStaff}
+            selectedServices={selectedServices}
+            onClearStaffFilter={() => setSelectedStaff("")}
+            onClearServiceFilter={() => setSelectedServices("")}
+          />
+        </div>
 
-        {/* Bảng Nhân viên, Dịch vụ & Biểu đồ tròn Doanh thu nhân viên */}
-        <StaffAndServiceStats
-          charts={chartsToDisplay}
-          selectedStaff={selectedStaff}
-          onSelectStaff={setSelectedStaff}
-          selectedServices={selectedServices}
-          onSelectServices={setSelectedServices}
-        />
+        {/* Cột 3 (tỉ lệ 1): Nhân viên (trên) + Dịch vụ (dưới) */}
+        <div className="xl:col-span-1 flex flex-col h-full min-h-[500px] xl:min-h-0">
+          <StaffAndServiceColumn
+            staffPerformance={chartsToDisplay?.staffPerformance || []}
+            topServices={chartsToDisplay?.topServices || []}
+            selectedStaff={selectedStaff}
+            onSelectStaff={setSelectedStaff}
+            selectedServices={selectedServices}
+            onSelectServices={setSelectedServices}
+          />
+        </div>
       </div>
 
-      {/* Main content grid */}
+      {/* 2. Biểu đồ tròn đưa sang 1 panel riêng biệt phía dưới */}
+      <StaffRevenuePieChart
+        staffPerformance={chartsToDisplay?.staffPerformance || []}
+        selectedStaff={selectedStaff}
+        onSelectStaff={setSelectedStaff}
+      />
+
+      {/* 3. Main content grid (Lịch hẹn gần đây & Lượt phục vụ) */}
       <div className={styles.contentGrid}>
         {/* Left Column: Recent Bookings */}
         <RecentBookings bookings={stats.recentBookings} />
@@ -390,6 +443,14 @@ export default function Dashboard() {
           <DailyTurns turns={stats.dailyTurns} />
         </div>
       </div>
+
+      {/* 4. Modal chi tiết hóa đơn theo ngày */}
+      {selectedDay && (
+        <DailyInvoiceModal
+          day={selectedDay}
+          onClose={() => setSelectedDay(null)}
+        />
+      )}
     </div>
   );
 }

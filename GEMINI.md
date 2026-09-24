@@ -48,7 +48,10 @@ Trước khi can thiệp vào từng tầng cụ thể, hãy đọc và áp dụ
    - Component đơn nhiệm (< 200 dòng).
    - Tách tầng: `Page -> Custom Hook -> Service -> TanStack Query v5`.
    - Bắt buộc xử lý đầy đủ 3 trạng thái: **Loading**, **Empty**, **Error**.
-   - Chuẩn Responsive: font size ô nhập trên mobile tối thiểu 16px, trạng thái `:hover` bọc trong `@media (hover: hover)`.
+   - **Quy chuẩn Styling**:
+     + **Mobile UI**: Bắt buộc sử dụng **TailwindCSS** (utility-first) thay vì CSS thuần để tối ưu tốc độ phát triển và tính linh hoạt.
+     + **Desktop UI**: Hiện tại còn dùng CSS Modules nhưng **định hướng tương lai sẽ refactor toàn bộ về TailwindCSS** (ưu tiên dùng Tailwind cho code mới và khi tái cấu trúc).
+   - Chuẩn Responsive: font size ô nhập trên mobile tối thiểu 16px (`text-base`), trạng thái `:hover` bọc trong `@media (hover: hover)` hoặc ưu tiên `active:` trên màn hình cảm ứng.
 
 3. **Database Standards**: [`.agents/rules/database_rule.md`](file:///c:/Workspace/salon_v4/.agents/rules/database_rule.md)
    - Tuân thủ chuẩn 3NF, đặt tên `snake_case`.

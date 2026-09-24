@@ -56,17 +56,13 @@ Mỗi màn hình danh sách, bảng dữ liệu hoặc form lấy dữ liệu t�
 
 ### 5. Giao Diện & Thẩm Mỹ (Styling, Responsive & Mobile-First)
 
-- **Hệ thống CSS**: Kết hợp **CSS Modules** (`*.module.css`) hoặc TailwindCSS với hệ thống CSS Variables chung.
+- **Quy chuẩn Styling theo nền tảng**:
+  - **Giao diện Mobile (`src/pages/mobile/*`, Mobile Components)**: **Bắt buộc sử dụng TailwindCSS** (utility-first classes) thay vì CSS thuần hay CSS Modules để tăng tốc độ phát triển, tối ưu responsive và đồng bộ palette màu từ cấu hình Tailwind (`tailwind.config.cjs`).
+  - **Giao diện Desktop**: Hiện tại duy trì song song các component dùng CSS Modules (`*.module.css`), nhưng **định hướng tương lai sẽ refactor toàn bộ Desktop về TailwindCSS** nhằm thống nhất 1 hệ thống styling. Khi viết mới component hoặc tái cấu trúc giao diện Desktop, **ưu tiên sử dụng TailwindCSS**.
 - **Tương thích thiết bị cảm ứng (Mobile/Tablet)**:
-  - Tất cả pseudo-class `:hover` phải được bọc trong `@media (hover: hover)` để tránh lỗi bị dính hover trên màn hình cảm ứng:
-    ```css
-    @media (hover: hover) {
-      .actionButton:hover {
-        background-color: var(--color-primary-hover);
-      }
-    }
-    ```
+  - Tất cả pseudo-class `:hover` nếu dùng trong CSS thuần/Modules phải được bọc trong `@media (hover: hover)`. Khi dùng Tailwind trên mobile, ưu tiên trạng thái chạm `active:` thay vì lạm dụng `hover:` để tránh lỗi dính trạng thái hover trên màn hình cảm ứng.
   - Cỡ chữ của thẻ `input` trên mobile tối thiểu phải đạt `16px` (`text-base`) để ngăn trình duyệt iOS tự động phóng to (zoom in) màn hình khi focus vào ô nhập.
+  - Vùng chạm (Touch Target) cho các nút bấm, icon thao tác trên mobile tối thiểu đạt 44x44px (`min-h-[44px] min-w-[44px]` hoặc padding tương đương).
 - **Không dùng Inline Styles**: Tuyệt đối không hard-code style trực tiếp trong JSX trừ trường hợp giá trị động (dynamic coordinates, dynamic width%).
 
 ---

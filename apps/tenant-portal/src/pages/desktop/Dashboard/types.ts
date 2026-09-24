@@ -123,6 +123,8 @@ export interface StaffPerformanceItem {
   staffId: string;
   staffName: string;
   revenue: number;
+  totalPrice?: number;
+  actualRevenue?: number;
   customers: number;
   recordCount: number;
 }

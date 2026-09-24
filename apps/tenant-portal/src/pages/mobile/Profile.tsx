@@ -130,10 +130,10 @@ export default function Profile() {
                 value={user.role}
                 onChange={handleRoleChange}
               >
-                <option value="EMPLOYEE">Employee (Nhân viên - Mobile)</option>
-                <option value="ADMIN">Admin (Quản trị viên - PC)</option>
-                <option value="MANAGER">Manager (Quản lý - PC)</option>
-                <option value="CASHIER">Cashier (Thu ngân - PC)</option>
+                <option value="EMPLOYEE">Employee (Nhân viên)</option>
+                <option value="ADMIN">Admin (Quản trị viên)</option>
+                <option value="MANAGER">Manager (Quản lý)</option>
+                <option value="CASHIER">Cashier (Thu ngân)</option>
               </select>
             </div>
 

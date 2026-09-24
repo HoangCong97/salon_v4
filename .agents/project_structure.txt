@@ -216,12 +216,17 @@ C:.
 |       |   |   |   |   \---useCustomers.ts
 |       |   |   |   +---Dashboard
 |       |   |   |   |   +---components
+|       |   |   |   |   |   +---DailyInvoiceModal.tsx
+|       |   |   |   |   |   +---DailyRevenueCalendar.tsx
 |       |   |   |   |   |   +---DailyTurns.tsx
 |       |   |   |   |   |   +---DashboardChart.tsx
 |       |   |   |   |   |   +---DashboardStats.tsx
+|       |   |   |   |   |   +---MonthlyRevenueChart.tsx
 |       |   |   |   |   |   +---PricingModal.tsx
 |       |   |   |   |   |   +---RecentBookings.tsx
+|       |   |   |   |   |   +---StaffAndServiceColumn.tsx
 |       |   |   |   |   |   +---StaffAndServiceStats.tsx
+|       |   |   |   |   |   +---StaffRevenuePieChart.tsx
 |       |   |   |   |   |   +---SubscriptionCard.tsx
 |       |   |   |   |   |   \---TableSectionHeader.tsx
 |       |   |   |   |   +---Dashboard.module.css

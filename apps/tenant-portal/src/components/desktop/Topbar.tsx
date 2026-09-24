@@ -273,10 +273,10 @@ export default function Topbar() {
                 color: "var(--color-primary)",
               }}
             >
-              <option value="ADMIN">ADMIN (PC)</option>
-              <option value="MANAGER">MANAGER (PC)</option>
-              <option value="CASHIER">CASHIER (PC)</option>
-              <option value="EMPLOYEE">EMPLOYEE (Mobile-first)</option>
+              <option value="ADMIN">ADMIN</option>
+              <option value="MANAGER">MANAGER</option>
+              <option value="CASHIER">CASHIER</option>
+              <option value="EMPLOYEE">EMPLOYEE</option>
             </select>
           </div>
         )}

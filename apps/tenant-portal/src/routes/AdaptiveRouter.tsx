@@ -39,23 +39,59 @@ import MobileInvoicesPage from "../pages/mobile/Invoices";
 import MobilePOS from "../pages/mobile/POS";
 import MobileRevenuePage from "../pages/mobile/Revenue";
 
-// Custom Screen Size Hook
-function useWindowWidth() {
-  const [width, setWidth] = useState(window.innerWidth);
+// Custom Screen Size Hook với Media Query và Resize Listener chuẩn xác
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.innerWidth <= breakpoint;
+  });
 
   useEffect(() => {
-    const handleResize = () => setWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    if (typeof window === "undefined") return;
 
-  return width;
+    const check = () => {
+      setIsMobile(window.innerWidth <= breakpoint);
+    };
+
+    check();
+    window.addEventListener("resize", check);
+    window.addEventListener("orientationchange", check);
+
+    let mql: MediaQueryList | null = null;
+    let handleMql: ((e: MediaQueryListEvent) => void) | null = null;
+
+    try {
+      mql = window.matchMedia(`(max-width: ${breakpoint}px)`);
+      handleMql = (e: MediaQueryListEvent) => {
+        setIsMobile(e.matches);
+      };
+
+      if (mql.addEventListener) {
+        mql.addEventListener("change", handleMql);
+      } else if ((mql as any).addListener) {
+        (mql as any).addListener(handleMql);
+      }
+    } catch {}
+
+    return () => {
+      window.removeEventListener("resize", check);
+      window.removeEventListener("orientationchange", check);
+      if (mql && handleMql) {
+        if (mql.removeEventListener) {
+          mql.removeEventListener("change", handleMql);
+        } else if ((mql as any).removeListener) {
+          (mql as any).removeListener(handleMql);
+        }
+      }
+    };
+  }, [breakpoint]);
+
+  return isMobile;
 }
 
 export default function AdaptiveRouter() {
-  const { user, setRole, initializeSession, hasPermission } = useAuthStore();
-  const width = useWindowWidth();
-  const isMobileScreen = width <= 768;
+  const { user, initializeSession, hasPermission } = useAuthStore();
+  const isMobileScreen = useIsMobile(768);
 
   // Kích hoạt đồng bộ hóa dữ liệu qua WebSocket
   useWebSocketSync();
@@ -68,227 +104,159 @@ export default function AdaptiveRouter() {
     return <Login />;
   }
 
-  const isEmployee = user.role === "EMPLOYEE";
-
-  // Case 1: Employee role -> strictly uses MobileLayout & Mobile pages
-  if (isEmployee) {
-    return (
-      <HashRouter>
-        <Routes>
+  return (
+    <HashRouter>
+      <Routes>
+        {isMobileScreen ? (
+          /* Giao diện Mobile (Màn hình hẹp <= 768px: MobileLayout) */
           <Route element={<MobileLayout />}>
             <Route path="/" element={<Schedule />} />
+            <Route path="/schedule" element={<Schedule />} />
+            <Route path="/appointments" element={<Schedule />} />
             <Route path="/invoices" element={<MobileInvoicesPage />} />
             <Route path="/revenue" element={<MobileRevenuePage />} />
             <Route path="/pos" element={<MobilePOS />} />
             <Route path="/shifts" element={<ShiftTasks />} />
+            <Route path="/attendance" element={<ShiftTasks />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
-        </Routes>
-      </HashRouter>
-    );
-  }
+        ) : (
+          /* Giao diện Desktop (Màn hình rộng > 768px: DesktopLayout) */
+          <Route element={<DesktopLayout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route
+              path="/pos"
+              element={
+                hasPermission("pos.view") ? <POS /> : <Navigate to="/" replace />
+              }
+            />
 
-  // Case 2: Admin/Manager/Cashier roles on MOBILE screens
-  if (isMobileScreen) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: "100vh",
-          padding: "24px",
-          textAlign: "center",
-          background: "var(--bg-app)",
-          fontFamily: "var(--font-family)",
-        }}
-      >
-        <div
-          className="card"
-          style={{
-            maxWidth: "400px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "20px",
-          }}
-        >
-          <span style={{ fontSize: "48px" }}>🖥️📱</span>
-          <h2 style={{ fontSize: "18px", fontWeight: "700" }}>
-            Giao diện Quản trị & POS
-          </h2>
-          <p
-            style={{
-              color: "var(--text-secondary)",
-              fontSize: "14px",
-              lineHeight: "1.6",
-            }}
-          >
-            Trang bán hàng POS và Cấu hình chi nhánh được thiết kế tối ưu cho
-            màn hình máy tính (PC/Laptop/Tablet). Vui lòng sử dụng thiết bị có
-            màn hình lớn hơn để tiếp tục thao tác.
-          </p>
-          <div
-            style={{ height: "1px", background: "var(--border-color)" }}
-          ></div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px",
-              textAlign: "left",
-            }}
-          >
-            <span
-              style={{
-                fontSize: "12px",
-                fontWeight: "600",
-                color: "var(--text-secondary)",
-              }}
-            >
-              Hoặc trải nghiệm giao diện nhân viên (Mobile Web):
-            </span>
-            <button
-              className="btn btn-primary"
-              onClick={() => setRole("EMPLOYEE")}
-              style={{ width: "100%", padding: "10px" }}
-            >
-              Chuyển sang vai trò Nhân viên
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+            {/* Permission-restricted routes */}
+            <Route
+              path="/branches"
+              element={
+                hasPermission("branch.view") ? (
+                  <Branches />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+            <Route
+              path="/services"
+              element={
+                hasPermission("service.view") ? (
+                  <Services />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+            <Route
+              path="/inventories"
+              element={
+                hasPermission("inventory.view") ? (
+                  <Inventories />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+            <Route
+              path="/staff"
+              element={
+                hasPermission("staff.view") ? (
+                  <StaffManagement />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+            <Route
+              path="/payroll"
+              element={
+                hasPermission("staff.view") ? (
+                  <Payroll />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+            <Route
+              path="/shifts"
+              element={
+                hasPermission("shift.view") ? (
+                  <Shifts />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+            <Route
+              path="/attendance"
+              element={
+                hasPermission("shift.view") ? (
+                  <AttendanceCalendar />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                hasPermission("report.view") ? (
+                  <Reports />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+            <Route
+              path="/revenue"
+              element={
+                hasPermission("report.view") ? (
+                  <Reports />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+            <Route
+              path="/invoices"
+              element={
+                hasPermission("invoice.view") ? (
+                  <Invoices />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+            <Route
+              path="/customers"
+              element={
+                hasPermission("customer.view") ? (
+                  <Customers />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+            <Route
+              path="/appointments"
+              element={
+                hasPermission("booking.view") ? (
+                  <Appointments />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
 
-  // Case 3: Admin/Manager/Cashier roles on DESKTOP screens
-  return (
-    <HashRouter>
-      <Routes>
-        <Route element={<DesktopLayout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route
-            path="/pos"
-            element={
-              hasPermission("pos.view") ? <POS /> : <Navigate to="/" replace />
-            }
-          />
-
-          {/* Permission-restricted routes */}
-          <Route
-            path="/branches"
-            element={
-              hasPermission("branch.view") ? (
-                <Branches />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-          <Route
-            path="/services"
-            element={
-              hasPermission("service.view") ? (
-                <Services />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-          <Route
-            path="/inventories"
-            element={
-              hasPermission("inventory.view") ? (
-                <Inventories />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-          <Route
-            path="/staff"
-            element={
-              hasPermission("staff.view") ? (
-                <StaffManagement />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-          <Route
-            path="/payroll"
-            element={
-              hasPermission("staff.view") ? (
-                <Payroll />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-          <Route
-            path="/shifts"
-            element={
-              hasPermission("shift.view") ? (
-                <Shifts />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-          <Route
-            path="/attendance"
-            element={
-              hasPermission("shift.view") ? (
-                <AttendanceCalendar />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-          <Route
-            path="/reports"
-            element={
-              hasPermission("report.view") ? (
-                <Reports />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-          <Route
-            path="/invoices"
-            element={
-              hasPermission("invoice.view") ? (
-                <Invoices />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-          <Route
-            path="/customers"
-            element={
-              hasPermission("customer.view") ? (
-                <Customers />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-          <Route
-            path="/appointments"
-            element={
-              hasPermission("booking.view") ? (
-                <Appointments />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        )}
       </Routes>
     </HashRouter>
   );
